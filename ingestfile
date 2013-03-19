@@ -163,7 +163,7 @@ if [ "$cleanup" == "Y" ] ; then
 		report "${RED}Cancelling requested deletion of source file, not looking safe.${NC}"
 	else
 		report "${GREEN}Removing the source file from ${input} as requested.${NC}"
-		rm "$input"
+		rm -f "$input"
 	fi
 fi
 
