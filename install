@@ -13,6 +13,6 @@ end
 
 pwd = File.expand_path File.join(__FILE__, "..")
 
-%w[makebroadcast makeyoutube].each do |file|
+%w[barcodeinterpret blackatends checksumpackage fix_left2stereo fix_rewrap fix_volume functions help ingestfile makebroadcast makedvd makemetadata makepodcast makeyoutube quickcompare removeDSStore xdcamingest].each do |file|
   system command+'"'+pwd+'/'+file+'"'+" /usr/local/bin"
 end
