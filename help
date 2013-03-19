@@ -1,0 +1,32 @@
+#!/bin/sh
+# help documentation
+# This script presents an index of microservices along with their options and definitions.
+
+echo "
+ 
+blackatend
+ 
+ 	Arguments: 		one or many video files.
+ 	Example:		blackatend /path/to/file1.mov /path/to/file2.mov
+ 	Description:		The script will decode the first and last few seconds of the file
+ 				and report on the number of black frames at each end.
+ 	Used by:		This script is mostly used by other scripts such as ingestfile.
+ 	
+checksumpackage
+ 
+ 	Arguments: 		one or many Archive Information Packages (AIP)
+ 	Example:		blackatend /path/to/package1 /path/to/package2
+ 	Description:		The script will use md5deep to produce a checksum.md5 file for
+ 				AIPs to help facilitate file integrity checks during long
+ 				term digital storage.
+ 	Used by:		This script is mainly used by other processes and preservation staff.
+ 	
+removeDSStore
+ 	
+ 	Arguments: 		one or many Archive Information Packages (AIP)
+ 	Example:		removeDSStore /path/to/package1 /path/to/package2
+ 	Description:		The script will remove .DS_Store files from
+ 				 AIPs because they are annoying.
+ 	Used by:		This script is mainly used by other processes and preservation staff.
+ 	
+ 	"

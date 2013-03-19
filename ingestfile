@@ -1,0 +1,175 @@
+#!/bin/bash
+# ingestfile
+# select an audiovisual file, package it, and transcode it
+version="1.0"
+
+makeaccesscopies="Y"       # use 'Y' for yes or any other character for no
+blackframetest="Y"         # use 'Y' for yes or any other character for no
+deliverytoomneon="N"       # use 'Y' for yes or any other character for no
+deliveraccesscopies="Y"    # use 'Y' for yes or any other character for no
+deliverytoaipstorage="Y"   # use 'Y' for yes or any other character for no
+
+scriptdir=`dirname "$0"`
+. "$scriptdir/variables"
+. "$scriptdir/functions"
+[ ! -f "$scriptdir/variables" -o ! -f "$scriptdir/functions" ] && { echo "Missing '$scriptdir/variables' and/or '$scriptdir/functions'. Exiting." ; exit 1 ;};
+
+# command-line options to set mediaid and original variables
+while getopts ":m:f:" opt; do
+	case "$opt" in
+		m) mediaid="$OPTARG";;
+		f) sourcefile="$OPTARG";;
+		\?) echo "Invalid option: -$OPTARG" ; exit 1 ;;
+		:) echo "Option -$OPTARG requires an argument" ; exit 1 ;;
+	esac
+done
+[ -n "$mediaid" ] && op="batch process"
+
+report "starting $SCRIPTNAME"
+
+ask_operator
+ask_mediaid
+ask_input
+
+echo "${BLUE}Select an audio strategy? ${NC}"
+PS3="${BLUE}Selection? ${NC}"
+select audiodecision in "Default audio mapping [first audio track used for stereo output]" "Only use left of the first audio track [for 21st Century]"
+do
+	break
+done
+
+
+
+echo "${BLUE}Select an cleanup strategy? ${NC}"
+PS3="${BLUE}Selection? ${NC}"
+select cleanupdecision in "Leave source file where it is." "Remove source file after successful ingest"
+do
+	break
+done
+
+if [ "$cleanupdecision" = "Remove source file after successful ingest" ] ; then
+	cleanup="Y"
+fi
+
+PS3="${BLUE}What do you want to do? ${NC}"
+select priority in "put in queue" "start now"
+do
+	break
+done
+
+# blackframe analysis
+if [ "$blackframetest" = "Y" ] ; then
+	black_at_ends "$input"
+	if [ "$head_black" -gt "30" ] ; then
+	    report "${RED}WARNING - There are at least $head_black frames of black at the beginning of ${input}${NC}"
+	    printf "Enter q to quit, any other key to continue: "
+	    read a1
+	    [ "$a1" == "q" ] && exit 0
+	fi
+	if [ "$tail_black" -gt "30" ] ; then
+	    report "${RED}WARNING - There are at least $tail_black frames of black at the end of ${input}${NC}"
+	    printf "Enter q to quit, any other key to continue: "
+	    read a2
+	    [ "$a2" == "q" ] && exit 0
+	fi
+fi
+
+objectsdir="$OUTDIR_INGESTFILE/$mediaid/objects"
+
+# check for existing output
+[ -d "$OUTDIR_INGESTFILE/$mediaid" ] && report "${RED}It looks like $mediaid was already ingested. If you want to overwrite the existing one please delete $OUTDIR_INGESTFILE/$mediaid first and then try again.${NC}" && exit 1
+[ -d "$AIP_STORAGE/$mediaid" ] && report "${RED}It looks like $mediaid was already ingested. If you want to overwrite the existing one please delete $AIP_STORAGE/$mediaid first and then try again.${NC}" && exit 1
+
+# queue handling
+if [ "$priority" = "put in queue" ] ; then
+	echo "$mediaid" >> /tmp/queue.txt
+	next=$(head -n 1 /tmp/queue.txt)
+	while [ "$mediaid" != "$next" ] ; do
+	 newnext=$(head -n 1 /tmp/queue.txt)
+	 echo -n "This process is waiting behind these identifiers: "
+	 cat /tmp/queue.txt | tr '\n' ' '
+	 echo
+	 while [ "$next" = "$newnext" ] ; do
+	  sleep 10
+	  newnext=$(head -n 1 /tmp/queue.txt)
+	 done
+	 next="$newnext"
+	done
+fi
+
+mkdir -p "$objectsdir"
+logdir="$OUTDIR_INGESTFILE/$mediaid/metadata/submissionDocumentation/logs"
+mkdir -p "$logdir"
+submissiondocdir="$OUTDIR_INGESTFILE/$mediaid/metadata/submissionDocumentation"
+mkdir -p "$submissiondocdir"
+
+start=`get_iso8601`
+
+# rsync
+report "${GREEN}STATUS Copying the original file to library storage at $objectsdir.${NC}"
+rsync -av --progress --log-file="$logdir/rsync_$(get_iso8601_c)_$(basename $0)_${version}.txt" "$input" "$objectsdir/"
+
+rsync_err="$?"
+[ "$rsync_err" -gt "0" ] && report "${RED}rsync failed with error ${rsync_err}${NC}" && exit 1
+
+# transcode
+if [ "$audiodecision" == "Only use left of the first audio track [for 21st Century]" ] ; then
+	echo hey hey
+	"$scriptdir/makebroadcast" -l "$OUTDIR_INGESTFILE/$mediaid"
+else
+	"$scriptdir/makebroadcast" "$OUTDIR_INGESTFILE/$mediaid"
+fi
+
+# upload to omneon
+if [ "$deliverytoomneon" == "Y" ] ; then
+	report "${GREEN}STATUS Uploading $servicefile to the OMNEON.${NC}"
+	"$scriptdir/uploadomneon" "$objectsdir/service/${mediaid%.*}.mov"
+fi
+
+# access copies
+if [ "$makeaccesscopies" == "Y" ] ; then
+	report "${GREEN}STATUS Making access copies.${NC}"
+	"$scriptdir/makedvd" "$OUTDIR_INGESTFILE/$mediaid"
+	"$scriptdir/makeyoutube" "$OUTDIR_INGESTFILE/$mediaid"
+	if [ "$deliveraccesscopies" = "Y" ] ; then
+		cp -av "$OUTDIR_INGESTFILE/$mediaid/objects/access/youtube_up/" "$PODCASTDELIVER/"
+	fi
+	if [ `echo "$mediaid" | grep "$REGEX4PODCAST"` ] ; then
+		report "${GREEN}${media} qualifies for podcast creation.${NC}"
+		sh "$scriptdir/makepodcast" "$OUTDIR_INGESTFILE/$mediaid"
+		if [ "$deliveraccesscopies" == "Y" ] ; then
+			cp -av "$OUTDIR_INGESTFILE/$mediaid/objects/access/podcast/" "$YOUTUBEDELIVER/"
+		fi
+	else
+		report "${BLUE}${media} does NOT qualify for podcast creation, skipping.${NC}"
+	fi
+fi
+end=`get_iso8601`
+
+# start reporting to operator log
+echo -e "$log" >> "$logdir/capture.log"
+echo "datetime_start: ${start}" >> "$logdir/capture.log"
+echo "datetime_end: ${end}" >> "$logdir/capture.log"
+
+# move and cleanup
+if [ "$deliverytoaipstorage" == "Y" ] ; then
+	rsync -av --progress --remove-source-files "$OUTDIR_INGESTFILE/$mediaid" "$AIP_STORAGE/"
+	[ `du -s "$OUTDIR_INGESTFILE/$mediaid" | awk '{print $1}'` = "0" ] && rm -r "$OUTDIR_INGESTFILE/$mediaid"
+	report "${GREEN}STATUS Done. Final package has been delivered to $AIP_STORAGE/${mediaid}${NC}"
+fi
+
+if [ "$cleanup" == "Y" ] ; then
+	if [ "$rsync_err" -gt "0" ] ; then
+		report "${RED}Cancelling requested deletion of source file, not looking safe.${NC}"
+	else
+		report "${GREEN}Removing the source file from ${input} as requested.${NC}"
+		rm "$input"
+	fi
+fi
+
+# clean up queue
+if [ "$priority" == "put in queue" ] ; then
+	tail -n +2 /tmp/queue.txt > /tmp/queue2.txt
+	rm /tmp/queue.txt
+	mv /tmp/queue2.txt /tmp/queue.txt
+fi

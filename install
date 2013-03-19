@@ -1,0 +1,18 @@
+#!/usr/bin/ruby
+
+if !File.exist?("/usr/local")
+  puts "Please enter your password to allow the installer to make changes."
+  system "sudo mkdir /usr/local"
+  command = "sudo cp "
+elsif !File.writable_real?("/usr/local")
+  puts "Please enter your password to allow the installer to make changes."
+  command = "sudo cp "
+else
+  command = "cp "
+end
+
+pwd = File.expand_path File.join(__FILE__, "..")
+
+%w[makebroadcast makeyoutube].each do |file|
+  system command+'"'+pwd+'/'+file+'"'+" /usr/local/bin"
+end

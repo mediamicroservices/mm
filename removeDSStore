@@ -1,0 +1,9 @@
+#!/bin/bash
+# @author Dave Rice
+while [ "$*" != "" ] ; do
+		target=$1
+		if [ -d "$target" ]; then
+			find "$target" -name '.DS_Store' -type f -delete
+		fi
+    shift
+done

@@ -1,0 +1,48 @@
+
+## Working directories for various scripts
+OUTDIR_INGESTFILE="$HOME/file_ingest"
+OUTDIR_INGESTXDCAM="$HOME/xdcam_ingest"
+outputdir_paper="$HOME/paper_ingest"
+
+## Archive Information Package storage directory, final package delivery location
+AIP_STORAGE="$HOME/aips"
+
+## File delivery locations
+PODCASTDELIVER="$HOME/podcastdelivery"
+YOUTUBEDELIVER="$HOME/youtubedelivery"
+
+TMPDIR="$HOME/tmp"
+
+## Regex to identify applicability of various services
+REGEX4PODCAST=""
+
+## variables for dvd generation
+DVDLABELPREFIX=""  # this string is pre-pended to DVD volume names
+
+# Service Delivery Data
+OMNEONIP=""
+OMNEONPATH=""
+
+# dv deck info
+# enter technical details into the log
+log+="CaptureDeviceSoftware: dvgrab,${0} version ${version}\n"
+log+="PlaybackDeviceManufacturer: \n"
+log+="PlaybackDeviceModel: \n"
+log+="PlaybackDeviceSerialNo: \n"
+log+="Interface: \n"
+
+# dv process info
+OUTDIR_INGESTDV="$HOME"	#declare directory for packages of dv files to be written to during processing
+DVLOG=dvgrab_capture.log		#name of the log for dvgrab process data
+OPLOG=ingest_operator.log		#name of the log for operator process data
+
+# DO NOT CHANGE BELOW THIS LINE
+# --------------------------------
+# some local environment variables
+SCRIPTNAME=`basename "$0"`
+
+# colors for text outputs
+RED="$(tput setaf 1)"   # Red      - For Errors Detected by Script
+GREEN="$(tput setaf 2)" # Green    - For Script Feedback to User
+BLUE="$(tput setaf 4)"  # Blue     - For Questions
+NC="$(tput sgr0)"       # No Color

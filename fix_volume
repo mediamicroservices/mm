@@ -1,0 +1,37 @@
+#!/bin/bash
+# this script takes one argument which is a video file. It evaluates the audio of the file, determines the difference needed to change the audio to -30dB as a mean_volume and then makes that adjustment to an output MXF file. The video track is simply copied.
+
+scriptdir=`dirname "$0"`
+. "$scriptdir/variables"
+. "$scriptdir/functions"
+
+if test $# != 1 ; then
+	report "${RED}You must supply one argument. Refer to a file after calling the `basename $0` script.${NC}"; exit
+fi
+
+while [ "$*" != "" ] ; do
+	
+	input_movie="$1"
+	name=`basename "$1"`
+	
+	codec_tag_string=`ffprobe -show_streams -print_format compact "$input_movie" 2>/dev/null| grep codec_type=video | grep -o "codec_tag_string=[^|]*" | cut -d= -f2`
+	
+	[ "$codec_tag_string" = "mpeg" ] && { ffmpeg_opts+=" -c:v copy -c:a pcm_s24le " ; extension="mxf" ; } ;
+	[ "$codec_tag_string" = "mpeg" ] || { ffmpeg_opts+=" -c:v copy -c:a pcm_s24le " ; extension="mov" ; } ;
+	
+	if [ -f "${input_movie%.*}_voladj.${extension}" ] ; then 
+		report "${RED}The intended output of `basename $0` already exists. Skipping for now. Please delete \"${input_movie%.*}_voladj.${extension}\" and rerun or figure out why you are trying to do this.${NC}"
+	else
+		report "${GREEN}Getting volume data for $name ...${NC}"
+		volume_data=`ffmpeg -i "$input_movie" -af volumedetect -f null - 2>&1 | grep volumedetect`
+		mean_volume=`echo "$volume_data" | grep "mean_volume" | cut -d: -f2 | cut -d " " -f2 | cut -d " " -f1`
+		max_volume=`echo "$volume_data" | grep "max_volume" | cut -d: -f2 | cut -d " " -f2 | cut -d " " -f1`
+		adjustment=`echo -30 - "$mean_volume" | bc` 
+		report "${GREEN}MEAN volume is ${mean_volume}dB. MAX volume is ${max_volume}db. Will adjust by ${adjustment}dB.${NC}"
+		report "${GREEN}Generating '${input_movie%.*}_voladj.${extension}' ...${NC}"
+		cmd="ffmpeg -i '$input_movie' $ffmpeg_opts -af volume=${adjustment}dB '${input_movie%.*}_voladj.${extension}'"
+		eval "$cmd"
+	    report "${GREEN} `basename $0` is done with ${name}.${NC}"
+	fi
+	shift
+done

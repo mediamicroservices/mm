@@ -1,0 +1,49 @@
+#!/bin/bash
+# uploadomneon
+# upload to omneon
+scriptdir=`dirname "$0"`
+. "$scriptdir/variables"
+. "$scriptdir/functions"
+[ ! -f "$scriptdir/variables" -o ! -f "$scriptdir/functions" ] && { echo "Missing '$scriptdir/variables' and/or '$scriptdir/functions'. Exiting." ; exit 1 ;};
+
+[ $# != 1 ] && { ask_input ; once="y" ;};
+
+while [ "$*" != ""  -o "$once" = "y" ] ; do
+once="n"
+[ "$#" != 0 ] && sourcefile="$1"
+removetmp="n"
+filename=`basename "$sourcefile"`
+
+status=`ftp -a "$OMNEONIP" <<END_SCRIPT
+binary
+ls "${OMNEONPATH}/${filename}"
+exit
+END_SCRIPT`
+if [ "$status" = "Name not found." ] ; then 
+report "The file named $filename is not currently on the omneon, proceeding..."
+
+if echo "$sourcefile" | grep -q "/Volumes/[AB][0-9]\{5\}" ; then
+	report "${GREEN}The file ${filename} is coming from an LTO tape. It will first move the file to ${TMPDIR} and then upload to the omneon.${NC}"
+	rsync -av --progress "$sourcefile" "${TMPDIR}/"
+	uploadfile="${TMPDIR}/${filename}"
+	removetmp="y"
+else
+	uploadfile="$sourcefile"
+fi
+
+report "${GREEN}Starting to ftp $filename to the Omneon...${NC}"
+ftp -a "$OMNEONIP" <<END_SCRIPT
+binary
+put "$uploadfile" "${OMNEONPATH}/${filename}"
+exit
+END_SCRIPT
+report "${RED}ftp exited with code ${?}${NC}"
+report "${GREEN}${filename} is uploaded to the omneon${NC}"
+[ "$?" = "0" ] && [ "$removetmp" = "y" ] && rm "${TMPDIR}/${filename}"
+else
+size=`echo "$status" | grep "$filename" | awk '{print $5}'`
+size_g=`echo "scale=3; $size / 1073741824" | bc`
+report "${RED}$filename is already on the omneon as a $size_g gigabyte file.${NC}"
+fi
+    shift
+done

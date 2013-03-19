@@ -1,0 +1,42 @@
+#!/bin/bash
+# checksumpackage
+# make checksum.md5 via md5deep for package
+# version 1.1 adds use of dfxml
+version=1.1
+
+scriptdir=`dirname "$0"`
+. "$scriptdir/variables"
+. "$scriptdir/functions"
+[ ! -f "$scriptdir/variables" -o ! -f "$scriptdir/functions" ] && { echo "Missing '$scriptdir/variables' and/or '$scriptdir/functions'. Exiting." ; exit 1 ;};
+
+check_dependencies md5deep xml
+
+# local variables
+CHECKSUMNAME="checksum.md5"
+DFXMLNAME="dfxml.xml"
+
+while [ "$*" != "" ] ; do
+	if [ -d "$1" ] ; then
+		pwd=`pwd`
+		"$scriptdir/removeDSStore" "$1"
+		if [ ! -s "${1}/metadata/$CHECKSUMNAME" -o ! -s "${1}/$CHECKSUMNAME" ] ; then
+			report "${BLUE}making Digital Forensics XML (${DFXMLNAME}) and $CHECKSUMNAME for ${1}${NC}"
+			cd "$1"
+			if [ -d objects ] ; then
+				md5deep -drl objects > "metadata/$DFXMLNAME"
+				xml sel -T -t -m "/dfxml/fileobject" -v "hashdigest" -o " " -v "ctime" -o "  " -v "filename" -n "metadata/$DFXMLNAME" > "metadata/$CHECKSUMNAME"
+			else
+				maketemp
+				md5deep -drl . > $TMPFILE
+				mv $TMPFILE "$DFXMLNAME"
+				xml sel -T -t -m "/dfxml/fileobject" -v "hashdigest" -o " " -v "ctime" -o "  " -v "filename" -n "$DFXMLNAME" > "$CHECKSUMNAME"
+			fi
+		    cd "$pwd"
+		else
+			report "${BLUE}${CHECKSUMNAME} already exists, skipping for ${1}${NC}"
+	    fi
+    else
+	    report "${BLUE}ERROR: $0 requires directories as input and $1 is not a directory.${NC}"
+    fi
+    shift
+done
