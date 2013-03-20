@@ -15,14 +15,18 @@ scriptdir=`dirname "$0"`
 [ ! -f "$scriptdir/variables" -o ! -f "$scriptdir/functions" ] && { echo "Missing '$scriptdir/variables' and/or '$scriptdir/functions'. Exiting." ; exit 1 ;};
 
 # command-line options to set mediaid and original variables
-while getopts ":m:f:" opt; do
+while getopts ":m:f:p" opt; do
 	case "$opt" in
 		m) mediaid="$OPTARG";;
 		f) sourcefile="$OPTARG";;
+		p) OUTDIR_INGESTFILE="$OPTARG" ;;
 		\?) echo "Invalid option: -$OPTARG" ; exit 1 ;;
 		:) echo "Option -$OPTARG requires an argument" ; exit 1 ;;
 	esac
 done
+
+[ "$OUTDIR_INGESTFILE" != "" ] && echo "The processing directory must be set. Use [ -p /path/to/processing/directory ]." && exit 1
+
 [ -n "$mediaid" ] && op="batch process"
 
 report "starting $SCRIPTNAME"
