@@ -159,13 +159,13 @@ if [ "$makeaccesscopies" == "Y" ] ; then
 	"$scriptdir/makedvd" "$OUTDIR_INGESTFILE/$mediaid"
 	"$scriptdir/makeyoutube" "$OUTDIR_INGESTFILE/$mediaid"
 	if [ "$deliveraccesscopies" = "Y" ] ; then
-		cp -av "$OUTDIR_INGESTFILE/$mediaid/objects/access/youtube_up/" "$PODCASTDELIVER/"
+		cp -av "$OUTDIR_INGESTFILE/$mediaid/objects/access/youtube_up/" "$YOUTUBEDELIVER/"
 	fi
 	if [ `echo "$mediaid" | grep "$REGEX4PODCAST"` ] ; then
 		report "${GREEN}${media} qualifies for podcast creation.${NC}"
 		sh "$scriptdir/makepodcast" "$OUTDIR_INGESTFILE/$mediaid"
 		if [ "$deliveraccesscopies" == "Y" ] ; then
-			cp -av "$OUTDIR_INGESTFILE/$mediaid/objects/access/podcast/" "$YOUTUBEDELIVER/"
+			cp -av "$OUTDIR_INGESTFILE/$mediaid/objects/access/podcast/" "$PODCASTDELIVER/"
 		fi
 	else
 		report "${BLUE}${media} does NOT qualify for podcast creation, skipping.${NC}"
