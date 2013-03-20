@@ -14,6 +14,16 @@ scriptdir=`dirname "$0"`
 . "$scriptdir/functions"
 [ ! -f "$scriptdir/variables" -o ! -f "$scriptdir/functions" ] && { echo "Missing '$scriptdir/variables' and/or '$scriptdir/functions'. Exiting." ; exit 1 ;};
 
+usage(){
+    echo "$(basename $0) ${version}"
+	echo "This script may be run interactively by running it with no arguments or may be used with the following options."
+	echo "Usage: $(basename $0) [ -m mediaid ] [ -f sourcefile ] [ -p processing_directory ]"
+	echo "  -m mediaid"
+	echo "  -f sourcefile"
+	echo "  -p processing directory. Transcoding will happen here."
+	exit
+}
+
 # command-line options to set mediaid and original variables
 while getopts ":m:f:p" opt; do
 	case "$opt" in
