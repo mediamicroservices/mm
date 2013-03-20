@@ -23,24 +23,27 @@ usage(){
 	echo "  -f sourcefile"
 	echo "  -p processing directory. Transcoding will happen here."
 	echo "  -a Archive Information Package storage directory. Final package delivery location."
+	echo "  -w podcast delivery"
 	exit
 }
 
 # command-line options to set mediaid and original variables
-while getopts ":hm:f:p:a:" opt; do
+while getopts ":hm:f:p:a:w:" opt; do
 	case "$opt" in
 		h) usage ;;
 		m) mediaid="$OPTARG";;
 		f) sourcefile="$OPTARG";;
 		p) OUTDIR_INGESTFILE="$OPTARG" ;;
 		a) AIP_STORAGE="$OPTARG" ;;
+		w) PODCASTDELIVER="$OPTARG"
 		\?) echo "Invalid option: -$OPTARG" ; exit 1 ;;
 		:) echo "Option -$OPTARG requires an argument" ; exit 1 ;;
 	esac
 done
 
 [ ! -d "$OUTDIR_INGESTFILE" ] && echo "The processing directory must be set. Use [ -p /path/to/processing/directory ]." && exit 1
-[ ! -d "$AIP_Storage" ] && echo "The AIP Storage directory must be set." && exit 1
+[ ! -d "$AIP_Storage" ] && echo "The AIP Storage directory must be set. Use [ -a /path/to/AIP/storage/directory ]." && exit 1
+[ ! -d "$PODCASTDELIVER" ] && echo "An access file for podcast delivery must be set. Use [ -w /path/to/objects/access/podcast]." && exit 1
 
 [ -n "$mediaid" ] && op="batch process"
 
