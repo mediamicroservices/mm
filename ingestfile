@@ -25,11 +25,12 @@ usage(){
 	echo "  -a Archive Information Package storage directory. Final package delivery location."
 	echo "  -w podcast delivery"
 	echo "  -y youtube delivery"
+	echo "  -x Regex will identify applicability of various services."
 	exit
 }
 
 # command-line options to set mediaid and original variables
-while getopts ":hm:f:p:a:w:y:" opt; do
+while getopts ":hm:f:p:a:w:y:x" opt; do
 	case "$opt" in
 		h) usage ;;
 		m) mediaid="$OPTARG";;
@@ -38,6 +39,7 @@ while getopts ":hm:f:p:a:w:y:" opt; do
 		a) AIP_STORAGE="$OPTARG" ;;
 		w) PODCASTDELIVER="$OPTARG"
 		y) YOUTUBEDELIVER="$OPTARG" ;;
+		x) REGEX4PODCAST ;;
 		\?) echo "Invalid option: -$OPTARG" ; exit 1 ;;
 		:) echo "Option -$OPTARG requires an argument" ; exit 1 ;;
 	esac
