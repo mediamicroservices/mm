@@ -50,7 +50,7 @@ while [ "$*" != ""  -o "$once" = "y" ] ; do
 		ffmpeg_opts+=" -c:v copy"
 	else
 		ffmpeg_opts+=" -vf 'pad=ih*16/9:ih:(ow-iw)/2:(oh-ih)/2,scale=size=hd1080:interl=1,format=yuv422p,setsar=1/1,setdar=16/9,fps=fps=ntsc'"
-		ffmpeg_opts+=" -c:v mpeg2video -intra_vlc 1 -non_linear_quant 1 -q:v 1 -qmin 1 -qmax 8  -g 15 -b:v 50M -maxrate:v 50M -minrate:v 50M -bufsize 17825792 -rc_init_occupancy 17825792 -dc 10 -lmin QP2LAMBDA -flags +ildct+ilme+low_delay -ps 1"
+		ffmpeg_opts+=" -c:v mpeg2video -top:v 1 -intra_vlc 1 -non_linear_quant 1 -q:v 1 -qmin 1 -qmax 8  -g 15 -b:v 50M -maxrate:v 50M -minrate:v 50M -bufsize 17825792 -rc_init_occupancy 17825792 -dc 10 -lmin QP2LAMBDA -flags +ildct+ilme+low_delay -ps 1"
 	fi
 	
 	# add audio options
