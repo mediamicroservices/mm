@@ -12,7 +12,9 @@ while getopts l opt ; do
 	esac
 done
 
-version="1.0"
+version="1.1"
+# history
+# v 1.1 change from mov output to mxf output, force all output to hd
 
 scriptdir=`dirname "$0"`
 . "$scriptdir/variables"
@@ -28,33 +30,46 @@ while [ "$*" != ""  -o "$once" = "y" ] ; do
 	once="n"
 	[ "$#" != 0 ] && input="$1"
     [ -d "$input" ] && { outputdir="$input/objects/service" && logdir="$input/metadata/submissionDocumentation/logs" ;};
-    [ -f "$input" ] && { outputdir=`dirname "$input"`"/service" && logdir="`dirname "$input"`/access/logs" ;};
+    [ -f "$input" ] && { outputdir=`dirname "$input"`"/service" && logdir="`dirname "$input"`/service/logs" ;};
     [ ! "$outputdir" ] && { outputdir="$input/objects/service" && logdir="$input/metadata/submissionDocumentation/logs" ;};
 	find_input "$input"
 
 	filename=`basename "$sourcefile"`
     mediaid=`basename "$input" | cut -d. -f1`
 	
-    servicefile="$outputdir/${mediaid%.*}.mov"
+    servicefile="$outputdir/${mediaid%.*}.mxf"
     [ -s "$servicefile" ] && { report "${RED}WARNING $servicefile already exists, skipping transcode${NC}" && exit;};
 
     report "${GREEN}STATUS Transcoding for Omneon compliance.${NC}"
-    ffmbc_opts=" -r ntsc "
-    ffmbc_opts+=" $audiomapping -ac 2 "
-    
-    get_codectagstring "$sourcefile"
-    get_width "$sourcefile"
-    [[ "$width" -gt 720 ]] && { target="xdcamhd422" && ffmbc_opts+=" -tff -s 1920x1080 -vtag xd5b ";};
-    [[ "$width" -gt 720 ]] || target="imx50"
+    ffmpeg_opts=" -r ntsc "
+    #ffmpeg_opts+=" $audiomapping -ac 2 "
 
-    [ "$codec_tag_string" = "xd5b" -o "$codec_tag_string" = "mx3n" -o "$codec_tag_string" = "mx5n" ] && ffmbc_opts+=" -vcodec copy -target $target "
-    [ "$codec_tag_string" = "xd5b" -o "$codec_tag_string" = "mx3n" -o "$codec_tag_string" = "mx5n" ] || ffmbc_opts+=" -target $target "
-    
+	# choose video encoding strategy, if source is xdcam 50 mb/sec ntsc then copy the video, else transcode
+    get_codectagstring="$sourcefile"
+	if [ "$codec_tag_string" = "xd5b" ] ; then
+		ffmpeg_opts+=" -c:v copy"
+	else
+		ffmpeg_opts+=" -vf 'pad=ih*16/9:ih:(ow-iw)/2:(oh-ih)/2,scale=size=hd1080:interl=1,format=yuv422p,setsar=1/1,setdar=16/9,fps=fps=ntsc'"
+		ffmpeg_opts+=" -c:v mpeg2video -intra_vlc 1 -non_linear_quant 1 -q:v 1 -qmin 1 -qmax 8  -g 15 -b:v 50M -maxrate:v 50M -minrate:v 50M -bufsize 17825792 -rc_init_occupancy 17825792 -dc 10 -lmin QP2LAMBDA -flags +ildct+ilme+low_delay -ps 1"
+	fi
+	
+	# add audio options
+	ffmpeg_opts+=" -c:a pcm_s24le -ar 48k -ac 2"
+	
+	# set input options for ffmpeg
+	inputoptions=" -y"
+	# log ffmpeg process
+	if [ "$logdir" != "" ] ; then
+		mkdir -p "$logdir"
+		export FFREPORT="file=${logdir}/%p_%t_$(basename $0)_${version}.txt"
+		inputoptions+=" -report"
+	fi
+     
     mkdir -p "$outputdir"
-    ffmbc_command="ffmbc -y -threads 8 -i '$sourcefile' $ffmbc_opts '$servicefile'"
-    report "${GREEN}Running: $ffmbc_command"
-	eval "$ffmbc_command" 
-    ffmbc_err="$?"
-    [ "$ffmbc_err" -gt "0" ] && { report "${RED}ffmbc failed with error ${ffmbc_err}${NC}" && exit 1;};
+    ffmpeg_command="ffmpeg $inputoptions -i '$sourcefile' $ffmpeg_opts '$servicefile'"
+    report "${GREEN}Running: ${ffmpeg_command}${NC}"
+	eval "$ffmpeg_command" 
+    ffmpeg_err="$?"
+    [ "$ffmpeg_err" -gt "0" ] && { report "${RED}ffmpeg failed with error ${ffmpeg_err}${NC}" && exit 1;};
     shift
 done
