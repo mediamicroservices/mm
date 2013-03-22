@@ -38,7 +38,7 @@ while [ "$*" != ""  -o "$once" = "y" ] ; do
     mediaid=`basename "$input" | cut -d. -f1`
 	
     servicefile="$outputdir/${mediaid%.*}.mxf"
-    [ -s "$servicefile" ] && { report "${RED}WARNING $servicefile already exists, skipping transcode${NC}" && exit;};
+    [ -s "$servicefile" ] && { report "${RED}WARNING $servicefile already exists, skipping transcode${NC}" ; shift ; continue ;};
 
     report "${GREEN}STATUS Transcoding for Omneon compliance.${NC}"
     ffmpeg_opts=" -r ntsc "
