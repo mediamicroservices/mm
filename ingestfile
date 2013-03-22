@@ -26,27 +26,29 @@ usage(){
 	echo "  -w podcast delivery"
 	echo "  -y youtube delivery"
 	echo "  -x Regex will identify applicability of various services."
+	echo "  -l Use only left channel of source video in transcoding."
 	exit
 }
 
 # command-line options to set mediaid and original variables
-while getopts ":hm:f:p:a:w:y:x" opt; do
+while getopts ":hm:f:p:a:w:y:xl" opt; do
 	case "$opt" in
 		h) usage ;;
 		m) mediaid="$OPTARG";;
 		f) sourcefile="$OPTARG";;
 		p) OUTDIR_INGESTFILE="$OPTARG" ;;
 		a) AIP_STORAGE="$OPTARG" ;;
-		w) PODCASTDELIVER="$OPTARG"
+		w) PODCASTDELIVER="$OPTARG" ;;
 		y) YOUTUBEDELIVER="$OPTARG" ;;
 		x) REGEX4PODCAST ;;
+		l) audiodecision="left" ;;
 		\?) echo "Invalid option: -$OPTARG" ; exit 1 ;;
 		:) echo "Option -$OPTARG requires an argument" ; exit 1 ;;
 	esac
 done
 
 [ ! -d "$OUTDIR_INGESTFILE" ] && echo "The processing directory must be set. Use [ -p /path/to/processing/directory ]." && exit 1
-[ ! -d "$AIP_Storage" ] && echo "The AIP Storage directory must be set. Use [ -a /path/to/AIP/storage/directory ]." && exit 1
+[ ! -d "$AIP_STORAGE" ] && echo "The AIP Storage directory must be set. Use [ -a /path/to/AIP/storage/directory ]." && exit 1
 [ ! -d "$PODCASTDELIVER" ] && echo "An access file for podcast delivery must be set. Use [ -w /path/to/objects/access/podcast]." && exit 1
 [ ! -d "$YOUTUBEDELIVER" ] && echo "An access file for youtube delivery must be set. Use [ -y /path/to/objects/access/youtube_up/]." && exit 1
 
@@ -58,13 +60,14 @@ ask_operator
 ask_mediaid
 ask_input
 
-echo "${BLUE}Select an audio strategy? ${NC}"
-PS3="${BLUE}Selection? ${NC}"
-select audiodecision in "Default audio mapping [first audio track used for stereo output]" "Only use left of the first audio track [for 21st Century]"
-do
-	break
-done
-
+if [ "$audiodecision" = "" ] ; then
+	echo "${BLUE}Select an audio strategy? ${NC}"
+	PS3="${BLUE}Selection? ${NC}"
+	select audiodecision in "Default audio mapping [first audio track used for stereo output]" "Only use left of the first audio track [for 21st Century]"
+	do
+		break
+	done
+fi
 
 
 echo "${BLUE}Select an cleanup strategy? ${NC}"
@@ -140,8 +143,7 @@ rsync_err="$?"
 [ "$rsync_err" -gt "0" ] && report "${RED}rsync failed with error ${rsync_err}${NC}" && exit 1
 
 # transcode
-if [ "$audiodecision" == "Only use left of the first audio track [for 21st Century]" ] ; then
-	echo hey hey
+if [ "$audiodecision" == "Only use left of the first audio track [for 21st Century]" -o "$audiodecision" == "left" ] ; then
 	"$scriptdir/makebroadcast" -l "$OUTDIR_INGESTFILE/$mediaid"
 else
 	"$scriptdir/makebroadcast" "$OUTDIR_INGESTFILE/$mediaid"
