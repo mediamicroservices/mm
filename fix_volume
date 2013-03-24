@@ -1,6 +1,9 @@
 #!/bin/bash
 # this script takes one argument which is a video file. It evaluates the audio of the file, determines the difference needed to change the audio to -30dB as a mean_volume and then makes that adjustment to an output MXF file. The video track is simply copied.
 
+# local variables
+suffix="_voladj"
+
 scriptdir=`dirname "$0"`
 . "$scriptdir/variables"
 . "$scriptdir/functions"
@@ -19,8 +22,8 @@ while [ "$*" != "" ] ; do
 	[ "$codec_tag_string" = "mpeg" ] && { ffmpeg_opts+=" -c:v copy -c:a pcm_s24le " ; extension="mxf" ; } ;
 	[ "$codec_tag_string" = "mpeg" ] || { ffmpeg_opts+=" -c:v copy -c:a pcm_s24le " ; extension="mov" ; } ;
 	
-	if [ -f "${input_movie%.*}_voladj.${extension}" ] ; then 
-		report "${RED}The intended output of `basename $0` already exists. Skipping for now. Please delete \"${input_movie%.*}_voladj.${extension}\" and rerun or figure out why you are trying to do this.${NC}"
+	if [ -f "${input_movie%.*}${suffix}.${extension}" ] ; then 
+		report "${RED}The intended output of `basename $0` already exists. Skipping for now. Please delete \"${input_movie%.*}${suffix}.${extension}\" and rerun or figure out why you are trying to do this.${NC}"
 	else
 		report "${GREEN}Getting volume data for $name ...${NC}"
 		volume_data=`ffmpeg -i "$input_movie" -af volumedetect -f null - 2>&1 | grep volumedetect`
@@ -28,8 +31,8 @@ while [ "$*" != "" ] ; do
 		max_volume=`echo "$volume_data" | grep "max_volume" | cut -d: -f2 | cut -d " " -f2 | cut -d " " -f1`
 		adjustment=`echo -30 - "$mean_volume" | bc` 
 		report "${GREEN}MEAN volume is ${mean_volume}dB. MAX volume is ${max_volume}db. Will adjust by ${adjustment}dB.${NC}"
-		report "${GREEN}Generating '${input_movie%.*}_voladj.${extension}' ...${NC}"
-		cmd="ffmpeg -i '$input_movie' $ffmpeg_opts -af volume=${adjustment}dB '${input_movie%.*}_voladj.${extension}'"
+		report "${GREEN}Generating '${input_movie%.*}${suffix}.${extension}' ...${NC}"
+		cmd="ffmpeg -i '$input_movie' $ffmpeg_opts -af volume=${adjustment}dB '${input_movie%.*}${suffix}.${extension}'"
 		eval "$cmd"
 	    report "${GREEN} `basename $0` is done with ${name}.${NC}"
 	fi
