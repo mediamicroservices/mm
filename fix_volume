@@ -3,6 +3,7 @@
 
 # local variables
 suffix="_voladj"
+reference=-23
 
 scriptdir=`dirname "$0"`
 . "$scriptdir/variables"
@@ -29,7 +30,7 @@ while [ "$*" != "" ] ; do
 		volume_data=`ffmpeg -i "$input_movie" -af volumedetect -f null - 2>&1 | grep volumedetect`
 		mean_volume=`echo "$volume_data" | grep "mean_volume" | cut -d: -f2 | cut -d " " -f2 | cut -d " " -f1`
 		max_volume=`echo "$volume_data" | grep "max_volume" | cut -d: -f2 | cut -d " " -f2 | cut -d " " -f1`
-		adjustment=`echo -30 - "$mean_volume" | bc` 
+		adjustment=`echo "$reference - $mean_volume" | bc` 
 		report "${GREEN}MEAN volume is ${mean_volume}dB. MAX volume is ${max_volume}db. Will adjust by ${adjustment}dB.${NC}"
 		report "${GREEN}Generating '${input_movie%.*}${suffix}.${extension}' ...${NC}"
 		cmd="ffmpeg -i '$input_movie' $ffmpeg_opts -af volume=${adjustment}dB '${input_movie%.*}${suffix}.${extension}'"
