@@ -14,15 +14,49 @@ scriptdir=`dirname "$0"`
 . "$scriptdir/functions"
 [ ! -f "$scriptdir/variables" -o ! -f "$scriptdir/functions" ] && { echo "Missing '$scriptdir/variables' and/or '$scriptdir/functions'. Exiting." ; exit 1 ;};
 
+usage(){
+    echo
+	echo "$(basename $0) ${version}"
+	echo "This script may be run interactively by running it with no arguments or may be used with the following options."
+	echo "Usage: $(basename $0) [ -m mediaid ] [ -f input] [ -p processing_directory ] [-a AIP_storage_directory ] [-w podcast_delivery ] [-y youtube_delivery ] [-x Regex ] [ -l audiodecision ] [ -c cleanupdecision ] [ -o operator ] [ -q priority ]"
+	echo "  -m mediaid"
+	echo "  -f input"
+	echo "  -p processing directory. Transcoding will happen here."
+	echo "  -a Archive Information Package storage directory. Final package delivery location."
+	echo "  -w podcast delivery"
+	echo "  -y youtube delivery"
+	echo "  -x Regex will identify applicability of various services."
+	echo "  -l Use only left channel of source video in transcoding."
+	echo "  -c Remove source file after successful ingest."
+	echo "  -q Put in queue."
+	exit
+}
+
 # command-line options to set mediaid and original variables
-while getopts ":m:f:" opt; do
+while getopts ":hm:f:p:a:w:y:xlco:q" opt; do
 	case "$opt" in
+		h) usage ;;
 		m) mediaid="$OPTARG";;
-		f) sourcefile="$OPTARG";;
+		f) input="$OPTARG";;
+		p) OUTDIR_INGESTFILE="$OPTARG" ;;
+		a) AIP_STORAGE="$OPTARG" ;;
+		w) PODCASTDELIVER="$OPTARG" ;;
+		y) YOUTUBEDELIVER="$OPTARG" ;;
+		x) REGEX4PODCAST ;;
+		l) audiodecision="left" ;;
+		c) cleanupdecision="Y" ;;
+		o) op="$OPTARG" ;;
+		q) priority="put in queue" ;;
 		\?) echo "Invalid option: -$OPTARG" ; exit 1 ;;
 		:) echo "Option -$OPTARG requires an argument" ; exit 1 ;;
 	esac
 done
+
+[ ! -d "$OUTDIR_INGESTFILE" ] && echo "The processing directory must be set. Use [ -p /path/to/processing/directory ]." && exit 1
+[ ! -d "$AIP_STORAGE" ] && echo "The AIP Storage directory must be set. Use [ -a /path/to/AIP/storage/directory ]." && exit 1
+[ ! -d "$PODCASTDELIVER" ] && echo "An access file for podcast delivery must be set. Use [ -w /path/to/objects/access/podcast]." && exit 1
+[ ! -d "$YOUTUBEDELIVER" ] && echo "An access file for youtube delivery must be set. Use [ -y /path/to/objects/access/youtube_up/]." && exit 1
+
 [ -n "$mediaid" ] && op="batch process"
 
 report "starting $SCRIPTNAME"
@@ -31,31 +65,36 @@ ask_operator
 ask_mediaid
 ask_input
 
-echo "${BLUE}Select an audio strategy? ${NC}"
-PS3="${BLUE}Selection? ${NC}"
-select audiodecision in "Default audio mapping [first audio track used for stereo output]" "Only use left of the first audio track [for 21st Century]"
-do
-	break
-done
-
-
-
-echo "${BLUE}Select an cleanup strategy? ${NC}"
-PS3="${BLUE}Selection? ${NC}"
-select cleanupdecision in "Leave source file where it is." "Remove source file after successful ingest"
-do
-	break
-done
-
-if [ "$cleanupdecision" = "Remove source file after successful ingest" ] ; then
-	cleanup="Y"
+if [ "$audiodecision" = "" ] ; then
+	echo "${BLUE}Select an audio strategy? ${NC}"
+	PS3="${BLUE}Selection? ${NC}"
+	select audiodecision in "Default audio mapping [first audio track used for stereo output]" "Only use left of the first audio track [for 21st Century]"
+	do
+		break
+	done
 fi
 
-PS3="${BLUE}What do you want to do? ${NC}"
-select priority in "put in queue" "start now"
-do
-	break
-done
+if [ "$cleanupdecision" = "" ] ; then
+	echo "${BLUE}Select an cleanup strategy? ${NC}"
+	PS3="${BLUE}Selection? ${NC}"
+	select cleanupdecision in "Leave source file where it is." "Remove source file after successful ingest"
+	do
+		break
+	done
+
+	if [ "$cleanupdecision" = "Remove source file after successful ingest" ] ; then
+		cleanup="Y"
+	fi
+fi
+
+if [ "$priority" = "" ] ; then
+	PS3="${BLUE}What do you want to do? ${NC}"
+	select priority in "put in queue" "start now"
+	do
+		break
+	done
+fi
+
 
 # blackframe analysis
 if [ "$blackframetest" = "Y" ] ; then
@@ -113,8 +152,7 @@ rsync_err="$?"
 [ "$rsync_err" -gt "0" ] && report "${RED}rsync failed with error ${rsync_err}${NC}" && exit 1
 
 # transcode
-if [ "$audiodecision" == "Only use left of the first audio track [for 21st Century]" ] ; then
-	echo hey hey
+if [ "$audiodecision" == "Only use left of the first audio track [for 21st Century]" -o "$audiodecision" == "left" ] ; then
 	"$scriptdir/makebroadcast" -l "$OUTDIR_INGESTFILE/$mediaid"
 else
 	"$scriptdir/makebroadcast" "$OUTDIR_INGESTFILE/$mediaid"
@@ -132,13 +170,13 @@ if [ "$makeaccesscopies" == "Y" ] ; then
 	"$scriptdir/makedvd" "$OUTDIR_INGESTFILE/$mediaid"
 	"$scriptdir/makeyoutube" "$OUTDIR_INGESTFILE/$mediaid"
 	if [ "$deliveraccesscopies" = "Y" ] ; then
-		cp -av "$OUTDIR_INGESTFILE/$mediaid/objects/access/youtube_up/" "$PODCASTDELIVER/"
+		cp -av "$OUTDIR_INGESTFILE/$mediaid/objects/access/youtube_up/" "$YOUTUBEDELIVER/"
 	fi
 	if [ `echo "$mediaid" | grep "$REGEX4PODCAST"` ] ; then
 		report "${GREEN}${media} qualifies for podcast creation.${NC}"
 		sh "$scriptdir/makepodcast" "$OUTDIR_INGESTFILE/$mediaid"
 		if [ "$deliveraccesscopies" == "Y" ] ; then
-			cp -av "$OUTDIR_INGESTFILE/$mediaid/objects/access/podcast/" "$YOUTUBEDELIVER/"
+			cp -av "$OUTDIR_INGESTFILE/$mediaid/objects/access/podcast/" "$PODCASTDELIVER/"
 		fi
 	else
 		report "${BLUE}${media} does NOT qualify for podcast creation, skipping.${NC}"

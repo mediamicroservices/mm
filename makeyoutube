@@ -8,6 +8,27 @@ scriptdir=`dirname "$0"`
 . "$scriptdir/functions"
 [ ! -f "$scriptdir/variables" -o ! -f "$scriptdir/functions" ] && { echo "Missing '$scriptdir/variables' and/or '$scriptdir/functions'. Exiting." ; exit 1 ;};
 
+usage(){
+    echo
+	echo "$(basename $0) ${version}"
+	echo "This script may be run interactively by running it with no arguments or may be used with the following options."
+	echo "Usage: $(basename $0) [ -m mediaid ] [ -f sourcefile ]"
+	echo "  -m mediaid"
+	echo "  -f sourcefile"
+	exit
+}
+
+# command-line options to set mediaid and original variables
+while getopts ":hm:f:" opt; do
+	case "$opt" in
+		h) usage ;;
+		m) mediaid="$OPTARG";;
+		f) sourcefile="$OPTARG";;
+		\?) echo "Invalid option: -$OPTARG" ; exit 1 ;;
+		:) echo "Option -$OPTARG requires an argument" ; exit 1 ;;
+	esac
+done
+
 [ "$#" = 0 ] && { ask_input ; once="y" ;};
 
 while [ "$*" != ""  -o "$once" = "y" ] ; do
