@@ -8,8 +8,8 @@ scriptdir=`dirname "$0"`
 . "$scriptdir/variables"
 . "$scriptdir/functions"
 
-if test $# != 1 ; then
-	report "${RED}You must supply one argument. Refer to a file after calling the `basename $0` script.${NC}"; exit
+if test $# = 0 ; then
+	report "${RED}You must supply one or many arguments. Usage: $(basename $0) [ file1 file2 ... ] .${NC}"; exit
 fi
 
 while [ "$*" != "" ] ; do
