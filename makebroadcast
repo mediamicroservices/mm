@@ -7,7 +7,7 @@
 while getopts l opt ; do
 	case $opt in
 		l)
-		audioleft="Y"
+		audiomapping=" -map_audio_channel 0:1:0:0:1:0 -map_audio_channel 0:1:0:0:1:1 "
 		shift ;;
 	esac
 done
@@ -20,9 +20,6 @@ scriptdir=`dirname "$0"`
 . "$scriptdir/variables"
 . "$scriptdir/functions"
 [ ! -f "$scriptdir/variables" -o ! -f "$scriptdir/functions" ] && { echo "Missing '$scriptdir/variables' and/or '$scriptdir/functions'. Exiting." ; exit 1 ;};
-
-
-[ "$audioleft" == "Y" ] && audiomapping=" -map_audio_channel 0:1:0:0:1:0 -map_audio_channel 0:1:0:0:1:1 "
 
 [ "$#" = 0 ] && { ask_input ; once="y" ;};
 
