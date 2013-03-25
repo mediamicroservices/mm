@@ -2,7 +2,6 @@
 # makebroadcast
 # make broadcast version
 
-
 # command-line options to set mediaid and original variables
 while getopts l opt ; do
 	case $opt in
@@ -26,23 +25,23 @@ scriptdir=`dirname "$0"`
 while [ "$*" != ""  -o "$once" = "y" ] ; do
 	once="n"
 	[ "$#" != 0 ] && input="$1"
-    [ -d "$input" ] && { outputdir="$input/objects/service" && logdir="$input/metadata/submissionDocumentation/logs" ;};
-    [ -f "$input" ] && { outputdir=`dirname "$input"`"/service" && logdir="`dirname "$input"`/service/logs" ;};
-    [ ! "$outputdir" ] && { outputdir="$input/objects/service" && logdir="$input/metadata/submissionDocumentation/logs" ;};
+	[ -d "$input" ] && { outputdir="$input/objects/service" && logdir="$input/metadata/submissionDocumentation/logs" ;};
+	[ -f "$input" ] && { outputdir=`dirname "$input"`"/service" && logdir="`dirname "$input"`/service/logs" ;};
+	[ ! "$outputdir" ] && { outputdir="$input/objects/service" && logdir="$input/metadata/submissionDocumentation/logs" ;};
 	find_input "$input"
 
 	filename=`basename "$sourcefile"`
-    mediaid=`basename "$input" | cut -d. -f1`
+	mediaid=`basename "$input" | cut -d. -f1`
 	
-    servicefile="$outputdir/${mediaid%.*}.mxf"
-    [ -s "$servicefile" ] && { report "${RED}WARNING $servicefile already exists, skipping transcode${NC}" ; shift ; continue ;};
+	servicefile="$outputdir/${mediaid%.*}.mxf"
+	[ -s "$servicefile" ] && { report "${RED}WARNING $servicefile already exists, skipping transcode${NC}" ; shift ; continue ;};
 
-    report "${GREEN}STATUS Transcoding for Omneon compliance.${NC}"
-    ffmpeg_opts=" -r ntsc "
-    #ffmpeg_opts+=" $audiomapping -ac 2 "
+	report "${GREEN}STATUS Transcoding for Omneon compliance.${NC}"
+	ffmpeg_opts=" -r ntsc "
+	#ffmpeg_opts+=" $audiomapping -ac 2 "
 
 	# choose video encoding strategy, if source is xdcam 50 mb/sec ntsc then copy the video, else transcode
-    get_codectagstring="$sourcefile"
+	get_codectagstring="$sourcefile"
 	if [ "$codec_tag_string" = "xd5b" ] ; then
 		ffmpeg_opts+=" -c:v copy"
 	else
@@ -61,12 +60,12 @@ while [ "$*" != ""  -o "$once" = "y" ] ; do
 		export FFREPORT="file=${logdir}/%p_%t_$(basename $0)_${version}.txt"
 		inputoptions+=" -report"
 	fi
-     
-    mkdir -p "$outputdir"
-    ffmpeg_command="ffmpeg $inputoptions -i '$sourcefile' $ffmpeg_opts '$servicefile'"
-    report "${GREEN}Running: ${ffmpeg_command}${NC}"
+
+	mkdir -p "$outputdir"
+	ffmpeg_command="ffmpeg $inputoptions -i '$sourcefile' $ffmpeg_opts '$servicefile'"
+	report "${GREEN}Running: ${ffmpeg_command}${NC}"
 	eval "$ffmpeg_command" 
-    ffmpeg_err="$?"
-    [ "$ffmpeg_err" -gt "0" ] && { report "${RED}ffmpeg failed with error ${ffmpeg_err}${NC}" && exit 1;};
-    shift
+	ffmpeg_err="$?"
+	[ "$ffmpeg_err" -gt "0" ] && { report "${RED}ffmpeg failed with error ${ffmpeg_err}${NC}" && exit 1;};
+	shift
 done
