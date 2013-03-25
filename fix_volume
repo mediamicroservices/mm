@@ -20,19 +20,19 @@ while [ "$*" != "" ] ; do
 	[ "$codec_tag_string" = "mpeg" ] || { ffmpeg_opts+=" -c:v copy -c:a pcm_s24le " ; extension="mov" ; } ;
 	output_movie="${input_movie%.*}${suffix}.${extension}"
 	
-	if [ -f "$output_movie" ] ; then 
+	if [ -f "$output_movie" ] ; then
 		report "${RED}The intended output of `basename $0` already exists. Skipping for now. Please delete \"${input_movie%.*}${suffix}.${extension}\" and rerun or figure out why you are trying to do this.${NC}"
 	else
 		report "${GREEN}Getting volume data for $name ...${NC}"
 		volume_data=`ffprobe -v error -of compact=p=0:nk=1 -show_entries frame=metadata:tags=lavfi.r128.I -f lavfi "amovie='${input_movie}',ebur128=metadata=1"`
 		[ $? -ne 0 ] && { report "${RED}Volume analysis for $input_movie exited with $?." ; continue ;};
 		for i in $(echo "$volume_data" | xargs); do
-		    [ "$i" != "" ] && integrated_loudness="$i"
+			[ "$i" != "" ] && integrated_loudness="$i"
 		done
 		adjustment=`echo "$reference - $integrated_loudness" | bc`
 		echo ADJUSTMENT "$adjustment"
 		# test to see if adjustment is at least 1dB, else skip
-		if [ `echo "$adjustment < 1" |bc` -eq 1 -o `echo "$adjustment > -1" |bc` -eq 1 ]; then
+		if [ `echo "$adjustment < 1" |bc` -eq 1 -a `echo "$adjustment > -1" |bc` -eq 1 ] ; then
 			report "${GREEN}Integrated loudness for $name is ${integrated_loudness}dB. Reference is $reference. No adjustment is needed for ${name}, skipping.${NC}"
 		else
 			report "${GREEN}Integrated loudness for $name is ${integrated_loudness}dB. Reference is $reference. Will adjust by ${adjustment}dB.${NC}"
