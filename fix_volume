@@ -8,34 +8,39 @@ reference=-23
 scriptdir=`dirname "$0"`
 . "$scriptdir/variables"
 . "$scriptdir/functions"
+[ ! -f "$scriptdir/variables" -o ! -f "$scriptdir/functions" ] && { echo "Missing '$scriptdir/variables' and/or '$scriptdir/functions'. Exiting." ; exit 1 ;};
 
-if test $# = 0 ; then
-	report "${RED}You must supply one or many arguments. Usage: $(basename $0) [ file1 file2 ... ] .${NC}"; exit
-fi
+[ $# = 0 ] && { report "${RED}You must supply one or many arguments. Usage: $(basename $0) [ file1 file2 ... ] .${NC}"; exit 2 ;};
 
 while [ "$*" != "" ] ; do
-	
 	input_movie="$1"
 	name=`basename "$1"`
-	
-	codec_tag_string=`ffprobe -show_streams -print_format compact "$input_movie" 2>/dev/null| grep codec_type=video | grep -o "codec_tag_string=[^|]*" | cut -d= -f2`
-	
+	get_codectagstring
 	[ "$codec_tag_string" = "mpeg" ] && { ffmpeg_opts+=" -c:v copy -c:a pcm_s24le " ; extension="mxf" ; } ;
 	[ "$codec_tag_string" = "mpeg" ] || { ffmpeg_opts+=" -c:v copy -c:a pcm_s24le " ; extension="mov" ; } ;
+	output_movie="${input_movie%.*}${suffix}.${extension}"
 	
-	if [ -f "${input_movie%.*}${suffix}.${extension}" ] ; then 
+	if [ -f "$output_movie" ] ; then 
 		report "${RED}The intended output of `basename $0` already exists. Skipping for now. Please delete \"${input_movie%.*}${suffix}.${extension}\" and rerun or figure out why you are trying to do this.${NC}"
 	else
 		report "${GREEN}Getting volume data for $name ...${NC}"
-		volume_data=`ffmpeg -i "$input_movie" -af volumedetect -f null - 2>&1 | grep volumedetect`
-		mean_volume=`echo "$volume_data" | grep "mean_volume" | cut -d: -f2 | cut -d " " -f2 | cut -d " " -f1`
-		max_volume=`echo "$volume_data" | grep "max_volume" | cut -d: -f2 | cut -d " " -f2 | cut -d " " -f1`
-		adjustment=`echo "$reference - $mean_volume" | bc` 
-		report "${GREEN}MEAN volume is ${mean_volume}dB. MAX volume is ${max_volume}db. Will adjust by ${adjustment}dB.${NC}"
-		report "${GREEN}Generating '${input_movie%.*}${suffix}.${extension}' ...${NC}"
-		cmd="ffmpeg -i '$input_movie' $ffmpeg_opts -af volume=${adjustment}dB '${input_movie%.*}${suffix}.${extension}'"
-		eval "$cmd"
-	    report "${GREEN} `basename $0` is done with ${name}.${NC}"
+		volume_data=`ffprobe -v error -of compact=p=0:nk=1 -show_entries frame=metadata:tags=lavfi.r128.I -f lavfi "amovie='${input_movie}',ebur128=metadata=1"`
+		[ $? -ne 0 ] && { report "${RED}Volume analysis for $input_movie exited with $?." ; continue ;};
+		for i in $(echo "$volume_data" | xargs); do
+		    [ "$i" != "" ] && integrated_loudness="$i"
+		done
+		adjustment=`echo "$reference - $integrated_loudness" | bc`
+		echo ADJUSTMENT "$adjustment"
+		# test to see if adjustment is at least 1dB, else skip
+		if [ `echo "$adjustment < 1" |bc` -eq 1 -o `echo "$adjustment > -1" |bc` -eq 1 ]; then
+			report "${GREEN}Integrated loudness for $name is ${integrated_loudness}dB. Reference is $reference. No adjustment is needed for ${name}, skipping.${NC}"
+		else
+			report "${GREEN}Integrated loudness for $name is ${integrated_loudness}dB. Reference is $reference. Will adjust by ${adjustment}dB.${NC}"
+			report "${GREEN}Generating $output_movie ...${NC}"
+			cmd="ffmpeg -i '$input_movie' $ffmpeg_opts -af volume=${adjustment}dB '$output_movie'"
+			eval "$cmd"
+		    report "${GREEN} `basename $0` is done with ${name}.${NC}"
+		fi
 	fi
 	shift
 done
