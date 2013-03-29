@@ -62,7 +62,7 @@ while [ "$*" != ""  -o "$once" = "y" ] ; do
 	fi
 
 	mkdir -p "$outputdir"
-	ffmpeg_command="ffmpeg $inputoptions -i '$sourcefile' $ffmpeg_opts '$servicefile'"
+	ffmpeg_command="ffmpeg $inputoptions -i \"$sourcefile\" $ffmpeg_opts \"$servicefile\""
 	report "${GREEN}Running: ${ffmpeg_command}${NC}"
 	eval "$ffmpeg_command" 
 	ffmpeg_err="$?"
