@@ -83,7 +83,13 @@ log -b
 	ffmpeg_opts+=" -acodec pcm_s24le -ar 48k -ac 2"
 
 	# set input options for ffmpeg
+<<<<<<< HEAD
 	inputoptions=" -y -threads 4"
+=======
+	inputoptions=" -y"
+	inputoptions+=" -threads 8"
+	inputoptions+=" -loglevel verbose"
+>>>>>>> makebroadcast: enable multi-threading and increase verbosity
 	mkdir -p "$outputdir"
 	ffmpeg_command="ffmbc $inputoptions -i \"$sourcefile\" $ffmpeg_opts \"$servicefile\""
 	# log ffmpeg process
