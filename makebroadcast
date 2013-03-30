@@ -65,6 +65,7 @@ log -b
 	if [ "$codec_tag_string" = "xd5b" ] ; then
 		ffmpeg_opts+=" -c:v copy"
 	else
+<<<<<<< HEAD
 		if [ "$cropdetect" = "Y" ] ; then
 			get_cropdetection "$sourcefile"
 			echo YEAHYAEAH
@@ -77,6 +78,10 @@ log -b
 			ffmpeg_opts+=" -vf 'pad=ih*16/9:ih:(ow-iw)/2:(oh-ih)/2,scale=1920:1080:interl=1'"
 		fi
 		ffmpeg_opts+=" -target xdcamhd422 -vtag xd5b -tff -aspect 16:9 -threads 4"
+=======
+		ffmpeg_opts+=" -vf 'pad=ih*16/9/sar:ih:(ow-iw)/2:(oh-ih)/2,scale=1920:1080:interl=1'"
+		ffmpeg_opts+=" -target xdcamhd422 -vtag xd5b -tff -threads 8"
+>>>>>>> makebroadcast: consider sar while scaling
 	fi
 
 	# add audio options
