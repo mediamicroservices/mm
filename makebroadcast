@@ -107,9 +107,13 @@ log -b
 	fi
 	report -dt "Running: ${ffmpeg_command}"
 	echo "$ffmpeg_command" >> "${logdir}/${reportfile}"
-	eval "$ffmpeg_command 2> >(tee -a ${logdir}/${reportfile} >&2)"
+	eval "$ffmpeg_command"
 	ffmpeg_err="$?"
+<<<<<<< HEAD
 	[ "$ffmpeg_err" -gt "0" ] && { report -wt "ffmpeg failed with error ${ffmpeg_err}" && exit 1;};
+=======
+	[ "$ffmpeg_err" -gt "0" ] && { report "${RED}ffmbc failed with error ${ffmpeg_err}${NC}" && exit 1;};
+>>>>>>> makebroadcast: remove logging for now
 	shift
 done
 log -e
