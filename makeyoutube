@@ -9,7 +9,7 @@ scriptdir=`dirname "$0"`
 [ ! -f "$scriptdir/variables" -o ! -f "$scriptdir/functions" ] && { echo "Missing '$scriptdir/variables' and/or '$scriptdir/functions'. Exiting." ; exit 1 ;};
 
 usage(){
-    echo
+	echo
 	echo "$(basename $0) ${version}"
 	echo "This script may be run interactively by running it with no arguments or may be used with the following options."
 	echo "Usage: $(basename $0) [ -m mediaid ] [ -f sourcefile ]"
@@ -34,16 +34,16 @@ done
 while [ "$*" != ""  -o "$once" = "y" ] ; do
 	once="n"
 	[ "$#" != 0 ] && input="$1"
-    [ -d "$input" ] && { outputdir="$input/objects/access/youtube_up" && logdir="$input/metadata/submissionDocumentation/logs" ;};
-    [ -f "$input" ] && { outputdir=`dirname "$input"`"/access/youtube_up" && logdir="`dirname "$input"`/access/logs" ;};
-    [ ! "$outputdir" ] && { outputdir="$input/objects/access/youtube_up" && logdir="$input/metadata/submissionDocumentation/logs" ;};
+	[ -d "$input" ] && { outputdir="$input/objects/access/youtube_up" && logdir="$input/metadata/submissionDocumentation/logs" ;};
+	[ -f "$input" ] && { outputdir=`dirname "$input"`"/access/youtube_up" && logdir="`dirname "$input"`/access/logs" ;};
+	[ ! "$outputdir" ] && { outputdir="$input/objects/access/youtube_up" && logdir="$input/metadata/submissionDocumentation/logs" ;};
 	find_input "$input"
 
-    filename=`basename "$sourcefile"`
-    mediaid=`basename "$1" | cut -d. -f1`
+	filename=`basename "$sourcefile"`
+	mediaid=`basename "$1" | cut -d. -f1`
 
 	youtubeoutput="$outputdir/${mediaid%.*}.mp4"
-    [ -s "$youtubeoutput" ] && { report "${RED}WARNING $youtubeoutput already exists, skipping transcode${NC}" ; exit 1 ;};
+	[ -s "$youtubeoutput" ] && { report "${RED}WARNING $youtubeoutput already exists, skipping transcode${NC}" ; exit 1 ;};
 	mkdir -p "$outputdir"
 	get_height "$sourcefile"
 	get_width "$sourcefile"
@@ -55,13 +55,13 @@ while [ "$*" != ""  -o "$once" = "y" ] ; do
 	middleoptions+=" -pix_fmt yuv420p"
 	middleoptions+=" -c:v libx264"
 	middleoptions+=" -crf 18"
-    if  [ "$height" -eq "486" -a "$width" -eq "720" ] ; then
-    	middleoptions+=" -vf \"crop=720:480:0:4,yadif\" "
-    elif  [ "$height" -eq "512" -a "$width" -eq "720" ] ;then
-    	middleoptions+=" -vf \"crop=720:480:0:32,yadif\" "
-    else
-    	middleoptions+=" -vf yadif "
-    fi
+	if  [ "$height" -eq "486" -a "$width" -eq "720" ] ; then
+		middleoptions+=" -vf \"crop=720:480:0:4,yadif\" "
+	elif  [ "$height" -eq "512" -a "$width" -eq "720" ] ;then
+		middleoptions+=" -vf \"crop=720:480:0:32,yadif\" "
+	else
+		middleoptions+=" -vf yadif "
+	fi
 	middleoptions+=" -c:a libfaac"
 	middleoptions+=" -b:a 128k"
 	middleoptions+=" -f mp4"
@@ -74,5 +74,5 @@ while [ "$*" != ""  -o "$once" = "y" ] ; do
 	makeyoutubecommand="ffmpeg $inputoptions -i \"$sourcefile\" $middleoptions \"$youtubeoutput\""
 	report "${GREEN}Running: $makeyoutubecommand${NC}"
 	eval "$makeyoutubecommand"
-    shift
+	shift
 done
