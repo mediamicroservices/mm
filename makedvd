@@ -16,6 +16,8 @@ usage(){
 	echo "  -m mediaid"
 	echo "  -f sourcefile"
 	echo "  -v dvdlabelprefix"
+	echo "  -h display this help"
+	echo
 	exit
 }
 
@@ -27,12 +29,15 @@ while getopts ":hm:f:v:" opt; do
 		f) sourcefile="$OPTARG";;
 		v) DVDLABELPREFIX="$OPTARG"
 		\?) echo "Invalid option: -$OPTARG" ; exit 1 ;;
+		v) DVDLABELPREFIX="$OPTARG";;
+		*) echo "bad option -$OPTARG" ; usage ;;
 		:) echo "Option -$OPTARG requires an argument" ; exit 1 ;;
 	esac
 done
 
 [ ! -d "$DVDLABELPREFIX" ] && echo "Label must be set. Include MediaID." && exit 1
 
+shift $(( ${OPTIND} - 1 ))
 check_dependencies ffmpeg dvdauthor mkisofs
 
 [ "$#" = 0 ] && { ask_input ; once="y" ;};
