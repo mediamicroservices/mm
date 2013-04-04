@@ -7,8 +7,6 @@ get_iso8601_c(){
 }
 
 report(){
-	message="$1"
-	if [ -n $message ] ; then
 		local RED="$(tput setaf 1)"   # Red      - For Warnings
 		local GREEN="$(tput setaf 2)" # Green    - For Declarations
 		local BLUE="$(tput setaf 4)"  # Blue     - For Questions
@@ -17,6 +15,7 @@ report(){
 		local startmessage=""
 		local endmessage=""
 		local echoopt=""
+		OPTIND=1
 		while getopts ":qdwtsn" opt; do
 			case "$opt" in
 				q) color="$BLUE" ;;                         # question mode, use color blue
@@ -28,8 +27,8 @@ report(){
 			esac
 		done
 		shift $(( ${OPTIND} - 1 ))
-		echo $echoopt "${color}${startmessage}${1}${NC}"
-	fi
+		message="$1"
+		echo $echoopt "${color}${startmessage}${message}${NC}"
 }
 
 black_at_ends(){
