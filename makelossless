@@ -1,10 +1,9 @@
 #!/bin/sh
 
-filename=`basename "$file"`
-dirname=`dirname "$file"`
-
 while [ "$*" != "" ] ; do
 	file="$1"
+	filename=`basename "$file"`
+	dirname=`dirname "$file"`
 	is2yuv=`ffmpeg 2>/dev/null -i "$file" 2>&1 | grep 2vuy | wc -l | sed 's/ //g'`
 	echo is "$is2yuv"
 	if [[ "$is2yuv" -eq 0 ]] ; then
