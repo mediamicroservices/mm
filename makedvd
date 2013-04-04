@@ -33,8 +33,6 @@ while getopts ":hm:f:v:" opt; do
 	esac
 done
 
-[ ! -d "$DVDLABELPREFIX" ] && echo "Label must be set. Include MediaID." && exit 1
-
 shift $(( ${OPTIND} - 1 ))
 check_dependencies ffmpeg dvdauthor mkisofs
 
