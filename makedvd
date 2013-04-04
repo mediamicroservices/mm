@@ -40,22 +40,22 @@ check_dependencies ffmpeg dvdauthor mkisofs
 
 while [ "$*" != ""  -o "$once" = "y" ] ; do
 	once="n"
-	
+
 	[ "$#" != 0 ] && input="$1"
-    [ -d "$input" ] && { outputdir="$input/objects/access/dvd" && logdir="$input/metadata/submissionDocumentation/logs" ;};
-    [ -f "$input" ] && { outputdir=`dirname "$input"`"/access/dvd" && logdir="`dirname "$input"`/access/logs" ;};
-    [ ! "$outputdir" ] && { outputdir="$input/objects/access/dvd" && logdir="$input/metadata/submissionDocumentation/logs" ;};
+	[ -d "$input" ] && { outputdir="$input/objects/access/dvd" && logdir="$input/metadata/submissionDocumentation/logs" ;};
+	[ -f "$input" ] && { outputdir=`dirname "$input"`"/access/dvd" && logdir="`dirname "$input"`/access/logs" ;};
+	[ ! "$outputdir" ] && { outputdir="$input/objects/access/dvd" && logdir="$input/metadata/submissionDocumentation/logs" ;};
 	find_input "$input"
-	
-    filename=`basename "$sourcefile"`
-    mediaid=`basename "$input" | cut -d. -f1`
-	
+
+	filename=`basename "$sourcefile"`
+	mediaid=`basename "$input" | cut -d. -f1`
+
 	isooutput="$outputdir/${mediaid%.*}.iso"
-    [ -s "$isooutput" ] && { report -wt "WARNING $isooutput already exists, skipping transcode" ; exit 1 ;};
+	[ -s "$isooutput" ] && { report -wt "WARNING $isooutput already exists, skipping transcode" ; exit 1 ;};
 	mkdir -p "$outputdir"
 	get_height "$sourcefile"
 	get_width "$sourcefile"
-	get_dar "$sourcefile"  
+	get_dar "$sourcefile"
 
 	darratio=`echo "scale=3 ; $dar" | bc`
 	[ `echo "scale=5 ; $darratio > 1.5" | bc -l` = 1 ] && aspect="16/9" || aspect="4/3"
@@ -63,14 +63,14 @@ while [ "$*" != ""  -o "$once" = "y" ] ; do
 	get_maxdvdbitrate "$sourcefile"
 	middleoptions="-r:v ntsc -c:v mpeg2video -c:a ac3 -f dvd -s 720x480 -pix_fmt yuv420p -g 18 -b:v $MAXDVDBITRATE -maxrate 9000k -minrate 0 -bufsize 1835008 -packetsize 2048 -muxrate 10080000 -b:a 448000 -ar 48000 "
 	if  [ "$height" -eq "486" -a "$width" -eq "720" ] ; then
-    	middleoptions+=" -vf \"crop=720:480:0:4,setdar=${aspect}\" "
-    elif  [ "$height" -eq "480" -a "$width" -eq "720" ] ; then
-    	middleoptions+=" -vf \"setdar=${aspect}\" "
-    elif  [ "$height" -eq "512" -a "$width" -eq "720" ] ; then
-    	middleoptions+=" -vf \"crop=720:480:0:32,setdar=${aspect}\" "
-    else
-    	middleoptions+=" -vf \"scale=720:480:interl=1,setdar=${aspect}\""
-    fi
+		middleoptions+=" -vf \"crop=720:480:0:4,setdar=${aspect}\" "
+	elif  [ "$height" -eq "480" -a "$width" -eq "720" ] ; then
+		middleoptions+=" -vf \"setdar=${aspect}\" "
+	elif  [ "$height" -eq "512" -a "$width" -eq "720" ] ; then
+		middleoptions+=" -vf \"crop=720:480:0:32,setdar=${aspect}\" "
+	else
+		middleoptions+=" -vf \"scale=720:480:interl=1,setdar=${aspect}\""
+	fi
 	inputoptions+=" -y"
 	if [ "$logdir" != "" ] ; then
 		mkdir -p "$logdir"
@@ -81,29 +81,28 @@ while [ "$*" != ""  -o "$once" = "y" ] ; do
 	dvdffmpegcommand="ffmpeg $inputoptions -i \"$sourcefile\" $middleoptions \"$outputdir/${mediaid%.*}.mpeg\""
 	report -dt "Running: $dvdffmpegcommand"
 	eval "$dvdffmpegcommand"
-    export VIDEO_FORMAT=NTSC
-    # chapters every 5 minutes, dvdauthor will ignore chapter markers greater than duration
-    report -dt "Making DVD VIDEO_TS folder."
+	export VIDEO_FORMAT=NTSC
+	# chapters every 5 minutes, dvdauthor will ignore chapter markers greater than duration
+	report -dt "Making DVD VIDEO_TS folder."
 	dvdauthor --title -v ntsc -a ac3+en -c 0,5:00,10:00,15:00,20:00,25:00,30:00,35:00,40:00,45:00,50:00,55:00,1:00:00,1:05:00,1:10:00,1:15:00,1:20:00,1:25:00,1:30:00,1:35:00,1:40:00,1:45:00,1:50:00,1:55:00,2:00:00,2:05:00,2:10:00,2:15:00,2:20:00,2:25:00,2:30:00,2:35:00,2:40:00,2:45:00,2:50:00,2:55:00,3:00:00,3:05:00,3:10:00,3:15:00,3:20:00,3:25:00,3:30:00,3:35:00,3:40:00,3:45:00,3:50:00,3:55:00 -f "$outputdir/${mediaid%.*}.mpeg" -o "$outputdir/${mediaid%.*}/" 2> "${logdir}/dvdauthor_$(get_iso8601_c)_$(basename $0)_${version}.txt"
-    dvdauthor_err="$?"
+	dvdauthor_err="$?"
 	if [ "$dvdauthor_err" -gt "0" ] ; then
 		report -wt "ERROR dvdauthor reported error code $dvdauthor_err. Please review $outputdir/${mediaid%.*}/"
 		exit "$dvdauthor_err"
 	else
 		rm "$outputdir/${mediaid%.*}.mpeg"
 	fi
-    dvdauthor -T -o "$outputdir/${mediaid%.*}/"
-    volname=`echo "${DVDLABELPREFIX}${mediaid}"`
+	dvdauthor -T -o "$outputdir/${mediaid%.*}/"
+	volname=`echo "${DVDLABELPREFIX}${mediaid}"`
 	report -dt "Making DVD image file."
-    mkisofs -f -dvd-video -udf -V "${volname:0:32}" -v -v -o "$outputdir/${mediaid%.*}.iso"  "$outputdir/${mediaid%.*}" 2> "${logdir}/mkisofs_$(get_iso8601_c)_$(basename $0)_${version}.txt"
-    mkisofs_err="$?"
-    if [ "$mkisofs_err" -gt "0" ] ; then
-    	report -wt "ERROR mkisofs reported error code $mkisofs_err. Please review $outputdir/${mediaid%.*}.iso."
+	mkisofs -f -dvd-video -udf -V "${volname:0:32}" -v -v -o "$outputdir/${mediaid%.*}.iso"  "$outputdir/${mediaid%.*}" 2> "${logdir}/mkisofs_$(get_iso8601_c)_$(basename $0)_${version}.txt"
+	mkisofs_err="$?"
+	if [ "$mkisofs_err" -gt "0" ] ; then
+		report -wt "ERROR mkisofs reported error code $mkisofs_err. Please review $outputdir/${mediaid%.*}.iso."
 		exit "$mkisofs_err"
-    else
-		rm -r "$outputdir/${mediaid%.*}/"
+	else
+	rm -r "$outputdir/${mediaid%.*}/"
 	fi
-    report -dt "STATUS ${mediaid%.*}.iso is generated."
-
-    shift
+	report -dt "STATUS ${mediaid%.*}.iso is generated."
+	shift
 done

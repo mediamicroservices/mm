@@ -7,7 +7,7 @@ scriptdir=`dirname "$0"`
 [ ! -f "$scriptdir/variables" -o ! -f "$scriptdir/functions" ] && { echo "Missing '$scriptdir/variables' and/or '$scriptdir/functions'. Exiting." ; exit 1 ;};
 
 usage(){
-    echo
+	echo
 	echo "$(basename $0) ${version}"
 	echo "This script may be run interactively by running it with no arguments or may be used with the following options."
 	echo "Usage: $(basename $0) [ -f sourcefile ] [ -i omneon_ip ] [ -n omneon_path ] [ -t tmp_dir]"
@@ -48,7 +48,7 @@ binary
 ls "${OMNEONPATH}/${filename}"
 exit
 END_SCRIPT`
-if [ "$status" = "Name not found." ] ; then 
+if [ "$status" = "Name not found." ] ; then
 report "The file named $filename is not currently on the omneon, proceeding..."
 
 if echo "$sourcefile" | grep -q "/Volumes/[AB][0-9]\{5\}" ; then
@@ -74,5 +74,5 @@ size=`echo "$status" | grep "$filename" | awk '{print $5}'`
 size_g=`echo "scale=3; $size / 1073741824" | bc`
 report -wt "$filename is already on the omneon as a $size_g gigabyte file."
 fi
-    shift
+shift
 done

@@ -19,7 +19,7 @@ while [ "$*" != "" ] ; do
 	[ "$codec_tag_string" = "mpeg" ] && { ffmpeg_opts+=" -c:v copy -c:a pcm_s24le " ; extension="mxf" ; } ;
 	[ "$codec_tag_string" = "mpeg" ] || { ffmpeg_opts+=" -c:v copy -c:a pcm_s24le " ; extension="mov" ; } ;
 	output_movie="${input_movie%.*}${suffix}.${extension}"
-	
+
 	if [ -f "$output_movie" ] ; then
 		report -wt "The intended output of `basename $0` already exists. Skipping for now. Please delete \"${input_movie%.*}${suffix}.${extension}\" and rerun or figure out why you are trying to do this."
 	else
@@ -39,7 +39,7 @@ while [ "$*" != "" ] ; do
 			report -dt "Generating $output_movie ..."
 			cmd="ffmpeg -i '$input_movie' $ffmpeg_opts -af volume=${adjustment}dB '$output_movie'"
 			eval "$cmd"
-		    report -dt " `basename $0` is done with ${name}."
+			report -dt " `basename $0` is done with ${name}."
 		fi
 	fi
 	shift

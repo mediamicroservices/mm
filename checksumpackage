@@ -31,12 +31,12 @@ while [ "$*" != "" ] ; do
 				mv $TMPFILE "$DFXMLNAME"
 				xml sel -T -t -m "/dfxml/fileobject" -v "hashdigest" -o " " -v "ctime" -o "  " -v "filename" -n "$DFXMLNAME" > "$CHECKSUMNAME"
 			fi
-		    cd "$pwd"
+			cd "$pwd"
 		else
 			report -dt "${CHECKSUMNAME} already exists, skipping for ${1}"
-	    fi
-    else
-	    report -dt "ERROR: $0 requires directories as input and $1 is not a directory."
-    fi
-    shift
+		fi
+	else
+	report -dt "ERROR: $0 requires directories as input and $1 is not a directory."
+	fi
+	shift
 done

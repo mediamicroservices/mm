@@ -33,7 +33,7 @@ while [ "$*" != ""  -o "$once" = "y" ] ; do
 
 	filename=`basename "$sourcefile"`
 	mediaid=`basename "$input" | cut -d. -f1`
-	
+
 	servicefile="$outputdir/${mediaid%.*}.mov"
 	[ -s "$servicefile" ] && { report -wt "WARNING $servicefile already exists, skipping transcode" ; shift ; continue ;};
 
@@ -49,10 +49,10 @@ while [ "$*" != ""  -o "$once" = "y" ] ; do
 		ffmpeg_opts+=" -vf 'pad=ih*16/9:ih:(ow-iw)/2:(oh-ih)/2,scale=1920:1080:interl=1'"
 		ffmpeg_opts+=" -target xdcamhd422 -vtag xd5b -tff"
 	fi
-	
+
 	# add audio options
 	ffmpeg_opts+=" -acodec pcm_s24le -ar 48k -ac 2"
-	
+
 	# set input options for ffmpeg
 	inputoptions=" -y"
 	mkdir -p "$outputdir"

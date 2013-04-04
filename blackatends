@@ -12,5 +12,5 @@ while [ "$*" != ""  -o "$once" = "y" ] ; do
 	once="n"
 	[ "$#" != 0 ] && sourcefile="$1"
 	black_at_ends "$sourcefile"
-    shift
+	shift
 done

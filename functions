@@ -32,17 +32,17 @@ report(){
 }
 
 black_at_ends(){
-    input_movie="$1"
-    name=`basename "$input_movie"`
-    analysis_head_seconds=10
-    analysis_tail_seconds=10
-    report -dt "Analyzing $name for excessive black at head or tail."
-    duration=`ffprobe "$1"  -show_format 2> /dev/null | grep duration | cut -d= -f2 | cut -d. -f1`
-    tail_start=`echo "$duration - $analysis_tail_seconds" | bc`
-    head_black=`ffmpeg -t "$analysis_head_seconds" -i "$1" -an -vf blackdetect=pix_th=0.05 -loglevel debug -f null - 2>&1 | grep -c -o picture_black_ratio:1`
-    report -dt "Black frames in first $analysis_head_seconds seconds: $head_black."
-    tail_black=`ffmpeg -ss "$tail_start" -i "$1" -an -vf blackdetect=pix_th=0.05 -loglevel debug -f null - 2>&1 | grep -c -o picture_black_ratio:1`
-    report -dt "Black frames in last  $analysis_head_seconds seconds: $tail_black."
+	input_movie="$1"
+	name=`basename "$input_movie"`
+	analysis_head_seconds=10
+	analysis_tail_seconds=10
+	report -dt "Analyzing $name for excessive black at head or tail."
+	duration=`ffprobe "$1"  -show_format 2> /dev/null | grep duration | cut -d= -f2 | cut -d. -f1`
+	tail_start=`echo "$duration - $analysis_tail_seconds" | bc`
+	head_black=`ffmpeg -t "$analysis_head_seconds" -i "$1" -an -vf blackdetect=pix_th=0.05 -loglevel debug -f null - 2>&1 | grep -c -o picture_black_ratio:1`
+	report -dt "Black frames in first $analysis_head_seconds seconds: $head_black."
+	tail_black=`ffmpeg -ss "$tail_start" -i "$1" -an -vf blackdetect=pix_th=0.05 -loglevel debug -f null - 2>&1 | grep -c -o picture_black_ratio:1`
+	report -dt "Black frames in last  $analysis_head_seconds seconds: $tail_black."
 }
 
 maketemp(){
@@ -55,37 +55,37 @@ maketemp(){
 }
 
 ask_operator(){
-    if [ -z "$op" ] ; then
-        report -qn "Enter the name of the operator or 'q' to quit: "
-        read op
-	[ -z "$op" ] && ask_operator || log+="operator: ${op}\n" 
-        [ "$op" == "q" ] && exit 0
-    fi
+	if [ -z "$op" ] ; then
+		report -qn "Enter the name of the operator or 'q' to quit: "
+		read op
+		[ -z "$op" ] && ask_operator || log+="operator: ${op}\n"
+		[ "$op" == "q" ] && exit 0
+	fi
 }
 
 ask_mediaid(){
-    if [ -z "$mediaid" ] ; then
-        report -qn "Enter a unique MEDIA ID: "
-        read mediaid
+	if [ -z "$mediaid" ] ; then
+		report -qn "Enter a unique MEDIA ID: "
+		read mediaid
 		[ -z "$mediaid" ] && ask_mediaid
-        # option to quit
-        [ "$mediaid" == "q" ] && exit 0
-        # validate id and perhaps fail with exit
-        [ -z "$mediaid" ] && report -wt "ERROR You must enter a valid MEDIA ID" && exit
-	[ ! -z `echo "$mediaid" | grep -v "^[A-Z0-9_-]*$"` ] && report -wt "ERROR The MEDIA ID must only contain capital letters, letters, hyphen and underscore" && exit 1
-    fi
-    [ ! -z "$mediaid" ] && log+="mediaid: ${mediaid}\n"
+		# option to quit
+		[ "$mediaid" == "q" ] && exit 0
+		# validate id and perhaps fail with exit
+		[ -z "$mediaid" ] && report -wt "ERROR You must enter a valid MEDIA ID" && exit
+		[ ! -z `echo "$mediaid" | grep -v "^[A-Z0-9_-]*$"` ] && report -wt "ERROR The MEDIA ID must only contain capital letters, letters, hyphen and underscore" && exit 1
+	fi
+	[ ! -z "$mediaid" ] && log+="mediaid: ${mediaid}\n"
 }
 
 ask_input(){
-    if [ -z "$input" ] ; then
-    	report -qn "Drag in the file: "
-    	read input
+	if [ -z "$input" ] ; then
+		report -qn "Drag in the file: "
+		read input
 		[ -z "$input" ] && ask_input
 		[ "$input" == "q" ] && exit 0
-    	basename=`basename "$input"`
-    	[ ! -z "$input log" ] && log+="input: ${input}\n"
-    fi    
+		basename=`basename "$input"`
+		[ ! -z "$input log" ] && log+="input: ${input}\n"
+	fi
 }
 
 check_dependencies(){
@@ -93,36 +93,37 @@ check_dependencies(){
 	while [ "$*" != "" ] ; do
 		dependency="$1"
 		if [ ! $(which $dependency) ] ; then
-            report -wt "This script requires $dependency to run but it is not installed"
-            report -wt "If you are running ubuntu or debian you might be able to install $dependency with the following command"
-            report -wt "sudo apt-get install ${dependency}"
-            report -wt "If you are running mac you might be able to install $dependency with the following command"
-            report -wt "brew install ${dependency}"
-            deps_ok=NO	
+			report -wt "This script requires $dependency to run but it is not installed"
+			report -wt "If you are running ubuntu or debian you might be able to install $dependency with the following command"
+			report -wt "sudo apt-get install ${dependency}"
+			report -wt "If you are running mac you might be able to install $dependency with the following command"
+			report -wt "brew install ${dependency}"
+			deps_ok=NO
 		fi
-	    shift
+		shift
 	done
-    if [[ "$deps_ok" == "NO" ]]; then
-            report -wt "Unmet dependencies"
-            report -wt "Aborting!"
-            exit 1
-    else
-            return 0
-    fi
+	if [[ "$deps_ok" == "NO" ]]; then
+		report -wt "Unmet dependencies"
+		report -wt "Aborting!"
+		exit 1
+	else
+		return 0
+	fi
 }
 
 ask(){
 	# This function requires 3 arguments
 	# 1) A prompt
 	# 2) The label for the metadata value
-    read -p "${1}" response
-    if [ -z "$response" ] ; then
-    	ask "$1" "$2"
-    else
-    	log+="${2}: ${response}\n"
-    fi
+	read -p "${1}" response
+	if [ -z "$response" ] ; then
+		ask "$1" "$2"
+		else
+		log+="${2}: ${response}\n"
+	fi
 	echo
 }
+
 offerChoice(){
 	# This function requires 3 arguments
 	# 1) A prompt
@@ -168,22 +169,22 @@ make_mezz_for_xdcam(){
 
 find_input (){
 	[ -d "$1" ] && [ -d "$1/objects/service" ] && sourcefile=`find "$1/objects/service" -maxdepth 1 -mindepth 1 -type f \( -name "*.mov" -o -name "*.mxf" -o -name "*.mp4" -o -name "*.dv" \) ! -name ".*"`
-    [ -f "$1" ] && sourcefile="$1"
-    [ ! "$sourcefile" ] && sourcefile=`find "$1/objects" -maxdepth 1 -mindepth 1 -type f \( -name "*.mov" -o -name "*.mxf" -o -name "*.mp4" -o -name "*.dv" \) ! -name ".*"`
+	[ -f "$1" ] && sourcefile="$1"
+	[ ! "$sourcefile" ] && sourcefile=`find "$1/objects" -maxdepth 1 -mindepth 1 -type f \( -name "*.mov" -o -name "*.mxf" -o -name "*.mp4" -o -name "*.dv" \) ! -name ".*"`
 	[ ! "$sourcefile" ] && { report -wt "A valid source file isn't found." ; exit 1 ;};
 	log+="sourcefile: ${sourcefile}\n"
 }
 
 get_width(){
-    width=`ffprobe "$1" -show_streams -select_streams 0:v 2> /dev/null | grep width= | cut -d = -f 2`
+	width=`ffprobe "$1" -show_streams -select_streams 0:v 2> /dev/null | grep width= | cut -d = -f 2`
 }
 
 get_height(){
-    height=`ffprobe "$1" -show_streams -select_streams 0:v 2> /dev/null | grep height= | cut -d = -f 2`
+	height=`ffprobe "$1" -show_streams -select_streams 0:v 2> /dev/null | grep height= | cut -d = -f 2`
 }
 
 get_dar(){
-    dar=`ffprobe "$1" -show_streams -select_streams 0:v 2> /dev/null | grep display_aspect_ratio= | cut -d = -f 2 | sed 's|:|/|g'`
+	dar=`ffprobe "$1" -show_streams -select_streams 0:v 2> /dev/null | grep display_aspect_ratio= | cut -d = -f 2 | sed 's|:|/|g'`
 }
 
 get_codectagstring(){

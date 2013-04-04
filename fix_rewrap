@@ -10,22 +10,22 @@ if test $# != 1 ; then
 fi
 
 while [ "$*" != "" ] ; do
-	
+
 	input_movie="$1"
 	name=`basename "$1"`
-	
+
 	codec_tag_string=`ffprobe -show_streams -print_format compact "$input_movie" 2>/dev/null| grep codec_type=video | grep -o "codec_tag_string=[^|]*" | cut -d= -f2`
-	
+
 	[ "$codec_tag_string" = "mpeg" ] && { ffmpeg_opts+=" -c:v copy -c:a pcm_s24le " ; extension="mxf" ; } ;
 	[ "$codec_tag_string" = "mpeg" ] || { ffmpeg_opts+=" -c:v copy -c:a pcm_s24le " ; extension="mov" ; } ;
-	
-	if [ -f "${input_movie%.*}_voladj.${extension}" ] ; then 
+
+	if [ -f "${input_movie%.*}_voladj.${extension}" ] ; then
 		report -wt "The intended output of `basename $0` already exists. Skipping for now. Please delete \"${input_movie%.*}_rewrap.${extension}\" and rerun or figure out why you are trying to do this."
 	else
 		report -dt "Generating '${input_movie%.*}_rewrap.${extension}' ..."
 		cmd="ffmbc -i '$input_movie' -vcodec copy -acodec copy '${input_movie%.*}_rewrap.${extension}'"
 		eval "$cmd"
-	    report -dt " `basename $0` is done with ${name}."
+		report -dt " `basename $0` is done with ${name}."
 	fi
 	shift
 done

@@ -9,7 +9,7 @@ scriptdir=`dirname "$0"`
 [ ! -f "$scriptdir/variables" -o ! -f "$scriptdir/functions" ] && { echo "Missing '$scriptdir/variables' and/or '$scriptdir/functions'. Exiting." ; exit 1 ;};
 
 usage(){
-    echo
+	echo
 	echo "$(basename $0) ${version}"
 	echo "This script may be run interactively by running it with no arguments or may be used with the following options."
 	echo "Usage: $(basename $0) [ -m mediaid ] [ -f sourcefile ]"
@@ -34,16 +34,16 @@ done
 while [ "$*" != ""  -o "$once" = "y" ] ; do
 	once="n"
 	[ "$#" != 0 ] && input="$1"
-    [ -d "$input" ] && { outputdir="$input/objects/access/podcast" && logdir="$input/metadata/submissionDocumentation/logs" ;};
-    [ -f "$input" ] && { outputdir=`dirname "$input"`"/access/podcast" && logdir="`dirname "$input"`/access/logs" ;};
-    [ ! "$outputdir" ] && { outputdir="$input/objects/access/podcast" && logdir="$input/metadata/submissionDocumentation/logs" ;};
+	[ -d "$input" ] && { outputdir="$input/objects/access/podcast" && logdir="$input/metadata/submissionDocumentation/logs" ;};
+	[ -f "$input" ] && { outputdir=`dirname "$input"`"/access/podcast" && logdir="`dirname "$input"`/access/logs" ;};
+	[ ! "$outputdir" ] && { outputdir="$input/objects/access/podcast" && logdir="$input/metadata/submissionDocumentation/logs" ;};
 	find_input "$input"
 
-    filename=`basename "$sourcefile"`
-    mediaid=`basename "$input" | cut -d. -f1`
+	filename=`basename "$sourcefile"`
+	mediaid=`basename "$input" | cut -d. -f1`
 
 	podcastoutput="$outputdir/${mediaid%.*}_podcast.mov"
-    [ -s "$podcastoutput" ] && { report -wt "WARNING $podcastoutput already exists, skipping transcode" ; exit 1 ;};
+	[ -s "$podcastoutput" ] && { report -wt "WARNING $podcastoutput already exists, skipping transcode" ; exit 1 ;};
 	mkdir -p "$outputdir"
 	middleoptions="-movflags faststart -pix_fmt yuv420p -c:v libx264 -b:v 1500k -maxrate:v 3000k -minrate:v 375k -bufsize:v 6000k -vf 'yadif,scale=640:trunc(ow/dar/2)*2:interl=1' -c:a libfaac -b:a 96k "
 	if [ "$logdir" != "" ] ; then
@@ -54,5 +54,5 @@ while [ "$*" != ""  -o "$once" = "y" ] ; do
 	makepodcastcommand="ffmpeg $inputoptions -i \"$sourcefile\" $middleoptions \"$podcastoutput\""
 	report -dt "Running: $makepodcastcommand"
 	eval "$makepodcastcommand"
-    shift
+	shift
 done

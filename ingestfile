@@ -15,7 +15,7 @@ scriptdir=`dirname "$0"`
 [ ! -f "$scriptdir/variables" -o ! -f "$scriptdir/functions" ] && { echo "Missing '$scriptdir/variables' and/or '$scriptdir/functions'. Exiting." ; exit 1 ;};
 
 usage(){
-    echo
+	echo
 	echo "$(basename $0) ${version}"
 	echo "This script may be run interactively by running it with no arguments or may be used with the following options."
 	echo "Usage: $(basename $0) [ -m mediaid ] [ -f input] [ -p processing_directory ] [-a AIP_storage_directory ] [-w podcast_delivery ] [-y youtube_delivery ] [-x Regex ] [ -l audiodecision ] [ -c cleanupdecision ] [ -o operator ] [ -q priority ]"
@@ -101,16 +101,16 @@ fi
 if [ "$blackframetest" = "Y" ] ; then
 	black_at_ends "$input"
 	if [ "$head_black" -gt "30" ] ; then
-	    report -wt "WARNING - There are at least $head_black frames of black at the beginning of ${input}"
-	    report -qn "Enter q to quit, any other key to continue: "
-	    read a1
-	    [ "$a1" == "q" ] && exit 0
+		report -wt "WARNING - There are at least $head_black frames of black at the beginning of ${input}"
+		report -qn "Enter q to quit, any other key to continue: "
+		read a1
+		[ "$a1" == "q" ] && exit 0
 	fi
 	if [ "$tail_black" -gt "30" ] ; then
-	    report -wt "WARNING - There are at least $tail_black frames of black at the end of ${input}"
-	    report -qn "Enter q to quit, any other key to continue: "
-	    read a2
-	    [ "$a2" == "q" ] && exit 0
+		report -wt "WARNING - There are at least $tail_black frames of black at the end of ${input}"
+		report -qn "Enter q to quit, any other key to continue: "
+		read a2
+		[ "$a2" == "q" ] && exit 0
 	fi
 fi
 
@@ -125,15 +125,15 @@ if [ "$priority" = "put in queue" ] ; then
 	echo "$mediaid" >> /tmp/queue.txt
 	next=$(head -n 1 /tmp/queue.txt)
 	while [ "$mediaid" != "$next" ] ; do
-	 newnext=$(head -n 1 /tmp/queue.txt)
-	 echo -n "This process is waiting behind these identifiers: "
-	 cat /tmp/queue.txt | tr '\n' ' '
-	 echo
-	 while [ "$next" = "$newnext" ] ; do
-	  sleep 10
-	  newnext=$(head -n 1 /tmp/queue.txt)
-	 done
-	 next="$newnext"
+		newnext=$(head -n 1 /tmp/queue.txt)
+		echo -n "This process is waiting behind these identifiers: "
+		cat /tmp/queue.txt | tr '\n' ' '
+		echo
+		while [ "$next" = "$newnext" ] ; do
+			sleep 10
+			newnext=$(head -n 1 /tmp/queue.txt)
+		done
+		next="$newnext"
 	done
 fi
 
