@@ -8,7 +8,7 @@ scriptdir=`dirname "$0"`
 suffix="_left2stereo"
 
 if test $# != 1 ; then
-	report "${RED}You must supply one argument. Refer to a file after calling the `basename $0` script.${NC}"; exit
+	report -wt "You must supply one argument. Refer to a file after calling the `basename $0` script."; exit
 fi
 
 while [ "$*" != "" ] ; do
@@ -22,12 +22,12 @@ while [ "$*" != "" ] ; do
 	[ "$codec_tag_string" = "mpeg" ] || { ffmpeg_opts+=" -c:v copy -c:a pcm_s24le " ; extension="mov" ; } ;
 	
 	if [ -f "${input_movie%.*}${suffix}.${extension}" ] ; then 
-		report "${RED}The intended output of `basename $0` already exists. Skipping for now. Please delete \"${input_movie%.*}${suffix}.${extension}\" and rerun or figure out why you are trying to do this.${NC}"
+		report -wt "The intended output of `basename $0` already exists. Skipping for now. Please delete \"${input_movie%.*}${suffix}.${extension}\" and rerun or figure out why you are trying to do this."
 	else
 		cmd="ffmpeg -i '$input_movie' $ffmpeg_opts -filter pan=stereo:c0=c0:c1=c0 '${input_movie%.*}${suffix}.${extension}'"
 		echo "$cmd"
 		eval "$cmd"
-	    report "${GREEN} `basename $0` is done with ${name}.${NC}"
+	    report -dt " `basename $0` is done with ${name}."
 	fi
 	shift
 done

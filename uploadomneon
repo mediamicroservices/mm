@@ -52,7 +52,7 @@ if [ "$status" = "Name not found." ] ; then
 report "The file named $filename is not currently on the omneon, proceeding..."
 
 if echo "$sourcefile" | grep -q "/Volumes/[AB][0-9]\{5\}" ; then
-	report "${GREEN}The file ${filename} is coming from an LTO tape. It will first move the file to ${TMPDIR} and then upload to the omneon.${NC}"
+	report -dt "The file ${filename} is coming from an LTO tape. It will first move the file to ${TMPDIR} and then upload to the omneon."
 	rsync -av --progress "$sourcefile" "${TMPDIR}/"
 	uploadfile="${TMPDIR}/${filename}"
 	removetmp="y"
@@ -60,19 +60,19 @@ else
 	uploadfile="$sourcefile"
 fi
 
-report "${GREEN}Starting to ftp $filename to the Omneon...${NC}"
+report -dt "Starting to ftp $filename to the Omneon..."
 ftp -a "$OMNEONIP" <<END_SCRIPT
 binary
 put "$uploadfile" "${OMNEONPATH}/${filename}"
 exit
 END_SCRIPT
-report "${RED}ftp exited with code ${?}${NC}"
-report "${GREEN}${filename} is uploaded to the omneon${NC}"
+report -wt "ftp exited with code ${?}"
+report -dt "${filename} is uploaded to the omneon"
 [ "$?" = "0" ] && [ "$removetmp" = "y" ] && rm "${TMPDIR}/${filename}"
 else
 size=`echo "$status" | grep "$filename" | awk '{print $5}'`
 size_g=`echo "scale=3; $size / 1073741824" | bc`
-report "${RED}$filename is already on the omneon as a $size_g gigabyte file.${NC}"
+report -wt "$filename is already on the omneon as a $size_g gigabyte file."
 fi
     shift
 done

@@ -7,7 +7,29 @@ get_iso8601_c(){
 }
 
 report(){
-    echo `get_iso8601` - "${1}"
+	message="$1"
+	if [ -n $message ] ; then
+		local RED="$(tput setaf 1)"   # Red      - For Warnings
+		local GREEN="$(tput setaf 2)" # Green    - For Declarations
+		local BLUE="$(tput setaf 4)"  # Blue     - For Questions
+		local NC="$(tput sgr0)"       # No Color
+		local color=""
+		local startmessage=""
+		local endmessage=""
+		local echoopt=""
+		while getopts ":qdwtsn" opt; do
+			case "$opt" in
+				q) color="$BLUE" ;;                         # question mode, use color blue
+				d) color="$GREEN" ;;                        # declaration mode, use color green
+				w) color="$RED" ;;                          # warning mode, use color red
+				t) startmessage="$(get_iso8601) - " ;;      # prepend timestamp to the message
+				s) startmessage+="[$(basename $0)] " ;;     # prepend scriptname to the message
+				n) echoopt="-n" ;;                          # to avoid line breaks after echo
+			esac
+		done
+		shift $(( ${OPTIND} - 1 ))
+		echo $echoopt "${color}${startmessage}${1}${NC}"
+	fi
 }
 
 black_at_ends(){
@@ -15,13 +37,13 @@ black_at_ends(){
     name=`basename "$input_movie"`
     analysis_head_seconds=10
     analysis_tail_seconds=10
-    report "${GREEN}Analyzing $name for excessive black at head or tail.${NC}"
+    report -dt "Analyzing $name for excessive black at head or tail."
     duration=`ffprobe "$1"  -show_format 2> /dev/null | grep duration | cut -d= -f2 | cut -d. -f1`
     tail_start=`echo "$duration - $analysis_tail_seconds" | bc`
     head_black=`ffmpeg -t "$analysis_head_seconds" -i "$1" -an -vf blackdetect=pix_th=0.05 -loglevel debug -f null - 2>&1 | grep -c -o picture_black_ratio:1`
-    report "${GREEN}Black frames in first $analysis_head_seconds seconds: $head_black.${NC}"
+    report -dt "Black frames in first $analysis_head_seconds seconds: $head_black."
     tail_black=`ffmpeg -ss "$tail_start" -i "$1" -an -vf blackdetect=pix_th=0.05 -loglevel debug -f null - 2>&1 | grep -c -o picture_black_ratio:1`
-    report "${GREEN}Black frames in last  $analysis_head_seconds seconds: $tail_black.${NC}"
+    report -dt "Black frames in last  $analysis_head_seconds seconds: $tail_black."
 }
 
 maketemp(){
@@ -35,7 +57,7 @@ maketemp(){
 
 ask_operator(){
     if [ -z "$op" ] ; then
-        printf "${BLUE}Enter the name of the operator or 'q' to quit: ${NC}"
+        report -qn "Enter the name of the operator or 'q' to quit: "
         read op
 	[ -z "$op" ] && ask_operator || log+="operator: ${op}\n" 
         [ "$op" == "q" ] && exit 0
@@ -44,21 +66,21 @@ ask_operator(){
 
 ask_mediaid(){
     if [ -z "$mediaid" ] ; then
-        printf "${BLUE}Enter a unique MEDIA ID: ${NC}"
+        report -qn "Enter a unique MEDIA ID: "
         read mediaid
 		[ -z "$mediaid" ] && ask_mediaid
         # option to quit
         [ "$mediaid" == "q" ] && exit 0
         # validate id and perhaps fail with exit
-        [ -z "$mediaid" ] && report "${RED}ERROR You must enter a valid MEDIA ID${NC}" && exit
-	[ ! -z `echo "$mediaid" | grep -v "^[A-Z0-9_-]*$"` ] && report "${RED}ERROR The MEDIA ID must only contain capital letters, letters, hyphen and underscore${NC}" && exit 1
+        [ -z "$mediaid" ] && report -wt "ERROR You must enter a valid MEDIA ID" && exit
+	[ ! -z `echo "$mediaid" | grep -v "^[A-Z0-9_-]*$"` ] && report -wt "ERROR The MEDIA ID must only contain capital letters, letters, hyphen and underscore" && exit 1
     fi
     [ ! -z "$mediaid" ] && log+="mediaid: ${mediaid}\n"
 }
 
 ask_input(){
     if [ -z "$input" ] ; then
-    	printf "${BLUE}Drag in the file: ${NC}"
+    	report -qn "Drag in the file: "
     	read input
 		[ -z "$input" ] && ask_input
 		[ "$input" == "q" ] && exit 0
@@ -72,18 +94,18 @@ check_dependencies(){
 	while [ "$*" != "" ] ; do
 		dependency="$1"
 		if [ ! $(which $dependency) ] ; then
-            report "${RED}This script requires $dependency to run but it is not installed${NC}"
-            report "${RED}If you are running ubuntu or debian you might be able to install $dependency with the following command${NC}"
-            report "${RED}sudo apt-get install ${dependency}${NC}"
-            report "${RED}If you are running mac you might be able to install $dependency with the following command${NC}"
-            report "${RED}brew install ${dependency}${NC}"
+            report -wt "This script requires $dependency to run but it is not installed"
+            report -wt "If you are running ubuntu or debian you might be able to install $dependency with the following command"
+            report -wt "sudo apt-get install ${dependency}"
+            report -wt "If you are running mac you might be able to install $dependency with the following command"
+            report -wt "brew install ${dependency}"
             deps_ok=NO	
 		fi
 	    shift
 	done
     if [[ "$deps_ok" == "NO" ]]; then
-            report "${RED}Unmet dependencies${NC}"
-            report "${RED}Aborting!${NC}"
+            report -wt "Unmet dependencies"
+            report -wt "Aborting!"
             exit 1
     else
             return 0
@@ -140,7 +162,7 @@ make_mezz_for_xdcam(){
 
 	rel_start=`echo "scale=3; $som_fc - $tmc_sec" | bc`
 	pushd `dirname "$4"`
-	report "${GREEN}Starting ffmpeg to trim mxf file at `date`. This will take a few minutes...${NC}"
+	report -dt "Starting ffmpeg to trim mxf file at `date`. This will take a few minutes..."
 	ffmpeg 2</dev/null -report -y -ss "$rel_start" -t "$dur_fc" -i "$3" -map 0:v -map 0:a:0 -map 0:a:1 -c copy "$4"
 	popd
 }
@@ -149,7 +171,7 @@ find_input (){
 	[ -d "$1" ] && [ -d "$1/objects/service" ] && sourcefile=`find "$1/objects/service" -maxdepth 1 -mindepth 1 -type f \( -name "*.mov" -o -name "*.mxf" -o -name "*.mp4" -o -name "*.dv" \) ! -name ".*"`
     [ -f "$1" ] && sourcefile="$1"
     [ ! "$sourcefile" ] && sourcefile=`find "$1/objects" -maxdepth 1 -mindepth 1 -type f \( -name "*.mov" -o -name "*.mxf" -o -name "*.mp4" -o -name "*.dv" \) ! -name ".*"`
-	[ ! "$sourcefile" ] && { report "${RED}A valid source file isn't found.${NC}" ; exit 1 ;};
+	[ ! "$sourcefile" ] && { report -wt "A valid source file isn't found." ; exit 1 ;};
 	log+="sourcefile: ${sourcefile}\n"
 }
 
@@ -179,7 +201,7 @@ get_maxdvdbitrate(){
 	local CAPDVDBITRATE=6000000    # in bits/second
 	MAXDVDBITRATE=`echo "(37000000000 - ( $DURATION * 224000 )) / $DURATION" | bc`
 	if ! [[ "$MAXDVDBITRATE" =~ ^[0-9]+$ ]] ; then
-		report "${RED}Calculation of dvd bitrate failed. Evaluated to ${MAXDVDBITRATE}. Using 4000000 as bitrate instead.${NC}"
+		report -wt "Calculation of dvd bitrate failed. Evaluated to ${MAXDVDBITRATE}. Using 4000000 as bitrate instead."
 		MAXDVDBITRATE=4000000
 	elif [ "$MAXDVDBITRATE" -gt "$CAPDVDBITRATE" ] ; then
 		MAXDVDBITRATE="$CAPDVDBITRATE"

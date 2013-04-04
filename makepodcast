@@ -43,7 +43,7 @@ while [ "$*" != ""  -o "$once" = "y" ] ; do
     mediaid=`basename "$input" | cut -d. -f1`
 
 	podcastoutput="$outputdir/${mediaid%.*}_podcast.mov"
-    [ -s "$podcastoutput" ] && { report "${RED}WARNING $podcastoutput already exists, skipping transcode${NC}" ; exit 1 ;};
+    [ -s "$podcastoutput" ] && { report -wt "WARNING $podcastoutput already exists, skipping transcode" ; exit 1 ;};
 	mkdir -p "$outputdir"
 	middleoptions="-movflags faststart -pix_fmt yuv420p -c:v libx264 -b:v 1500k -maxrate:v 3000k -minrate:v 375k -bufsize:v 6000k -vf 'yadif,scale=640:trunc(ow/dar/2)*2:interl=1' -c:a libfaac -b:a 96k "
 	if [ "$logdir" != "" ] ; then
@@ -52,7 +52,7 @@ while [ "$*" != ""  -o "$once" = "y" ] ; do
 		inputoptions+=" -report"
 	fi
 	makepodcastcommand="ffmpeg $inputoptions -i \"$sourcefile\" $middleoptions \"$podcastoutput\""
-	report "${GREEN}Running: $makepodcastcommand${NC}"
+	report -dt "Running: $makepodcastcommand"
 	eval "$makepodcastcommand"
     shift
 done

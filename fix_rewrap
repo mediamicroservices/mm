@@ -6,7 +6,7 @@ scriptdir=`dirname "$0"`
 . "$scriptdir/functions"
 
 if test $# != 1 ; then
-	report "${RED}You must supply one argument. Refer to a file after calling the `basename $0` script.${NC}"; exit
+	report -wt "You must supply one argument. Refer to a file after calling the `basename $0` script."; exit
 fi
 
 while [ "$*" != "" ] ; do
@@ -20,12 +20,12 @@ while [ "$*" != "" ] ; do
 	[ "$codec_tag_string" = "mpeg" ] || { ffmpeg_opts+=" -c:v copy -c:a pcm_s24le " ; extension="mov" ; } ;
 	
 	if [ -f "${input_movie%.*}_voladj.${extension}" ] ; then 
-		report "${RED}The intended output of `basename $0` already exists. Skipping for now. Please delete \"${input_movie%.*}_rewrap.${extension}\" and rerun or figure out why you are trying to do this.${NC}"
+		report -wt "The intended output of `basename $0` already exists. Skipping for now. Please delete \"${input_movie%.*}_rewrap.${extension}\" and rerun or figure out why you are trying to do this."
 	else
-		report "${GREEN}Generating '${input_movie%.*}_rewrap.${extension}' ...${NC}"
+		report -dt "Generating '${input_movie%.*}_rewrap.${extension}' ..."
 		cmd="ffmbc -i '$input_movie' -vcodec copy -acodec copy '${input_movie%.*}_rewrap.${extension}'"
 		eval "$cmd"
-	    report "${GREEN} `basename $0` is done with ${name}.${NC}"
+	    report -dt " `basename $0` is done with ${name}."
 	fi
 	shift
 done

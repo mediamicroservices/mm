@@ -4,7 +4,7 @@
 scriptdir=`dirname "$0"`
 . "$scriptdir/variables"
 . "$scriptdir/functions"
-[ ! -f "$scriptdir/variables" -o ! -f "$scriptdir/functions" ] && { echo "Missing '$scriptdir/variables' and/or '$scriptdir/functions'. Exiting." ; exit 1 ;};
+[ ! -f "$scriptdir/variables" -o ! -f "$scriptdir/functions" ] && { report -wt "Missing '$scriptdir/variables' and/or '$scriptdir/functions'. Exiting." ; exit 1 ;};
 
 usage(){
     echo
@@ -20,12 +20,12 @@ while getopts ":hm:f:p:a:w:y:x" opt; do
 	case "$opt" in
 		h) usage ;;
 		c) OUTDIR_INGESTXDCAM="$OPTARG" ;;
-		\?) echo "Invalid option: -$OPTARG" ; exit 1 ;;
-		:) echo "Option -$OPTARG requires an argument" ; exit 1 ;;
+		\?) report -w "Invalid option: -$OPTARG" ; exit 1 ;;
+		:) report -w "Option -$OPTARG requires an argument" ; exit 1 ;;
 	esac
 done
 
-[ ! -d "$OUTDIR_INGESTXDCAM" ] && echo "The XD Cam processing directory must be set. Use [ -p /path/to/XDCam/processing/directory ]." && exit 1
+[ ! -d "$OUTDIR_INGESTXDCAM" ] && report -w "The XD Cam processing directory must be set. Use [ -p /path/to/XDCam/processing/directory ]." && exit 1
 
 defaults write com.apple.desktopservices DSDontWriteNetworkStores true
 
@@ -35,10 +35,10 @@ while true ; do
     xdcam_count=`find /Volumes -name 'XDCAM*' -maxdepth 1 | wc -l | awk '{print $1}'`
     while [ $xdcam_count -ne 1 ]; do
         if [ $xdcam_count -gt 1 ]; then
-            report "${RED}More than 1 XDCam deck appears to be mounted, please connect only one.${NC}"
+            report -wt "More than 1 XDCam deck appears to be mounted, please connect only one."
             exit 3
         else
-            echo -n "${RED}No XDCam disk found. Check deck connection. Click return to continue or 'q' to quit: ${NC}"
+            report -qn "${RED}No XDCam disk found. Check deck connection. Click return to continue or 'q' to quit: "
             read ok
             if [ "$ok" == "q" ]; then
               exit 0
@@ -50,20 +50,20 @@ while true ; do
     #identify deck
     xdcam_mount=`find /Volumes -name 'XDCAM*' -maxdepth 1`
     deck1=`basename "$xdcam_mount"`
-    report "${BLUE}Found the XDCAM deck: ${deck1}${NC}"
+    report -dt "Found the XDCAM deck: ${deck1}"
 
-    echo -n "${GREEN}Scan the barcode1, type 1st media_id, or 'q' to quit: ${NC}"
+    report -qn "${GREEN}Scan the barcode1, type 1st media_id, or 'q' to quit: "
     read barcode1
     if [ "$barcode1" == "q" ]; then
         exit 0
     fi
-    echo -n "${GREEN}Scan the barcode2, type 2nd media_id, or 'q' to quit or leave blank if there is no second barcode: ${NC}"
+    report -qn "${GREEN}Scan the barcode2, type 2nd media_id, or 'q' to quit or leave blank if there is no second barcode: "
     read barcode2
     if [ "$barcode2" == "q" ]; then
         exit 0
     fi
 
-    echo -n "${GREEN}Enter the name of the operator or 'q' to quit: ${NC}"
+    report -qn "${GREEN}Enter the name of the operator or 'q' to quit: "
     read op
     if [ "$op" == "q" ]; then
         exit 0
@@ -91,12 +91,12 @@ while true ; do
         # use the barcode for mediaid and deviceid and request other values
         materialid1="$barcode1"
         deviceid1="$barcode1"
-        echo -n "BARCODE 1 - Enter start of media in HH:MM:SS:FF format or 'q' to quit: "
+        report -qn "BARCODE 1 - Enter start of media in HH:MM:SS:FF format or 'q' to quit: "
         read som1
         if [ "$som1" == "q" ]; then
             exit 0
         fi 
-        echo -n "BARCODE 1 - Enter duration of media in HH:MM:SS:FF format or 'q' to quit: "
+        report -qn "BARCODE 1 - Enter duration of media in HH:MM:SS:FF format or 'q' to quit: "
         read duration1
         if [ "$duration1" == "q" ]; then
             exit 0
@@ -104,12 +104,12 @@ while true ; do
         if [ "$barcode2" != "" ] ; then
             materialid2="$barcode2"
             deviceid2="$barcode2"
-            echo -n "BARCODE 2 - Enter start of media in HH:MM:SS:FF format or 'q' to quit: "
+            report -qn "BARCODE 2 - Enter start of media in HH:MM:SS:FF format or 'q' to quit: "
             read som2
             if [ "$som2" == "q" ]; then
                 exit 0
             fi 
-            echo -n "BARCODE 2 - Enter duration of media in HH:MM:SS:FF format or 'q' to quit: "
+            report -qn "BARCODE 2 - Enter duration of media in HH:MM:SS:FF format or 'q' to quit: "
             read duration2
             if [ "$duration2" == "q" ]; then
                 exit 0
@@ -143,12 +143,12 @@ while true ; do
 	else
     	# check for existing output
         if [ -d "$OUTDIR_INGESTXDCAM/$deviceid1" ] ; then
-            report "${GREEN}It looks like $deviceid1 was already ingested. If you want to overwrite the existing one please delete $OUTDIR_INGESTXDCAM/$deviceid1 first and then try again.${NC}"
+            report -dt "It looks like $deviceid1 was already ingested. If you want to overwrite the existing one please delete $OUTDIR_INGESTXDCAM/$deviceid1 first and then try again."
         else
             # start xdcam ingest process
     	    start=`date -u "+%Y%m%dT%H%M%SZ"`
             mkdir -p "$OUTDIR_INGESTXDCAM/$deviceid1/object"
-            report "${GREEN}copying disc...${NC}"
+            report -dt "copying disc..."
             rsync -a --stats --progress --log-file="$OUTDIR_INGESTXDCAM/$deviceid1/object/cp.log" "/Volumes/${deck1}" "$OUTDIR_INGESTXDCAM/$deviceid1/object/"
             end=`date -u "+%Y%m%dT%H%M%SZ"`
             hdiutil eject "/Volumes/${deck1}"
@@ -183,25 +183,25 @@ while true ; do
             fi
     
             # make and deliver broadcast version
-            echo making omneon version...
+            report -dt "making omneon version..."
             mezzfiledir="${OUTDIR_INGESTXDCAM}/${deviceid1}/broadcast_version"
             mkdir -p "$mezzfiledir"
-            report "${GREEN}running make_mezz_for_xdcam $som1 $duration1 $mxffile $mezzfiledir/${materialid1}.mxf${NC}"
+            report -dt "running make_mezz_for_xdcam $som1 $duration1 $mxffile $mezzfiledir/${materialid1}.mxf"
             make_mezz_for_xdcam "$som1" "$duration1" "$mxffile" "$mezzfiledir/${materialid1}.mxf"
-            report "${GREEN}starting to ftp the broadcast file for "${materialid1}" to the Omneon...${NC}"
+            report -dt "starting to ftp the broadcast file for "${materialid1}" to the Omneon..."
             "${scriptdir}/uploadomneon" "$mezzfiledir/${materialid1}.mxf"
             
             if [ "$barcode2" != "" ] ; then
-                report "${GREEN}running make_mezz_for_xdcam $som2 $duration2 $mxffile $mezzfiledir/${materialid2}.mxf${NC}"
+                report -dt "running make_mezz_for_xdcam $som2 $duration2 $mxffile $mezzfiledir/${materialid2}.mxf"
                 make_mezz_for_xdcam "$som2" "$duration2" "$mxffile" "$mezzfiledir/${materialid2}.mxf"
-                report "${GREEN}starting to ftp the broadcast file for "${materialid2}" to the Omneon...${NC}"
+                report -dt "starting to ftp the broadcast file for "${materialid2}" to the Omneon..."
                 "${scriptdir}/uploadomneon" "$mezzfiledir/${materialid2}.mxf"
             fi
             
-            echo starting initial checksum and packaging...
+            report -dt "starting initial checksum and packaging..."
             bag baginplace "${OUTDIR_INGESTXDCAM}/${deviceid1}"
             
-            echo "done with $deviceid1 at `date`"
+            report -dt "done with $deviceid1 at `date`"
         fi
     fi
 done

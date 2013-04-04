@@ -61,7 +61,7 @@ while [ "$*" != "" ] ; do
     mediaid=`basename "$1" | cut -d. -f1`
     
     # transcode
-    report "${GREEN}STATUS Making metadata reports.${NC}"
+    report -dt "STATUS Making metadata reports."
     
     #only works with one file in objects , to do
     mkdir -p "$outputdir/objects"

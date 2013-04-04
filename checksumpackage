@@ -20,7 +20,7 @@ while [ "$*" != "" ] ; do
 		pwd=`pwd`
 		"$scriptdir/removeDSStore" "$1"
 		if [ ! -s "${1}/metadata/$CHECKSUMNAME" -o ! -s "${1}/$CHECKSUMNAME" ] ; then
-			report "${BLUE}making Digital Forensics XML (${DFXMLNAME}) and $CHECKSUMNAME for ${1}${NC}"
+			report -dt "making Digital Forensics XML (${DFXMLNAME}) and $CHECKSUMNAME for ${1}"
 			cd "$1"
 			if [ -d objects ] ; then
 				md5deep -drl objects > "metadata/$DFXMLNAME"
@@ -33,10 +33,10 @@ while [ "$*" != "" ] ; do
 			fi
 		    cd "$pwd"
 		else
-			report "${BLUE}${CHECKSUMNAME} already exists, skipping for ${1}${NC}"
+			report -dt "${CHECKSUMNAME} already exists, skipping for ${1}"
 	    fi
     else
-	    report "${BLUE}ERROR: $0 requires directories as input and $1 is not a directory.${NC}"
+	    report -dt "ERROR: $0 requires directories as input and $1 is not a directory."
     fi
     shift
 done

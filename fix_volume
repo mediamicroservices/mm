@@ -10,7 +10,7 @@ scriptdir=`dirname "$0"`
 . "$scriptdir/functions"
 [ ! -f "$scriptdir/variables" -o ! -f "$scriptdir/functions" ] && { echo "Missing '$scriptdir/variables' and/or '$scriptdir/functions'. Exiting." ; exit 1 ;};
 
-[ $# = 0 ] && { report "${RED}You must supply one or many arguments. Usage: $(basename $0) [ file1 file2 ... ] .${NC}"; exit 2 ;};
+[ $# = 0 ] && { report -wt "You must supply one or many arguments. Usage: $(basename $0) [ file1 file2 ... ] ."; exit 2 ;};
 
 while [ "$*" != "" ] ; do
 	input_movie="$1"
@@ -21,11 +21,11 @@ while [ "$*" != "" ] ; do
 	output_movie="${input_movie%.*}${suffix}.${extension}"
 	
 	if [ -f "$output_movie" ] ; then
-		report "${RED}The intended output of `basename $0` already exists. Skipping for now. Please delete \"${input_movie%.*}${suffix}.${extension}\" and rerun or figure out why you are trying to do this.${NC}"
+		report -wt "The intended output of `basename $0` already exists. Skipping for now. Please delete \"${input_movie%.*}${suffix}.${extension}\" and rerun or figure out why you are trying to do this."
 	else
-		report "${GREEN}Getting volume data for $name ...${NC}"
+		report -dt "Getting volume data for $name ..."
 		volume_data=`ffprobe -v error -of compact=p=0:nk=1 -show_entries frame=metadata:tags=lavfi.r128.I -f lavfi "amovie='${input_movie}',ebur128=metadata=1"`
-		[ $? -ne 0 ] && { report "${RED}Volume analysis for $input_movie exited with $?." ; continue ;};
+		[ $? -ne 0 ] && { report -wt "Volume analysis for $input_movie exited with $?." ; continue ;};
 		for i in $(echo "$volume_data" | xargs); do
 			[ "$i" != "" ] && integrated_loudness="$i"
 		done
@@ -33,13 +33,13 @@ while [ "$*" != "" ] ; do
 		echo ADJUSTMENT "$adjustment"
 		# test to see if adjustment is at least 1dB, else skip
 		if [ `echo "$adjustment < 1" |bc` -eq 1 -a `echo "$adjustment > -1" |bc` -eq 1 ] ; then
-			report "${GREEN}Integrated loudness for $name is ${integrated_loudness}dB. Reference is $reference. No adjustment is needed for ${name}, skipping.${NC}"
+			report -dt "Integrated loudness for $name is ${integrated_loudness}dB. Reference is $reference. No adjustment is needed for ${name}, skipping."
 		else
-			report "${GREEN}Integrated loudness for $name is ${integrated_loudness}dB. Reference is $reference. Will adjust by ${adjustment}dB.${NC}"
-			report "${GREEN}Generating $output_movie ...${NC}"
+			report -dt "Integrated loudness for $name is ${integrated_loudness}dB. Reference is $reference. Will adjust by ${adjustment}dB."
+			report -dt "Generating $output_movie ..."
 			cmd="ffmpeg -i '$input_movie' $ffmpeg_opts -af volume=${adjustment}dB '$output_movie'"
 			eval "$cmd"
-		    report "${GREEN} `basename $0` is done with ${name}.${NC}"
+		    report -dt " `basename $0` is done with ${name}."
 		fi
 	fi
 	shift

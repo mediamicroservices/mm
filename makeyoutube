@@ -43,7 +43,7 @@ while [ "$*" != ""  -o "$once" = "y" ] ; do
 	mediaid=`basename "$1" | cut -d. -f1`
 
 	youtubeoutput="$outputdir/${mediaid%.*}.mp4"
-	[ -s "$youtubeoutput" ] && { report "${RED}WARNING $youtubeoutput already exists, skipping transcode${NC}" ; exit 1 ;};
+	[ -s "$youtubeoutput" ] && { report -wt "WARNING $youtubeoutput already exists, skipping transcode" ; exit 1 ;};
 	mkdir -p "$outputdir"
 	get_height "$sourcefile"
 	get_width "$sourcefile"
@@ -72,7 +72,7 @@ while [ "$*" != ""  -o "$once" = "y" ] ; do
 		inputoptions+=" -report"
 	fi
 	makeyoutubecommand="ffmpeg $inputoptions -i \"$sourcefile\" $middleoptions \"$youtubeoutput\""
-	report "${GREEN}Running: $makeyoutubecommand${NC}"
+	report -dt "Running: $makeyoutubecommand"
 	eval "$makeyoutubecommand"
 	chapterlist=$(ffmpeg -i "$sourcefile" 2>&1 | grep "Chapter #0." | awk '{print $4}' | tr -d "\n" | sed '$s/.$//') && { chaptered="Y" ; report "Found chapters found in $sourcefile" ;};
 	if [ chaptered="Y" ] ; then
@@ -81,7 +81,7 @@ while [ "$*" != ""  -o "$once" = "y" ] ; do
 		fi
 		#-force_key_frames $chapterlist
 		segmentcommand="ffmpeg $inputoptions -i \"$sourcefile\" $middleoptions -r:v ntsc -map 0:v -map 0:a -f segment -segment_times $chapterlist -reset_timestamps 1 -segment_start_number 1 -segment_time_delta 0.05 \"${youtubeoutput%.*}_S%02d.mp4\""
-		report "${GREEN}Running: $segmentcommand"
+		report -dt "Running: $segmentcommand"
 		eval "$segmentcommand"
 	fi
 	shift

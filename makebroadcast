@@ -35,9 +35,9 @@ while [ "$*" != ""  -o "$once" = "y" ] ; do
 	mediaid=`basename "$input" | cut -d. -f1`
 	
 	servicefile="$outputdir/${mediaid%.*}.mov"
-	[ -s "$servicefile" ] && { report "${RED}WARNING $servicefile already exists, skipping transcode${NC}" ; shift ; continue ;};
+	[ -s "$servicefile" ] && { report -wt "WARNING $servicefile already exists, skipping transcode" ; shift ; continue ;};
 
-	report "${GREEN}STATUS Transcoding for Omneon compliance.${NC}"
+	report -dt "STATUS Transcoding for Omneon compliance."
 	ffmpeg_opts=" -r ntsc"
 	ffmpeg_opts+=" $audiomapping -ac 2"
 
@@ -65,10 +65,10 @@ while [ "$*" != ""  -o "$once" = "y" ] ; do
 		echo "Report written to \"${reportfile}\"" >> "${logdir}/${reportfile}"
 		echo "Command line:" >> "${logdir}/${reportfile}"
 	fi
-	report "${GREEN}Running: ${ffmpeg_command}${NC}"
+	report -dt "Running: ${ffmpeg_command}"
 	echo "$ffmpeg_command" >> "${logdir}/${reportfile}"
 	eval "$ffmpeg_command 2> >(tee -a ${logdir}/${reportfile} >&2)"
 	ffmpeg_err="$?"
-	[ "$ffmpeg_err" -gt "0" ] && { report "${RED}ffmpeg failed with error ${ffmpeg_err}${NC}" && exit 1;};
+	[ "$ffmpeg_err" -gt "0" ] && { report -wt "ffmpeg failed with error ${ffmpeg_err}" && exit 1;};
 	shift
 done

@@ -66,8 +66,8 @@ ask_mediaid
 ask_input
 
 if [ "$audiodecision" = "" ] ; then
-	echo "${BLUE}Select an audio strategy? ${NC}"
-	PS3="${BLUE}Selection? ${NC}"
+	report -q "Select an audio strategy? "
+	PS3="Selection? "
 	select audiodecision in "Default audio mapping [first audio track used for stereo output]" "Only use left of the first audio track [for 21st Century]"
 	do
 		break
@@ -75,8 +75,8 @@ if [ "$audiodecision" = "" ] ; then
 fi
 
 if [ "$cleanupdecision" = "" ] ; then
-	echo "${BLUE}Select an cleanup strategy? ${NC}"
-	PS3="${BLUE}Selection? ${NC}"
+	report -q "Select an cleanup strategy? "
+	PS3="Selection? "
 	select cleanupdecision in "Leave source file where it is." "Remove source file after successful ingest"
 	do
 		break
@@ -88,7 +88,8 @@ if [ "$cleanupdecision" = "" ] ; then
 fi
 
 if [ "$priority" = "" ] ; then
-	PS3="${BLUE}What do you want to do? ${NC}"
+	report -q "Select an multitasking strategy? "
+	PS3="Selection? "
 	select priority in "put in queue" "start now"
 	do
 		break
@@ -100,14 +101,14 @@ fi
 if [ "$blackframetest" = "Y" ] ; then
 	black_at_ends "$input"
 	if [ "$head_black" -gt "30" ] ; then
-	    report "${RED}WARNING - There are at least $head_black frames of black at the beginning of ${input}${NC}"
-	    printf "Enter q to quit, any other key to continue: "
+	    report -wt "WARNING - There are at least $head_black frames of black at the beginning of ${input}"
+	    report -qn "Enter q to quit, any other key to continue: "
 	    read a1
 	    [ "$a1" == "q" ] && exit 0
 	fi
 	if [ "$tail_black" -gt "30" ] ; then
-	    report "${RED}WARNING - There are at least $tail_black frames of black at the end of ${input}${NC}"
-	    printf "Enter q to quit, any other key to continue: "
+	    report -wt "WARNING - There are at least $tail_black frames of black at the end of ${input}"
+	    report -qn "Enter q to quit, any other key to continue: "
 	    read a2
 	    [ "$a2" == "q" ] && exit 0
 	fi
@@ -116,8 +117,8 @@ fi
 objectsdir="$OUTDIR_INGESTFILE/$mediaid/objects"
 
 # check for existing output
-[ -d "$OUTDIR_INGESTFILE/$mediaid" ] && report "${RED}It looks like $mediaid was already ingested. If you want to overwrite the existing one please delete $OUTDIR_INGESTFILE/$mediaid first and then try again.${NC}" && exit 1
-[ -d "$AIP_STORAGE/$mediaid" ] && report "${RED}It looks like $mediaid was already ingested. If you want to overwrite the existing one please delete $AIP_STORAGE/$mediaid first and then try again.${NC}" && exit 1
+[ -d "$OUTDIR_INGESTFILE/$mediaid" ] && report -wt "It looks like $mediaid was already ingested. If you want to overwrite the existing one please delete $OUTDIR_INGESTFILE/$mediaid first and then try again." && exit 1
+[ -d "$AIP_STORAGE/$mediaid" ] && report -wt "It looks like $mediaid was already ingested. If you want to overwrite the existing one please delete $AIP_STORAGE/$mediaid first and then try again." && exit 1
 
 # queue handling
 if [ "$priority" = "put in queue" ] ; then
@@ -145,11 +146,11 @@ mkdir -p "$submissiondocdir"
 start=`get_iso8601`
 
 # rsync
-report "${GREEN}STATUS Copying the original file to library storage at $objectsdir.${NC}"
+report -dt "STATUS Copying the original file to library storage at $objectsdir."
 rsync -av --progress --log-file="$logdir/rsync_$(get_iso8601_c)_$(basename $0)_${version}.txt" "$input" "$objectsdir/"
 
 rsync_err="$?"
-[ "$rsync_err" -gt "0" ] && report "${RED}rsync failed with error ${rsync_err}${NC}" && exit 1
+[ "$rsync_err" -gt "0" ] && report -wt "rsync failed with error ${rsync_err}" && exit 1
 
 # transcode
 if [ "$audiodecision" == "Only use left of the first audio track [for 21st Century]" -o "$audiodecision" == "left" ] ; then
@@ -160,26 +161,26 @@ fi
 
 # upload to omneon
 if [ "$deliverytoomneon" == "Y" ] ; then
-	report "${GREEN}STATUS Uploading $servicefile to the OMNEON.${NC}"
+	report -dt "STATUS Uploading $servicefile to the OMNEON."
 	"$scriptdir/uploadomneon" "$objectsdir/service/${mediaid%.*}.mov"
 fi
 
 # access copies
 if [ "$makeaccesscopies" == "Y" ] ; then
-	report "${GREEN}STATUS Making access copies.${NC}"
+	report -dt "STATUS Making access copies."
 	"$scriptdir/makedvd" "$OUTDIR_INGESTFILE/$mediaid"
 	"$scriptdir/makeyoutube" "$OUTDIR_INGESTFILE/$mediaid"
 	if [ "$deliveraccesscopies" = "Y" ] ; then
 		cp -av "$OUTDIR_INGESTFILE/$mediaid/objects/access/youtube_up/" "$YOUTUBEDELIVER/"
 	fi
 	if [ `echo "$mediaid" | grep "$REGEX4PODCAST"` ] ; then
-		report "${GREEN}${media} qualifies for podcast creation.${NC}"
+		report -dt "${media} qualifies for podcast creation."
 		sh "$scriptdir/makepodcast" "$OUTDIR_INGESTFILE/$mediaid"
 		if [ "$deliveraccesscopies" == "Y" ] ; then
 			cp -av "$OUTDIR_INGESTFILE/$mediaid/objects/access/podcast/" "$PODCASTDELIVER/"
 		fi
 	else
-		report "${BLUE}${media} does NOT qualify for podcast creation, skipping.${NC}"
+		report -dt "${media} does NOT qualify for podcast creation, skipping."
 	fi
 fi
 end=`get_iso8601`
@@ -193,14 +194,14 @@ echo "datetime_end: ${end}" >> "$logdir/capture.log"
 if [ "$deliverytoaipstorage" == "Y" ] ; then
 	rsync -av --progress --remove-source-files "$OUTDIR_INGESTFILE/$mediaid" "$AIP_STORAGE/"
 	[ `du -s "$OUTDIR_INGESTFILE/$mediaid" | awk '{print $1}'` = "0" ] && rm -r "$OUTDIR_INGESTFILE/$mediaid"
-	report "${GREEN}STATUS Done. Final package has been delivered to $AIP_STORAGE/${mediaid}${NC}"
+	report -dt "STATUS Done. Final package has been delivered to $AIP_STORAGE/${mediaid}"
 fi
 
 if [ "$cleanup" == "Y" ] ; then
 	if [ "$rsync_err" -gt "0" ] ; then
-		report "${RED}Cancelling requested deletion of source file, not looking safe.${NC}"
+		report -wt "Cancelling requested deletion of source file, not looking safe."
 	else
-		report "${GREEN}Removing the source file from ${input} as requested.${NC}"
+		report -dt "Removing the source file from ${input} as requested."
 		rm -f "$input"
 	fi
 fi
