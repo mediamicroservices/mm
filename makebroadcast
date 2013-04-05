@@ -3,9 +3,10 @@
 # make broadcast version
 
 # command-line options to set mediaid and original variables
-while getopts l opt ; do
+while getopts lc opt ; do
 	case $opt in
 		l) audiomapping=" -map_audio_channel 0:1:0:0:1:0 -map_audio_channel 0:1:0:0:1:1 " ;;
+		c) cropdetect="Y" ;;
 	esac
 done
 shift $(( ${OPTIND} - 1 ))
@@ -52,15 +53,25 @@ while [ "$*" != ""  -o "$once" = "y" ] ; do
 	if [ "$codec_tag_string" = "xd5b" ] ; then
 		ffmpeg_opts+=" -c:v copy"
 	else
-		ffmpeg_opts+=" -vf 'pad=ih*16/9:ih:(ow-iw)/2:(oh-ih)/2,scale=1920:1080:interl=1'"
-		ffmpeg_opts+=" -target xdcamhd422 -vtag xd5b -tff"
+		if [ "$cropdetect" = "Y" ] ; then
+			get_cropdetection "$sourcefile"
+			echo YEAHYAEAH
+			if [ -n "$CROPADJ" ] ;then
+				ffmpeg_opts+=" -vf '${CROPADJ},pad=ih*16/9:ih:(ow-iw)/2:(oh-ih)/2,scale=1920:1080:interl=1'"
+			else
+				ffmpeg_opts+=" -vf 'pad=ih*16/9:ih:(ow-iw)/2:(oh-ih)/2,scale=1920:1080:interl=1'"
+			fi
+		else
+			ffmpeg_opts+=" -vf 'pad=ih*16/9:ih:(ow-iw)/2:(oh-ih)/2,scale=1920:1080:interl=1'"
+		fi
+		ffmpeg_opts+=" -target xdcamhd422 -vtag xd5b -tff -aspect 16:9 -threads 4"
 	fi
 
 	# add audio options
 	ffmpeg_opts+=" -acodec pcm_s24le -ar 48k -ac 2"
 
 	# set input options for ffmpeg
-	inputoptions=" -y"
+	inputoptions=" -y -threads 4"
 	mkdir -p "$outputdir"
 	ffmpeg_command="ffmbc $inputoptions -i \"$sourcefile\" $ffmpeg_opts \"$servicefile\""
 	# log ffmpeg process
