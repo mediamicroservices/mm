@@ -5,11 +5,10 @@
 # command-line options to set mediaid and original variables
 while getopts l opt ; do
 	case $opt in
-		l)
-		audiomapping=" -map_audio_channel 0:1:0:0:1:0 -map_audio_channel 0:1:0:0:1:1 "
-		shift ;;
+		l) audiomapping=" -map_audio_channel 0:1:0:0:1:0 -map_audio_channel 0:1:0:0:1:1 " ;;
 	esac
 done
+shift $(( ${OPTIND} - 1 ))
 
 version="1.2"
 # history
