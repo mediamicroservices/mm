@@ -207,3 +207,10 @@ get_maxdvdbitrate(){
 		MAXDVDBITRATE="$CAPDVDBITRATE"
 	fi
 }
+
+has_first_two_tracks_mono(){
+	[ $(ffprobe 2>/dev/null "$1" -show_streams | grep -c "codec_type=audio") -ge 2 ] && \
+	[ $(ffprobe 2>/dev/null "$1" -show_streams -select_streams a:0 -of compact=p=0 | grep -o "channels=[0-9]*" | cut -d= -f2) = "1" ] && \
+	[ $(ffprobe 2>/dev/null "$1" -show_streams -select_streams a:1 -of compact=p=0 | grep -o "channels=[0-9]*" | cut -d= -f2) = "1" ] && \
+	MULTIMONO="Y"
+}

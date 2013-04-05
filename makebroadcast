@@ -39,10 +39,17 @@ while [ "$*" != ""  -o "$once" = "y" ] ; do
 
 	report -dt "STATUS Transcoding for Omneon compliance."
 	ffmpeg_opts=" -r ntsc"
-	ffmpeg_opts+=" $audiomapping -ac 2"
-
+	if [ -n "$audiomapping" ] ; then
+		ffmpeg_opts+=" $audiomapping"
+	else
+		has_first_two_tracks_mono "$sourcefile"
+		if [ "$MULTIMONO" = "Y" ] ; then
+			audiomapping=" -map_audio_channel 0.1:0:0.1:0 -map_audio_channel 0.2:0:0.1:1 "
+			ffmpeg_opts+=" $audiomapping"
+		fi
+	fi
 	# choose video encoding strategy, if source is xdcam 50 mb/sec ntsc then copy the video, else transcode
-	get_codectagstring="$sourcefile"
+	get_codectagstring "$sourcefile"
 	if [ "$codec_tag_string" = "xd5b" ] ; then
 		ffmpeg_opts+=" -c:v copy"
 	else
