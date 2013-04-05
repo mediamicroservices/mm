@@ -2,9 +2,9 @@
 # xdcamingest
 # ingest an xdcam disc, make a package, and deliver select files
 scriptdir=`dirname "$0"`
-. "$scriptdir/variables"
-. "$scriptdir/functions"
-[ ! -f "$scriptdir/variables" -o ! -f "$scriptdir/functions" ] && { report -wt "Missing '$scriptdir/variables' and/or '$scriptdir/functions'. Exiting." ; exit 1 ;};
+. "$scriptdir/mmvariables"
+. "$scriptdir/mmfunctions"
+[ ! -f "$scriptdir/mmvariables" -o ! -f "$scriptdir/mmfunctions" ] && { report -wt "Missing '$scriptdir/mmvariables' and/or '$scriptdir/mmfunctions'. Exiting." ; exit 1 ;};
 
 usage(){
 	echo

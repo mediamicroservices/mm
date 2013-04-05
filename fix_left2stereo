@@ -2,8 +2,8 @@
 # left 2 stereo mix
 
 scriptdir=`dirname "$0"`
-. "$scriptdir/variables"
-. "$scriptdir/functions"
+. "$scriptdir/mmvariables"
+. "$scriptdir/mmfunctions"
 
 suffix="_left2stereo"
 

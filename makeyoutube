@@ -4,9 +4,9 @@
 version="1.0"
 
 scriptdir=`dirname "$0"`
-. "$scriptdir/variables"
-. "$scriptdir/functions"
-[ ! -f "$scriptdir/variables" -o ! -f "$scriptdir/functions" ] && { echo "Missing '$scriptdir/variables' and/or '$scriptdir/functions'. Exiting." ; exit 1 ;};
+. "$scriptdir/mmvariables"
+. "$scriptdir/mmfunctions"
+[ ! -f "$scriptdir/mmvariables" -o ! -f "$scriptdir/mmfunctions" ] && { echo "Missing '$scriptdir/mmvariables' and/or '$scriptdir/mmfunctions'. Exiting." ; exit 1 ;};
 
 usage(){
 	echo

@@ -33,7 +33,6 @@ fix_left2stereo
 	Arguments:		one video file with .mxf or .mov extension
 	Example:		fix_left2stereo /path/to/file1.mxf /path/to/file1.mov
 	Description:		The script will adjust stereo audio to the left channel.
-	Used by:		This script is mostly used by other processes and preservation staff.
 
 
 fix_rewrap
@@ -41,7 +40,6 @@ fix_rewrap
 	Arguments:		one video file with .mxf or .mov extension
 	Example:		fix_rewrap /path/to/file1.mxf /path/to/file1.mov
 	Description:		The script will change the wrapper of a video file.
-	Used by:		This script is mostly used by other processes and preservation staff.
 
 
 fix_volume
@@ -50,14 +48,6 @@ fix_volume
 	Example:		fix_volume /path/to/file1.mxf /path/to/file1.mov
 	Description			The script will evaluate the audio of a video file to determine 
 					the difference and adjust as needed. 
-	Used by:		This script is mostly used by other processes and preservation staff.
-
-
-functions
-	
-	Description:	The script contains the full code of functions performed within other scripts. 
-					The functions script allows other scripts to succinctly recall specific functions.
-	Used by:		This script is exclusively used by other scripts.
 
 
 ingestfile
@@ -65,7 +55,7 @@ ingestfile
 	Arguments:		one or many audiovisual files
 	Example:		ingestfile /path/to/file1.mov /path/to/file2.mov
 	Description:		The script will package, transcode, and ingest an audiovisual file. This script
-					makes use of several functions described in the functions script.
+					makes use of several functions described in the mmfunctions script.
 
 
 install
@@ -94,7 +84,6 @@ makemetadata
 	Arguments:		
 	Example:		
 	Description:
-	Used by:
 
 
 makepodcast

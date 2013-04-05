@@ -2,9 +2,9 @@
 # blackatends
 # Accepts one or many video files as an input and determines how many frames of black are at the beginning and at the end
 scriptdir=`dirname "$0"`
-. "$scriptdir/variables"
-. "$scriptdir/functions"
-[ ! -f "$scriptdir/variables" -o ! -f "$scriptdir/functions" ] && { echo "Missing '$scriptdir/variables' and/or '$scriptdir/functions'. Exiting." ; exit 1 ;};
+. "$scriptdir/mmvariables"
+. "$scriptdir/mmfunctions"
+[ ! -f "$scriptdir/mmvariables" -o ! -f "$scriptdir/mmfunctions" ] && { echo "Missing '$scriptdir/mmvariables' and/or '$scriptdir/mmfunctions'. Exiting." ; exit 1 ;};
 
 [ "$#" = 0 ] && { ask_input ; once="y" ;};
 

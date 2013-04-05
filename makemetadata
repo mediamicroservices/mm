@@ -2,8 +2,8 @@
 # make dvd
 
 scriptdir=`dirname "$0"`
-. "$scriptdir/variables"
-. "$scriptdir/functions"
+. "$scriptdir/mmvariables"
+. "$scriptdir/mmfunctions"
 
 usage(){
 	echo
