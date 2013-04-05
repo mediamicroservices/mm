@@ -3,32 +3,29 @@
 # This script presents an index of microservices along with their options and definitions.
 
 echo "
- 
+
 barcode_interpret
- 
+
 	Arguments:		one or many scanned interleaved 2/5 barcode values
-	Example:		
 	Description:		The script will translate the scanned barcode into human a
-					readable numerical value and retrieve the associated media ID.
-	Used by:		This script is mostly used by other processes and preservation staff.
+					readable numerical value and retrieve the associated identifiers.
+
 
 blackatend
- 
- 	Arguments: 		one or many video files.
- 	Example:		blackatend /path/to/file1.mov /path/to/file2.mov
- 	Description:		The script will decode the first and last few seconds of the file
- 				and report on the number of black frames at each end.
- 	Used by:		This script is mostly used by other scripts such as ingestfile.
- 	
- 		
+
+	Arguments: 		one or many video files.
+	Example:		blackatend /path/to/file1.mov /path/to/file2.mov
+	Description:		The script will decode the first and last few seconds of the file
+				and report on the number of black frames at each end.
+
+
 checksumpackage
  
- 	Arguments: 		one or many Archive Information Packages (AIP)
- 	Example:		checksumpackage /path/to/package1 /path/to/package2
- 	Description:		The script will use md5deep to produce a checksum.md5 file for
- 				AIPs to help facilitate file integrity checks during long
- 				term digital storage.
- 	Used by:		This script is mostly used by other processes and preservation staff.
+	Arguments: 		one or many Archive Information Packages (AIP)
+	Example:		checksumpackage /path/to/package1 /path/to/package2
+	Description:		The script will use md5deep to produce a checksum.md5 file for
+				AIPs to help facilitate file integrity checks during long
+				term digital storage.
 
 
 fix_left2stereo
@@ -38,6 +35,7 @@ fix_left2stereo
 	Description:		The script will adjust stereo audio to the left channel.
 	Used by:		This script is mostly used by other processes and preservation staff.
 
+
 fix_rewrap
 	
 	Arguments:		one video file with .mxf or .mov extension
@@ -45,7 +43,7 @@ fix_rewrap
 	Description:		The script will change the wrapper of a video file.
 	Used by:		This script is mostly used by other processes and preservation staff.
 
- 	
+
 fix_volume
 
 	Arguments:		one video file with .mxf or .mov extension
@@ -54,11 +52,13 @@ fix_volume
 					the difference and adjust as needed. 
 	Used by:		This script is mostly used by other processes and preservation staff.
 
+
 functions
 	
 	Description:	The script contains the full code of functions performed within other scripts. 
 					The functions script allows other scripts to succinctly recall specific functions.
 	Used by:		This script is exclusively used by other scripts.
+
 
 ingestfile
 
@@ -66,14 +66,13 @@ ingestfile
 	Example:		ingestfile /path/to/file1.mov /path/to/file2.mov
 	Description:		The script will package, transcode, and ingest an audiovisual file. This script
 					makes use of several functions described in the functions script.
-	Used by:		This script is used by preservation staff.
+
 
 install
 
-	Arguments:	
+	Arguments:
 	Example:
 	Description:
-	Used by:
 
 makebroadcast
 
@@ -81,14 +80,14 @@ makebroadcast
 	Example:		makebroadcast /path/to/file1.mov /path/to/file2.mov
 	Description:			The script will create a broadcast version of a video file. Version 1.2 
 					reverts the video file to .mov and ffmbc.
-	Used by:		This script is mostly used by other processes and preservation staff.
+
 
 makedvd
 	
 	Arguments:		one or many video files.
 	Example:		makedvd /path/to/file1.mov /path/to/file2.mov
 	Description:			The script will create and label a dvd version of a video file.
-	Used by:		This script is mostly used by other processes and preservation staff.
+
 
 makemetadata
 
@@ -97,48 +96,44 @@ makemetadata
 	Description:
 	Used by:
 
+
 makepodcast
 
 	Arguments:		one or many video files.
 	Example:		makepodcast /path/to/file1.mov /path/to/file2.mov
 	Description:			The script will create a video file suitable for podcast.
-	Used by:		This script is mostly used by other processes and preservation staff.
+
 
 makeyoutube
 
 	Arguments: 		one or many video files.
 	Example:		makeyoutube /path/to/file1.mov /path/to/file2.mov
 	Description:		The script will create a video file suitable for youtube upload.
-	Used by:		This script is mostly used by other processes and preservation staff.
 
-quickcompare 	
- 	
- 	Arguments:		two files.
-	Example:
+
+quickcompare
+
+	Arguments:		two files.
 	Description:		The script will quickly compare two files.
-	Used by:		This script is used by preservation staff.
-	
+
+
 removeDSStore
- 	
- 	Arguments: 		one or many Archive Information Packages (AIP)
- 	Example:		removeDSStore /path/to/package1 /path/to/package2
- 	Description:		The script will remove .DS_Store files from
- 				 AIPs because they are annoying.
- 	Used by:		This script is mainly used by other processes and preservation staff.
- 	
- 	"
- 	
+
+	Arguments: 		one or many Archive Information Packages (AIP)
+	Example:		removeDSStore /path/to/package1 /path/to/package2
+	Description:		The script will remove .DS_Store files from
+				 AIPs because they are annoying.
+
 uploadomneon
 
 	Arguments:		one or many video files.
 	Example:		uploadomneon /path/to/file1.mov /path/to/file2.mov
 	Description:		The script will prepare and upload a video file to the Omneon.
-	Used by:		This script is used by preservation staff.
+
 
 xdcamingest
 
-	Arguments:		one xdcam disc file.
-	Example:
-	Description:		The script will ingest an xdcam disc, make a package, and deliver select files.
-	Used by:		This script is used by preservation staff.
-	
+	Arguments:		none. The script is only run interactively.
+	Description:		The script will ingest an xdcam disc, make a package, and deliver select files.	
+"
+
