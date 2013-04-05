@@ -214,3 +214,20 @@ has_first_two_tracks_mono(){
 	[ $(ffprobe 2>/dev/null "$1" -show_streams -select_streams a:1 -of compact=p=0 | grep -o "channels=[0-9]*" | cut -d= -f2) = "1" ] && \
 	MULTIMONO="Y"
 }
+
+get_volume_adjustment(){
+	reference=-23
+	volume_data=`ffprobe -v error -of compact=p=0:nk=1 -show_entries frame=metadata:tags=lavfi.r128.I -f lavfi "amovie='${input_movie}',ebur128=metadata=1"`
+	[ $? -ne 0 ] && { report -wt "Volume analysis for $input_movie exited with $?." ; exit ;};
+	for i in $(echo "$volume_data" | xargs); do
+		[ "$i" != "" ] && integrated_loudness="$i"
+	done
+	VOLADJ=`echo "$reference - $integrated_loudness" | bc`
+	# test to see if adjustment is at least 1dB, else skip
+	if [ `echo "$VOLADJ < 1" |bc` -eq 1 -a `echo "$VOLADJ > -1" |bc` -eq 1 ] ; then
+		report -dt "Integrated loudness for $name is ${integrated_loudness}dB. Reference is ${reference}dB. No adjustment is needed for ${name}, skipping."
+		VOLADJ=""
+	else
+		report -dt "Integrated loudness for $name is ${integrated_loudness}dB. Reference is ${reference}dB. Will adjust by ${VOLADJ}dB."
+	fi
+}

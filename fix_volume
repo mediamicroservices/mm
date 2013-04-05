@@ -3,7 +3,6 @@
 
 # local variables
 suffix="_voladj"
-reference=-23
 
 scriptdir=`dirname "$0"`
 . "$scriptdir/mmvariables"
@@ -16,30 +15,22 @@ while [ "$*" != "" ] ; do
 	input_movie="$1"
 	name=`basename "$1"`
 	get_codectagstring
-	[ "$codec_tag_string" = "mpeg" ] && { ffmpeg_opts+=" -c:v copy -c:a pcm_s24le " ; extension="mxf" ; } ;
-	[ "$codec_tag_string" = "mpeg" ] || { ffmpeg_opts+=" -c:v copy -c:a pcm_s24le " ; extension="mov" ; } ;
+	[ "$codec_tag_string" = "mpeg" ] && { ffmpeg_opts+=" -c:v copy -c:a pcm_s24le" ; extension="mxf" ; } ;
+	[ "$codec_tag_string" = "mpeg" ] || { ffmpeg_opts+=" -c:v copy -c:a pcm_s24le" ; extension="mov" ; } ;
 	output_movie="${input_movie%.*}${suffix}.${extension}"
-
 	if [ -f "$output_movie" ] ; then
-		report -wt "The intended output of `basename $0` already exists. Skipping for now. Please delete \"${input_movie%.*}${suffix}.${extension}\" and rerun or figure out why you are trying to do this."
+		report -wt "The intended output of `basename $0` already exists. Skipping for now. Please delete \"$output_movie\" and rerun or figure out why you are trying to do this."
 	else
 		report -dt "Getting volume data for $name ..."
-		volume_data=`ffprobe -v error -of compact=p=0:nk=1 -show_entries frame=metadata:tags=lavfi.r128.I -f lavfi "amovie='${input_movie}',ebur128=metadata=1"`
-		[ $? -ne 0 ] && { report -wt "Volume analysis for $input_movie exited with $?." ; continue ;};
-		for i in $(echo "$volume_data" | xargs); do
-			[ "$i" != "" ] && integrated_loudness="$i"
-		done
-		adjustment=`echo "$reference - $integrated_loudness" | bc`
-		echo ADJUSTMENT "$adjustment"
-		# test to see if adjustment is at least 1dB, else skip
-		if [ `echo "$adjustment < 1" |bc` -eq 1 -a `echo "$adjustment > -1" |bc` -eq 1 ] ; then
-			report -dt "Integrated loudness for $name is ${integrated_loudness}dB. Reference is $reference. No adjustment is needed for ${name}, skipping."
-		else
-			report -dt "Integrated loudness for $name is ${integrated_loudness}dB. Reference is $reference. Will adjust by ${adjustment}dB."
+		get_volume_adjustment "$input_movie"
+		if [ -n "$VOLADJ" ] ; then
 			report -dt "Generating $output_movie ..."
-			cmd="ffmpeg -i '$input_movie' $ffmpeg_opts -af volume=${adjustment}dB '$output_movie'"
+			cmd="ffmpeg -i \"$input_movie\" $ffmpeg_opts -af volume=${VOLADJ}dB '$output_movie'"
+			report -dt "Running: $cmd"
 			eval "$cmd"
-			report -dt " `basename $0` is done with ${name}."
+			report -dst "Done with ${name}."
+		else
+			report -dst "Integrated loudness for $name is ${integrated_loudness}dB. Reference is $reference. No adjustment is needed for ${name}, skipping."
 		fi
 	fi
 	shift
