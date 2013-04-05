@@ -176,19 +176,19 @@ find_input (){
 }
 
 get_width(){
-	width=`ffprobe "$1" -show_streams -select_streams 0:v 2> /dev/null | grep width= | cut -d = -f 2`
+	width=`ffprobe "$1" -show_streams -select_streams v 2> /dev/null | grep width= | cut -d = -f 2`
 }
 
 get_height(){
-	height=`ffprobe "$1" -show_streams -select_streams 0:v 2> /dev/null | grep height= | cut -d = -f 2`
+	height=`ffprobe "$1" -show_streams -select_streams v 2> /dev/null | grep height= | cut -d = -f 2`
 }
 
 get_dar(){
-	dar=`ffprobe "$1" -show_streams -select_streams 0:v 2> /dev/null | grep display_aspect_ratio= | cut -d = -f 2 | sed 's|:|/|g'`
+	dar=`ffprobe "$1" -show_streams -select_streams v 2> /dev/null | grep display_aspect_ratio= | cut -d = -f 2 | sed 's|:|/|g'`
 }
 
 get_codectagstring(){
-	codec_tag_string=`ffprobe "$1" -show_streams -select_streams 0:v 2> /dev/null | grep codec_tag_string= | cut -d = -f 2`
+	codec_tag_string=`ffprobe "$1" -show_streams -select_streams v 2> /dev/null | grep codec_tag_string= | cut -d = -f 2`
 }
 
 get_duration(){
