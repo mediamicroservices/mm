@@ -14,7 +14,7 @@ cleanup(){
 }
 
 trap cleanup SIGHUP SIGINT SIGTERM
-log -b
+
 
 usage(){
     echo
@@ -35,7 +35,7 @@ while getopts ":hm:f:v:" opt; do
 	case "$opt" in
 		h) usage ;;
 		m) mediaid="$OPTARG";;
-		f) sourcefile="$OPTARG";;
+		f) input="$OPTARG" ; once="y" ;;
 		v) DVDLABELPREFIX="$OPTARG";;
 		*) echo "bad option -$OPTARG" ; usage ;;
 		:) echo "Option -$OPTARG requires an argument" ; exit 1 ;;
@@ -45,7 +45,7 @@ done
 shift $(( ${OPTIND} - 1 ))
 check_dependencies ffmpeg dvdauthor mkisofs
 
-[ "$#" = 0 ] && { ask_input ; once="y" ;};
+[ "$#" = 0 -a ! "$input" ] && { ask_input ; once="y" ;};
 
 while [ "$*" != ""  -o "$once" = "y" ] ; do
 	once="n"
@@ -58,6 +58,8 @@ while [ "$*" != ""  -o "$once" = "y" ] ; do
 
 	filename=`basename "$sourcefile"`
 	mediaid=`basename "$input" | cut -d. -f1`
+	
+log -b
 
 	isooutput="$outputdir/${mediaid%.*}.iso"
 	[ -s "$isooutput" ] && { report -wt "WARNING $isooutput already exists, skipping transcode" ; exit 1 ;};
