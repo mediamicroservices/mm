@@ -6,6 +6,21 @@ get_iso8601_c(){
     date +%Y%m%d-%I%M%S
 }
 
+log(){
+	logfile="/Users/database/Desktop/mm_log.txt"
+	OPTIND=1
+	while getopts ":bea" opt; do
+		case "$opt" in
+			b) status="start" ;;              # script is beginning
+			e) status="end"   ;;              # script is ending
+			a) status="abort" ;;              # script is aborted
+		esac
+	done
+	shift $(( ${OPTIND} - 1 ))
+	note="$1"
+	echo `get_iso8601`", $(basename $0), $status, $op, $mediaid, $note" >> "$logfile"
+}
+
 report(){
 		local RED="$(tput setaf 1)"   # Red      - For Warnings
 		local GREEN="$(tput setaf 2)" # Green    - For Declarations
