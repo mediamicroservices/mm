@@ -7,7 +7,7 @@ get_iso8601_c(){
 }
 
 log(){
-	logfile="/Users/database/Desktop/mm_log.txt"
+	logfile="$HOME/Library/Logs/mediamicroservices.log"
 	OPTIND=1
 	while getopts ":beac" opt; do
 		case "$opt" in
