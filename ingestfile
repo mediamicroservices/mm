@@ -20,7 +20,6 @@ cleanup(){
 }
 
 trap cleanup SIGHUP SIGINT SIGTERM
-log -b
 
 usage(){
 	echo
@@ -72,6 +71,8 @@ report "starting $SCRIPTNAME"
 ask_operator
 ask_mediaid
 ask_input
+
+log -b
 
 if [ "$audiodecision" = "" ] ; then
 	report -q "Select an audio strategy? "
