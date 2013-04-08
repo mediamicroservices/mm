@@ -1,7 +1,23 @@
 #!/bin/bash
 checksize=512000
 # quick file compare, not completely authoritative but decent in a short amount of time
+
+scriptdir=`dirname "$0"`
+. "$scriptdir/mmvariables"
+. "$scriptdir/mmfunctions"
+[ ! -f "$scriptdir/mmvariables" -o ! -f "$scriptdir/mmfunctions" ] && { echo "Missing '$scriptdir/mmvariables' and/or '$scriptdir/mmfunctions'. Exiting." ; exit 1 ;};
+
+cleanup(){
+	log -a "Process aborted"
+	exit 1
+}
+
+trap cleanup SIGHUP SIGINT SIGTERM
+log -b
+
 [ ! "$#" = "2" ] && { echo Use two possibly similar files are arguments. ; exit 1 ;};
 #[ ! `du "$1" | cut -f1` = `du "$2" | cut -f1` ] && echo The files are different sizes
 [ ! `head -c "$checksize" "$1" | md5` = `head -c "$checksize" "$2" | md5` ] && echo The first "$checksize" bytes have different md5s.
 [ ! `tail -c "$checksize" "$1" | md5` = `tail -c "$checksize" "$2" | md5` ] && echo The last "$checksize" bytes have different md5s.
+done
+log -e
