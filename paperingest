@@ -60,5 +60,5 @@ echo "operator: ${op}" >> "$submissionMetadataDir/operation_process.txt"
 echo "command: ${command}"  >> "$submissionMetadataDir/operation_process.txt"
   
 echo done scanning "$mediaid"
-done
+
 log -e
