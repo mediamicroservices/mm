@@ -6,6 +6,14 @@ scriptdir=`dirname "$0"`
 . "$scriptdir/mmfunctions"
 [ ! -f "$scriptdir/mmvariables" -o ! -f "$scriptdir/mmfunctions" ] && { report -wt "Missing '$scriptdir/mmvariables' and/or '$scriptdir/mmfunctions'. Exiting." ; exit 1 ;};
 
+cleanup(){
+	log -a "Process aborted"
+	exit 1
+}
+
+trap cleanup SIGHUP SIGINT SIGTERM
+log -b
+
 usage(){
 	echo
 	echo "$(basename $0) ${version}"
@@ -205,3 +213,4 @@ while true ; do
 		fi
 	fi
 done
+log -e

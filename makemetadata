@@ -5,6 +5,14 @@ scriptdir=`dirname "$0"`
 . "$scriptdir/mmvariables"
 . "$scriptdir/mmfunctions"
 
+cleanup(){
+	log -a "Process aborted"
+	exit 1
+}
+
+trap cleanup SIGHUP SIGINT SIGTERM
+log -b
+
 usage(){
 	echo
 	echo "$(basename $0) ${version}"
@@ -78,3 +86,4 @@ while [ "$*" != "" ] ; do
 	shift
 	counter=`expr "$counter" + 1`
 done
+log -e
