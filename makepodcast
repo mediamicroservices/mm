@@ -14,7 +14,6 @@ cleanup(){
 }
 
 trap cleanup SIGHUP SIGINT SIGTERM
-log -b
 
 usage(){
 	echo
@@ -37,6 +36,7 @@ while getopts ":hm:f:" opt; do
 		:) echo "Option -$OPTARG requires an argument" ; exit 1 ;;
 	esac
 done
+
 shift $(( ${OPTIND} - 1 ))
 
 [ "$#" = 0 -a ! "$input" ] && { ask_input ; once="y" ;};
@@ -51,6 +51,8 @@ while [ "$*" != ""  -o "$once" = "y" ] ; do
 
 	filename=`basename "$sourcefile"`
 	mediaid=`basename "$input" | cut -d. -f1`
+	
+log -b
 
 	podcastoutput="$outputdir/${mediaid%.*}_podcast.mov"
 	[ -s "$podcastoutput" ] && { report -wt "WARNING $podcastoutput already exists, skipping transcode" ; exit 1 ;};
