@@ -9,11 +9,12 @@ get_iso8601_c(){
 log(){
 	logfile="/Users/database/Desktop/mm_log.txt"
 	OPTIND=1
-	while getopts ":bea" opt; do
+	while getopts ":beac" opt; do
 		case "$opt" in
 			b) status="start" ;;              # script is beginning
 			e) status="end"   ;;              # script is ending
 			a) status="abort" ;;              # script is aborted
+			c) status="comment" ;;            # comment about what script is doing
 		esac
 	done
 	shift $(( ${OPTIND} - 1 ))
