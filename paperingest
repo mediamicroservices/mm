@@ -1,8 +1,8 @@
 #!/bin/bash
 
 scriptdir=`dirname "$0"`
-. "$scriptdir/variables"
-. "$scriptdir/functions"
+. "$scriptdir/mmvariables"
+. "$scriptdir/mmfunctions"
 
 cleanup(){
 	log -a "Process aborted"
@@ -17,16 +17,11 @@ ask_operator
 ask_mediaid
 
 if [ -d "$mediaid" ] ; then
-echo "It looks like this $mediaid was already scanned. If you want to overwrite the existing one please delete $mediaid first and then try again."
+	report -wdt "It looks like this $mediaid was already scanned. If you want to overwrite the existing one please delete $mediaid first and then try again."
 exit
 fi
 
-#this should give the free space in gigabytes
-freespace=`df -g $outputdir_paper | awk '{ print $4; }' | tail -n 1`
-if [ $freespace -lt 5 ]; then
-  echo "ERROR only $freespace gb free in this directory. This script requires at least 5"
-  exit 1
-fi
+free_space 5 "$outputdir_paper"
   
 origdir="$outputdir_paper/$mediaid/objects"
 submissionMetadataDir="$outputdir_paper/$mediaid/metadata/submissionDocumentation"
@@ -58,7 +53,7 @@ echo "os: ${os}" >> "$submissionMetadataDir/operation_process.txt"
 echo "identifier: ${mediaid}" >> "$submissionMetadataDir/operation_process.txt"
 echo "operator: ${op}" >> "$submissionMetadataDir/operation_process.txt"
 echo "command: ${command}"  >> "$submissionMetadataDir/operation_process.txt"
-  
+
 echo done scanning "$mediaid"
 
 log -e
