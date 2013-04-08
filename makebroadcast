@@ -8,9 +8,12 @@ while getopts lc opt ; do
 	case $opt in
 		l) audiomapping=" -map_audio_channel 0:1:0:0:1:0 -map_audio_channel 0:1:0:0:1:1 " ;;
 		c) cropdetect="Y" ;;
+		f) input="$OPTARG" ; once="y" ;;
 	esac
 done
 shift $(( ${OPTIND} - 1 ))
+
+[ "$#" = 0 -a ! "$input" ] && { ask_input ; once="y" ;};
 
 version="1.2"
 # history
@@ -28,9 +31,6 @@ cleanup(){
 }
 
 trap cleanup SIGHUP SIGINT SIGTERM
-log -b
-
-[ "$#" = 0 ] && { ask_input ; once="y" ;};
 
 while [ "$*" != ""  -o "$once" = "y" ] ; do
 	once="n"
@@ -42,6 +42,8 @@ while [ "$*" != ""  -o "$once" = "y" ] ; do
 
 	filename=`basename "$sourcefile"`
 	mediaid=`basename "$input" | cut -d. -f1`
+	
+log -b
 
 	servicefile="$outputdir/${mediaid%.*}.mov"
 	[ -s "$servicefile" ] && { report -wt "WARNING $servicefile already exists, skipping transcode" ; shift ; continue ;};
