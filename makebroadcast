@@ -2,7 +2,8 @@
 # makebroadcast
 # make broadcast version
 
-# command-line options to set mediaid and original variables
+# command-line options to set mediaid and original 
+OPTIND=1
 while getopts lc opt ; do
 	case $opt in
 		l) audiomapping=" -map_audio_channel 0:1:0:0:1:0 -map_audio_channel 0:1:0:0:1:1 " ;;
