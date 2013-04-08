@@ -1,5 +1,19 @@
 #!/bin/bash
 # @author Dave Rice
+
+scriptdir=`dirname "$0"`
+. "$scriptdir/mmvariables"
+. "$scriptdir/mmfunctions"
+[ ! -f "$scriptdir/mmvariables" -o ! -f "$scriptdir/mmfunctions" ] && { echo "Missing '$scriptdir/mmvariables' and/or '$scriptdir/mmfunctions'. Exiting." ; exit 1 ;};
+
+cleanup(){
+	log -a "Process aborted"
+	exit 1
+}
+
+trap cleanup SIGHUP SIGINT SIGTERM
+log -b
+
 while [ "$*" != "" ] ; do
 	target=$1
 	if [ -d "$target" ]; then
@@ -7,3 +21,4 @@ while [ "$*" != "" ] ; do
 	fi
 	shift
 done
+log -e
