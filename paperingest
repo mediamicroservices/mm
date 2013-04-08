@@ -16,7 +16,7 @@ ask_operator
 
 ask_mediaid
 
-if [ -d "$mediaid" ] ; then
+if [ -d "$outputdir_paper/$mediaid" ] ; then
 	report -wdt "It looks like this $mediaid was already scanned. If you want to overwrite the existing one please delete $mediaid first and then try again."
 exit
 fi

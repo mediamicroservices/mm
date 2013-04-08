@@ -19,5 +19,5 @@ log -b
 #[ ! `du "$1" | cut -f1` = `du "$2" | cut -f1` ] && echo The files are different sizes
 [ ! `head -c "$checksize" "$1" | md5` = `head -c "$checksize" "$2" | md5` ] && echo The first "$checksize" bytes have different md5s.
 [ ! `tail -c "$checksize" "$1" | md5` = `tail -c "$checksize" "$2" | md5` ] && echo The last "$checksize" bytes have different md5s.
-done
+
 log -e
