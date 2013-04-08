@@ -4,6 +4,13 @@ scriptdir=`dirname "$0"`
 . "$scriptdir/variables"
 . "$scriptdir/functions"
 
+cleanup(){
+	log -a "Process aborted"
+	exit 1
+}
+
+trap cleanup SIGHUP SIGINT SIGTERM
+log -b
 
 ask_operator
 
@@ -53,3 +60,5 @@ echo "operator: ${op}" >> "$submissionMetadataDir/operation_process.txt"
 echo "command: ${command}"  >> "$submissionMetadataDir/operation_process.txt"
   
 echo done scanning "$mediaid"
+done
+log -e
