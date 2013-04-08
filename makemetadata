@@ -23,6 +23,7 @@ usage(){
 }
 
 # command-line options to set mediaid and original variables
+OPTIND=1
 while getopts ":hm:" opt; do
 	case "$opt" in
 		h) usage ;;
