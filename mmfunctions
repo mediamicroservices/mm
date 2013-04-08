@@ -260,3 +260,16 @@ get_cropdetection(){
 	done
 	report -dt "Crop detection complete. Will crop by ${CROPADJ} (width,height,from_left,from_top) before scaling."
 }
+
+free_space(){
+	#this should give the free space in gigabytes
+	local space="$1"  #This value represents the space in gigabytes required for the script to run
+	local outputdir="$2"
+	[ ! -d "$outputdir" ] && { report -wt "The output directory [$outputdir] that free-space function is seeking does not exist." ; exit 1 ;};
+	[[ ! $space =~ ^-?[0-9]+$ ]] && { report -wt "Number is not an integer." ; exit 1 ;};
+	freespace=`df -g "$outputdir" | awk '{ print $4; }' | tail -n 1`
+	if [ $freespace -lt $space ]; then
+  	report -wts "ERROR only $freespace gb free in this directory. This script requires at least $space gigabytes"
+  	exit 1
+	fi
+}
