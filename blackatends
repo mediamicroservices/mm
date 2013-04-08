@@ -6,6 +6,14 @@ scriptdir=`dirname "$0"`
 . "$scriptdir/mmfunctions"
 [ ! -f "$scriptdir/mmvariables" -o ! -f "$scriptdir/mmfunctions" ] && { echo "Missing '$scriptdir/mmvariables' and/or '$scriptdir/mmfunctions'. Exiting." ; exit 1 ;};
 
+cleanup(){
+	log -a "Process aborted"
+	exit 1
+}
+
+trap cleanup SIGHUP SIGINT SIGTERM
+log -b
+
 [ "$#" = 0 ] && { ask_input ; once="y" ;};
 
 while [ "$*" != ""  -o "$once" = "y" ] ; do
@@ -14,3 +22,4 @@ while [ "$*" != ""  -o "$once" = "y" ] ; do
 	black_at_ends "$sourcefile"
 	shift
 done
+log -e

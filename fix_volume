@@ -9,6 +9,14 @@ scriptdir=`dirname "$0"`
 . "$scriptdir/mmfunctions"
 [ ! -f "$scriptdir/mmvariables" -o ! -f "$scriptdir/mmfunctions" ] && { echo "Missing '$scriptdir/mmvariables' and/or '$scriptdir/mmfunctions'. Exiting." ; exit 1 ;};
 
+cleanup(){
+	log -a "Process aborted"
+	exit 1
+}
+
+trap cleanup SIGHUP SIGINT SIGTERM
+log -b
+
 [ $# = 0 ] && { report -wt "You must supply one or many arguments. Usage: $(basename $0) [ file1 file2 ... ] ."; exit 2 ;};
 
 while [ "$*" != "" ] ; do
@@ -34,3 +42,4 @@ while [ "$*" != "" ] ; do
 	fi
 	shift
 done
+log -e

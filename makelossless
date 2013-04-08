@@ -4,6 +4,15 @@ scriptdir=`dirname "$0"`
 . "$scriptdir/functions"
 [ ! -f "$scriptdir/variables" -o ! -f "$scriptdir/functions" ] && { echo "Missing '$scriptdir/variables' and/or '$scriptdir/functions'. Exiting." ; exit 1 ;};
 check_dependencies ffmpeg muxmovie mediainfo
+
+cleanup(){
+	log -a "Process aborted"
+	exit 1
+}
+
+trap cleanup SIGHUP SIGINT SIGTERM
+log -b
+
 while [ "$*" != "" ] ; do
 	file="$1"
 	filename=`basename "$file"`
@@ -65,3 +74,4 @@ while [ "$*" != "" ] ; do
 	echo done with "$sourcefile"
 	shift
 done
+log -e

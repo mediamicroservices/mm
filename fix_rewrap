@@ -6,6 +6,14 @@ scriptdir=`dirname "$0"`
 . "$scriptdir/mmfunctions"
 [ ! -f "$scriptdir/mmvariables" -o ! -f "$scriptdir/mmfunctions" ] && { echo "Missing '$scriptdir/mmvariables' and/or '$scriptdir/mmfunctions'. Exiting." ; exit 1 ;};
 
+cleanup(){
+	log -a "Process aborted"
+	exit 1
+}
+
+trap cleanup SIGHUP SIGINT SIGTERM
+log -b
+
 if test $# != 1 ; then
 	report -wt "You must supply one argument. Refer to a file after calling the `basename $0` script."; exit
 fi
@@ -30,3 +38,4 @@ while [ "$*" != "" ] ; do
 	fi
 	shift
 done
+log -e
