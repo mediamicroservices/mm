@@ -27,10 +27,11 @@ usage(){
 }
 
 # command-line options to set mediaid and original variables
+OPTIND=1
 while getopts ":hm:f:t:ip" opt; do
 	case "$opt" in
 		h) usage ;;
-		f) sourcefile="$OPTARG";;
+		f) input="$OPTARG" ; once="y" ;;
 		i) OMNEONIP="$OPTARG" ;;
 		n) OMNEONPATH="$OPTARG" ;;
 		t) TMPDIR="$OPTARG" ;;
@@ -43,13 +44,16 @@ done
 [ ! -d "$OMNEONIP"] && echo "The Omneon IP must be set." && exit 1
 [ ! -d "$OMNEONPATH"] && echo "The Omneon Path must be set." && exit 1
 
-[ $# != 1 ] && { ask_input ; once="y" ;};
+shift $(( ${OPTIND} - 1 ))
+[ "$#" = 0 -a ! "$input" ] && { ask_input ; once="y" ;};
 
 while [ "$*" != ""  -o "$once" = "y" ] ; do
 once="n"
 [ "$#" != 0 ] && sourcefile="$1"
 removetmp="n"
 filename=`basename "$sourcefile"`
+
+log -b
 
 status=`ftp -a "$OMNEONIP" <<END_SCRIPT
 binary
