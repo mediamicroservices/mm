@@ -2,24 +2,29 @@
 # makebroadcast
 # make broadcast version
 
-# command-line options to set mediaid and original variables
+scriptdir=`dirname "$0"`
+. "$scriptdir/mmvariables"
+. "$scriptdir/mmfunctions"
+[ ! -f "$scriptdir/mmvariables" -o ! -f "$scriptdir/mmfunctions" ] && { echo "Missing '$scriptdir/mmvariables' and/or '$scriptdir/mmfunctions'. Exiting." ; exit 1 ;};
+
+
+# command-line options to set mediaid and original 
+OPTIND=1
 while getopts lc opt ; do
 	case $opt in
 		l) audiomapping=" -map_audio_channel 0:1:0:0:1:0 -map_audio_channel 0:1:0:0:1:1 " ;;
 		c) cropdetect="Y" ;;
+		f) input="$OPTARG" ; once="y" ;;
 	esac
 done
 shift $(( ${OPTIND} - 1 ))
+
+[ "$#" = 0 -a ! "$input" ] && { ask_input ; once="y" ;};
 
 version="1.2"
 # history
 # v 1.1 change from mov output to mxf output, force all output to hd
 # v 1.2 revert to mov and ffmbc
-
-scriptdir=`dirname "$0"`
-. "$scriptdir/mmvariables"
-. "$scriptdir/mmfunctions"
-[ ! -f "$scriptdir/mmvariables" -o ! -f "$scriptdir/mmfunctions" ] && { echo "Missing '$scriptdir/mmvariables' and/or '$scriptdir/mmfunctions'. Exiting." ; exit 1 ;};
 
 cleanup(){
 	log -a "Process aborted"
@@ -27,9 +32,6 @@ cleanup(){
 }
 
 trap cleanup SIGHUP SIGINT SIGTERM
-log -b
-
-[ "$#" = 0 ] && { ask_input ; once="y" ;};
 
 while [ "$*" != ""  -o "$once" = "y" ] ; do
 	once="n"
@@ -41,6 +43,8 @@ while [ "$*" != ""  -o "$once" = "y" ] ; do
 
 	filename=`basename "$sourcefile"`
 	mediaid=`basename "$input" | cut -d. -f1`
+	
+log -b
 
 	servicefile="$outputdir/${mediaid%.*}.mov"
 	[ -s "$servicefile" ] && { report -wt "WARNING $servicefile already exists, skipping transcode" ; shift ; continue ;};

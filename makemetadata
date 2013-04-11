@@ -1,5 +1,6 @@
 #!/bin/bash
-# make dvd
+# make metadata
+#produces errors on zero-sized files
 
 scriptdir=`dirname "$0"`
 . "$scriptdir/mmvariables"
@@ -11,7 +12,6 @@ cleanup(){
 }
 
 trap cleanup SIGHUP SIGINT SIGTERM
-log -b
 
 usage(){
 	echo
@@ -23,6 +23,7 @@ usage(){
 }
 
 # command-line options to set mediaid and original variables
+OPTIND=1
 while getopts ":hm:" opt; do
 	case "$opt" in
 		h) usage ;;
@@ -32,6 +33,8 @@ while getopts ":hm:" opt; do
 	esac
 done
 shift $(( ${OPTIND} - 1 ))
+
+log -b
 
 counter=0
 while [ "$*" != "" ] ; do

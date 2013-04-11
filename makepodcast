@@ -14,7 +14,6 @@ cleanup(){
 }
 
 trap cleanup SIGHUP SIGINT SIGTERM
-log -b
 
 usage(){
 	echo
@@ -27,18 +26,20 @@ usage(){
 }
 
 # command-line options to set mediaid and original variables
+OPTIND=1
 while getopts ":hm:f:" opt; do
 	case "$opt" in
 		h) usage ;;
 		m) mediaid="$OPTARG";;
-		f) sourcefile="$OPTARG";;
+		f) input="$OPTARG" ; once="y" ;;
 		\?) echo "Invalid option: -$OPTARG" ; exit 1 ;;
 		:) echo "Option -$OPTARG requires an argument" ; exit 1 ;;
 	esac
 done
+
 shift $(( ${OPTIND} - 1 ))
 
-[ "$#" = 0 ] && { ask_input ; once="y" ;};
+[ "$#" = 0 -a ! "$input" ] && { ask_input ; once="y" ;};
 
 while [ "$*" != ""  -o "$once" = "y" ] ; do
 	once="n"
@@ -50,6 +51,8 @@ while [ "$*" != ""  -o "$once" = "y" ] ; do
 
 	filename=`basename "$sourcefile"`
 	mediaid=`basename "$input" | cut -d. -f1`
+	
+log -b
 
 	podcastoutput="$outputdir/${mediaid%.*}_podcast.mov"
 	[ -s "$podcastoutput" ] && { report -wt "WARNING $podcastoutput already exists, skipping transcode" ; exit 1 ;};
