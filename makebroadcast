@@ -2,6 +2,12 @@
 # makebroadcast
 # make broadcast version
 
+scriptdir=`dirname "$0"`
+. "$scriptdir/mmvariables"
+. "$scriptdir/mmfunctions"
+[ ! -f "$scriptdir/mmvariables" -o ! -f "$scriptdir/mmfunctions" ] && { echo "Missing '$scriptdir/mmvariables' and/or '$scriptdir/mmfunctions'. Exiting." ; exit 1 ;};
+
+
 # command-line options to set mediaid and original 
 OPTIND=1
 while getopts lc opt ; do
@@ -19,11 +25,6 @@ version="1.2"
 # history
 # v 1.1 change from mov output to mxf output, force all output to hd
 # v 1.2 revert to mov and ffmbc
-
-scriptdir=`dirname "$0"`
-. "$scriptdir/mmvariables"
-. "$scriptdir/mmfunctions"
-[ ! -f "$scriptdir/mmvariables" -o ! -f "$scriptdir/mmfunctions" ] && { echo "Missing '$scriptdir/mmvariables' and/or '$scriptdir/mmfunctions'. Exiting." ; exit 1 ;};
 
 cleanup(){
 	log -a "Process aborted"
