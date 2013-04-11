@@ -1,4 +1,4 @@
-#!/bin/bash -x
+#!/bin/bash
 
 scriptdir=`dirname "$0"`
 . "$scriptdir/mmvariables"
@@ -29,10 +29,10 @@ shift $(( ${OPTIND} - 1 ))
 while [ "$*" != ""  -o "$once" = "y" ] ; do
 	once="n"
 	[ "$#" != 0 ] && input="$1"
-    [ -d "$1" ] && { outputdir="$1/objects/access/images" && logdir="$1/metadata/submissionDocumentation/logs" ;};
-    [ -f "$1" ] && { outputdir=`dirname "$1"`"/access/images" && logdir="`dirname "$1"`/service/logs" ;};
-    [ ! "$file" ] && { outputdir="$1/objects/access/images" && logdir="$1/metadata/submissionDocumentation/logs" ;};
-	find_input "$1"
+	[ -d "$input" ] && { outputdir="$input/objects/access/images" && logdir="$input/metadata/submissionDocumentation/logs" ;};
+	[ -f "$input" ] && { outputdir=`dirname "$input"`"/access/images" && logdir="`dirname "$input"`/access/logs" ;};
+	[ ! "$outputdir" ] && { outputdir="$input/objects/access/images" && logdir="$input/metadata/submissionDocumentation/logs" ;};
+	find_input "$input"
     
     
 	filename=`basename "$file"`
@@ -42,13 +42,14 @@ log -b
     
      if [ ! -s "$1/objects/access/images" ] ; then
 		IMAGECOUNT=10
-		INPUT="$1"
-		BASE=`basename $file`
-		DURATION=`ffprobe 2>/dev/null $file -show_format | grep duration | cut -d= -f2`
+		BASE=`basename "$sourcefile"`
+		DURATION=`ffprobe 2>/dev/null $sourcefile -show_format | grep duration | cut -d= -f2`
+		
 		mkdir -p "$outputdir"
 		 for IMAGENUMBER in `seq 1 "$IMAGECOUNT"` ; do
+		 echo "BASE $BASE DURATION $DURATION START $START"
  		 START=`echo "( $DURATION / ( $IMAGECOUNT + 1 )) * $IMAGENUMBER" | bc`
- 		 ffmpeg -ss "$START" -i $file -vf yadif,thumbnail=100 -frames:v 1 "$outputdir/${BASE%.*}_${IMAGENUMBER}.tiff"
+ 		 ffmpeg -ss "$START" -i $sourcefile -vf yadif,thumbnail=100 -frames:v 1 "$outputdir/${BASE%.*}_${IMAGENUMBER}.tiff"
  		 done	
  	fi
  	shift
