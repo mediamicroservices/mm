@@ -156,7 +156,7 @@ start=`get_iso8601`
 
 # rsync
 report -dt "STATUS Copying the original file to library storage at $objectsdir."
-rsync -av --progress --log-file="$logdir/rsync_$(get_iso8601_c)_$(basename $0)_${version}.txt" "$input" "$objectsdir/"
+rsync -rtv --progress --log-file="$logdir/rsync_$(get_iso8601_c)_$(basename $0)_${version}.txt" "$input" "$objectsdir/"
 
 rsync_err="$?"
 [ "$rsync_err" -gt "0" ] && report -wt "rsync failed with error ${rsync_err}" && exit 1
@@ -201,7 +201,7 @@ echo "datetime_end: ${end}" >> "$logdir/capture.log"
 
 # move and cleanup
 if [ "$deliverytoaipstorage" == "Y" ] ; then
-	rsync -av --progress --remove-source-files "$OUTDIR_INGESTFILE/$mediaid" "$AIP_STORAGE/"
+	rsync -rtv --progress --remove-source-files "$OUTDIR_INGESTFILE/$mediaid" "$AIP_STORAGE/"
 	[ `du -s "$OUTDIR_INGESTFILE/$mediaid" | awk '{print $1}'` = "0" ] && rm -r "$OUTDIR_INGESTFILE/$mediaid"
 	report -dt "STATUS Done. Final package has been delivered to $AIP_STORAGE/${mediaid}"
 fi

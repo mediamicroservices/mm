@@ -158,7 +158,7 @@ while true ; do
 			start=`date -u "+%Y%m%dT%H%M%SZ"`
 			mkdir -p "$OUTDIR_INGESTXDCAM/$deviceid1/object"
 			report -dt "copying disc..."
-			rsync -a --stats --progress --log-file="$OUTDIR_INGESTXDCAM/$deviceid1/object/cp.log" "/Volumes/${deck1}" "$OUTDIR_INGESTXDCAM/$deviceid1/object/"
+			rsync -rtv --stats --progress --log-file="$OUTDIR_INGESTXDCAM/$deviceid1/object/cp.log" "/Volumes/${deck1}" "$OUTDIR_INGESTXDCAM/$deviceid1/object/"
 			end=`date -u "+%Y%m%dT%H%M%SZ"`
 			hdiutil eject "/Volumes/${deck1}"
 
