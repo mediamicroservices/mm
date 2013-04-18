@@ -81,7 +81,7 @@ log -b
 	if [ "$logdir" != "" ] ; then
 		mkdir -p "$logdir"
 		export FFREPORT="file=${logdir}/%p_%t_$(basename $0)_${version}.txt"
-		inputoptions+=" -report"
+		inputoptions+=" -v warning -stats"
 	fi
 	#makeyoutubecommand="ffmpeg $inputoptions -i \"$sourcefile\" $middleoptions \"$youtubeoutput\""
 	#report -dt "Running: $makeyoutubecommand"
