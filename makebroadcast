@@ -5,7 +5,7 @@
 scriptdir=`dirname "$0"`
 . "$scriptdir/mmfunctions" || { echo "Missing '$scriptdir/mmfunctions'. Exiting." ; exit 1 ;};
 
-# command-line options to set mediaid and original 
+# command-line options to set mediaid and original variables
 OPTIND=1
 while getopts lc opt ; do
     case $opt in
