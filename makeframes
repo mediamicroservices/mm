@@ -1,30 +1,52 @@
-#!/bin/bash 
+#!/bin/bash
 
 scriptdir=`dirname "$0"`
 . "$scriptdir/mmfunctions" || { echo "Missing '$scriptdir/mmfunctions'. Exiting." ; exit 1 ;};
 
-while [ "$*" != "" ] ; do
+[ "$#" = 0 -a ! "$input" ] && { ask_input ; once="y" ;};
 
-find_input "$1"
-    
-    [ -d "$1" ] && outputdir="$1/objects/access/images"
-    [ -f "$1" ] && outputdir=`dirname "$1"`"/access/images"
-    [ ! "$file" ] && outputdir="$1/objects/access/images"  
-    
-    
+cleanup(){
+    log -a "Process aborted"
+    exit 1
+}
+trap cleanup SIGHUP SIGINT SIGTERM
+
+# command-line options to set mediaid and original variables
+OPTIND=1
+while getopts ":m:f:" opt; do
+    case "$opt" in
+        m) mediaid="$OPTARG";;
+        f) input="$OPTARG" ; once="y" ;;
+        \?) echo "Invalid option: -$OPTARG" ; exit 1 ;;
+        :) echo "Option -$OPTARG requires an argument" ; exit 1 ;;
+    esac
+done
+shift $(( ${OPTIND} - 1 ))
+
+while [ "$*" != ""  -o "$once" = "y" ] ; do
+    once="n"
+    [ "$#" != 0 ] && input="$1"
+    [ -d "$1" ] && { outputdir="$1/objects/access/images" && logdir="$1/metadata/submissionDocumentation/logs" ;};
+    [ -f "$1" ] && { outputdir=`dirname "$1"`"/access/images" && logdir="`dirname "$1"`/service/logs" ;};
+    [ ! "$file" ] && { outputdir="$1/objects/access/images" && logdir="$1/metadata/submissionDocumentation/logs" ;};
+    find_input "$1"
+
     filename=`basename "$file"`
     mediaid=`basename "$1" | cut -d. -f1`
-    
-     if [ ! -s "$outputdir/${mediaid%.*}.mp4" ] ; then
+
+    log -b
+
+    if [ ! -s "$1/objects/access/images" ] ; then
         IMAGECOUNT=10
         INPUT="$1"
         BASE=`basename $file`
         DURATION=`ffprobe 2>/dev/null $file -show_format | grep duration | cut -d= -f2`
         mkdir -p "$outputdir"
          for IMAGENUMBER in `seq 1 "$IMAGECOUNT"` ; do
-          START=`echo "( $DURATION / ( $IMAGECOUNT + 1 )) * $IMAGENUMBER" | bc`
-          ffmpeg -ss "$START" -i $file -vf yadif,thumbnail=100 -frames:v 1 "$outputdir/${BASE%.*}_${IMAGENUMBER}.tiff"
-          done    
+             START=`echo "( $DURATION / ( $IMAGECOUNT + 1 )) * $IMAGENUMBER" | bc`
+             ffmpeg -ss "$START" -i $file -vf yadif,thumbnail=100 -frames:v 1 "$outputdir/${BASE%.*}_${IMAGENUMBER}.tiff"
+         done    
      fi
      shift
 done
+log -e
