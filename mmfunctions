@@ -1,4 +1,4 @@
-CONFIG_FILE="$scriptdir/mmvariables"
+CONFIG_FILE="$scriptdir/mm.conf"
 
 . "$CONFIG_FILE"
 
