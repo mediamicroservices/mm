@@ -6,21 +6,31 @@ scriptdir=`dirname "$0"`
 . "$scriptdir/mmfunctions" || { echo "Missing '$scriptdir/mmfunctions'. Exiting." ; exit 1 ;};
 
 # local variables
-REQUIRED_VARIABLES="OUTDIR_INGESTFILE OUTDIR_INGESTXDCAM outputdir_paper AIP_STORAGE PODCASTDELIVER YOUTUBEDELIVER TMPDIR REGEX4PODCAST DVDLABELPREFIX OMNEONIP OMNEONPATH"
+REQUIRED_VARIABLES=("OUTDIR_INGESTFILE" "OUTDIR_INGESTXDCAM" "outputdir_paper" "AIP_STORAGE" "PODCASTDELIVER" "YOUTUBEDELIVER" "TMPDIR" "REGEX4PODCAST" "DVDLABELPREFIX" "OMNEONIP" "OMNEONPATH")
+
+# set up configuration file if required
+if [ ! -f "$CONFIG_FILE" ] ; then
+    touch "$CONFIG_FILE"
+    for KEY in $REQUIRED_VARIABLES ; do
+        echo "$KEY=" >> "$CONFIG_FILE"
+    done
+fi
 
 report -d "Table of existing variables:"
-for KEY in $REQUIRED_VARIABLES ; do
+for KEY in "${REQUIRED_VARIABLES[@]}" ; do
     VALUE=`grep "^$KEY=" "$CONFIG_FILE" | cut -d= -f2`
     printf '\t%-25s %-40s\n' "$KEY" "$VALUE"
 done
-
-report -q "Edit a variable? "
-PS3="Selection (or 'q' to quit)? "
-select CONFIG_KEY in $REQUIRED_VARIABLES
-do
-    break
+while true ; do
+    report -q "Edit a variable? "
+    PS3="Selection (or 'q' to quit)? "
+    select CONFIG_KEY in "${REQUIRED_VARIABLES[@]}" "Quit"
+    do
+        break
+    done
+    [ "$CONFIG_KEY" = "Quit" ] && { echo Goodbye. ; exit 1 ;};
+    echo -n "Enter the value for $CONFIG_KEY: "
+    read "CONFIG_VALUE"
+    echo "k $CONFIG_KEY v $CONFIG_VALUE"
+    config_edit "$CONFIG_KEY" "$CONFIG_VALUE"
 done
-echo -n "Enter the value for $CONFIG_KEY: "
-read "CONFIG_VALUE"
-echo "k $CONFIG_KEY v $CONFIG_VALUE"
-config_edit "$CONFIG_KEY" "$CONFIG_VALUE"
