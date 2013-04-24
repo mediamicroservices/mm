@@ -9,270 +9,270 @@ get_iso8601_c(){
 }
 
 log(){
-	logfile="$HOME/Library/Logs/mediamicroservices.log"
-	OPTIND=1
-	while getopts ":beac" opt; do
-		case "$opt" in
-			b) status="start" ;;              # script is beginning
-			e) status="end"   ;;              # script is ending
-			a) status="abort" ;;              # script is aborted
-			c) status="comment" ;;            # comment about what script is doing
-		esac
-	done
-	shift $(( ${OPTIND} - 1 ))
-	note="$1"
-	echo `get_iso8601`", $(basename $0), $status, $op, $mediaid, $note" >> "$logfile"
+    logfile="$HOME/Library/Logs/mediamicroservices.log"
+    OPTIND=1
+    while getopts ":beac" opt; do
+        case "$opt" in
+            b) status="start" ;;              # script is beginning
+            e) status="end"   ;;              # script is ending
+            a) status="abort" ;;              # script is aborted
+            c) status="comment" ;;            # comment about what script is doing
+        esac
+    done
+    shift $(( ${OPTIND} - 1 ))
+    note="$1"
+    echo `get_iso8601`", $(basename $0), $status, $op, $mediaid, $note" >> "$logfile"
 }
 
 report(){
-		local RED="$(tput setaf 1)"   # Red      - For Warnings
-		local GREEN="$(tput setaf 2)" # Green    - For Declarations
-		local BLUE="$(tput setaf 4)"  # Blue     - For Questions
-		local NC="$(tput sgr0)"       # No Color
-		local color=""
-		local startmessage=""
-		local endmessage=""
-		local echoopt=""
-		OPTIND=1
-		while getopts ":qdwtsn" opt; do
-			case "$opt" in
-				q) color="$BLUE" ;;                         # question mode, use color blue
-				d) color="$GREEN" ;;                        # declaration mode, use color green
-				w) color="$RED" ; log="Y";;                 # warning mode, use color red
-				t) startmessage="$(get_iso8601) - " ;;      # prepend timestamp to the message
-				s) startmessage+="[$(basename $0)] " ;;     # prepend scriptname to the message
-				n) echoopt="-n" ;;                          # to avoid line breaks after echo
-			esac
-		done
-		shift $(( ${OPTIND} - 1 ))
-		message="$1"
-		echo $echoopt "${color}${startmessage}${message}${NC}"
-		[ "$log" = "Y" ] && log -c "$message"
+        local RED="$(tput setaf 1)"   # Red      - For Warnings
+        local GREEN="$(tput setaf 2)" # Green    - For Declarations
+        local BLUE="$(tput setaf 4)"  # Blue     - For Questions
+        local NC="$(tput sgr0)"       # No Color
+        local color=""
+        local startmessage=""
+        local endmessage=""
+        local echoopt=""
+        OPTIND=1
+        while getopts ":qdwtsn" opt; do
+            case "$opt" in
+                q) color="$BLUE" ;;                         # question mode, use color blue
+                d) color="$GREEN" ;;                        # declaration mode, use color green
+                w) color="$RED" ; log="Y";;                 # warning mode, use color red
+                t) startmessage="$(get_iso8601) - " ;;      # prepend timestamp to the message
+                s) startmessage+="[$(basename $0)] " ;;     # prepend scriptname to the message
+                n) echoopt="-n" ;;                          # to avoid line breaks after echo
+            esac
+        done
+        shift $(( ${OPTIND} - 1 ))
+        message="$1"
+        echo $echoopt "${color}${startmessage}${message}${NC}"
+        [ "$log" = "Y" ] && log -c "$message"
 }
 
 black_at_ends(){
-	input_movie="$1"
-	name=`basename "$input_movie"`
-	analysis_head_seconds=10
-	analysis_tail_seconds=10
-	report -dt "Analyzing $name for excessive black at head or tail."
-	duration=`ffprobe "$1"  -show_format 2> /dev/null | grep duration | cut -d= -f2 | cut -d. -f1`
-	tail_start=`echo "$duration - $analysis_tail_seconds" | bc`
-	head_black=`ffmpeg -t "$analysis_head_seconds" -i "$1" -an -vf blackdetect=pix_th=0.05 -loglevel debug -f null - 2>&1 | grep -c -o picture_black_ratio:1`
-	report -dt "Black frames in first $analysis_head_seconds seconds: $head_black."
-	tail_black=`ffmpeg -ss "$tail_start" -i "$1" -an -vf blackdetect=pix_th=0.05 -loglevel debug -f null - 2>&1 | grep -c -o picture_black_ratio:1`
-	report -dt "Black frames in last  $analysis_head_seconds seconds: $tail_black."
+    input_movie="$1"
+    name=`basename "$input_movie"`
+    analysis_head_seconds=10
+    analysis_tail_seconds=10
+    report -dt "Analyzing $name for excessive black at head or tail."
+    duration=`ffprobe "$1"  -show_format 2> /dev/null | grep duration | cut -d= -f2 | cut -d. -f1`
+    tail_start=`echo "$duration - $analysis_tail_seconds" | bc`
+    head_black=`ffmpeg -t "$analysis_head_seconds" -i "$1" -an -vf blackdetect=pix_th=0.05 -loglevel debug -f null - 2>&1 | grep -c -o picture_black_ratio:1`
+    report -dt "Black frames in first $analysis_head_seconds seconds: $head_black."
+    tail_black=`ffmpeg -ss "$tail_start" -i "$1" -an -vf blackdetect=pix_th=0.05 -loglevel debug -f null - 2>&1 | grep -c -o picture_black_ratio:1`
+    report -dt "Black frames in last  $analysis_head_seconds seconds: $tail_black."
 }
 
 maketemp(){
-	tempfoo=`basename $0`
-	TMPFILE=`mktemp -q /tmp/${tempfoo}.XXXXXX`
-	if [ $? -ne 0 ]; then
-		echo "$0: Can't create temp file, exiting..."
-		exit 1
-	fi
+    tempfoo=`basename $0`
+    TMPFILE=`mktemp -q /tmp/${tempfoo}.XXXXXX`
+    if [ $? -ne 0 ]; then
+        echo "$0: Can't create temp file, exiting..."
+        exit 1
+    fi
 }
 
 ask_operator(){
-	if [ -z "$op" ] ; then
-		report -qn "Enter the name of the operator or 'q' to quit: "
-		read op
-		[ -z "$op" ] && ask_operator || log+="operator: ${op}\n"
-		[ "$op" == "q" ] && exit 0
-	fi
+    if [ -z "$op" ] ; then
+        report -qn "Enter the name of the operator or 'q' to quit: "
+        read op
+        [ -z "$op" ] && ask_operator || log+="operator: ${op}\n"
+        [ "$op" == "q" ] && exit 0
+    fi
 }
 
 ask_mediaid(){
-	if [ -z "$mediaid" ] ; then
-		report -qn "Enter a unique MEDIA ID: "
-		read mediaid
-		[ -z "$mediaid" ] && ask_mediaid
-		# option to quit
-		[ "$mediaid" == "q" ] && exit 0
-		# validate id and perhaps fail with exit
-		[ -z "$mediaid" ] && report -wt "ERROR You must enter a valid MEDIA ID" && exit
-		[ ! -z `echo "$mediaid" | grep -v "^[A-Z0-9_-]*$"` ] && report -wt "ERROR The MEDIA ID must only contain capital letters, letters, hyphen and underscore" && exit 1
-	fi
-	[ ! -z "$mediaid" ] && log+="mediaid: ${mediaid}\n"
+    if [ -z "$mediaid" ] ; then
+        report -qn "Enter a unique MEDIA ID: "
+        read mediaid
+        [ -z "$mediaid" ] && ask_mediaid
+        # option to quit
+        [ "$mediaid" == "q" ] && exit 0
+        # validate id and perhaps fail with exit
+        [ -z "$mediaid" ] && report -wt "ERROR You must enter a valid MEDIA ID" && exit
+        [ ! -z `echo "$mediaid" | grep -v "^[A-Z0-9_-]*$"` ] && report -wt "ERROR The MEDIA ID must only contain capital letters, letters, hyphen and underscore" && exit 1
+    fi
+    [ ! -z "$mediaid" ] && log+="mediaid: ${mediaid}\n"
 }
 
 ask_input(){
-	if [ -z "$input" ] ; then
-		report -qn "Drag in the file: "
-		read input
-		[ -z "$input" ] && ask_input
-		[ "$input" == "q" ] && exit 0
-		basename=`basename "$input"`
-		[ ! -z "$input log" ] && log+="input: ${input}\n"
-	fi
+    if [ -z "$input" ] ; then
+        report -qn "Drag in the file: "
+        read input
+        [ -z "$input" ] && ask_input
+        [ "$input" == "q" ] && exit 0
+        basename=`basename "$input"`
+        [ ! -z "$input log" ] && log+="input: ${input}\n"
+    fi
 }
 
 check_dependencies(){
-	deps_ok=YES
-	while [ "$*" != "" ] ; do
-		dependency="$1"
-		if [ ! $(which $dependency) ] ; then
-			report -wt "This script requires $dependency to run but it is not installed"
-			report -wt "If you are running ubuntu or debian you might be able to install $dependency with the following command"
-			report -wt "sudo apt-get install ${dependency}"
-			report -wt "If you are running mac you might be able to install $dependency with the following command"
-			report -wt "brew install ${dependency}"
-			deps_ok=NO
-		fi
-		shift
-	done
-	if [[ "$deps_ok" == "NO" ]]; then
-		report -wt "Unmet dependencies"
-		report -wt "Aborting!"
-		exit 1
-	else
-		return 0
-	fi
+    deps_ok=YES
+    while [ "$*" != "" ] ; do
+        dependency="$1"
+        if [ ! $(which $dependency) ] ; then
+            report -wt "This script requires $dependency to run but it is not installed"
+            report -wt "If you are running ubuntu or debian you might be able to install $dependency with the following command"
+            report -wt "sudo apt-get install ${dependency}"
+            report -wt "If you are running mac you might be able to install $dependency with the following command"
+            report -wt "brew install ${dependency}"
+            deps_ok=NO
+        fi
+        shift
+    done
+    if [[ "$deps_ok" == "NO" ]]; then
+        report -wt "Unmet dependencies"
+        report -wt "Aborting!"
+        exit 1
+    else
+        return 0
+    fi
 }
 
 ask(){
-	# This function requires 3 arguments
-	# 1) A prompt
-	# 2) The label for the metadata value
-	read -p "${1}" response
-	if [ -z "$response" ] ; then
-		ask "$1" "$2"
-		else
-		log+="${2}: ${response}\n"
-	fi
-	echo
+    # This function requires 3 arguments
+    # 1) A prompt
+    # 2) The label for the metadata value
+    read -p "${1}" response
+    if [ -z "$response" ] ; then
+        ask "$1" "$2"
+        else
+        log+="${2}: ${response}\n"
+    fi
+    echo
 }
 
 offerChoice(){
-	# This function requires 3 arguments
-	# 1) A prompt
-	# 2) The label for the metadata value
-	# 3) A vocabulary list
-	PS3="${1}"
-	label="${2}"
-	eval set "$3"
-	select option in "$@"
-	do
-		break
-	done
-	log+="${label}: ${option}\n"
-	echo
+    # This function requires 3 arguments
+    # 1) A prompt
+    # 2) The label for the metadata value
+    # 3) A vocabulary list
+    PS3="${1}"
+    label="${2}"
+    eval set "$3"
+    select option in "$@"
+    do
+        break
+    done
+    log+="${label}: ${option}\n"
+    echo
 }
 
 make_mezz_for_xdcam(){
-	som="$1"
-	dur="$2"
+    som="$1"
+    dur="$2"
 
-	tmc_ms=`mediainfo --inform="Video;%Delay%" "$3"`
-	tmc_smp=`mediainfo --inform="Video;%Delay/String3%" "$3"`
-	tmc_sec=`echo "$tmc_ms * 0.001" | bc`
+    tmc_ms=`mediainfo --inform="Video;%Delay%" "$3"`
+    tmc_smp=`mediainfo --inform="Video;%Delay/String3%" "$3"`
+    tmc_sec=`echo "$tmc_ms * 0.001" | bc`
 
-	som_h=`echo "$som" | cut -c 1-2`
-	som_m=`echo "$som" | cut -c 4-5`
-	som_s=`echo "$som" | cut -c 7-8`
-	som_f=`echo "$som" | cut -c 10-11`
-	som_fc=`echo "scale=3; (((((3600 * $som_h)+(60 * $som_m)+ $som_s ) * 30)+ $som_f ) - ( 2 * (((60 * $som_h)+ $som_m ) - (((60 * $som_h)+ $som_m ) / 10 )))) / 29.97" | bc`
+    som_h=`echo "$som" | cut -c 1-2`
+    som_m=`echo "$som" | cut -c 4-5`
+    som_s=`echo "$som" | cut -c 7-8`
+    som_f=`echo "$som" | cut -c 10-11`
+    som_fc=`echo "scale=3; (((((3600 * $som_h)+(60 * $som_m)+ $som_s ) * 30)+ $som_f ) - ( 2 * (((60 * $som_h)+ $som_m ) - (((60 * $som_h)+ $som_m ) / 10 )))) / 29.97" | bc`
 
-	dur_h=`echo "$dur" | cut -c 1-2`
-	dur_m=`echo "$dur" | cut -c 4-5`
-	dur_s=`echo "$dur" | cut -c 7-8`
-	dur_f=`echo "$dur" | cut -c 10-11`
-	dur_fc=`echo "scale=3; (((((3600 * $dur_h)+(60 * $dur_m)+ $dur_s ) * 30)+ $dur_f ) - ( 2 * (((60 * $dur_h)+ $dur_m ) - (((60 * $dur_h)+ $dur_m ) / 10 )))) / 29.97" | bc`
+    dur_h=`echo "$dur" | cut -c 1-2`
+    dur_m=`echo "$dur" | cut -c 4-5`
+    dur_s=`echo "$dur" | cut -c 7-8`
+    dur_f=`echo "$dur" | cut -c 10-11`
+    dur_fc=`echo "scale=3; (((((3600 * $dur_h)+(60 * $dur_m)+ $dur_s ) * 30)+ $dur_f ) - ( 2 * (((60 * $dur_h)+ $dur_m ) - (((60 * $dur_h)+ $dur_m ) / 10 )))) / 29.97" | bc`
 
-	rel_start=`echo "scale=3; $som_fc - $tmc_sec" | bc`
-	pushd `dirname "$4"`
-	report -dt "Starting ffmpeg to trim mxf file at `date`. This will take a few minutes..."
-	ffmpeg 2</dev/null -report -y -ss "$rel_start" -t "$dur_fc" -i "$3" -map 0:v -map 0:a:0 -map 0:a:1 -c copy "$4"
-	popd
+    rel_start=`echo "scale=3; $som_fc - $tmc_sec" | bc`
+    pushd `dirname "$4"`
+    report -dt "Starting ffmpeg to trim mxf file at `date`. This will take a few minutes..."
+    ffmpeg 2</dev/null -report -y -ss "$rel_start" -t "$dur_fc" -i "$3" -map 0:v -map 0:a:0 -map 0:a:1 -c copy "$4"
+    popd
 }
 
 find_input (){
-	[ -d "$1" ] && [ -d "$1/objects/service" ] && sourcefile=`find "$1/objects/service" -maxdepth 1 -mindepth 1 -type f \( -name "*.mov" -o -name "*.mxf" -o -name "*.mp4" -o -name "*.dv" \) ! -name ".*"`
-	[ -f "$1" ] && sourcefile="$1"
-	[ ! "$sourcefile" ] && sourcefile=`find "$1/objects" -maxdepth 1 -mindepth 1 -type f \( -name "*.mov" -o -name "*.mxf" -o -name "*.mp4" -o -name "*.dv" \) ! -name ".*"`
-	[ ! "$sourcefile" ] && { report -wt "A valid source file isn't found." ; exit 1 ;};
-	log+="sourcefile: ${sourcefile}\n"
+    [ -d "$1" ] && [ -d "$1/objects/service" ] && sourcefile=`find "$1/objects/service" -maxdepth 1 -mindepth 1 -type f \( -name "*.mov" -o -name "*.mxf" -o -name "*.mp4" -o -name "*.dv" \) ! -name ".*"`
+    [ -f "$1" ] && sourcefile="$1"
+    [ ! "$sourcefile" ] && sourcefile=`find "$1/objects" -maxdepth 1 -mindepth 1 -type f \( -name "*.mov" -o -name "*.mxf" -o -name "*.mp4" -o -name "*.dv" \) ! -name ".*"`
+    [ ! "$sourcefile" ] && { report -wt "A valid source file isn't found." ; exit 1 ;};
+    log+="sourcefile: ${sourcefile}\n"
 }
 
 get_width(){
-	width=`ffprobe "$1" -show_streams -select_streams v 2> /dev/null | grep width= | cut -d = -f 2`
+    width=`ffprobe "$1" -show_streams -select_streams v 2> /dev/null | grep width= | cut -d = -f 2`
 }
 
 get_height(){
-	height=`ffprobe "$1" -show_streams -select_streams v 2> /dev/null | grep height= | cut -d = -f 2`
+    height=`ffprobe "$1" -show_streams -select_streams v 2> /dev/null | grep height= | cut -d = -f 2`
 }
 
 get_dar(){
-	dar=`ffprobe "$1" -show_streams -select_streams v 2> /dev/null | grep display_aspect_ratio= | cut -d = -f 2 | sed 's|:|/|g'`
+    dar=`ffprobe "$1" -show_streams -select_streams v 2> /dev/null | grep display_aspect_ratio= | cut -d = -f 2 | sed 's|:|/|g'`
 }
 
 get_codectagstring(){
-	codec_tag_string=`ffprobe "$1" -show_streams -select_streams v 2> /dev/null | grep codec_tag_string= | cut -d = -f 2`
+    codec_tag_string=`ffprobe "$1" -show_streams -select_streams v 2> /dev/null | grep codec_tag_string= | cut -d = -f 2`
 }
 
 get_duration(){
-	DURATION=`ffprobe "$1" -show_format 2> /dev/null | grep duration= | cut -d = -f 2`
+    DURATION=`ffprobe "$1" -show_format 2> /dev/null | grep duration= | cut -d = -f 2`
 }
 
 get_maxdvdbitrate(){
-	get_duration "$1"
-	local DVDCAPACITY=37000000000  # in bits
-	local CAPDVDBITRATE=6000000    # in bits/second
-	MAXDVDBITRATE=`echo "(37000000000 - ( $DURATION * 224000 )) / $DURATION" | bc`
-	if ! [[ "$MAXDVDBITRATE" =~ ^[0-9]+$ ]] ; then
-		report -wt "Calculation of dvd bitrate failed. Evaluated to ${MAXDVDBITRATE}. Using 4000000 as bitrate instead."
-		MAXDVDBITRATE=4000000
-	elif [ "$MAXDVDBITRATE" -gt "$CAPDVDBITRATE" ] ; then
-		MAXDVDBITRATE="$CAPDVDBITRATE"
-	fi
+    get_duration "$1"
+    local DVDCAPACITY=37000000000  # in bits
+    local CAPDVDBITRATE=6000000    # in bits/second
+    MAXDVDBITRATE=`echo "(37000000000 - ( $DURATION * 224000 )) / $DURATION" | bc`
+    if ! [[ "$MAXDVDBITRATE" =~ ^[0-9]+$ ]] ; then
+        report -wt "Calculation of dvd bitrate failed. Evaluated to ${MAXDVDBITRATE}. Using 4000000 as bitrate instead."
+        MAXDVDBITRATE=4000000
+    elif [ "$MAXDVDBITRATE" -gt "$CAPDVDBITRATE" ] ; then
+        MAXDVDBITRATE="$CAPDVDBITRATE"
+    fi
 }
 
 has_first_two_tracks_mono(){
-	[ $(ffprobe 2>/dev/null "$1" -show_streams | grep -c "codec_type=audio") -ge 2 ] && \
-	[ $(ffprobe 2>/dev/null "$1" -show_streams -select_streams a:0 -of compact=p=0 | grep -o "channels=[0-9]*" | cut -d= -f2) = "1" ] && \
-	[ $(ffprobe 2>/dev/null "$1" -show_streams -select_streams a:1 -of compact=p=0 | grep -o "channels=[0-9]*" | cut -d= -f2) = "1" ] && \
-	MULTIMONO="Y"
+    [ $(ffprobe 2>/dev/null "$1" -show_streams | grep -c "codec_type=audio") -ge 2 ] && \
+    [ $(ffprobe 2>/dev/null "$1" -show_streams -select_streams a:0 -of compact=p=0 | grep -o "channels=[0-9]*" | cut -d= -f2) = "1" ] && \
+    [ $(ffprobe 2>/dev/null "$1" -show_streams -select_streams a:1 -of compact=p=0 | grep -o "channels=[0-9]*" | cut -d= -f2) = "1" ] && \
+    MULTIMONO="Y"
 }
 
 get_volume_adjustment(){
-	reference=-23
-	input_movie="$1"
-	report -dt "Getting volume data for $(basename "$input_movie") ..."
-	volume_data=`ffprobe -v error -of compact=p=0:nk=1 -show_entries frame=metadata:tags=lavfi.r128.I -f lavfi "amovie='${input_movie}',ebur128=metadata=1"`
-	[ $? -ne 0 ] && { report -wt "Volume analysis for $input_movie exited with $?." ; exit ;};
-	for i in $(echo "$volume_data" | xargs); do
-		[ "$i" != "" ] && integrated_loudness="$i"
-	done
-	VOLADJ=`echo "$reference - $integrated_loudness" | bc`
-	# test to see if adjustment is at least 1dB, else skip
-	if [ `echo "$VOLADJ < 1" |bc` -eq 1 -a `echo "$VOLADJ > -1" |bc` -eq 1 ] ; then
-		report -dt "Integrated loudness for $name is ${integrated_loudness}dB. Reference is ${reference}dB. No adjustment is needed for ${name}, skipping."
-		VOLADJ=""
-	else
-		report -dt "Integrated loudness for $name is ${integrated_loudness}dB. Reference is ${reference}dB. Will adjust by ${VOLADJ}dB."
-	fi
+    reference=-23
+    input_movie="$1"
+    report -dt "Getting volume data for $(basename "$input_movie") ..."
+    volume_data=`ffprobe -v error -of compact=p=0:nk=1 -show_entries frame=metadata:tags=lavfi.r128.I -f lavfi "amovie='${input_movie}',ebur128=metadata=1"`
+    [ $? -ne 0 ] && { report -wt "Volume analysis for $input_movie exited with $?." ; exit ;};
+    for i in $(echo "$volume_data" | xargs); do
+        [ "$i" != "" ] && integrated_loudness="$i"
+    done
+    VOLADJ=`echo "$reference - $integrated_loudness" | bc`
+    # test to see if adjustment is at least 1dB, else skip
+    if [ `echo "$VOLADJ < 1" |bc` -eq 1 -a `echo "$VOLADJ > -1" |bc` -eq 1 ] ; then
+        report -dt "Integrated loudness for $name is ${integrated_loudness}dB. Reference is ${reference}dB. No adjustment is needed for ${name}, skipping."
+        VOLADJ=""
+    else
+        report -dt "Integrated loudness for $name is ${integrated_loudness}dB. Reference is ${reference}dB. Will adjust by ${VOLADJ}dB."
+    fi
 }
 
 get_cropdetection(){
-	input_movie="$1"
-	report -dt "Getting cropping data for $(basename "$input_movie") ..."
-	crop_data=`ffmpeg -i "${input_movie}" -an -vf cropdetect -f null - 2>&1 | grep -o "crop=[0-9:]*"`
-	[ $? -ne 0 ] && { report -wt "Crop detection analysis for $input_movie exited with $?." ; exit ;};
-	for i in $(echo "$crop_data" | xargs); do
-		[ "$i" != "" ] && CROPADJ="$i"
-	done
-	report -dt "Crop detection complete. Will crop by ${CROPADJ} (width,height,from_left,from_top) before scaling."
+    input_movie="$1"
+    report -dt "Getting cropping data for $(basename "$input_movie") ..."
+    crop_data=`ffmpeg -i "${input_movie}" -an -vf cropdetect -f null - 2>&1 | grep -o "crop=[0-9:]*"`
+    [ $? -ne 0 ] && { report -wt "Crop detection analysis for $input_movie exited with $?." ; exit ;};
+    for i in $(echo "$crop_data" | xargs); do
+        [ "$i" != "" ] && CROPADJ="$i"
+    done
+    report -dt "Crop detection complete. Will crop by ${CROPADJ} (width,height,from_left,from_top) before scaling."
 }
 
 free_space(){
-	#this should give the free space in gigabytes
-	local space="$1"  #This value represents the space in gigabytes required for the script to run
-	local outputdir="$2"
-	[ ! -d "$outputdir" ] && { report -wt "The output directory [$outputdir] that free-space function is seeking does not exist." ; exit 1 ;};
-	[[ ! $space =~ ^-?[0-9]+$ ]] && { report -wt "Number is not an integer." ; exit 1 ;};
-	freespace=`df -g "$outputdir" | awk '{ print $4; }' | tail -n 1`
-	if [ $freespace -lt $space ]; then
-  	report -wts "ERROR only $freespace gb free in this directory. This script requires at least $space gigabytes"
-  	exit 1
-	fi
+    #this should give the free space in gigabytes
+    local space="$1"  #This value represents the space in gigabytes required for the script to run
+    local outputdir="$2"
+    [ ! -d "$outputdir" ] && { report -wt "The output directory [$outputdir] that free-space function is seeking does not exist." ; exit 1 ;};
+    [[ ! $space =~ ^-?[0-9]+$ ]] && { report -wt "Number is not an integer." ; exit 1 ;};
+    freespace=`df -g "$outputdir" | awk '{ print $4; }' | tail -n 1`
+    if [ $freespace -lt $space ]; then
+      report -wts "ERROR only $freespace gb free in this directory. This script requires at least $space gigabytes"
+      exit 1
+    fi
 }

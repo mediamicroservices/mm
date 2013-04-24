@@ -8,8 +8,8 @@ scriptdir=`dirname "$0"`
 . "$scriptdir/mmfunctions" || { echo "Missing '$scriptdir/mmfunctions'. Exiting." ; exit 1 ;};
 
 cleanup(){
-	log -a "Process aborted"
-	exit 1
+    log -a "Process aborted"
+    exit 1
 }
 
 trap cleanup SIGHUP SIGINT SIGTERM
@@ -18,29 +18,29 @@ log -b
 [ $# = 0 ] && { report -wt "You must supply one or many arguments. Usage: $(basename $0) [ file1 file2 ... ] ."; exit 2 ;};
 
 while [ "$*" != "" ] ; do
-	input_movie="$1"
-	name=`basename "$1"`
-	get_codectagstring
-	#[ "$codec_tag_string" = "mpeg" ] && { ffmpeg_opts+=" -c:v copy -c:a pcm_s24le" ; extension="mxf" ; } ;
-	#[ "$codec_tag_string" = "mpeg" ] || { ffmpeg_opts+=" -c:v copy -c:a pcm_s24le" ; extension="mov" ; } ;
-	[ "$codec_tag_string" = "mpeg" ] && { ffmpeg_opts+=" -c:a pcm_s24le -f s24le -ar 48000 -ac 2 " ; ffmbc_opts=" -vcodec copy -f s24le -ar 48000 -ac 2 -map_audio_channel 1:0:0:0:1:0 -map_audio_channel 1:0:1:0:1:1 " ; extension="mxf" ; } ;
-	[ "$codec_tag_string" = "mpeg" ] || { ffmpeg_opts+=" -c:a pcm_s24le -f s24le -ar 48000 -ac 2 " ; ffmbc_opts=" -vcodec copy -f s24le -ar 48000 -ac 2 -map_audio_channel 1:0:0:0:1:0 -map_audio_channel 1:0:1:0:1:1 " ; extension="mov" ; } ;
-	output_movie="${input_movie%.*}${suffix}.${extension}"
-	if [ -f "$output_movie" ] ; then
-		report -wt "The intended output of `basename $0` already exists. Skipping for now. Please delete \"$output_movie\" and rerun or figure out why you are trying to do this."
-	else
-		get_volume_adjustment "$input_movie"
-		if [ -n "$VOLADJ" ] ; then
-			report -dt "Generating $output_movie ..."
-			#cmd="ffmpeg -i \"$input_movie\" $ffmpeg_opts -af volume=${VOLADJ}dB '$output_movie'"
-			cmd="ffmpeg -i \"$input_movie\" $ffmpeg_opts -af volume=${VOLADJ}dB - | ffmbc -i \"$input_movie\" $ffmbc_opts -i pipe:0 -acodec pcm_s24le \"$output_movie\""
-			report -dt "Running: $cmd"
-			eval "$cmd"
-			report -dst "Done with ${name}."
-		else
-			report -dst "Integrated loudness for $name is ${integrated_loudness}dB. Reference is $reference. No adjustment is needed for ${name}, skipping."
-		fi
-	fi
-	shift
+    input_movie="$1"
+    name=`basename "$1"`
+    get_codectagstring
+    #[ "$codec_tag_string" = "mpeg" ] && { ffmpeg_opts+=" -c:v copy -c:a pcm_s24le" ; extension="mxf" ; } ;
+    #[ "$codec_tag_string" = "mpeg" ] || { ffmpeg_opts+=" -c:v copy -c:a pcm_s24le" ; extension="mov" ; } ;
+    [ "$codec_tag_string" = "mpeg" ] && { ffmpeg_opts+=" -c:a pcm_s24le -f s24le -ar 48000 -ac 2 " ; ffmbc_opts=" -vcodec copy -f s24le -ar 48000 -ac 2 -map_audio_channel 1:0:0:0:1:0 -map_audio_channel 1:0:1:0:1:1 " ; extension="mxf" ; } ;
+    [ "$codec_tag_string" = "mpeg" ] || { ffmpeg_opts+=" -c:a pcm_s24le -f s24le -ar 48000 -ac 2 " ; ffmbc_opts=" -vcodec copy -f s24le -ar 48000 -ac 2 -map_audio_channel 1:0:0:0:1:0 -map_audio_channel 1:0:1:0:1:1 " ; extension="mov" ; } ;
+    output_movie="${input_movie%.*}${suffix}.${extension}"
+    if [ -f "$output_movie" ] ; then
+        report -wt "The intended output of `basename $0` already exists. Skipping for now. Please delete \"$output_movie\" and rerun or figure out why you are trying to do this."
+    else
+        get_volume_adjustment "$input_movie"
+        if [ -n "$VOLADJ" ] ; then
+            report -dt "Generating $output_movie ..."
+            #cmd="ffmpeg -i \"$input_movie\" $ffmpeg_opts -af volume=${VOLADJ}dB '$output_movie'"
+            cmd="ffmpeg -i \"$input_movie\" $ffmpeg_opts -af volume=${VOLADJ}dB - | ffmbc -i \"$input_movie\" $ffmbc_opts -i pipe:0 -acodec pcm_s24le \"$output_movie\""
+            report -dt "Running: $cmd"
+            eval "$cmd"
+            report -dst "Done with ${name}."
+        else
+            report -dst "Integrated loudness for $name is ${integrated_loudness}dB. Reference is $reference. No adjustment is needed for ${name}, skipping."
+        fi
+    fi
+    shift
 done
 log -e

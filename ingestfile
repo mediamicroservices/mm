@@ -13,48 +13,48 @@ scriptdir=`dirname "$0"`
 . "$scriptdir/mmfunctions" || { echo "Missing '$scriptdir/mmfunctions'. Exiting." ; exit 1 ;};
 
 cleanup(){
-	log -a "Process aborted"
-	exit 1
+    log -a "Process aborted"
+    exit 1
 }
 
 trap cleanup SIGHUP SIGINT SIGTERM
 
 usage(){
-	echo
-	echo "$(basename $0) ${version}"
-	echo "This script may be run interactively by running it with no arguments or may be used with the following options."
-	echo "Usage: $(basename $0) [ -m mediaid ] [ -f input] [ -p processing_directory ] [-a AIP_storage_directory ] [-w podcast_delivery ] [-y youtube_delivery ] [-x Regex ] [ -l audiodecision ] [ -c cleanupdecision ] [ -o operator ] [ -q priority ]"
-	echo "  -m mediaid"
-	echo "  -f input"
-	echo "  -p processing directory. Transcoding will happen here."
-	echo "  -a Archive Information Package storage directory. Final package delivery location."
-	echo "  -w podcast delivery"
-	echo "  -y youtube delivery"
-	echo "  -x Regex will identify applicability of various services."
-	echo "  -l Use only left channel of source video in transcoding."
-	echo "  -c Remove source file after successful ingest."
-	echo "  -q Put in queue."
-	exit
+    echo
+    echo "$(basename $0) ${version}"
+    echo "This script may be run interactively by running it with no arguments or may be used with the following options."
+    echo "Usage: $(basename $0) [ -m mediaid ] [ -f input] [ -p processing_directory ] [-a AIP_storage_directory ] [-w podcast_delivery ] [-y youtube_delivery ] [-x Regex ] [ -l audiodecision ] [ -c cleanupdecision ] [ -o operator ] [ -q priority ]"
+    echo "  -m mediaid"
+    echo "  -f input"
+    echo "  -p processing directory. Transcoding will happen here."
+    echo "  -a Archive Information Package storage directory. Final package delivery location."
+    echo "  -w podcast delivery"
+    echo "  -y youtube delivery"
+    echo "  -x Regex will identify applicability of various services."
+    echo "  -l Use only left channel of source video in transcoding."
+    echo "  -c Remove source file after successful ingest."
+    echo "  -q Put in queue."
+    exit
 }
 
 # command-line options to set mediaid and original variables
 while getopts ":hm:f:p:a:w:y:xlco:q" opt; do
-	case "$opt" in
-		h) usage ;;
-		m) mediaid="$OPTARG";;
-		f) input="$OPTARG";;
-		p) OUTDIR_INGESTFILE="$OPTARG" ;;
-		a) AIP_STORAGE="$OPTARG" ;;
-		w) PODCASTDELIVER="$OPTARG" ;;
-		y) YOUTUBEDELIVER="$OPTARG" ;;
-		x) REGEX4PODCAST ;;
-		l) audiodecision="left" ;;
-		c) cleanupdecision="Y" ;;
-		o) op="$OPTARG" ;;
-		q) priority="put in queue" ;;
-		\?) echo "Invalid option: -$OPTARG" ; exit 1 ;;
-		:) echo "Option -$OPTARG requires an argument" ; exit 1 ;;
-	esac
+    case "$opt" in
+        h) usage ;;
+        m) mediaid="$OPTARG";;
+        f) input="$OPTARG";;
+        p) OUTDIR_INGESTFILE="$OPTARG" ;;
+        a) AIP_STORAGE="$OPTARG" ;;
+        w) PODCASTDELIVER="$OPTARG" ;;
+        y) YOUTUBEDELIVER="$OPTARG" ;;
+        x) REGEX4PODCAST ;;
+        l) audiodecision="left" ;;
+        c) cleanupdecision="Y" ;;
+        o) op="$OPTARG" ;;
+        q) priority="put in queue" ;;
+        \?) echo "Invalid option: -$OPTARG" ; exit 1 ;;
+        :) echo "Option -$OPTARG requires an argument" ; exit 1 ;;
+    esac
 done
 
 [ ! -d "$OUTDIR_INGESTFILE" ] && echo "The processing directory must be set. Use [ -p /path/to/processing/directory ]." && exit 1
@@ -73,52 +73,52 @@ ask_input
 log -b
 
 if [ "$audiodecision" = "" ] ; then
-	report -q "Select an audio strategy? "
-	PS3="Selection? "
-	select audiodecision in "Default audio mapping [first audio track used for stereo output]" "Only use left of the first audio track [for 21st Century]"
-	do
-		break
-	done
+    report -q "Select an audio strategy? "
+    PS3="Selection? "
+    select audiodecision in "Default audio mapping [first audio track used for stereo output]" "Only use left of the first audio track [for 21st Century]"
+    do
+        break
+    done
 fi
 
 if [ "$cleanupdecision" = "" ] ; then
-	report -q "Select an cleanup strategy? "
-	PS3="Selection? "
-	select cleanupdecision in "Leave source file where it is." "Remove source file after successful ingest"
-	do
-		break
-	done
+    report -q "Select an cleanup strategy? "
+    PS3="Selection? "
+    select cleanupdecision in "Leave source file where it is." "Remove source file after successful ingest"
+    do
+        break
+    done
 
-	if [ "$cleanupdecision" = "Remove source file after successful ingest" ] ; then
-		cleanup="Y"
-	fi
+    if [ "$cleanupdecision" = "Remove source file after successful ingest" ] ; then
+        cleanup="Y"
+    fi
 fi
 
 if [ "$priority" = "" ] ; then
-	report -q "Select an multitasking strategy? "
-	PS3="Selection? "
-	select priority in "put in queue" "start now"
-	do
-		break
-	done
+    report -q "Select an multitasking strategy? "
+    PS3="Selection? "
+    select priority in "put in queue" "start now"
+    do
+        break
+    done
 fi
 
 
 # blackframe analysis
 if [ "$blackframetest" = "Y" ] ; then
-	black_at_ends "$input"
-	if [ "$head_black" -gt "30" ] ; then
-		report -wt "WARNING - There are at least $head_black frames of black at the beginning of ${input}"
-		report -qn "Enter q to quit, any other key to continue: "
-		read a1
-		[ "$a1" == "q" ] && exit 0
-	fi
-	if [ "$tail_black" -gt "30" ] ; then
-		report -wt "WARNING - There are at least $tail_black frames of black at the end of ${input}"
-		report -qn "Enter q to quit, any other key to continue: "
-		read a2
-		[ "$a2" == "q" ] && exit 0
-	fi
+    black_at_ends "$input"
+    if [ "$head_black" -gt "30" ] ; then
+        report -wt "WARNING - There are at least $head_black frames of black at the beginning of ${input}"
+        report -qn "Enter q to quit, any other key to continue: "
+        read a1
+        [ "$a1" == "q" ] && exit 0
+    fi
+    if [ "$tail_black" -gt "30" ] ; then
+        report -wt "WARNING - There are at least $tail_black frames of black at the end of ${input}"
+        report -qn "Enter q to quit, any other key to continue: "
+        read a2
+        [ "$a2" == "q" ] && exit 0
+    fi
 fi
 
 objectsdir="$OUTDIR_INGESTFILE/$mediaid/objects"
@@ -129,19 +129,19 @@ objectsdir="$OUTDIR_INGESTFILE/$mediaid/objects"
 
 # queue handling
 if [ "$priority" = "put in queue" ] ; then
-	echo "$mediaid" >> /tmp/queue.txt
-	next=$(head -n 1 /tmp/queue.txt)
-	while [ "$mediaid" != "$next" ] ; do
-		newnext=$(head -n 1 /tmp/queue.txt)
-		echo -n "This process is waiting behind these identifiers: "
-		cat /tmp/queue.txt | tr '\n' ' '
-		echo
-		while [ "$next" = "$newnext" ] ; do
-			sleep 10
-			newnext=$(head -n 1 /tmp/queue.txt)
-		done
-		next="$newnext"
-	done
+    echo "$mediaid" >> /tmp/queue.txt
+    next=$(head -n 1 /tmp/queue.txt)
+    while [ "$mediaid" != "$next" ] ; do
+        newnext=$(head -n 1 /tmp/queue.txt)
+        echo -n "This process is waiting behind these identifiers: "
+        cat /tmp/queue.txt | tr '\n' ' '
+        echo
+        while [ "$next" = "$newnext" ] ; do
+            sleep 10
+            newnext=$(head -n 1 /tmp/queue.txt)
+        done
+        next="$newnext"
+    done
 fi
 
 mkdir -p "$objectsdir"
@@ -161,34 +161,34 @@ rsync_err="$?"
 
 # transcode
 if [ "$audiodecision" == "Only use left of the first audio track [for 21st Century]" -o "$audiodecision" == "left" ] ; then
-	"$scriptdir/makebroadcast" -l "$OUTDIR_INGESTFILE/$mediaid"
+    "$scriptdir/makebroadcast" -l "$OUTDIR_INGESTFILE/$mediaid"
 else
-	"$scriptdir/makebroadcast" "$OUTDIR_INGESTFILE/$mediaid"
+    "$scriptdir/makebroadcast" "$OUTDIR_INGESTFILE/$mediaid"
 fi
 
 # upload to omneon
 if [ "$deliverytoomneon" == "Y" ] ; then
-	report -dt "STATUS Uploading $servicefile to the OMNEON."
-	"$scriptdir/uploadomneon" "$objectsdir/service/${mediaid%.*}.mov"
+    report -dt "STATUS Uploading $servicefile to the OMNEON."
+    "$scriptdir/uploadomneon" "$objectsdir/service/${mediaid%.*}.mov"
 fi
 
 # access copies
 if [ "$makeaccesscopies" == "Y" ] ; then
-	report -dt "STATUS Making access copies."
-	"$scriptdir/makedvd" "$OUTDIR_INGESTFILE/$mediaid"
-	"$scriptdir/makeyoutube" "$OUTDIR_INGESTFILE/$mediaid"
-	if [ "$deliveraccesscopies" = "Y" ] ; then
-		cp -av "$OUTDIR_INGESTFILE/$mediaid/objects/access/youtube_up/" "$YOUTUBEDELIVER/"
-	fi
-	if [ `echo "$mediaid" | grep "$REGEX4PODCAST"` ] ; then
-		report -dt "${media} qualifies for podcast creation."
-		sh "$scriptdir/makepodcast" "$OUTDIR_INGESTFILE/$mediaid"
-		if [ "$deliveraccesscopies" == "Y" ] ; then
-			cp -av "$OUTDIR_INGESTFILE/$mediaid/objects/access/podcast/" "$PODCASTDELIVER/"
-		fi
-	else
-		report -dt "${media} does NOT qualify for podcast creation, skipping."
-	fi
+    report -dt "STATUS Making access copies."
+    "$scriptdir/makedvd" "$OUTDIR_INGESTFILE/$mediaid"
+    "$scriptdir/makeyoutube" "$OUTDIR_INGESTFILE/$mediaid"
+    if [ "$deliveraccesscopies" = "Y" ] ; then
+        cp -av "$OUTDIR_INGESTFILE/$mediaid/objects/access/youtube_up/" "$YOUTUBEDELIVER/"
+    fi
+    if [ `echo "$mediaid" | grep "$REGEX4PODCAST"` ] ; then
+        report -dt "${media} qualifies for podcast creation."
+        sh "$scriptdir/makepodcast" "$OUTDIR_INGESTFILE/$mediaid"
+        if [ "$deliveraccesscopies" == "Y" ] ; then
+            cp -av "$OUTDIR_INGESTFILE/$mediaid/objects/access/podcast/" "$PODCASTDELIVER/"
+        fi
+    else
+        report -dt "${media} does NOT qualify for podcast creation, skipping."
+    fi
 fi
 end=`get_iso8601`
 
@@ -199,25 +199,25 @@ echo "datetime_end: ${end}" >> "$logdir/capture.log"
 
 # move and cleanup
 if [ "$deliverytoaipstorage" == "Y" ] ; then
-	rsync -rtv --progress --remove-source-files "$OUTDIR_INGESTFILE/$mediaid" "$AIP_STORAGE/"
-	[ `du -s "$OUTDIR_INGESTFILE/$mediaid" | awk '{print $1}'` = "0" ] && rm -r "$OUTDIR_INGESTFILE/$mediaid"
-	report -dt "STATUS Done. Final package has been delivered to $AIP_STORAGE/${mediaid}"
+    rsync -rtv --progress --remove-source-files "$OUTDIR_INGESTFILE/$mediaid" "$AIP_STORAGE/"
+    [ `du -s "$OUTDIR_INGESTFILE/$mediaid" | awk '{print $1}'` = "0" ] && rm -r "$OUTDIR_INGESTFILE/$mediaid"
+    report -dt "STATUS Done. Final package has been delivered to $AIP_STORAGE/${mediaid}"
 fi
 
 if [ "$cleanup" == "Y" ] ; then
-	if [ "$rsync_err" -gt "0" ] ; then
-		report -wt "Cancelling requested deletion of source file, not looking safe."
-	else
-		report -dt "Removing the source file from ${input} as requested."
-		rm -f "$input"
-	fi
+    if [ "$rsync_err" -gt "0" ] ; then
+        report -wt "Cancelling requested deletion of source file, not looking safe."
+    else
+        report -dt "Removing the source file from ${input} as requested."
+        rm -f "$input"
+    fi
 fi
 
 # clean up queue
 if [ "$priority" == "put in queue" ] ; then
-	tail -n +2 /tmp/queue.txt > /tmp/queue2.txt
-	rm /tmp/queue.txt
-	mv /tmp/queue2.txt /tmp/queue.txt
+    tail -n +2 /tmp/queue.txt > /tmp/queue2.txt
+    rm /tmp/queue.txt
+    mv /tmp/queue2.txt /tmp/queue.txt
 fi
 done
 log -e

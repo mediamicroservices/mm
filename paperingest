@@ -4,8 +4,8 @@ scriptdir=`dirname "$0"`
 . "$scriptdir/mmfunctions" || { echo "Missing '$scriptdir/mmfunctions'. Exiting." ; exit 1 ;};
 
 cleanup(){
-	log -a "Process aborted"
-	exit 1
+    log -a "Process aborted"
+    exit 1
 }
 
 trap cleanup SIGHUP SIGINT SIGTERM
@@ -16,7 +16,7 @@ ask_operator
 ask_mediaid
 
 if [ -d "$outputdir_paper/$mediaid" ] ; then
-	report -wdt "It looks like this $mediaid was already scanned. If you want to overwrite the existing one please delete $mediaid first and then try again."
+    report -wdt "It looks like this $mediaid was already scanned. If you want to overwrite the existing one please delete $mediaid first and then try again."
 exit
 fi
 

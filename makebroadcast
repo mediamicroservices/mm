@@ -8,11 +8,11 @@ scriptdir=`dirname "$0"`
 # command-line options to set mediaid and original 
 OPTIND=1
 while getopts lc opt ; do
-	case $opt in
-		l) audiomapping=" -map_audio_channel 0:1:0:0:1:0 -map_audio_channel 0:1:0:0:1:1 " ;;
-		c) cropdetect="Y" ;;
-		f) input="$OPTARG" ; once="y" ;;
-	esac
+    case $opt in
+        l) audiomapping=" -map_audio_channel 0:1:0:0:1:0 -map_audio_channel 0:1:0:0:1:1 " ;;
+        c) cropdetect="Y" ;;
+        f) input="$OPTARG" ; once="y" ;;
+    esac
 done
 shift $(( ${OPTIND} - 1 ))
 
@@ -24,93 +24,93 @@ version="1.2"
 # v 1.2 revert to mov and ffmbc
 
 cleanup(){
-	log -a "Process aborted"
-	exit 1
+    log -a "Process aborted"
+    exit 1
 }
 
 trap cleanup SIGHUP SIGINT SIGTERM
 
 while [ "$*" != ""  -o "$once" = "y" ] ; do
-	once="n"
-	[ "$#" != 0 ] && input="$1"
-	[ -d "$input" ] && { outputdir="$input/objects/service" && logdir="$input/metadata/submissionDocumentation/logs" ;};
-	[ -f "$input" ] && { outputdir=`dirname "$input"`"/service" && logdir="`dirname "$input"`/service/logs" ;};
-	[ ! "$outputdir" ] && { outputdir="$input/objects/service" && logdir="$input/metadata/submissionDocumentation/logs" ;};
-	find_input "$input"
+    once="n"
+    [ "$#" != 0 ] && input="$1"
+    [ -d "$input" ] && { outputdir="$input/objects/service" && logdir="$input/metadata/submissionDocumentation/logs" ;};
+    [ -f "$input" ] && { outputdir=`dirname "$input"`"/service" && logdir="`dirname "$input"`/service/logs" ;};
+    [ ! "$outputdir" ] && { outputdir="$input/objects/service" && logdir="$input/metadata/submissionDocumentation/logs" ;};
+    find_input "$input"
 
-	filename=`basename "$sourcefile"`
-	mediaid=`basename "$input" | cut -d. -f1`
-	
+    filename=`basename "$sourcefile"`
+    mediaid=`basename "$input" | cut -d. -f1`
+    
 log -b
 
-	servicefile="$outputdir/${mediaid%.*}.mov"
-	[ -s "$servicefile" ] && { report -wt "WARNING $servicefile already exists, skipping transcode" ; shift ; continue ;};
+    servicefile="$outputdir/${mediaid%.*}.mov"
+    [ -s "$servicefile" ] && { report -wt "WARNING $servicefile already exists, skipping transcode" ; shift ; continue ;};
 
-	report -dt "STATUS Transcoding for Omneon compliance."
-	ffmpeg_opts=" -r ntsc"
-	if [ -n "$audiomapping" ] ; then
-		ffmpeg_opts+=" $audiomapping"
-	else
-		has_first_two_tracks_mono "$sourcefile"
-		if [ "$MULTIMONO" = "Y" ] ; then
-			audiomapping=" -map_audio_channel 0.1:0:0.1:0 -map_audio_channel 0.2:0:0.1:1 "
-			ffmpeg_opts+=" $audiomapping"
-		fi
-	fi
-	# choose video encoding strategy, if source is xdcam 50 mb/sec ntsc then copy the video, else transcode
-	get_codectagstring "$sourcefile"
-	if [ "$codec_tag_string" = "xd5b" ] ; then
-		ffmpeg_opts+=" -c:v copy"
-	else
+    report -dt "STATUS Transcoding for Omneon compliance."
+    ffmpeg_opts=" -r ntsc"
+    if [ -n "$audiomapping" ] ; then
+        ffmpeg_opts+=" $audiomapping"
+    else
+        has_first_two_tracks_mono "$sourcefile"
+        if [ "$MULTIMONO" = "Y" ] ; then
+            audiomapping=" -map_audio_channel 0.1:0:0.1:0 -map_audio_channel 0.2:0:0.1:1 "
+            ffmpeg_opts+=" $audiomapping"
+        fi
+    fi
+    # choose video encoding strategy, if source is xdcam 50 mb/sec ntsc then copy the video, else transcode
+    get_codectagstring "$sourcefile"
+    if [ "$codec_tag_string" = "xd5b" ] ; then
+        ffmpeg_opts+=" -c:v copy"
+    else
 <<<<<<< HEAD
-		if [ "$cropdetect" = "Y" ] ; then
-			get_cropdetection "$sourcefile"
-			echo YEAHYAEAH
-			if [ -n "$CROPADJ" ] ;then
-				ffmpeg_opts+=" -vf '${CROPADJ},pad=ih*16/9:ih:(ow-iw)/2:(oh-ih)/2,scale=1920:1080:interl=1'"
-			else
-				ffmpeg_opts+=" -vf 'pad=ih*16/9:ih:(ow-iw)/2:(oh-ih)/2,scale=1920:1080:interl=1'"
-			fi
-		else
-			ffmpeg_opts+=" -vf 'pad=ih*16/9:ih:(ow-iw)/2:(oh-ih)/2,scale=1920:1080:interl=1'"
-		fi
-		ffmpeg_opts+=" -target xdcamhd422 -vtag xd5b -tff -aspect 16:9 -threads 4"
+        if [ "$cropdetect" = "Y" ] ; then
+            get_cropdetection "$sourcefile"
+            echo YEAHYAEAH
+            if [ -n "$CROPADJ" ] ;then
+                ffmpeg_opts+=" -vf '${CROPADJ},pad=ih*16/9:ih:(ow-iw)/2:(oh-ih)/2,scale=1920:1080:interl=1'"
+            else
+                ffmpeg_opts+=" -vf 'pad=ih*16/9:ih:(ow-iw)/2:(oh-ih)/2,scale=1920:1080:interl=1'"
+            fi
+        else
+            ffmpeg_opts+=" -vf 'pad=ih*16/9:ih:(ow-iw)/2:(oh-ih)/2,scale=1920:1080:interl=1'"
+        fi
+        ffmpeg_opts+=" -target xdcamhd422 -vtag xd5b -tff -aspect 16:9 -threads 4"
 =======
-		ffmpeg_opts+=" -vf 'pad=ih*16/9/sar:ih:(ow-iw)/2:(oh-ih)/2,scale=1920:1080:interl=1'"
-		ffmpeg_opts+=" -target xdcamhd422 -vtag xd5b -tff -threads 8"
+        ffmpeg_opts+=" -vf 'pad=ih*16/9/sar:ih:(ow-iw)/2:(oh-ih)/2,scale=1920:1080:interl=1'"
+        ffmpeg_opts+=" -target xdcamhd422 -vtag xd5b -tff -threads 8"
 >>>>>>> makebroadcast: consider sar while scaling
-	fi
+    fi
 
-	# add audio options
-	ffmpeg_opts+=" -acodec pcm_s24le -ar 48k -ac 2"
+    # add audio options
+    ffmpeg_opts+=" -acodec pcm_s24le -ar 48k -ac 2"
 
-	# set input options for ffmpeg
+    # set input options for ffmpeg
 <<<<<<< HEAD
-	inputoptions=" -y -threads 4"
+    inputoptions=" -y -threads 4"
 =======
-	inputoptions=" -y"
-	inputoptions+=" -threads 8"
-	inputoptions+=" -loglevel verbose"
+    inputoptions=" -y"
+    inputoptions+=" -threads 8"
+    inputoptions+=" -loglevel verbose"
 >>>>>>> makebroadcast: enable multi-threading and increase verbosity
-	mkdir -p "$outputdir"
-	ffmpeg_command="ffmbc $inputoptions -i \"$sourcefile\" $ffmpeg_opts \"$servicefile\""
-	# log ffmpeg process
-	if [ "$logdir" != "" ] ; then
-		mkdir -p "$logdir"
-		reportfile="ffmbc_$(date '+%Y%m%d-%H%M%S')_$(basename $0)_${version}.txt"
-		echo "ffmbc started on $(date '+%F at %T')" > "${logdir}/${reportfile}"
-		echo "Report written to \"${reportfile}\"" >> "${logdir}/${reportfile}"
-		echo "Command line:" >> "${logdir}/${reportfile}"
-	fi
-	report -dt "Running: ${ffmpeg_command}"
-	echo "$ffmpeg_command" >> "${logdir}/${reportfile}"
-	eval "$ffmpeg_command"
-	ffmpeg_err="$?"
+    mkdir -p "$outputdir"
+    ffmpeg_command="ffmbc $inputoptions -i \"$sourcefile\" $ffmpeg_opts \"$servicefile\""
+    # log ffmpeg process
+    if [ "$logdir" != "" ] ; then
+        mkdir -p "$logdir"
+        reportfile="ffmbc_$(date '+%Y%m%d-%H%M%S')_$(basename $0)_${version}.txt"
+        echo "ffmbc started on $(date '+%F at %T')" > "${logdir}/${reportfile}"
+        echo "Report written to \"${reportfile}\"" >> "${logdir}/${reportfile}"
+        echo "Command line:" >> "${logdir}/${reportfile}"
+    fi
+    report -dt "Running: ${ffmpeg_command}"
+    echo "$ffmpeg_command" >> "${logdir}/${reportfile}"
+    eval "$ffmpeg_command"
+    ffmpeg_err="$?"
 <<<<<<< HEAD
-	[ "$ffmpeg_err" -gt "0" ] && { report -wt "ffmpeg failed with error ${ffmpeg_err}" && exit 1;};
+    [ "$ffmpeg_err" -gt "0" ] && { report -wt "ffmpeg failed with error ${ffmpeg_err}" && exit 1;};
 =======
-	[ "$ffmpeg_err" -gt "0" ] && { report "${RED}ffmbc failed with error ${ffmpeg_err}${NC}" && exit 1;};
+    [ "$ffmpeg_err" -gt "0" ] && { report "${RED}ffmbc failed with error ${ffmpeg_err}${NC}" && exit 1;};
 >>>>>>> makebroadcast: remove logging for now
-	shift
+    shift
 done
 log -e

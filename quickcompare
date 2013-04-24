@@ -6,8 +6,8 @@ scriptdir=`dirname "$0"`
 . "$scriptdir/mmfunctions" || { echo "Missing '$scriptdir/mmfunctions'. Exiting." ; exit 1 ;};
 
 cleanup(){
-	log -a "Process aborted"
-	exit 1
+    log -a "Process aborted"
+    exit 1
 }
 
 trap cleanup SIGHUP SIGINT SIGTERM

@@ -12,19 +12,19 @@ find_input "$1"
     [ ! "$file" ] && outputdir="$1/objects/access/images"  
     
     
-	filename=`basename "$file"`
+    filename=`basename "$file"`
     mediaid=`basename "$1" | cut -d. -f1`
     
      if [ ! -s "$outputdir/${mediaid%.*}.mp4" ] ; then
-		IMAGECOUNT=10
-		INPUT="$1"
-		BASE=`basename $file`
-		DURATION=`ffprobe 2>/dev/null $file -show_format | grep duration | cut -d= -f2`
-		mkdir -p "$outputdir"
-		 for IMAGENUMBER in `seq 1 "$IMAGECOUNT"` ; do
- 		 START=`echo "( $DURATION / ( $IMAGECOUNT + 1 )) * $IMAGENUMBER" | bc`
- 		 ffmpeg -ss "$START" -i $file -vf yadif,thumbnail=100 -frames:v 1 "$outputdir/${BASE%.*}_${IMAGENUMBER}.tiff"
- 		 done	
- 	fi
- 	shift
+        IMAGECOUNT=10
+        INPUT="$1"
+        BASE=`basename $file`
+        DURATION=`ffprobe 2>/dev/null $file -show_format | grep duration | cut -d= -f2`
+        mkdir -p "$outputdir"
+         for IMAGENUMBER in `seq 1 "$IMAGECOUNT"` ; do
+          START=`echo "( $DURATION / ( $IMAGECOUNT + 1 )) * $IMAGENUMBER" | bc`
+          ffmpeg -ss "$START" -i $file -vf yadif,thumbnail=100 -frames:v 1 "$outputdir/${BASE%.*}_${IMAGENUMBER}.tiff"
+          done    
+     fi
+     shift
 done

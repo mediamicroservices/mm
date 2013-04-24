@@ -5,18 +5,18 @@ scriptdir=`dirname "$0"`
 . "$scriptdir/mmfunctions" || { echo "Missing '$scriptdir/mmfunctions'. Exiting." ; exit 1 ;};
 
 cleanup(){
-	log -a "Process aborted"
-	exit 1
+    log -a "Process aborted"
+    exit 1
 }
 
 trap cleanup SIGHUP SIGINT SIGTERM
 log -b
 
 while [ "$*" != "" ] ; do
-	target=$1
-	if [ -d "$target" ]; then
-		find "$target" -name '.DS_Store' -type f -delete
-	fi
-	shift
+    target=$1
+    if [ -d "$target" ]; then
+        find "$target" -name '.DS_Store' -type f -delete
+    fi
+    shift
 done
 log -e

@@ -5,37 +5,37 @@ scriptdir=`dirname "$0"`
 . "$scriptdir/mmfunctions" || { echo "Missing '$scriptdir/mmfunctions'. Exiting." ; exit 1 ;};
 
 cleanup(){
-	log -a "Process aborted"
-	exit 1
+    log -a "Process aborted"
+    exit 1
 }
 
 trap cleanup SIGHUP SIGINT SIGTERM
 log -b
 
 usage(){
-	echo
-	echo "$(basename $0) ${version}"
-	echo "This script may be run interactively by running it with no arguments or may be used with the following options."
-	echo "Usage: $(basename $0) [ -f sourcefile ] [ -i omneon_ip ] [ -n omneon_path ] [ -t tmp_dir]"
-	echo "  -f sourcefile"
-	echo "  -i omneonip"
-	echo "  -n omneonpath"
-	echo "  -t tmpdir"
-	exit
+    echo
+    echo "$(basename $0) ${version}"
+    echo "This script may be run interactively by running it with no arguments or may be used with the following options."
+    echo "Usage: $(basename $0) [ -f sourcefile ] [ -i omneon_ip ] [ -n omneon_path ] [ -t tmp_dir]"
+    echo "  -f sourcefile"
+    echo "  -i omneonip"
+    echo "  -n omneonpath"
+    echo "  -t tmpdir"
+    exit
 }
 
 # command-line options to set mediaid and original variables
 OPTIND=1
 while getopts ":hm:f:t:ip" opt; do
-	case "$opt" in
-		h) usage ;;
-		f) input="$OPTARG" ; once="y" ;;
-		i) OMNEONIP="$OPTARG" ;;
-		n) OMNEONPATH="$OPTARG" ;;
-		t) TMPDIR="$OPTARG" ;;
-		\?) echo "Invalid option: -$OPTARG" ; exit 1 ;;
-		:) echo "Option -$OPTARG requires an argument" ; exit 1 ;;
-	esac
+    case "$opt" in
+        h) usage ;;
+        f) input="$OPTARG" ; once="y" ;;
+        i) OMNEONIP="$OPTARG" ;;
+        n) OMNEONPATH="$OPTARG" ;;
+        t) TMPDIR="$OPTARG" ;;
+        \?) echo "Invalid option: -$OPTARG" ; exit 1 ;;
+        :) echo "Option -$OPTARG requires an argument" ; exit 1 ;;
+    esac
 done
 
 [ ! -d "$TMPDIR" ] && echo "The temporary directory must be set. Use [ -t /path/to/temporary/directory ]." && exit 1
@@ -62,12 +62,12 @@ if [ "$status" = "Name not found." ] ; then
 report "The file named $filename is not currently on the omneon, proceeding..."
 
 if echo "$sourcefile" | grep -q "/Volumes/[AB][0-9]\{5\}" ; then
-	report -dt "The file ${filename} is coming from an LTO tape. It will first move the file to ${TMPDIR} and then upload to the omneon."
-	rsync -rtv --progress "$sourcefile" "${TMPDIR}/"
-	uploadfile="${TMPDIR}/${filename}"
-	removetmp="y"
+    report -dt "The file ${filename} is coming from an LTO tape. It will first move the file to ${TMPDIR} and then upload to the omneon."
+    rsync -rtv --progress "$sourcefile" "${TMPDIR}/"
+    uploadfile="${TMPDIR}/${filename}"
+    removetmp="y"
 else
-	uploadfile="$sourcefile"
+    uploadfile="$sourcefile"
 fi
 
 report -dt "Starting to ftp $filename to the Omneon..."

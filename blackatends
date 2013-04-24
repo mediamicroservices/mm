@@ -5,8 +5,8 @@ scriptdir=`dirname "$0"`
 . "$scriptdir/mmfunctions" || { echo "Missing '$scriptdir/mmfunctions'. Exiting." ; exit 1 ;};
 
 cleanup(){
-	log -a "Process aborted"
-	exit 1
+    log -a "Process aborted"
+    exit 1
 }
 
 trap cleanup SIGHUP SIGINT SIGTERM
@@ -15,9 +15,9 @@ log -b
 [ "$#" = 0 ] && { ask_input ; once="y" ;};
 
 while [ "$*" != ""  -o "$once" = "y" ] ; do
-	once="n"
-	[ "$#" != 0 ] && sourcefile="$1"
-	black_at_ends "$sourcefile"
-	shift
+    once="n"
+    [ "$#" != 0 ] && sourcefile="$1"
+    black_at_ends "$sourcefile"
+    shift
 done
 log -e

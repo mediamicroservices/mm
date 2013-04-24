@@ -7,32 +7,32 @@ scriptdir=`dirname "$0"`
 . "$scriptdir/mmfunctions" || { echo "Missing '$scriptdir/mmfunctions'. Exiting." ; exit 1 ;};
 
 cleanup(){
-	log -a "Process aborted"
-	exit 1
+    log -a "Process aborted"
+    exit 1
 }
 
 trap cleanup SIGHUP SIGINT SIGTERM
 
 usage(){
-	echo
-	echo "$(basename $0) ${version}"
-	echo "This script may be run interactively by running it with no arguments or may be used with the following options."
-	echo "Usage: $(basename $0) [ -m mediaid ] [ -f sourcefile ]"
-	echo "  -m mediaid"
-	echo "  -f sourcefile"
-	exit
+    echo
+    echo "$(basename $0) ${version}"
+    echo "This script may be run interactively by running it with no arguments or may be used with the following options."
+    echo "Usage: $(basename $0) [ -m mediaid ] [ -f sourcefile ]"
+    echo "  -m mediaid"
+    echo "  -f sourcefile"
+    exit
 }
 
 # command-line options to set mediaid and original variables
 OPTIND=1
 while getopts ":hm:f:" opt; do
-	case "$opt" in
-		h) usage ;;
-		m) mediaid="$OPTARG";;
-		f) input="$OPTARG" ; once="y" ;;
-		\?) echo "Invalid option: -$OPTARG" ; exit 1 ;;
-		:) echo "Option -$OPTARG requires an argument" ; exit 1 ;;
-	esac
+    case "$opt" in
+        h) usage ;;
+        m) mediaid="$OPTARG";;
+        f) input="$OPTARG" ; once="y" ;;
+        \?) echo "Invalid option: -$OPTARG" ; exit 1 ;;
+        :) echo "Option -$OPTARG requires an argument" ; exit 1 ;;
+    esac
 done
 
 shift $(( ${OPTIND} - 1 ))
@@ -40,60 +40,60 @@ shift $(( ${OPTIND} - 1 ))
 [ "$#" = 0 -a ! "$input" ] && { ask_input ; once="y" ;};
 
 while [ "$*" != ""  -o "$once" = "y" ] ; do
-	once="n"
-	[ "$#" != 0 ] && input="$1"
-	[ -d "$input" ] && { outputdir="$input/objects/access/youtube_up" && logdir="$input/metadata/submissionDocumentation/logs" ;};
-	[ -f "$input" ] && { outputdir=`dirname "$input"`"/access/youtube_up" && logdir="`dirname "$input"`/access/logs" ;};
-	[ ! "$outputdir" ] && { outputdir="$input/objects/access/youtube_up" && logdir="$input/metadata/submissionDocumentation/logs" ;};
-	find_input "$input"
+    once="n"
+    [ "$#" != 0 ] && input="$1"
+    [ -d "$input" ] && { outputdir="$input/objects/access/youtube_up" && logdir="$input/metadata/submissionDocumentation/logs" ;};
+    [ -f "$input" ] && { outputdir=`dirname "$input"`"/access/youtube_up" && logdir="`dirname "$input"`/access/logs" ;};
+    [ ! "$outputdir" ] && { outputdir="$input/objects/access/youtube_up" && logdir="$input/metadata/submissionDocumentation/logs" ;};
+    find_input "$input"
 
-	filename=`basename "$sourcefile"`
-	mediaid=`basename "$1" | cut -d. -f1`
-	
+    filename=`basename "$sourcefile"`
+    mediaid=`basename "$1" | cut -d. -f1`
+    
 log -b
 
-	youtubeoutput="$outputdir/${mediaid%.*}.mp4"
-	[ -s "$youtubeoutput" ] && { report -wt "WARNING $youtubeoutput already exists, skipping transcode" ; exit 1 ;};
-	mkdir -p "$outputdir"
-	get_height "$sourcefile"
-	get_width "$sourcefile"
+    youtubeoutput="$outputdir/${mediaid%.*}.mp4"
+    [ -s "$youtubeoutput" ] && { report -wt "WARNING $youtubeoutput already exists, skipping transcode" ; exit 1 ;};
+    mkdir -p "$outputdir"
+    get_height "$sourcefile"
+    get_width "$sourcefile"
 
-	inputoptions=""
-	inputoptions+=" -vsync 0"
-	middleoptions=""
-	middleoptions+=" -movflags faststart"
-	middleoptions+=" -pix_fmt yuv420p"
-	middleoptions+=" -c:v libx264"
-	middleoptions+=" -crf 18"
-	if  [ "$height" -eq "486" -a "$width" -eq "720" ] ; then
-		middleoptions+=" -vf \"crop=720:480:0:4,yadif\" "
-	elif  [ "$height" -eq "512" -a "$width" -eq "720" ] ;then
-		middleoptions+=" -vf \"crop=720:480:0:32,yadif\" "
-	else
-		middleoptions+=" -vf yadif "
-	fi
-	middleoptions+=" -c:a libfaac"
-	middleoptions+=" -b:a 128k"
-	middleoptions+=" -f mp4"
+    inputoptions=""
+    inputoptions+=" -vsync 0"
+    middleoptions=""
+    middleoptions+=" -movflags faststart"
+    middleoptions+=" -pix_fmt yuv420p"
+    middleoptions+=" -c:v libx264"
+    middleoptions+=" -crf 18"
+    if  [ "$height" -eq "486" -a "$width" -eq "720" ] ; then
+        middleoptions+=" -vf \"crop=720:480:0:4,yadif\" "
+    elif  [ "$height" -eq "512" -a "$width" -eq "720" ] ;then
+        middleoptions+=" -vf \"crop=720:480:0:32,yadif\" "
+    else
+        middleoptions+=" -vf yadif "
+    fi
+    middleoptions+=" -c:a libfaac"
+    middleoptions+=" -b:a 128k"
+    middleoptions+=" -f mp4"
 
-	if [ "$logdir" != "" ] ; then
-		mkdir -p "$logdir"
-		export FFREPORT="file=${logdir}/%p_%t_$(basename $0)_${version}.txt"
-		inputoptions+=" -report"
-	fi
-	#makeyoutubecommand="ffmpeg $inputoptions -i \"$sourcefile\" $middleoptions \"$youtubeoutput\""
-	#report -dt "Running: $makeyoutubecommand"
-	#eval "$makeyoutubecommand"
-	#chapterlist=$(ffmpeg -i "$sourcefile" 2>&1 | grep "Chapter #0." | awk '{print $4}' | tr -d "\n" | sed '$s/.$//') && { chaptered="Y" ; report "Found chapters found in $sourcefile" ;};
-	#if [ chaptered="Y" ] ; then
-		#if [ "$logdir" != "" ] ; then
-			#export FFREPORT="file=${logdir}/%p_%t_$(basename $0)_segmented_${version}.txt"
-		#fi
-		#-force_key_frames $chapterlist
-		#segmentcommand="ffmpeg $inputoptions -i \"$sourcefile\" $middleoptions -r:v ntsc -map 0:v -map 0:a -f segment -segment_times $chapterlist -reset_timestamps 1 #-segment_start_number 1 -segment_time_delta 0.05 \"${youtubeoutput%.*}_S%02d.mp4\""
-		#report -dt "Running: $segmentcommand"
-		#eval "$segmentcommand"
-	#fi
-	shift
+    if [ "$logdir" != "" ] ; then
+        mkdir -p "$logdir"
+        export FFREPORT="file=${logdir}/%p_%t_$(basename $0)_${version}.txt"
+        inputoptions+=" -report"
+    fi
+    #makeyoutubecommand="ffmpeg $inputoptions -i \"$sourcefile\" $middleoptions \"$youtubeoutput\""
+    #report -dt "Running: $makeyoutubecommand"
+    #eval "$makeyoutubecommand"
+    #chapterlist=$(ffmpeg -i "$sourcefile" 2>&1 | grep "Chapter #0." | awk '{print $4}' | tr -d "\n" | sed '$s/.$//') && { chaptered="Y" ; report "Found chapters found in $sourcefile" ;};
+    #if [ chaptered="Y" ] ; then
+        #if [ "$logdir" != "" ] ; then
+            #export FFREPORT="file=${logdir}/%p_%t_$(basename $0)_segmented_${version}.txt"
+        #fi
+        #-force_key_frames $chapterlist
+        #segmentcommand="ffmpeg $inputoptions -i \"$sourcefile\" $middleoptions -r:v ntsc -map 0:v -map 0:a -f segment -segment_times $chapterlist -reset_timestamps 1 #-segment_start_number 1 -segment_time_delta 0.05 \"${youtubeoutput%.*}_S%02d.mp4\""
+        #report -dt "Running: $segmentcommand"
+        #eval "$segmentcommand"
+    #fi
+    shift
 done
 log -e

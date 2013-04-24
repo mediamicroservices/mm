@@ -5,58 +5,57 @@ scriptdir=`dirname "$0"`
 . "$scriptdir/mmfunctions" || { echo "Missing '$scriptdir/mmfunctions'. Exiting." ; exit 1 ;};
 
 cleanup(){
-	log -a "Process aborted"
-	exit 1
+    log -a "Process aborted"
+    exit 1
 }
 
 trap cleanup SIGHUP SIGINT SIGTERM
 log -b
 
-if test $# != 1
-then
-echo "You must supply one argument, a scanned interleaved 2/5 barcode value"; exit
+if test $# != 1 ; then
+    echo "You must supply one argument, a scanned interleaved 2/5 barcode value"; exit
 fi
 
 barcode="$1"
 
 translatebyte()
 {
-	val=`echo $1 | echo $(cut -c $2-$3) + 32 | bc`
-	if [ "$val" = 131 ] ; then
-		echo 9 | awk '{printf("%c", $0);}'
-	else
-		echo $val | awk '{printf("%c", $0);}'
-	fi
+    val=`echo $1 | echo $(cut -c $2-$3) + 32 | bc`
+    if [ "$val" = 131 ] ; then
+        echo 9 | awk '{printf("%c", $0);}'
+    else
+        echo $val | awk '{printf("%c", $0);}'
+    fi
 }
 addcolons()
 {
-	echo $(echo $1 | cut -c 1-2):$(echo $1 | cut -c 3-4):$(echo $1 | cut -c 5-6):$(echo $1 | cut -c 7-8)
+    echo $(echo $1 | cut -c 1-2):$(echo $1 | cut -c 3-4):$(echo $1 | cut -c 5-6):$(echo $1 | cut -c 7-8)
 }
 
 get_ids()
 {
-	barcode=$1
-	c00=`translatebyte $barcode 2 3`
-	c01=`translatebyte $barcode 4 5`
-	c02=`translatebyte $barcode 6 7`
-	c03=`translatebyte $barcode 8 9`
-	c04=`translatebyte $barcode 10 11`
-	c05=`translatebyte $barcode 12 13`
-	c06=`translatebyte $barcode 14 15`
-	c07=`translatebyte $barcode 16 17`
-	c08=`translatebyte $barcode 18 19`
-	c09=`translatebyte $barcode 20 21`
-	c10=`translatebyte $barcode 22 23`
-	c11=`translatebyte $barcode 24 25`
-	c12=`translatebyte $barcode 26 27`
-	c13=`translatebyte $barcode 28 29`
-	c14=`translatebyte $barcode 30 31`
-	c15=`translatebyte $barcode 32 33`
-	c16=`translatebyte $barcode 34 35`
-	c17=`translatebyte $barcode 36 37`
-	c18=`translatebyte $barcode 38 39`
-	c19=`translatebyte $barcode 40 41`
-	echo $c00$c01$c02$c03$c04$c05$c06$c07$c08$c09$c10$c11$c12$c13$c14$c15$c16$c17$c18$c19
+    barcode=$1
+    c00=`translatebyte $barcode 2 3`
+    c01=`translatebyte $barcode 4 5`
+    c02=`translatebyte $barcode 6 7`
+    c03=`translatebyte $barcode 8 9`
+    c04=`translatebyte $barcode 10 11`
+    c05=`translatebyte $barcode 12 13`
+    c06=`translatebyte $barcode 14 15`
+    c07=`translatebyte $barcode 16 17`
+    c08=`translatebyte $barcode 18 19`
+    c09=`translatebyte $barcode 20 21`
+    c10=`translatebyte $barcode 22 23`
+    c11=`translatebyte $barcode 24 25`
+    c12=`translatebyte $barcode 26 27`
+    c13=`translatebyte $barcode 28 29`
+    c14=`translatebyte $barcode 30 31`
+    c15=`translatebyte $barcode 32 33`
+    c16=`translatebyte $barcode 34 35`
+    c17=`translatebyte $barcode 36 37`
+    c18=`translatebyte $barcode 38 39`
+    c19=`translatebyte $barcode 40 41`
+    echo $c00$c01$c02$c03$c04$c05$c06$c07$c08$c09$c10$c11$c12$c13$c14$c15$c16$c17$c18$c19
 }
 
 ids=`get_ids $barcode`

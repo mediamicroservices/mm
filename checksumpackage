@@ -8,8 +8,8 @@ scriptdir=`dirname "$0"`
 . "$scriptdir/mmfunctions" || { echo "Missing '$scriptdir/mmfunctions'. Exiting." ; exit 1 ;};
 
 cleanup(){
-	log -a "Process aborted"
-	exit 1
+    log -a "Process aborted"
+    exit 1
 }
 
 trap cleanup SIGHUP SIGINT SIGTERM
@@ -22,28 +22,28 @@ CHECKSUMNAME="checksum.md5"
 DFXMLNAME="dfxml.xml"
 
 while [ "$*" != "" ] ; do
-	if [ -d "$1" ] ; then
-		pwd=`pwd`
-		"$scriptdir/removeDSStore" "$1"
-		if [ ! -s "${1}/metadata/$CHECKSUMNAME" -o ! -s "${1}/$CHECKSUMNAME" ] ; then
-			report -dt "making Digital Forensics XML (${DFXMLNAME}) and $CHECKSUMNAME for ${1}"
-			cd "$1"
-			if [ -d objects ] ; then
-				md5deep -drl objects > "metadata/$DFXMLNAME"
-				xml sel -T -t -m "/dfxml/fileobject" -v "hashdigest" -o " " -v "ctime" -o "  " -v "filename" -n "metadata/$DFXMLNAME" > "metadata/$CHECKSUMNAME"
-			else
-				maketemp
-				md5deep -drl . > $TMPFILE
-				mv $TMPFILE "$DFXMLNAME"
-				xml sel -T -t -m "/dfxml/fileobject" -v "hashdigest" -o " " -v "ctime" -o "  " -v "filename" -n "$DFXMLNAME" > "$CHECKSUMNAME"
-			fi
-			cd "$pwd"
-		else
-			report -dt "${CHECKSUMNAME} already exists, skipping for ${1}"
-		fi
-	else
-	report -dt "ERROR: $0 requires directories as input and $1 is not a directory."
-	fi
-	shift
+    if [ -d "$1" ] ; then
+        pwd=`pwd`
+        "$scriptdir/removeDSStore" "$1"
+        if [ ! -s "${1}/metadata/$CHECKSUMNAME" -o ! -s "${1}/$CHECKSUMNAME" ] ; then
+            report -dt "making Digital Forensics XML (${DFXMLNAME}) and $CHECKSUMNAME for ${1}"
+            cd "$1"
+            if [ -d objects ] ; then
+                md5deep -drl objects > "metadata/$DFXMLNAME"
+                xml sel -T -t -m "/dfxml/fileobject" -v "hashdigest" -o " " -v "ctime" -o "  " -v "filename" -n "metadata/$DFXMLNAME" > "metadata/$CHECKSUMNAME"
+            else
+                maketemp
+                md5deep -drl . > $TMPFILE
+                mv $TMPFILE "$DFXMLNAME"
+                xml sel -T -t -m "/dfxml/fileobject" -v "hashdigest" -o " " -v "ctime" -o "  " -v "filename" -n "$DFXMLNAME" > "$CHECKSUMNAME"
+            fi
+            cd "$pwd"
+        else
+            report -dt "${CHECKSUMNAME} already exists, skipping for ${1}"
+        fi
+    else
+    report -dt "ERROR: $0 requires directories as input and $1 is not a directory."
+    fi
+    shift
 done
 log -e
