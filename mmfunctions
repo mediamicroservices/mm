@@ -1,4 +1,6 @@
-. "$scriptdir/mmvariables"
+CONFIG_FILE="$scriptdir/mmvariables"
+
+. "$CONFIG_FILE"
 
 get_iso8601(){
     date +%FT%T
@@ -276,3 +278,9 @@ free_space(){
       exit 1
     fi
 }
+
+config_edit(){
+    [ -z "$1" -o -z "$2" ] && { report -w "The config_edit function requires two arguments. Error." ; exit ;};
+    sed -i '' "s/^$1=[^ ]*/$1=$2/" "$CONFIG_FILE"
+}
+
