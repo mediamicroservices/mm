@@ -23,21 +23,24 @@ DFXMLNAME="dfxml.xml"
 
 while [ "$*" != "" ] ; do
     if [ -d "$1" ] ; then
-        pwd=`pwd`
+        PWD=`pwd`
         "$scriptdir/removeDSStore" "$1"
-        if [ ! -s "${1}/metadata/$CHECKSUMNAME" -o ! -s "${1}/$CHECKSUMNAME" ] ; then
-            report -dt "making Digital Forensics XML (${DFXMLNAME}) and $CHECKSUMNAME for ${1}"
+        if [ -d "$1/objects" ] ; then
+            INDIR="objects"
+            OUTDIR="metadata"
+        else
+            INDIR="."
+            OUTDIR="."
+        fi
+        [ ! -d "$1/$OUTDIR" ] && mkdir -p "$1/$OUTDIR"
+        if [ ! -s "${1}/$OUTDIR/$CHECKSUMNAME" ] ; then
+            report -dt "making Digital Forensics XML (${DFXMLNAME}) and ($CHECKSUMNAME) for ${1}"
             cd "$1"
-            if [ -d objects ] ; then
-                md5deep -drl objects > "metadata/$DFXMLNAME"
-                xml sel -T -t -m "/dfxml/fileobject" -v "hashdigest" -o " " -v "ctime" -o "  " -v "filename" -n "metadata/$DFXMLNAME" > "metadata/$CHECKSUMNAME"
-            else
-                maketemp
-                md5deep -drl . > $TMPFILE
-                mv $TMPFILE "$DFXMLNAME"
-                xml sel -T -t -m "/dfxml/fileobject" -v "hashdigest" -o " " -v "ctime" -o "  " -v "filename" -n "$DFXMLNAME" > "$CHECKSUMNAME"
-            fi
-            cd "$pwd"
+            maketemp
+            md5deep -drl "$INDIR" > $TMPFILE
+            mv $TMPFILE "$OUTDIR/$DFXMLNAME"
+            xml sel -T -t -m "/dfxml/fileobject" -v "hashdigest" -o " " -v "ctime" -o "  " -v "filename" -n "$OUTDIR/$DFXMLNAME" > "$OUTDIR/$CHECKSUMNAME"
+            cd "$PWD"
         else
             report -dt "${CHECKSUMNAME} already exists, skipping for ${1}"
         fi
