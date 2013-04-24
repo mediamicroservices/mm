@@ -1,0 +1,26 @@
+#!/bin/bash
+# mmconfig
+# set up variables for microservices
+
+scriptdir=`dirname "$0"`
+. "$scriptdir/mmfunctions" || { echo "Missing '$scriptdir/mmfunctions'. Exiting." ; exit 1 ;};
+
+# local variables
+REQUIRED_VARIABLES="OUTDIR_INGESTFILE OUTDIR_INGESTXDCAM outputdir_paper AIP_STORAGE PODCASTDELIVER YOUTUBEDELIVER TMPDIR REGEX4PODCAST DVDLABELPREFIX OMNEONIP OMNEONPATH"
+
+report -d "Table of existing variables:"
+for KEY in $REQUIRED_VARIABLES ; do
+    VALUE=`grep "^$KEY=" "$CONFIG_FILE" | cut -d= -f2`
+    printf '\t%-25s %-40s\n' "$KEY" "$VALUE"
+done
+
+report -q "Edit a variable? "
+PS3="Selection (or 'q' to quit)? "
+select CONFIG_KEY in $REQUIRED_VARIABLES
+do
+    break
+done
+echo -n "Enter the value for $CONFIG_KEY: "
+read "CONFIG_VALUE"
+echo "k $CONFIG_KEY v $CONFIG_VALUE"
+config_edit "$CONFIG_KEY" "$CONFIG_VALUE"
