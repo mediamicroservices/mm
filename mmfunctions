@@ -1,3 +1,5 @@
+. "$scriptdir/mmvariables"
+
 get_iso8601(){
     date +%FT%T
 }

@@ -3,8 +3,7 @@
 #produces errors on zero-sized files
 
 scriptdir=`dirname "$0"`
-. "$scriptdir/mmvariables"
-. "$scriptdir/mmfunctions"
+. "$scriptdir/mmfunctions" || { echo "Missing '$scriptdir/mmfunctions'. Exiting." ; exit 1 ;};
 
 cleanup(){
 	log -a "Process aborted"

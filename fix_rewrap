@@ -2,9 +2,7 @@
 # this script takes one argument which is a video file. It then rewraps it to make a new file.
 
 scriptdir=`dirname "$0"`
-. "$scriptdir/mmvariables"
-. "$scriptdir/mmfunctions"
-[ ! -f "$scriptdir/mmvariables" -o ! -f "$scriptdir/mmfunctions" ] && { echo "Missing '$scriptdir/mmvariables' and/or '$scriptdir/mmfunctions'. Exiting." ; exit 1 ;};
+. "$scriptdir/mmfunctions" || { echo "Missing '$scriptdir/mmfunctions'. Exiting." ; exit 1 ;};
 
 cleanup(){
 	log -a "Process aborted"

@@ -10,9 +10,7 @@ deliveraccesscopies="Y"    # use 'Y' for yes or any other character for no
 deliverytoaipstorage="Y"   # use 'Y' for yes or any other character for no
 
 scriptdir=`dirname "$0"`
-. "$scriptdir/mmvariables"
-. "$scriptdir/mmfunctions"
-[ ! -f "$scriptdir/mmvariables" -o ! -f "$scriptdir/mmfunctions" ] && { echo "Missing '$scriptdir/mmvariables' and/or '$scriptdir/mmfunctions'. Exiting." ; exit 1 ;};
+. "$scriptdir/mmfunctions" || { echo "Missing '$scriptdir/mmfunctions'. Exiting." ; exit 1 ;};
 
 cleanup(){
 	log -a "Process aborted"

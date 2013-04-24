@@ -1,8 +1,7 @@
 #!/bin/bash 
 
 scriptdir=`dirname "$0"`
-. "$scriptdir/variables.sh"
-. "$scriptdir/functions.sh"
+. "$scriptdir/mmfunctions" || { echo "Missing '$scriptdir/mmfunctions'. Exiting." ; exit 1 ;};
 
 while [ "$*" != "" ] ; do
 
