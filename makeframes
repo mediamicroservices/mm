@@ -5,6 +5,9 @@ scriptdir=`dirname "$0"`
 
 [ "$#" = 0 -a ! "$input" ] && { ask_input ; once="y" ;};
 
+# local variables
+IMAGECOUNT=10
+
 cleanup(){
     log -a "Process aborted"
     exit 1
@@ -31,21 +34,18 @@ while [ "$*" != ""  -o "$once" = "y" ] ; do
     [ ! "$outputdir" ] && { outputdir="$input/objects/access/images" && logdir="$input/metadata/submissionDocumentation/logs" ;};
     find_input "$input" 
 
-    filename=`basename "$file"`
     mediaid=`basename "$1" | cut -d. -f1`
 
     log -b
-
-    if [ ! -s "$1/objects/access/images" ] ; then
-        IMAGECOUNT=10
-        BASE=`basename "$sourcefile"`
-        DURATION=`ffprobe 2>/dev/null $sourcefile -show_format | grep duration | cut -d= -f2` 
-        mkdir -p "$outputdir"
-        for IMAGENUMBER in `seq 1 "$IMAGECOUNT"` ; do
-            START=`echo "( $DURATION / ( $IMAGECOUNT + 1 )) * $IMAGENUMBER" | bc`
-            ffmpeg -ss "$START" -i $sourcefile -vf yadif,thumbnail=100 -frames:v 1 "$outputdir/${BASE%.*}_${IMAGENUMBER}.tiff" 
-        done	
-    fi
+    [ -s "$outputdir" ] && { report -wt "WARNING $outputdir already exists, skipping transcode" ; shift ; continue ;};
+    BASE=`basename "$sourcefile"`
+    DURATION=`ffprobe 2>/dev/null $sourcefile -show_format | grep duration | cut -d= -f2` 
+    mkdir -p "$outputdir"
+    for IMAGENUMBER in `seq 1 "$IMAGECOUNT"` ; do
+        START=`echo "( $DURATION / ( $IMAGECOUNT + 1 )) * $IMAGENUMBER" | bc`
+        report -d "Making frame $IMAGENUMBER of $IMAGECOUNT $outputdir/${BASE%.*}_${IMAGENUMBER}.tiff"
+        ffmpeg -y -v warning -ss "$START" -i $sourcefile -vf yadif,thumbnail=100 -frames:v 1 "$outputdir/${mediaid}_${IMAGENUMBER}.tiff" 
+    done
     shift
 done
 log -e
