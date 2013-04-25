@@ -16,8 +16,8 @@ usage(){
     echo
     echo "$(basename $0) ${version}"
     echo "This script may be run interactively by running it with no arguments or may be used with the following options."
-    echo "Usage: $(basename $0) [ -c ingest_xd_cam ]"
-    echo "  -c ingestxdcam"
+    echo "Usage: $(basename $0) [ -c output_directory_for_xdcam ]"
+    echo "  -c output_directory_for_xdcam (else will default to $CONFIG_FILE)"
     exit
 }
 
@@ -32,7 +32,7 @@ while getopts ":hm:f:p:a:w:y:x" opt; do
     esac
 done
 
-[ ! -d "$OUTDIR_INGESTXDCAM" ] && report -w "The XD Cam processing directory must be set. Use [ -p /path/to/XDCam/processing/directory ]." && exit 1
+[ ! -d "$OUTDIR_INGESTXDCAM" ] && report -w "The XDCam processing directory must be set. Use [ -c /path/to/XDCam/processing/directory ]." && exit 1
 
 defaults write com.apple.desktopservices DSDontWriteNetworkStores true
 
@@ -45,7 +45,7 @@ while true ; do
             report -wt "More than 1 XDCam deck appears to be mounted, please connect only one."
             exit 3
         else
-            report -qn "${RED}No XDCam disk found. Check deck connection. Click return to continue or 'q' to quit: "
+            report -qn "No XDCam disk found. Check deck connection. Click return to continue or 'q' to quit: "
             read ok
             if [ "$ok" == "q" ]; then
                 exit 0
@@ -59,18 +59,18 @@ while true ; do
     deck1=`basename "$xdcam_mount"`
     report -dt "Found the XDCAM deck: ${deck1}"
 
-    report -qn "${GREEN}Scan the barcode1, type 1st media_id, or 'q' to quit: "
+    report -qn "Scan the barcode1, type 1st media_id, or 'q' to quit: "
     read barcode1
     if [ "$barcode1" == "q" ]; then
         exit 0
     fi
-    report -qn "${GREEN}Scan the barcode2, type 2nd media_id, or 'q' to quit or leave blank if there is no second barcode: "
+    report -qn "Scan the barcode2, type 2nd media_id, or 'q' to quit or leave blank if there is no second barcode: "
     read barcode2
     if [ "$barcode2" == "q" ]; then
         exit 0
     fi
 
-    report -qn "${GREEN}Enter the name of the operator or 'q' to quit: "
+    report -qn "Enter the name of the operator or 'q' to quit: "
     read op
     if [ "$op" == "q" ]; then
         exit 0
@@ -207,7 +207,6 @@ while true ; do
 
             report -dt "starting initial checksum and packaging..."
             bag baginplace "${OUTDIR_INGESTXDCAM}/${deviceid1}"
-
             report -dt "done with $deviceid1 at `date`"
         fi
     fi
