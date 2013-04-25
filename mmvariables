@@ -23,19 +23,6 @@ DVDLABELPREFIX=""  # this string is pre-pended to DVD volume names
 OMNEONIP=""
 OMNEONPATH=""
 
-# dv deck info
-# enter technical details into the log
-log+="CaptureDeviceSoftware: dvgrab,${0} version ${version}\n"
-log+="PlaybackDeviceManufacturer: \n"
-log+="PlaybackDeviceModel: \n"
-log+="PlaybackDeviceSerialNo: \n"
-log+="Interface: \n"
-
-# dv process info
-OUTDIR_INGESTDV="$HOME"    #declare directory for packages of dv files to be written to during processing
-DVLOG=dvgrab_capture.log        #name of the log for dvgrab process data
-OPLOG=ingest_operator.log        #name of the log for operator process data
-
 # DO NOT CHANGE BELOW THIS LINE
 # --------------------------------
 # some local environment variables
