@@ -46,7 +46,7 @@ log -b
     servicefile="$outputdir/${mediaid%.*}.mov"
     [ -s "$servicefile" ] && { report -wt "WARNING $servicefile already exists, skipping transcode" ; shift ; continue ;};
 
-    report -dt "STATUS Transcoding for Omneon compliance."
+    report -dt "STATUS Transcoding for broadcast compliance."
     ffmpeg_opts=" -r ntsc"
     if [ -n "$audiomapping" ] ; then
         ffmpeg_opts+=" $audiomapping"
@@ -62,36 +62,26 @@ log -b
     if [ "$codec_tag_string" = "xd5b" ] ; then
         ffmpeg_opts+=" -c:v copy"
     else
-<<<<<<< HEAD
         if [ "$cropdetect" = "Y" ] ; then
             get_cropdetection "$sourcefile"
-            echo YEAHYAEAH
             if [ -n "$CROPADJ" ] ;then
-                ffmpeg_opts+=" -vf '${CROPADJ},pad=ih*16/9:ih:(ow-iw)/2:(oh-ih)/2,scale=1920:1080:interl=1'"
+                ffmpeg_opts+=" -vf '${CROPADJ},pad=ih*16/9/sar:ih:(ow-iw)/2:(oh-ih)/2,scale=1920:1080:interl=1'"
             else
-                ffmpeg_opts+=" -vf 'pad=ih*16/9:ih:(ow-iw)/2:(oh-ih)/2,scale=1920:1080:interl=1'"
+                ffmpeg_opts+=" -vf 'pad=ih*16/9/sar:ih:(ow-iw)/2:(oh-ih)/2,scale=1920:1080:interl=1'"
             fi
         else
-            ffmpeg_opts+=" -vf 'pad=ih*16/9:ih:(ow-iw)/2:(oh-ih)/2,scale=1920:1080:interl=1'"
+            ffmpeg_opts+=" -vf 'pad=ih*16/9/sar:ih:(ow-iw)/2:(oh-ih)/2,scale=1920:1080:interl=1'"
         fi
         ffmpeg_opts+=" -target xdcamhd422 -vtag xd5b -tff -aspect 16:9 -threads 4"
-=======
-        ffmpeg_opts+=" -vf 'pad=ih*16/9/sar:ih:(ow-iw)/2:(oh-ih)/2,scale=1920:1080:interl=1'"
-        ffmpeg_opts+=" -target xdcamhd422 -vtag xd5b -tff -threads 8"
->>>>>>> makebroadcast: consider sar while scaling
     fi
 
     # add audio options
     ffmpeg_opts+=" -acodec pcm_s24le -ar 48k -ac 2"
 
     # set input options for ffmpeg
-<<<<<<< HEAD
-    inputoptions=" -y -threads 4"
-=======
     inputoptions=" -y"
     inputoptions+=" -threads 8"
     inputoptions+=" -loglevel verbose"
->>>>>>> makebroadcast: enable multi-threading and increase verbosity
     mkdir -p "$outputdir"
     ffmpeg_command="ffmbc $inputoptions -i \"$sourcefile\" $ffmpeg_opts \"$servicefile\""
     # log ffmpeg process
@@ -106,11 +96,7 @@ log -b
     echo "$ffmpeg_command" >> "${logdir}/${reportfile}"
     eval "$ffmpeg_command"
     ffmpeg_err="$?"
-<<<<<<< HEAD
     [ "$ffmpeg_err" -gt "0" ] && { report -wt "ffmpeg failed with error ${ffmpeg_err}" && exit 1;};
-=======
-    [ "$ffmpeg_err" -gt "0" ] && { report "${RED}ffmbc failed with error ${ffmpeg_err}${NC}" && exit 1;};
->>>>>>> makebroadcast: remove logging for now
     shift
 done
 log -e
