@@ -1,6 +1,15 @@
+# assign variables
+SCRIPTNAME=`basename "$0"`
 CONFIG_FILE="$scriptdir/mm.conf"
+WHAT_IS_THIS="mediamicroservices"
 
-. "$CONFIG_FILE"
+# load configuration file
+if [ -f "$CONFIG_FILE" ] ; then
+    . "$CONFIG_FILE"
+elif [ ! "$CONFIG" = "Y" ] ; then
+    echo "The configuration file is not set. You must first create $CONFIG_FILE by running mmconfig." 1>&2
+    exit 1
+fi
 
 get_iso8601(){
     date +%FT%T
@@ -277,10 +286,5 @@ free_space(){
       report -wts "ERROR only $freespace gb free in this directory. This script requires at least $space gigabytes"
       exit 1
     fi
-}
-
-config_edit(){
-    [ -z "$1" -o -z "$2" ] && { report -w "The config_edit function requires two arguments. Error." ; exit ;};
-    sed -i '' "s:^$1=[^ ]*:$1=$2:" "$CONFIG_FILE"
 }
 

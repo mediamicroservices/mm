@@ -26,4 +26,4 @@ OMNEONPATH=""
 # DO NOT CHANGE BELOW THIS LINE
 # --------------------------------
 # some local environment variables
-SCRIPTNAME=`basename "$0"`
+
