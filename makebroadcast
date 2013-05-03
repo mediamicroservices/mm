@@ -41,19 +41,20 @@ while [ "$*" != ""  -o "$once" = "y" ] ; do
 
     filename=`basename "$sourcefile"`
     mediaid=`basename "$input" | cut -d. -f1`
-    
-log -b
+
+    log -b
 
     servicefile="$outputdir/${mediaid%.*}.mov"
-    [ -s "$servicefile" ] && { report -wt "WARNING $servicefile already exists, skipping transcode" ; shift ; continue ;};
+    [ -s "$servicefile" ] && { report -wt "$servicefile already exists, skipping transcode" ; shift ; continue ;};
 
-    report -dt "STATUS Transcoding for broadcast compliance."
+    report -dt "Starting transcode of $(basename $sourcefile) for broadcast compliance."
     ffmpeg_opts=" -r ntsc"
     if [ -n "$audiomapping" ] ; then
         ffmpeg_opts+=" $audiomapping"
     else
         has_first_two_tracks_mono "$sourcefile"
         if [ "$MULTIMONO" = "Y" ] ; then
+            report -wt "The first two audio tracks are both mono. Considering track 1 for left and track 2 for right."
             audiomapping=" -map_audio_channel 0.1:0:0.1:0 -map_audio_channel 0.2:0:0.1:1 "
             ffmpeg_opts+=" $audiomapping"
         fi
@@ -63,13 +64,13 @@ log -b
     #if [ "$codec_tag_string" = "xd5b" ] ; then
     #    ffmpeg_opts+=" -c:v copy"
     #else
-        if [ "$cropdetect" = "Y" ] ; then
-            get_cropdetection "$sourcefile"
-            filterchain_start="${CROPADJ},"
-        fi
-        ffmpeg_opts+=" -vf '${filterchain_start}pad=ih*16/9/sar:ih:(ow-iw)/2:(oh-ih)/2,scale=1920:1080:interl=1'"
-        ffmpeg_opts+=" -target xdcamhd422 -vtag xd5b -tff -aspect 16:9 -threads 4"
-        #fi
+    if [ "$cropdetect" = "Y" ] ; then
+        get_cropdetection "$sourcefile"
+        filterchain_start="${CROPADJ},"
+    fi
+    ffmpeg_opts+=" -vf '${filterchain_start}pad=ih*16/9/sar:ih:(ow-iw)/2:(oh-ih)/2,scale=1920:1080:interl=1'"
+    ffmpeg_opts+=" -target xdcamhd422 -vtag xd5b -tff -aspect 16:9 -threads 4"
+    #fi
 
     # add audio options
     ffmpeg_opts+=" -acodec pcm_s24le -ar 48k -ac 2"

@@ -28,6 +28,7 @@ log(){
             e) status="end"   ;;              # script is ending
             a) status="abort" ;;              # script is aborted
             c) status="comment" ;;            # comment about what script is doing
+            w) status+"warning" ;;            # warning information
         esac
     done
     shift $(( ${OPTIND} - 1 ))
@@ -58,7 +59,7 @@ report(){
         shift $(( ${OPTIND} - 1 ))
         message="$1"
         echo $echoopt "${color}${startmessage}${message}${NC}"
-        [ "$log" = "Y" ] && log -c "$message"
+        [ "$log" = "Y" ] && log -w "$message"
 }
 
 black_at_ends(){
