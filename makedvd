@@ -87,7 +87,7 @@ while [ "$*" != ""  -o "$once" = "y" ] ; do
         export FFREPORT="file=${logdir}/%p_%t_$(basename $0)_${version}.txt"
         inputoptions+=" -v warning -stats"
     fi
-    report -dt "Transcoding to DVD compliant mpeg2."
+    report -dt "Working on $(basename $isooutput) DVD image."
     dvdffmpegcommand="ffmpeg $inputoptions -i \"$sourcefile\" $middleoptions \"$outputdir/${mediaid%.*}.mpeg\""
     report -dt "Running: $dvdffmpegcommand"
     eval "$dvdffmpegcommand"
@@ -105,15 +105,16 @@ while [ "$*" != ""  -o "$once" = "y" ] ; do
     dvdauthor -T -o "$outputdir/${mediaid%.*}/"
     volname=`echo "${DVDLABELPREFIX}${mediaid}"`
     report -dt "Making DVD image file."
-    mkisofs -f -dvd-video -udf -V "${volname:0:32}" -v -v -o "$outputdir/${mediaid%.*}.iso"  "$outputdir/${mediaid%.*}" 2> "${logdir}/mkisofs_$(get_iso8601_c)_$(basename $0)_${version}.txt"
+    mkisofs -f -dvd-video -udf -V "${volname:0:32}" -v -v -o "$isooutput"  "$outputdir/${mediaid%.*}" 2> "${logdir}/mkisofs_$(get_iso8601_c)_$(basename $0)_${version}.txt"
     mkisofs_err="$?"
     if [ "$mkisofs_err" -gt "0" ] ; then
-        report -wt "ERROR mkisofs reported error code $mkisofs_err. Please review $outputdir/${mediaid%.*}.iso."
+        report -wt "ERROR mkisofs reported error code $mkisofs_err. Please review $isooutput."
         exit "$mkisofs_err"
     else
     rm -r "$outputdir/${mediaid%.*}/"
     fi
-    report -dt "STATUS ${mediaid%.*}.iso is generated."
+    report -dt "$(basename $isooutput) is done."
+    log -e
     shift
 done
-log -e
+

@@ -59,18 +59,24 @@ while [ "$*" != ""  -o "$once" = "y" ] ; do
             ffmpeg_opts+=" $audiomapping"
         fi
     fi
-    # choose video encoding strategy, if source is xdcam 50 mb/sec ntsc then copy the video, else transcode
-    get_codectagstring "$sourcefile"
-    #if [ "$codec_tag_string" = "xd5b" ] ; then
-    #    ffmpeg_opts+=" -c:v copy"
-    #else
     if [ "$cropdetect" = "Y" ] ; then
         get_cropdetection "$sourcefile"
         filterchain_start="${CROPADJ},"
     fi
-    ffmpeg_opts+=" -vf '${filterchain_start}pad=ih*16/9/sar:ih:(ow-iw)/2:(oh-ih)/2,scale=1920:1080:interl=1'"
-    ffmpeg_opts+=" -target xdcamhd422 -vtag xd5b -tff -aspect 16:9 -threads 4"
-    #fi
+    # decide on an output codec
+    get_dar "$sourcefile"
+    darratio=`echo "scale=3 ; $dar" | bc`
+    if [ `echo "scale=5 ; $darratio > 1.5" | bc -l` = 1 ] ; then
+        aspect="16/9"
+        dvdaspect="16:9"
+        ffmpeg_opts+=" -vf '${filterchain_start}pad=ih*16/9/sar:ih:(ow-iw)/2:(oh-ih)/2,scale=1920:1080:interl=1'"
+        ffmpeg_opts+=" -target xdcamhd422 -vtag xd5b -tff -aspect 16:9 -threads 4"
+    else
+        aspect="4/3"
+        dvdaspect="4:3"
+        ffmpeg_opts+=" -vf '${filterchain_start}pad=ih*4/3/sar:ih:(ow-iw)/2:(oh-ih)/2,scale=720:480:interl=1'"
+        ffmpeg_opts+=" -target imx30 -tff -aspect 4:3 -threads 4"
+    fi
 
     # add audio options
     ffmpeg_opts+=" -acodec pcm_s24le -ar 48k -ac 2"

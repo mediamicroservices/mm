@@ -170,7 +170,7 @@ fi
 
 # upload to omneon
 if [ "$deliverytoomneon" == "Y" ] ; then
-    report -dt "STATUS Uploading $servicefile to the OMNEON."
+    report -dt "STATUS Uploading $objectsdir/service/${mediaid%.*}.mov to the OMNEON."
     "$scriptdir/uploadomneon" "$objectsdir/service/${mediaid%.*}.mov"
 fi
 
@@ -183,7 +183,7 @@ if [ "$makeaccesscopies" == "Y" ] ; then
         cp -av "$OUTDIR_INGESTFILE/$mediaid/objects/access/youtube_up/" "$YOUTUBEDELIVER/"
     fi
     if [ `echo "$mediaid" | grep "$REGEX4PODCAST"` ] ; then
-        report -dt "${media} qualifies for podcast creation."
+        report -dt "${mediaid} qualifies for podcast creation."
         sh "$scriptdir/makepodcast" "$OUTDIR_INGESTFILE/$mediaid"
         if [ "$deliveraccesscopies" == "Y" ] ; then
             cp -av "$OUTDIR_INGESTFILE/$mediaid/objects/access/podcast/" "$PODCASTDELIVER/"
