@@ -30,7 +30,7 @@ while getopts ":hm:f:" opt; do
         h) usage ;;
         m) mediaid="$OPTARG";;
         f) input="$OPTARG" ; once="y" ;;
-        \?) echo "Invalid option: -$OPTARG" ; exit 1 ;;
+        *) echo "bad option -$OPTARG" ; usage ;;
         :) echo "Option -$OPTARG requires an argument" ; exit 1 ;;
     esac
 done
@@ -49,8 +49,8 @@ while [ "$*" != ""  -o "$once" = "y" ] ; do
 
     filename=`basename "$sourcefile"`
     mediaid=`basename "$1" | cut -d. -f1`
-    
-log -b
+
+    log -b
 
     youtubeoutput="$outputdir/${mediaid%.*}.mp4"
     [ -s "$youtubeoutput" ] && { report -wt "WARNING $youtubeoutput already exists, skipping transcode" ; exit 1 ;};
@@ -81,9 +81,9 @@ log -b
 		export FFREPORT="file=${logdir}/%p_%t_$(basename $0)_${version}.txt"
 		inputoptions+=" -v warning -stats"
 	fi
-	#makeyoutubecommand="ffmpeg $inputoptions -i \"$sourcefile\" $middleoptions \"$youtubeoutput\""
-	#report -dt "Running: $makeyoutubecommand"
-	#eval "$makeyoutubecommand"
+	makeyoutubecommand="ffmpeg $inputoptions -i \"$sourcefile\" $middleoptions \"$youtubeoutput\""
+    report -dt "Running: $makeyoutubecommand"
+	eval "$makeyoutubecommand"
 	#chapterlist=$(ffmpeg -i "$sourcefile" 2>&1 | grep "Chapter #0." | awk '{print $4}' | tr -d "\n" | sed '$s/.$//') && { chaptered="Y" ; report "Found chapters found in $sourcefile" ;};
 	#if [ chaptered="Y" ] ; then
 		#if [ "$logdir" != "" ] ; then

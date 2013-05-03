@@ -57,10 +57,10 @@ while getopts ":hm:f:p:a:w:y:xlco:q" opt; do
     esac
 done
 
-[ ! -d "$OUTDIR_INGESTFILE" ] && echo "The processing directory must be set. Use [ -p /path/to/processing/directory ]." && exit 1
-[ ! -d "$AIP_STORAGE" ] && echo "The AIP Storage directory must be set. Use [ -a /path/to/AIP/storage/directory ]." && exit 1
-[ ! -d "$PODCASTDELIVER" ] && echo "An access file for podcast delivery must be set. Use [ -w /path/to/objects/access/podcast]." && exit 1
-[ ! -d "$YOUTUBEDELIVER" ] && echo "An access file for youtube delivery must be set. Use [ -y /path/to/objects/access/youtube_up/]." && exit 1
+[ -z "$OUTDIR_INGESTFILE" ] && echo "The processing directory must be set. Use [ -p /path/to/processing/directory ] or run mmconfig to set OUTDIR_INGESTFILE." && exit 1
+[ -z "$AIP_STORAGE" ] && echo "The AIP Storage directory must be set. Use [ -a /path/to/AIP/storage/directory ] or run mmconfig to set AIP_STORAGE." && exit 1
+[ -z "$PODCASTDELIVER" ] && echo "An access file for podcast delivery must be set. Use [ -w /path/to/deliver/podcastfiles] or run mmconfig to set PODCASTDELIVER." && exit 1
+[ -z "$YOUTUBEDELIVER" ] && echo "An access file for youtube delivery must be set. Use [ -y /path/to/deliver/youtubefiles] or run mmconfig to set YOUTUBEDELIVER." && exit 1
 
 [ -n "$mediaid" ] && op="batch process"
 
@@ -154,7 +154,7 @@ start=`get_iso8601`
 
 # rsync
 report -dt "STATUS Copying the original file to library storage at $objectsdir."
-rsync -rtv --progress --log-file="$logdir/rsync_$(get_iso8601_c)_$(basename $0)_${version}.txt" "$input" "$objectsdir/"
+rsync -rt --progress --log-file="$logdir/rsync_$(get_iso8601_c)_$(basename $0)_${version}.txt" "$input" "$objectsdir/"
 
 rsync_err="$?"
 [ "$rsync_err" -gt "0" ] && report -wt "rsync failed with error ${rsync_err}" && exit 1
@@ -162,7 +162,7 @@ rsync_err="$?"
 # transcode
 if [ "$audiodecision" == "Only use left of the first audio track [for 21st Century]" -o "$audiodecision" == "left" ] ; then
     "$scriptdir/makebroadcast" -l "$OUTDIR_INGESTFILE/$mediaid"
-elif [ "$audiodecision" == "Only use right of the first audio track"] ; then
+elif [ "$audiodecision" == "Only use right of the first audio track" ] ; then
     "$scriptdir/makebroadcast" -r "$OUTDIR_INGESTFILE/$mediaid"
 else
     "$scriptdir/makebroadcast" "$OUTDIR_INGESTFILE/$mediaid"
@@ -201,7 +201,7 @@ echo "datetime_end: ${end}" >> "$logdir/capture.log"
 
 # move and cleanup
 if [ "$deliverytoaipstorage" == "Y" ] ; then
-    rsync -rtv --progress --remove-source-files "$OUTDIR_INGESTFILE/$mediaid" "$AIP_STORAGE/"
+    rsync -rt --progress --remove-source-files "$OUTDIR_INGESTFILE/$mediaid" "$AIP_STORAGE/"
     [ `du -s "$OUTDIR_INGESTFILE/$mediaid" | awk '{print $1}'` = "0" ] && rm -r "$OUTDIR_INGESTFILE/$mediaid"
     report -dt "STATUS Done. Final package has been delivered to $AIP_STORAGE/${mediaid}"
 fi
@@ -221,5 +221,4 @@ if [ "$priority" == "put in queue" ] ; then
     rm /tmp/queue.txt
     mv /tmp/queue2.txt /tmp/queue.txt
 fi
-done
 log -e

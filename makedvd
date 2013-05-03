@@ -56,8 +56,8 @@ while [ "$*" != ""  -o "$once" = "y" ] ; do
 
     filename=`basename "$sourcefile"`
     mediaid=`basename "$input" | cut -d. -f1`
-    
-log -b
+
+    log -b
 
     isooutput="$outputdir/${mediaid%.*}.iso"
     [ -s "$isooutput" ] && { report -wt "WARNING $isooutput already exists, skipping transcode" ; exit 1 ;};
@@ -69,7 +69,6 @@ log -b
     darratio=`echo "scale=3 ; $dar" | bc`
     [ `echo "scale=5 ; $darratio > 1.5" | bc -l` = 1 ] && { aspect="16/9" ; dvdaspect="16:9" ;};
     [ `echo "scale=5 ; $darratio > 1.5" | bc -l` = 1 ] || { aspect="4/3" ; dvdaspect="4:3" ;};
-
 
 	get_maxdvdbitrate "$sourcefile"
 	middleoptions="-r:v ntsc -c:v mpeg2video -c:a ac3 -f dvd -s 720x480 -pix_fmt yuv420p -g 18 -b:v $MAXDVDBITRATE -maxrate 9000k -minrate 0 -bufsize 1835008 -packetsize 2048 -muxrate 10080000 -b:a 448000 -ar 48000 "
