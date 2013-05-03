@@ -7,11 +7,21 @@ scriptdir=`dirname "$0"`
 . "$scriptdir/mmfunctions" || { echo "Missing '$scriptdir/mmfunctions'. Exiting." ; exit 1 ;};
 
 # local variables
-REQUIRED_VARIABLES=("OUTDIR_INGESTFILE" "OUTDIR_INGESTXDCAM" "outputdir_paper" "AIP_STORAGE" "PODCASTDELIVER" "YOUTUBEDELIVER" "TMPDIR" "REGEX4PODCAST" "DVDLABELPREFIX" "OMNEONIP" "OMNEONPATH")
+REQUIRED_VARIABLES=("OUTDIR_INGESTFILE" "OUTDIR_INGESTXDCAM" "OUTDIR_PAPER" "AIP_STORAGE" "PODCASTDELIVER" "YOUTUBEDELIVER" "TMPDIR" "REGEX4PODCAST" "DVDLABELPREFIX" "OMNEONIP" "OMNEONPATH")
 
 config_edit(){
     [ -z "$1" -o -z "$2" ] && { report -w "The config_edit function requires two arguments. Error." ; exit ;};
     sed -i '' "s:^$1=[^ ]*:$1=$2:" "$CONFIG_FILE"
+}
+
+test_config(){
+    for directoryvariable in OUTDIR_INGESTFILE OUTDIR_INGEST XDCAM OUTDIR_PAPER AIP_STORAGE PODCASTDELIVER YOUTUBEDELIVER TMPDIR ; do
+        if [ -d "${!directoryvariable}" ] ; then
+            report -d "${directoryvariable} is a valid directory"
+        else
+            report -w "${directoryvariable} is NOT a valid directory"
+        fi
+    done
 }
 
 # set up configuration file if required
@@ -24,6 +34,10 @@ if [ ! -f "$CONFIG_FILE" ] ; then
         echo "$KEY=" >> "$CONFIG_FILE"
     done
 fi
+
+report -d "Testing $CONFIG_FILE validity"
+test_config
+echo
 
 report -d "Table of existing variables:"
 for KEY in "${REQUIRED_VARIABLES[@]}" ; do

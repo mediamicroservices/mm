@@ -15,16 +15,16 @@ ask_operator
 
 ask_mediaid
 
-if [ -d "$outputdir_paper/$mediaid" ] ; then
+if [ -d "$OUTDIR_PAPER/$mediaid" ] ; then
     report -wdt "It looks like this $mediaid was already scanned. If you want to overwrite the existing one please delete $mediaid first and then try again."
 exit
 fi
 
-free_space 5 "$outputdir_paper"
+free_space 5 "$OUTDIR_PAPER"
   
-origdir="$outputdir_paper/$mediaid/objects"
-submissionMetadataDir="$outputdir_paper/$mediaid/metadata/submissionDocumentation"
-logdir="$outputdir_paper/$mediaid/logs"
+origdir="$OUTDIR_PAPER/$mediaid/objects"
+submissionMetadataDir="$OUTDIR_PAPER/$mediaid/metadata/submissionDocumentation"
+logdir="$OUTDIR_PAPER/$mediaid/logs"
   
 mkdir -p "$origdir"
 mkdir -p "$submissionMetadataDir"
