@@ -60,9 +60,9 @@ log -b
     fi
     # choose video encoding strategy, if source is xdcam 50 mb/sec ntsc then copy the video, else transcode
     get_codectagstring "$sourcefile"
-    if [ "$codec_tag_string" = "xd5b" ] ; then
-        ffmpeg_opts+=" -c:v copy"
-    else
+    #if [ "$codec_tag_string" = "xd5b" ] ; then
+    #    ffmpeg_opts+=" -c:v copy"
+    #else
         if [ "$cropdetect" = "Y" ] ; then
             get_cropdetection "$sourcefile"
             if [ -n "$CROPADJ" ] ;then
@@ -74,7 +74,7 @@ log -b
             ffmpeg_opts+=" -vf 'pad=ih*16/9/sar:ih:(ow-iw)/2:(oh-ih)/2,scale=1920:1080:interl=1'"
         fi
         ffmpeg_opts+=" -target xdcamhd422 -vtag xd5b -tff -aspect 16:9 -threads 4"
-    fi
+        #fi
 
     # add audio options
     ffmpeg_opts+=" -acodec pcm_s24le -ar 48k -ac 2"
