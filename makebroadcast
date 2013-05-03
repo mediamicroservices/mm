@@ -10,6 +10,7 @@ OPTIND=1
 while getopts lc opt ; do
     case $opt in
         l) audiomapping=" -map_audio_channel 0:1:0:0:1:0 -map_audio_channel 0:1:0:0:1:1 " ;;
+        r) audiomapping=" -map_audio_channel 0:1:1:0:1:0 -map_audio_channel 0:1:1:0:1:1 " ;;
         c) cropdetect="Y" ;;
         f) input="$OPTARG" ; once="y" ;;
     esac

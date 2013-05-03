@@ -75,7 +75,7 @@ log -b
 if [ "$audiodecision" = "" ] ; then
     report -q "Select an audio strategy? "
     PS3="Selection? "
-    select audiodecision in "Default audio mapping [first audio track used for stereo output]" "Only use left of the first audio track [for 21st Century]"
+    select audiodecision in "Default audio mapping [first audio track used for stereo output]" "Only use left of the first audio track [for 21st Century]" "Only use right of the first audio track"
     do
         break
     done
@@ -162,6 +162,8 @@ rsync_err="$?"
 # transcode
 if [ "$audiodecision" == "Only use left of the first audio track [for 21st Century]" -o "$audiodecision" == "left" ] ; then
     "$scriptdir/makebroadcast" -l "$OUTDIR_INGESTFILE/$mediaid"
+elif [ "$audiodecision" == "Only use right of the first audio track"] ; then
+    "$scriptdir/makebroadcast" -r "$OUTDIR_INGESTFILE/$mediaid"
 else
     "$scriptdir/makebroadcast" "$OUTDIR_INGESTFILE/$mediaid"
 fi
