@@ -65,14 +65,9 @@ log -b
     #else
         if [ "$cropdetect" = "Y" ] ; then
             get_cropdetection "$sourcefile"
-            if [ -n "$CROPADJ" ] ;then
-                ffmpeg_opts+=" -vf '${CROPADJ},pad=ih*16/9/sar:ih:(ow-iw)/2:(oh-ih)/2,scale=1920:1080:interl=1'"
-            else
-                ffmpeg_opts+=" -vf 'pad=ih*16/9/sar:ih:(ow-iw)/2:(oh-ih)/2,scale=1920:1080:interl=1'"
-            fi
-        else
-            ffmpeg_opts+=" -vf 'pad=ih*16/9/sar:ih:(ow-iw)/2:(oh-ih)/2,scale=1920:1080:interl=1'"
+            filterchain_start="${CROPADJ},"
         fi
+        ffmpeg_opts+=" -vf '${filterchain_start}pad=ih*16/9/sar:ih:(ow-iw)/2:(oh-ih)/2,scale=1920:1080:interl=1'"
         ffmpeg_opts+=" -target xdcamhd422 -vtag xd5b -tff -aspect 16:9 -threads 4"
         #fi
 
