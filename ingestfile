@@ -38,7 +38,7 @@ usage(){
 }
 
 # command-line options to set mediaid and original variables
-while getopts ":hm:f:p:a:w:y:xlco:q" opt; do
+while getopts ":hm:f:p:a:w:y:xlcro:q" opt; do
     case "$opt" in
         h) usage ;;
         m) mediaid="$OPTARG";;
@@ -50,6 +50,7 @@ while getopts ":hm:f:p:a:w:y:xlco:q" opt; do
         x) REGEX4PODCAST ;;
         l) audiodecision="left" ;;
         c) cleanupdecision="Y" ;;
+        r) cropdetection="Y" ;;
         o) op="$OPTARG" ;;
         q) priority="put in queue" ;;
         \?) echo "Invalid option: -$OPTARG" ; exit 1 ;;
@@ -64,8 +65,6 @@ done
 
 [ -n "$mediaid" ] && op="batch process"
 
-report "starting $SCRIPTNAME"
-
 ask_operator
 ask_mediaid
 ask_input
@@ -76,6 +75,15 @@ if [ "$audiodecision" = "" ] ; then
     report -q "Select an audio strategy? "
     PS3="Selection? "
     select audiodecision in "Default audio mapping [first audio track used for stereo output]" "Only use left of the first audio track [for 21st Century]" "Only use right of the first audio track"
+    do
+        break
+    done
+fi
+
+if [ "$cropdetection" = "" ] ; then
+    report -q "Select a cropping strategy? "
+    PS3="Selection? "
+    select cropdecision in "Do not crop." "Examine the video and auto-crop out black borders (slower)"
     do
         break
     done
@@ -164,6 +172,8 @@ if [ "$audiodecision" == "Only use left of the first audio track [for 21st Centu
     "$scriptdir/makebroadcast" -l "$OUTDIR_INGESTFILE/$mediaid"
 elif [ "$audiodecision" == "Only use right of the first audio track" ] ; then
     "$scriptdir/makebroadcast" -r "$OUTDIR_INGESTFILE/$mediaid"
+elif [ "$cropdecision" == "Examine the video and auto-crop out black borders (slower)" ] ; then
+    "$scriptdir/makebroadcast" -c "$OUTDIR_INGESTFILE/$mediaid"
 else
     "$scriptdir/makebroadcast" "$OUTDIR_INGESTFILE/$mediaid"
 fi

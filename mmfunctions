@@ -269,7 +269,8 @@ get_cropdetection(){
     input_movie="$1"
     report -dt "Getting cropping data for $(basename "$input_movie") ..."
     crop_data=`ffmpeg -i "${input_movie}" -an -vf cropdetect -f null - 2>&1 | grep -o "crop=[0-9:]*"`
-    [ $? -ne 0 ] && { report -wt "Crop detection analysis for $input_movie exited with $?." ; exit ;};
+    crop_err="$?"
+    [ "$crop_err" -ne 0 ] && { report -wt "Crop detection analysis for $input_movie exited with $crop_err." ; exit ;};
     for i in $(echo "$crop_data" | xargs); do
         [ "$i" != "" ] && CROPADJ="$i"
     done
