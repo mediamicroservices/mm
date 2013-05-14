@@ -53,19 +53,19 @@ while [ "$*" != ""  -o "$once" = "y" ] ; do
     
 log -b
 
-	podcastoutput="$outputdir/${mediaid%.*}_podcast.mov"
-	[ -s "$podcastoutput" ] && { report -wt "WARNING $podcastoutput already exists, skipping transcode" ; exit 1 ;};
-	mkdir -p "$outputdir"
-	middleoptions="-movflags faststart -pix_fmt yuv420p -c:v libx264 -b:v 1500k -maxrate:v 3000k -minrate:v 375k -bufsize:v 6000k -vf 'yadif,scale=640:trunc(ow/dar/2)*2:interl=1' -c:a libfaac -b:a 96k "
-	if [ "$logdir" != "" ] ; then
-		mkdir -p "$logdir"
-		export FFREPORT="file=${logdir}/%p_%t_$(basename $0)_${version}.txt"
-		inputoptions+=" -v warning -stats"
-	fi
-	makepodcastcommand="ffmpeg $inputoptions -i \"$sourcefile\" $middleoptions \"$podcastoutput\""
-	report -dt "Running: $makepodcastcommand"
-	eval "$makepodcastcommand"
+    podcastoutput="$outputdir/${mediaid%.*}_podcast.mov"
+    [ -s "$podcastoutput" ] && { report -wt "WARNING $podcastoutput already exists, skipping transcode" ; exit 1 ;};
+    mkdir -p "$outputdir"
+    middleoptions="-movflags faststart -pix_fmt yuv420p -c:v libx264 -b:v 1500k -maxrate:v 3000k -minrate:v 375k -bufsize:v 6000k -vf 'yadif,scale=640:trunc(ow/dar/2)*2:interl=1' -c:a libfaac -b:a 96k "
+    if [ "$logdir" != "" ] ; then
+        mkdir -p "$logdir"
+        export FFREPORT="file=${logdir}/%p_%t_$(basename $0)_${version}.txt"
+        inputoptions+=" -v warning -stats"
+    fi
+    makepodcastcommand="ffmpeg $inputoptions -i \"$sourcefile\" $middleoptions \"$podcastoutput\""
+    report -dt "Running: $makepodcastcommand"
+    eval "$makepodcastcommand"
     [ -d "$deliverdir" ] && cp -av "$outputdir/" "$deliverdir/"
-	shift
+    shift
 done
 log -e
