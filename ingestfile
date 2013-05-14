@@ -170,15 +170,11 @@ rsync_err="$?"
 [ "$rsync_err" -gt "0" ] && report -wt "rsync failed with error ${rsync_err}" && exit 1
 
 # make copy for broadcast
-if [ "$audiodecision" == "Only use left of the first audio track [for 21st Century]" -o "$audiodecision" == "left" ] ; then
-    "$scriptdir/makebroadcast" -l "$OUTDIR_INGESTFILE/$mediaid"
-elif [ "$audiodecision" == "Only use right of the first audio track" ] ; then
-    "$scriptdir/makebroadcast" -r "$OUTDIR_INGESTFILE/$mediaid"
-elif [ "$cropdecision" == "Examine the video and auto-crop out black borders (slower)" ] ; then
-    "$scriptdir/makebroadcast" -c "$OUTDIR_INGESTFILE/$mediaid"
-else
-    "$scriptdir/makebroadcast" "$OUTDIR_INGESTFILE/$mediaid"
-fi
+makebroadcastopts=""
+[ "$audiodecision" == "Only use left of the first audio track [for 21st Century]" -o "$audiodecision" == "left" ] && makebroadcastopts+=(-l)
+[ "$audiodecision" == "Only use right of the first audio track" ] && makebroadcastopts+=(-r)
+[ "$cropdecision" == "Examine the video and auto-crop out black borders (slower)" ] && makebroadcastopts+=(-c)
+"$scriptdir/makebroadcast" "${makebroadcastopts[@]}" "$OUTDIR_INGESTFILE/$mediaid"
 
 # upload broadcast copy
 if [ "$deliverytoomneon" == "Y" ] ; then
@@ -191,15 +187,12 @@ if [ "$makeaccesscopies" == "Y" ] ; then
     report -dt "STATUS Making access copies."
     "$scriptdir/makedvd" "$OUTDIR_INGESTFILE/$mediaid"
     "$scriptdir/makeyoutube" "$OUTDIR_INGESTFILE/$mediaid"
-    if [ "$deliveraccesscopies" = "Y" ] ; then
-        cp -av "$OUTDIR_INGESTFILE/$mediaid/objects/access/youtube_up/" "$YOUTUBEDELIVER/"
-    fi
+    [ "$deliveraccesscopies" = "Y" ] && makeyoutubeopts=(-d $YOUTUBEDELIVER)
+    "$scriptdir/makeyoutube" "${makeyoutubeopts[@]}" "$OUTDIR_INGESTFILE/$mediaid"
     if [ `echo "$mediaid" | grep "$REGEX4PODCAST"` ] ; then
         report -dt "${mediaid} qualifies for podcast creation."
-        sh "$scriptdir/makepodcast" "$OUTDIR_INGESTFILE/$mediaid"
-        if [ "$deliveraccesscopies" == "Y" ] ; then
-            cp -av "$OUTDIR_INGESTFILE/$mediaid/objects/access/podcast/" "$PODCASTDELIVER/"
-        fi
+        [ "$deliveraccesscopies" == "Y" ] && makepodcastopts=(-d $PODCASTDELIVER)
+        sh "$scriptdir/makepodcast" "${makepodcastopts[@]}" "$OUTDIR_INGESTFILE/$mediaid"
     else
         report -dt "${media} does NOT qualify for podcast creation, skipping."
     fi

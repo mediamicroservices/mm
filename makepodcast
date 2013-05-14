@@ -25,11 +25,12 @@ usage(){
 
 # command-line options to set mediaid and original variables
 OPTIND=1
-while getopts ":hm:f:" opt; do
+while getopts ":hm:f:d:" opt; do
     case "$opt" in
         h) usage ;;
         m) mediaid="$OPTARG";;
         f) input="$OPTARG" ; once="y" ;;
+        d) deliverdir="$OPTARG";;
         \?) echo "Invalid option: -$OPTARG" ; exit 1 ;;
         :) echo "Option -$OPTARG requires an argument" ; exit 1 ;;
     esac
@@ -64,6 +65,7 @@ log -b
 	makepodcastcommand="ffmpeg $inputoptions -i \"$sourcefile\" $middleoptions \"$podcastoutput\""
 	report -dt "Running: $makepodcastcommand"
 	eval "$makepodcastcommand"
+    [ -d "$deliverdir" ] && cp -av "$outputdir/" "$deliverdir/"
 	shift
 done
 log -e
