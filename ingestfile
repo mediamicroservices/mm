@@ -58,20 +58,20 @@ while getopts ":hm:f:p:a:w:y:xlcro:q" opt; do
     esac
 done
 
+# check environment
 [ -z "$OUTDIR_INGESTFILE" ] && echo "The processing directory must be set. Use [ -p /path/to/processing/directory ] or run mmconfig to set OUTDIR_INGESTFILE." && exit 1
 [ -z "$AIP_STORAGE" ] && echo "The AIP Storage directory must be set. Use [ -a /path/to/AIP/storage/directory ] or run mmconfig to set AIP_STORAGE." && exit 1
-[ -z "$PODCASTDELIVER" ] && echo "An access file for podcast delivery must be set. Use [ -w /path/to/deliver/podcastfiles] or run mmconfig to set PODCASTDELIVER." && exit 1
-[ -z "$YOUTUBEDELIVER" ] && echo "An access file for youtube delivery must be set. Use [ -y /path/to/deliver/youtubefiles] or run mmconfig to set YOUTUBEDELIVER." && exit 1
+[ -z "$PODCASTDELIVER" ] && echo "A directory for podcast delivery must be set. Use [ -w /path/to/deliver/podcastfiles] or run mmconfig to set PODCASTDELIVER." && exit 1
+[ -z "$YOUTUBEDELIVER" ] && echo "A directory for youtube delivery must be set. Use [ -y /path/to/deliver/youtubefiles] or run mmconfig to set YOUTUBEDELIVER." && exit 1
 
 [ -n "$mediaid" ] && op="batch process"
 
+# interview the operator
 ask_operator
-
 ask_mediaid
-# check for existing output
+## check for existing output
 [ -d "$OUTDIR_INGESTFILE/$mediaid" ] && report -wt "It looks like $mediaid was already ingested. If you want to overwrite the existing one please delete $OUTDIR_INGESTFILE/$mediaid first and then try again." && exit 1
 [ -d "$AIP_STORAGE/$mediaid" ] && report -wt "It looks like $mediaid was already ingested. If you want to overwrite the existing one please delete $AIP_STORAGE/$mediaid first and then try again." && exit 1
-
 ask_input
 
 log -b
@@ -116,7 +116,6 @@ if [ "$priority" = "" ] ; then
     done
 fi
 
-
 # blackframe analysis
 if [ "$blackframetest" = "Y" ] ; then
     black_at_ends "$input"
@@ -153,6 +152,7 @@ if [ "$priority" = "put in queue" ] ; then
     done
 fi
 
+# set up package directories
 mkdir -p "$objectsdir"
 logdir="$OUTDIR_INGESTFILE/$mediaid/metadata/submissionDocumentation/logs"
 mkdir -p "$logdir"
@@ -168,7 +168,7 @@ rsync -rt --progress --log-file="$logdir/rsync_$(get_iso8601_c)_$(basename $0)_$
 rsync_err="$?"
 [ "$rsync_err" -gt "0" ] && report -wt "rsync failed with error ${rsync_err}" && exit 1
 
-# transcode
+# make copy for broadcast
 if [ "$audiodecision" == "Only use left of the first audio track [for 21st Century]" -o "$audiodecision" == "left" ] ; then
     "$scriptdir/makebroadcast" -l "$OUTDIR_INGESTFILE/$mediaid"
 elif [ "$audiodecision" == "Only use right of the first audio track" ] ; then
@@ -179,13 +179,13 @@ else
     "$scriptdir/makebroadcast" "$OUTDIR_INGESTFILE/$mediaid"
 fi
 
-# upload to omneon
+# upload broadcast copy
 if [ "$deliverytoomneon" == "Y" ] ; then
     report -dt "STATUS Uploading $objectsdir/service/${mediaid%.*}.mov to the OMNEON."
     "$scriptdir/uploadomneon" "$objectsdir/service/${mediaid%.*}.mov"
 fi
 
-# access copies
+# make access copies
 if [ "$makeaccesscopies" == "Y" ] ; then
     report -dt "STATUS Making access copies."
     "$scriptdir/makedvd" "$OUTDIR_INGESTFILE/$mediaid"
@@ -216,7 +216,6 @@ if [ "$deliverytoaipstorage" == "Y" ] ; then
     [ `du -s "$OUTDIR_INGESTFILE/$mediaid" | awk '{print $1}'` = "0" ] && rm -r "$OUTDIR_INGESTFILE/$mediaid"
     report -dt "STATUS Done. Final package has been delivered to $AIP_STORAGE/${mediaid}"
 fi
-
 if [ "$cleanup" == "Y" ] ; then
     if [ "$rsync_err" -gt "0" ] ; then
         report -wt "Cancelling requested deletion of source file, not looking safe."
