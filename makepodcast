@@ -75,7 +75,7 @@ log -b
     fi
     report -dt "Running: ffmpeg ${inputoptions[@]} -i ${sourcefile} ${middleoptions[@]} ${podcastoutput}"
     ffmpeg ${inputoptions[@]} -i ${sourcefile} ${middleoptions[@]} ${podcastoutput}
-    [ -d "${deliverdir}" ] && cp -av "${outputdir}/" "${deliverdir}/"
+    [ -d "${deliverdir}" ] && cp -av "${podcastoutput}" "${deliverdir}/"
     shift
 done
 log -e

@@ -96,7 +96,7 @@ while [ "$*" != ""  -o "$once" = "y" ] ; do
         #eval "$segmentcommand"
     #fi
     report -dt "$(basename ${youtubeoutput}) is done."
-    [ -d "${deliverdir}" ] && cp -av "${outputdir}/" "${deliverdir}/"
+    [ -d "${deliverdir}" ] && cp -av "${youtubeoutput}" "${deliverdir}/"
     shift
     log -e
 done
