@@ -23,8 +23,10 @@ while [ "$*" != "" ] ; do
     extension="${name#*.}"
     
     get_codectagstring
+    unset ffmpeg_opts
+    unset ffmbc_opts
     ffmpeg_opts+=(-c:v copy -c:a pcm_s24le -ar 48000 -ac 2)
-    ffmbc_opts=(-vcodec copy -f s24le -ar 48000 -ac 2)
+    ffmbc_opts+=(-vcodec copy -f s24le -ar 48000 -ac 2)
     [ "${codec_tag_string}" = "mpeg" ] && extension="mxf"
 
     output_movie="${input_movie%.*}${suffix}.${extension}"

@@ -186,7 +186,7 @@ rsync_err="$?"
 [ "$rsync_err" -gt "0" ] && report -wt "rsync failed with error ${rsync_err}" && exit 1
 
 # make copy for broadcast
-makebroadcastopts=""
+unset makebroadcastopts
 [ "$audiodecision" == "Only use left of the first audio track [for 21st Century]" -o "$audiodecision" == "left" ] && makebroadcastopts+=(-l)
 [ "$audiodecision" == "Only use right of the first audio track" ] && makebroadcastopts+=(-r)
 [ "$cropdecision" == "Examine the video and auto-crop out black borders (slower)" ] && makebroadcastopts+=(-c)

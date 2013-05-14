@@ -24,7 +24,7 @@ while [ "$*" != "" ] ; do
     extension="${name#*.}"
     
     get_codectagstring
-    ffmbc_opts=""
+    unset ffmbc_opts
     ffmbc_opts+=(-vcodec copy -acodec copy)
     [ "${codec_tag_string}" = "mpeg" ] && extension="mxf"
 
