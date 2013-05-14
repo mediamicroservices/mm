@@ -9,6 +9,7 @@ deliverytoomneon="Y"       # use 'Y' for yes or any other character for no
 deliveraccesscopies="Y"    # use 'Y' for yes or any other character for no
 deliverytoaipstorage="Y"   # use 'Y' for yes or any other character for no
 
+queuefile="/tmp/queue.txt"
 scriptdir=`dirname "$0"`
 . "$scriptdir/mmfunctions" || { echo "Missing '$scriptdir/mmfunctions'. Exiting." ; exit 1 ;};
 
@@ -135,16 +136,16 @@ objectsdir="$OUTDIR_INGESTFILE/$mediaid/objects"
 
 # queue handling
 if [ "$priority" = "put in queue" ] ; then
-    echo "$mediaid" >> /tmp/queue.txt
-    next=$(head -n 1 /tmp/queue.txt)
+    echo "$mediaid" >> "$queuefile"
+    next=$(head -n 1 "$queuefile")
     while [ "$mediaid" != "$next" ] ; do
-        newnext=$(head -n 1 /tmp/queue.txt)
+        newnext=$(head -n 1 "$queuefile")
         echo -n "This process is waiting behind these identifiers: "
-        cat /tmp/queue.txt | tr '\n' ' '
+        cat "$queuefile" | tr '\n' ' '
         echo
         while [ "$next" = "$newnext" ] ; do
             sleep 10
-            newnext=$(head -n 1 /tmp/queue.txt)
+            newnext=$(head -n 1 "$queuefile")
         done
         next="$newnext"
     done
@@ -227,8 +228,8 @@ fi
 
 # clean up queue
 if [ "$priority" == "put in queue" ] ; then
-    tail -n +2 /tmp/queue.txt > /tmp/queue2.txt
-    rm /tmp/queue.txt
-    mv /tmp/queue2.txt /tmp/queue.txt
+    tail -n +2 "$queuefile" > "${queuefile}_tmp"
+    rm "$queuefile"
+    mv "${queuefile}_tmp" "$queuefile"
 fi
 log -e
