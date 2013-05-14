@@ -216,6 +216,11 @@ get_height(){
 
 get_dar(){
     dar=`ffprobe "$1" -show_streams -select_streams v 2> /dev/null | grep display_aspect_ratio= | cut -d = -f 2 | sed 's|:|/|g'`
+    if [ "$dar" = "0/1" ] ; then
+        get_width "$1"
+        get_height "$1"
+        dar="${width}/${height}"
+    fi
 }
 
 get_codectagstring(){
