@@ -47,12 +47,9 @@ while [ "$*" != ""  -o "$once" = "y" ] ; do
     [ -f "$input" ] && { outputdir=`dirname "$input"`"/access/podcast" && logdir="`dirname "$input"`/access/logs" ;};
     [ ! "$outputdir" ] && { outputdir="$input/objects/access/podcast" && logdir="$input/metadata/submissionDocumentation/logs" ;};
     find_input "$input"
-
     filename=`basename "$sourcefile"`
     mediaid=`basename "$input" | cut -d. -f1`
-    
-log -b
-
+    log -b
     podcastoutput="$outputdir/${mediaid%.*}_podcast.mov"
     [ -s "${podcastoutput}" ] && { report -wt "WARNING ${podcastoutput} already exists, skipping transcode" ; exit 1 ;};
     mkdir -p "${outputdir}"
@@ -76,6 +73,6 @@ log -b
     report -dt "Running: ffmpeg ${inputoptions[@]} -i ${sourcefile} ${middleoptions[@]} ${podcastoutput}"
     ffmpeg ${inputoptions[@]} -i ${sourcefile} ${middleoptions[@]} ${podcastoutput}
     [ -d "${deliverdir}" ] && cp -av "${podcastoutput}" "${deliverdir}/"
+    log -e
     shift
 done
-log -e
