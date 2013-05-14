@@ -66,7 +66,12 @@ done
 [ -n "$mediaid" ] && op="batch process"
 
 ask_operator
+
 ask_mediaid
+# check for existing output
+[ -d "$OUTDIR_INGESTFILE/$mediaid" ] && report -wt "It looks like $mediaid was already ingested. If you want to overwrite the existing one please delete $OUTDIR_INGESTFILE/$mediaid first and then try again." && exit 1
+[ -d "$AIP_STORAGE/$mediaid" ] && report -wt "It looks like $mediaid was already ingested. If you want to overwrite the existing one please delete $AIP_STORAGE/$mediaid first and then try again." && exit 1
+
 ask_input
 
 log -b
@@ -130,10 +135,6 @@ if [ "$blackframetest" = "Y" ] ; then
 fi
 
 objectsdir="$OUTDIR_INGESTFILE/$mediaid/objects"
-
-# check for existing output
-[ -d "$OUTDIR_INGESTFILE/$mediaid" ] && report -wt "It looks like $mediaid was already ingested. If you want to overwrite the existing one please delete $OUTDIR_INGESTFILE/$mediaid first and then try again." && exit 1
-[ -d "$AIP_STORAGE/$mediaid" ] && report -wt "It looks like $mediaid was already ingested. If you want to overwrite the existing one please delete $AIP_STORAGE/$mediaid first and then try again." && exit 1
 
 # queue handling
 if [ "$priority" = "put in queue" ] ; then
