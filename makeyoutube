@@ -53,39 +53,38 @@ while [ "$*" != ""  -o "$once" = "y" ] ; do
 
     log -b
 
-    youtubeoutput="$outputdir/${mediaid%.*}.mp4"
-    [ -s "$youtubeoutput" ] && { report -wt "WARNING $youtubeoutput already exists, skipping transcode" ; exit 1 ;};
-    mkdir -p "$outputdir"
-    get_height "$sourcefile"
-    get_width "$sourcefile"
+    youtubeoutput="${outputdir}/${mediaid%.*}.mp4"
+    [ -s "${youtubeoutput}" ] && { report -wt "WARNING ${youtubeoutput} already exists, skipping transcode" ; exit 1 ;};
+    mkdir -p "${outputdir}"
+    get_height "${sourcefile}"
+    get_width "${sourcefile}"
 
-    inputoptions=""
-    inputoptions+=" -vsync 0"
-    middleoptions=""
-    middleoptions+=" -movflags faststart"
-    middleoptions+=" -pix_fmt yuv420p"
-    middleoptions+=" -c:v libx264"
-    middleoptions+=" -crf 18"
-    if  [ "$height" -eq "486" -a "$width" -eq "720" ] ; then
-        middleoptions+=" -vf \"crop=720:480:0:4,yadif\" "
-    elif  [ "$height" -eq "512" -a "$width" -eq "720" ] ;then
-        middleoptions+=" -vf \"crop=720:480:0:32,yadif\" "
+    unset inputoptions
+    inputoptions+=(-vsync 0)
+    unset middleoptions
+    middleoptions+=(-movflags faststart)
+    middleoptions+=(-pix_fmt yuv420p)
+    middleoptions+=(-c:v libx264)
+    middleoptions+=(-crf 18)
+    if  [ "${height}" -eq "486" -a "${width}" -eq "720" ] ; then
+        middleoptions+=(-vf "crop=720:480:0:4,yadif")
+    elif  [ "${height}" -eq "512" -a "${width}" -eq "720" ] ;then
+        middleoptions+=(-vf "crop=720:480:0:32,yadif")
     else
-        middleoptions+=" -vf yadif "
+        middleoptions+=(-vf yadif)
     fi
-    middleoptions+=" -c:a libfaac"
-    middleoptions+=" -b:a 128k"
-    middleoptions+=" -f mp4"
+    middleoptions+=(-c:a libfaac)
+    middleoptions+=(-b:a 128k)
+    middleoptions+=(-f mp4)
 
-    if [ "$logdir" != "" ] ; then
-        mkdir -p "$logdir"
+    if [ "${logdir}" != "" ] ; then
+        mkdir -p "${logdir}"
         export FFREPORT="file=${logdir}/%p_%t_$(basename $0)_${version}.txt"
-        inputoptions+=" -v warning -stats"
+        inputoptions+=(-v warning -stats)
     fi
-    report -dt "Working on $(basename $youtubeoutput) for youtube upload."
-    makeyoutubecommand="ffmpeg $inputoptions -i \"$sourcefile\" $middleoptions \"$youtubeoutput\""
-    report -dt "Running: $makeyoutubecommand"
-    eval "$makeyoutubecommand"
+    report -dt "Working on $(basename ${youtubeoutput}) for youtube upload."
+    report -dt "Running: ffmpeg ${inputoptions[@]} -i ${sourcefile} ${middleoptions[@]} ${youtubeoutput}"
+    ffmpeg ${inputoptions[@]} -i ${sourcefile} ${middleoptions[@]} ${youtubeoutput}
     #chapterlist=$(ffmpeg -i "$sourcefile" 2>&1 | grep "Chapter #0." | awk '{print $4}' | tr -d "\n" | sed '$s/.$//') && { chaptered="Y" ; report "Found chapters found in $sourcefile" ;};
     #if [ chaptered="Y" ] ; then
         #if [ "$logdir" != "" ] ; then
@@ -96,8 +95,8 @@ while [ "$*" != ""  -o "$once" = "y" ] ; do
         #report -dt "Running: $segmentcommand"
         #eval "$segmentcommand"
     #fi
-    report -dt "$(basename $youtubeoutput) is done."
-    [ -d "$deliverdir" ] && cp -av "$outputdir/" "$deliverdir/"
+    report -dt "$(basename ${youtubeoutput}) is done."
+    [ -d "${deliverdir}" ] && cp -av "${outputdir}/" "${deliverdir}/"
     shift
     log -e
 done

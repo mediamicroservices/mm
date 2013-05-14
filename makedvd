@@ -65,32 +65,45 @@ while [ "$*" != ""  -o "$once" = "y" ] ; do
     get_height "$sourcefile"
     get_width "$sourcefile"
     get_dar "$sourcefile"
-
     darratio=`echo "scale=3 ; $dar" | bc`
     [ `echo "scale=5 ; $darratio > 1.5" | bc -l` = 1 ] && { aspect="16/9" ; dvdaspect="16:9" ;};
     [ `echo "scale=5 ; $darratio > 1.5" | bc -l` = 1 ] || { aspect="4/3" ; dvdaspect="4:3" ;};
 
     get_maxdvdbitrate "$sourcefile"
-    middleoptions="-r:v ntsc -c:v mpeg2video -c:a ac3 -f dvd -s 720x480 -pix_fmt yuv420p -g 18 -b:v $MAXDVDBITRATE -maxrate 9000k -minrate 0 -bufsize 1835008 -packetsize 2048 -muxrate 10080000 -b:a 448000 -ar 48000 "
+    unset inputoptions
+    unset middleoptions
+    middleoptions+=(-r:v ntsc)
+    middleoptions+=(-c:v mpeg2video)
+    middleoptions+=(-c:a ac3)
+    middleoptions+=(-f dvd)
+    middleoptions+=(-s 720x480)
+    middleoptions+=(-pix_fmt yuv420p)
+    middleoptions+=(-g 18)
+    middleoptions+=(-b:v $MAXDVDBITRATE)
+    middleoptions+=(-maxrate 9000k)
+    middleoptions+=(-minrate 0)
+    middleoptions+=(-bufsize 1835008)
+    middleoptions+=(-packetsize 2048)
+    middleoptions+=(-muxrate 10080000)
+    middleoptions+=(-b:a 448000)
+    middleoptions+=(-ar 48000)
     if  [ "$height" -eq "486" -a "$width" -eq "720" ] ; then
-        middleoptions+=" -vf \"crop=720:480:0:4,setdar=${aspect}\" -aspect $aspect "
+        middleoptions+=(-vf "crop=720:480:0:4,setdar=${aspect}" -aspect $aspect)
     elif  [ "$height" -eq "480" -a "$width" -eq "720" ] ; then
-        middleoptions+=" -vf \"setdar=${aspect}\" -aspect $aspect "
+        middleoptions+=(-vf "setdar=${aspect}" -aspect $aspect)
     elif  [ "$height" -eq "512" -a "$width" -eq "720" ] ; then
-        middleoptions+=" -vf \"crop=720:480:0:32,setdar=${aspect}\" -aspect $aspect "
+        middleoptions+=(-vf "crop=720:480:0:32,setdar=${aspect}" -aspect $aspect)
     else
-        middleoptions+=" -vf \"scale=720:480:interl=1,setdar=${aspect}\" -aspect $aspect "
+        middleoptions+=(-vf "scale=720:480:interl=1,setdar=${aspect}" -aspect $aspect)
     fi
     inputoptions+=" -y"
     if [ "$logdir" != "" ] ; then
         mkdir -p "$logdir"
         export FFREPORT="file=${logdir}/%p_%t_$(basename $0)_${version}.txt"
-        inputoptions+=" -v warning -stats"
+        inputoptions+=(-v warning -stats)
     fi
     report -dt "Working on $(basename $isooutput) DVD image."
-    dvdffmpegcommand="ffmpeg $inputoptions -i \"$sourcefile\" $middleoptions \"$outputdir/${mediaid%.*}.mpeg\""
-    report -dt "Running: $dvdffmpegcommand"
-    eval "$dvdffmpegcommand"
+    ffmpeg ${inputoptions[@]} -i ${sourcefile} ${middleoptions[@]} ${outputdir}/${mediaid%.*}.mpeg
     export VIDEO_FORMAT=NTSC
     # chapters every 5 minutes, dvdauthor will ignore chapter markers greater than duration
     report -dt "Making DVD VIDEO_TS folder."

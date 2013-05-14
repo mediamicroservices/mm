@@ -46,19 +46,19 @@ report(){
         local endmessage=""
         local echoopt=""
         OPTIND=1
-        while getopts ":qdwtsn" opt; do
+        while getopts ":qdwstn" opt; do
             case "$opt" in
                 q) color="$BLUE" ;;                         # question mode, use color blue
                 d) color="$GREEN" ;;                        # declaration mode, use color green
                 w) color="$RED" ; log="Y";;                 # warning mode, use color red
-                t) startmessage="$(get_iso8601) - " ;;      # prepend timestamp to the message
-                s) startmessage+="[$(basename $0)] " ;;     # prepend scriptname to the message
+                s) startmessage+=([$(basename $0)] ) ;;     # prepend scriptname to the message
+                t) startmessage+=($(get_iso8601) '- ' ) ;;     # prepend timestamp to the message
                 n) echoopt="-n" ;;                          # to avoid line breaks after echo
             esac
         done
         shift $(( ${OPTIND} - 1 ))
         message="$1"
-        echo $echoopt "${color}${startmessage}${message}${NC}"
+        echo $echoopt "${color}${startmessage[@]}${message}${NC}"
         [ "$log" = "Y" ] && log -w "$message"
 }
 
