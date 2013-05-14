@@ -74,8 +74,6 @@ ask_mediaid
 [ -d "$AIP_STORAGE/$mediaid" ] && report -wt "It looks like $mediaid was already ingested. If you want to overwrite the existing one please delete $AIP_STORAGE/$mediaid first and then try again." && exit 1
 ask_input
 
-log -b
-
 if [ "$audiodecision" = "" ] ; then
     report -q "Select an audio strategy? "
     PS3="Selection? "
@@ -151,6 +149,8 @@ if [ "$priority" = "put in queue" ] ; then
         next="$newnext"
     done
 fi
+
+log -b
 
 # set up package directories
 mkdir -p "$objectsdir"
