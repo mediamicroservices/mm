@@ -13,8 +13,22 @@ queuefile="/tmp/queue.txt"
 scriptdir=`dirname "$0"`
 . "$scriptdir/mmfunctions" || { echo "Missing '$scriptdir/mmfunctions'. Exiting." ; exit 1 ;};
 
+add_mediaid_to_queue(){
+    [ -z "$mediaid" ] || { report -wt "Error: mediaid is undefined in add_media_to_queue function" && exit 1 ;};
+    [ -f "$queuefile"] || { report -wt "Error: queuefile is undefined in add_media_to_queue function" && exit 1 ;};
+    echo "$mediaid" >> "$queuefile"
+}
+remove_mediaid_from_queue(){
+    [ -z "$mediaid" ] || { report -wt "Error: mediaid is undefined in add_media_to_queue function" && exit 1 ;};
+    [ -f "$queuefile"] || { report -wt "Error: queuefile is undefined in add_media_to_queue function" && exit 1 ;};
+    grep -v "^${mediaid}$" "$queuefile" | grep "^[A-Z0-9_-]\+$" > "${queuefile}_tmp"
+    rm "$queuefile"
+    mv "${queuefile}_tmp" "$queuefile"
+}
+
 cleanup(){
     log -a "Process aborted"
+    remove_mediaid_from_queue
     exit 1
 }
 
@@ -136,7 +150,7 @@ objectsdir="$OUTDIR_INGESTFILE/$mediaid/objects"
 
 # queue handling
 if [ "$priority" = "put in queue" ] ; then
-    echo "$mediaid" >> "$queuefile"
+    add_mediaid_to_queue
     next=$(head -n 1 "$queuefile")
     while [ "$mediaid" != "$next" ] ; do
         newnext=$(head -n 1 "$queuefile")
@@ -220,9 +234,6 @@ if [ "$cleanup" == "Y" ] ; then
 fi
 
 # clean up queue
-if [ "$priority" == "put in queue" ] ; then
-    tail -n +2 "$queuefile" > "${queuefile}_tmp"
-    rm "$queuefile"
-    mv "${queuefile}_tmp" "$queuefile"
-fi
+[ "$priority" == "put in queue" ] && remove_mediaid_from_queue
+
 log -e
