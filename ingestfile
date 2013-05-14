@@ -18,6 +18,7 @@ add_mediaid_to_queue(){
     [ -f "$queuefile"] || { report -wt "Error: queuefile is undefined in add_media_to_queue function" && exit 1 ;};
     echo "$mediaid" >> "$queuefile"
 }
+
 remove_mediaid_from_queue(){
     [ -z "$mediaid" ] || { report -wt "Error: mediaid is undefined in add_media_to_queue function" && exit 1 ;};
     [ -f "$queuefile"] || { report -wt "Error: queuefile is undefined in add_media_to_queue function" && exit 1 ;};
@@ -29,6 +30,7 @@ remove_mediaid_from_queue(){
 cleanup(){
     log -a "Process aborted"
     remove_mediaid_from_queue
+    [ -d "$OUTDIR_INGESTFILE/$mediaid" ] && mv "$OUTDIR_INGESTFILE/$mediaid" "$OUTDIR_INGESTFILE/${mediaid}_aborted_ingest_$(get_iso8601_c)"
     exit 1
 }
 
