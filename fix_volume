@@ -1,9 +1,6 @@
 #!/bin/bash
 # this script takes one argument which is a video file. It evaluates the audio of the file, determines the difference needed to change the audio to -30dB as a mean_volume and then makes that adjustment to an output MXF file. The video track is simply copied.
 
-# local variables
-suffix="_voladj"
-
 scriptdir=`dirname "$0"`
 . "$scriptdir/mmfunctions" || { echo "Missing '$scriptdir/mmfunctions'. Exiting." ; exit 1 ;};
 
@@ -12,6 +9,9 @@ cleanup(){
     exit 1
 }
 
+# local variables
+suffix="_voladj"
+
 trap cleanup SIGHUP SIGINT SIGTERM
 log -b
 
@@ -19,26 +19,25 @@ log -b
 
 while [ "$*" != "" ] ; do
     input_movie="$1"
-    name=`basename "$1"`
+    name=$(basename "$1")
+    extension="${name#*.}"
+    
     get_codectagstring
-    #[ "$codec_tag_string" = "mpeg" ] && { ffmpeg_opts+=" -c:v copy -c:a pcm_s24le" ; extension="mxf" ; } ;
-    #[ "$codec_tag_string" = "mpeg" ] || { ffmpeg_opts+=" -c:v copy -c:a pcm_s24le" ; extension="mov" ; } ;
-    [ "$codec_tag_string" = "mpeg" ] && { ffmpeg_opts+=" -c:a pcm_s24le -f s24le -ar 48000 -ac 2 " ; ffmbc_opts=" -vcodec copy -f s24le -ar 48000 -ac 2 " ; extension="mxf" ; } ;
-    [ "$codec_tag_string" = "mpeg" ] || { ffmpeg_opts+=" -c:a pcm_s24le -f s24le -ar 48000 -ac 2 " ; ffmbc_opts=" -vcodec copy -f s24le -ar 48000 -ac 2 " ; extension="mov" ; } ;
+    ffmpeg_opts+=(-c:v copy -c:a pcm_s24le -ar 48000 -ac 2)
+    ffmbc_opts=(-vcodec copy -f s24le -ar 48000 -ac 2)
+    [ "${codec_tag_string}" = "mpeg" ] && extension="mxf"
+
     output_movie="${input_movie%.*}${suffix}.${extension}"
-    if [ -f "$output_movie" ] ; then
-        report -wt "The intended output of `basename $0` already exists. Skipping for now. Please delete \"$output_movie\" and rerun or figure out why you are trying to do this."
+    if [ -f "${output_movie}" ] ; then
+        report -wt "The intended output of $(basename $0) already exists. Skipping for now. Please delete ${output_movie} and rerun or figure out why you are trying to do this."
     else
-        get_volume_adjustment "$input_movie"
-        if [ -n "$VOLADJ" ] ; then
-            report -dt "Generating $output_movie ..."
-            #cmd="ffmpeg -i \"$input_movie\" $ffmpeg_opts -af volume=${VOLADJ}dB '$output_movie'"
-            cmd="ffmpeg -i \"$input_movie\" $ffmpeg_opts -af volume=${VOLADJ}dB -f s24le -ar 48000 -ac 2 - | ffmbc -i \"$input_movie\" $ffmbc_opts -i pipe:0 -acodec pcm_s24le -ar 48000 -ac 2 \"$output_movie\""
-            report -dt "Running: $cmd"
-            eval "$cmd"
+        get_volume_adjustment "${input_movie}"
+        if [ -n "${VOLADJ}" ] ; then
+            report -dt "Generating ${output_movie} ..."
+            ffmpeg -i ${input_movie} ${ffmpeg_opts[@]} -af volume=${VOLADJ}dB -f s24le -ar 48000 -ac 2 - | ffmbc -i ${input_movie} ${ffmbc_opts[@]} -i pipe:0 -acodec pcm_s24le -ar 48000 -ac 2 ${output_movie}
             report -dst "Done with ${name}."
         else
-            report -dst "Integrated loudness for $name is ${integrated_loudness}dB. Reference is $reference. No adjustment is needed for ${name}, skipping."
+            report -dst "Integrated loudness for $name is ${integrated_loudness}dB. Reference is ${reference}. No adjustment is needed for ${name}, skipping."
         fi
     fi
     shift
