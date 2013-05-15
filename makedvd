@@ -3,7 +3,7 @@
 # make dvd
 version="1.0"
 
-scriptdir=`dirname "$0"`
+scriptdir=$(dirname "$0")
 . "$scriptdir/mmfunctions" || { echo "Missing '$scriptdir/mmfunctions'. Exiting." ; exit 1 ;};
 
 cleanup(){
@@ -50,12 +50,12 @@ while [ "$*" != ""  -o "$once" = "y" ] ; do
 
     [ "$#" != 0 ] && input="$1"
     [ -d "$input" ] && { outputdir="$input/objects/access/dvd" && logdir="$input/metadata/submissionDocumentation/logs" ;};
-    [ -f "$input" ] && { outputdir=`dirname "$input"`"/access/dvd" && logdir="`dirname "$input"`/access/logs" ;};
+    [ -f "$input" ] && { outputdir=$(dirname "$input")"/access/dvd" && logdir="$(dirname "$input")/access/logs" ;};
     [ ! "$outputdir" ] && { outputdir="$input/objects/access/dvd" && logdir="$input/metadata/submissionDocumentation/logs" ;};
     find_input "$input"
 
-    filename=`basename "$sourcefile"`
-    mediaid=`basename "$input" | cut -d. -f1`
+    filename=$(basename "$sourcefile")
+    mediaid=$(basename "$input" | cut -d. -f1)
 
     log -b
 
@@ -65,9 +65,9 @@ while [ "$*" != ""  -o "$once" = "y" ] ; do
     get_height "$sourcefile"
     get_width "$sourcefile"
     get_dar "$sourcefile"
-    darratio=`echo "scale=3 ; $dar" | bc`
-    [ `echo "scale=5 ; $darratio > 1.5" | bc -l` = 1 ] && { aspect="16/9" ; dvdaspect="16:9" ;};
-    [ `echo "scale=5 ; $darratio > 1.5" | bc -l` = 1 ] || { aspect="4/3" ; dvdaspect="4:3" ;};
+    darratio=$(echo "scale=3 ; $dar" | bc)
+    [ $(echo "scale=5 ; $darratio > 1.5" | bc -l) = 1 ] && { aspect="16/9" ; dvdaspect="16:9" ;};
+    [ $(echo "scale=5 ; $darratio > 1.5" | bc -l) = 1 ] || { aspect="4/3" ; dvdaspect="4:3" ;};
 
     get_maxdvdbitrate "$sourcefile"
     unset inputoptions
@@ -116,7 +116,7 @@ while [ "$*" != ""  -o "$once" = "y" ] ; do
         rm "$outputdir/${mediaid%.*}.mpeg"
     fi
     dvdauthor -T -o "$outputdir/${mediaid%.*}/"
-    volname=`echo "${DVDLABELPREFIX}${mediaid}"`
+    volname=$(echo "${DVDLABELPREFIX}${mediaid}")
     report -dt "Making DVD image file."
     mkisofs -f -dvd-video -udf -V "${volname:0:32}" -v -v -o "$isooutput"  "$outputdir/${mediaid%.*}" 2> "${logdir}/mkisofs_$(get_iso8601_c)_$(basename $0)_${version}.txt"
     mkisofs_err="$?"

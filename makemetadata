@@ -2,7 +2,7 @@
 # make metadata
 #produces errors on zero-sized files
 
-scriptdir=`dirname "$0"`
+scriptdir=$(dirname "$0")
 . "$scriptdir/mmfunctions" || { echo "Missing '$scriptdir/mmfunctions'. Exiting." ; exit 1 ;};
 
 cleanup(){
@@ -37,27 +37,27 @@ log -b
 
 counter=0
 while [ "$*" != "" ] ; do
-    uuid=`uuidgen`
+    uuid=$(uuidgen)
 
     cd "$1"
-    objects_file=`find "./objects" -maxdepth 1 -mindepth 1 -type f -name "*.mov" ! -name ".*"`
-    service_file=`find "./objects/service" -maxdepth 1 -mindepth 1 -type f -name "*.mov" ! -name ".*"`
+    objects_file=$(find "./objects" -maxdepth 1 -mindepth 1 -type f -name "*.mov" ! -name ".*")
+    service_file=$(find "./objects/service" -maxdepth 1 -mindepth 1 -type f -name "*.mov" ! -name ".*")
     mkdir -p "/tmp/$uuid"
 
     outputdir="./metadata/submissionDocumentation/fileMeta"
     mkdir -p "$outputdir"
 
-    objectbasename=`basename "$objects_file"`
-    servicebasename=`basename "$service_file"`
-    mediaid=`basename "$1" | cut -d. -f1`
+    objectbasename=$(basename "$objects_file")
+    servicebasename=$(basename "$service_file")
+    mediaid=$(basename "$1" | cut -d. -f1)
 
     find "./objects/access" -type d -mindepth 1 -maxdepth 1 > "/tmp/$uuid/access.txt"
     while read access ; do
-        accessname=`basename "$access"`
+        accessname=$(basename "$access")
         find "$access" -type f ! -name ".*" > "/tmp/$uuid/access_${accessname}.txt"
         while read access_file ; do
             mkdir -p "$outputdir/access/$accessname"
-            accessbasename=`basename "$access_file"`
+            accessbasename=$(basename "$access_file")
             ffprobe 2>/dev/null "$access_file" -show_format -show_streams -show_data -show_error -show_versions -noprivate -of xml="q=1:x=1" > "$outputdir/access/$accessname/${accessbasename%.*}_ffprobe.xml"
             ffprobe 2>/dev/null "$access_file" -show_format -show_streams -show_data -show_error -show_versions -of json > "$outputdir/access/$accessname/${accessbasename%.*}_ffprobe.json"
         mediainfo --language=raw -f --output=XML "$access_file" > "$outputdir/access/$accessname/${accessbasename%.*}_mediainfo.xml"
@@ -67,9 +67,9 @@ while [ "$*" != "" ] ; do
     outputdir="./metadata/submissionDocumentation/fileMeta"
     mkdir -p "$outputdir"
 
-    objectbasename=`basename "$objects_file"`
-    servicebasename=`basename "$service_file"`
-    mediaid=`basename "$1" | cut -d. -f1`
+    objectbasename=$(basename "$objects_file")
+    servicebasename=$(basename "$service_file")
+    mediaid=$(basename "$1" | cut -d. -f1)
 
     # transcode
     report -dt "STATUS Making metadata reports."
@@ -86,6 +86,6 @@ while [ "$*" != "" ] ; do
     mediainfo --language=raw -f --output=XML "$service_file" > "$outputdir/service/${servicebasename%.*}_mediainfo.xml"
     rm -r -f "/tmp/$uuid"
     shift
-    counter=`expr "$counter" + 1`
+    counter=$(expr "$counter" + 1)
 done
 log -e

@@ -10,7 +10,7 @@ deliveraccesscopies="Y"    # use 'Y' for yes or any other character for no
 deliverytoaipstorage="Y"   # use 'Y' for yes or any other character for no
 
 queuefile="/tmp/queue.txt"
-scriptdir=`dirname "$0"`
+scriptdir=$(dirname "$0")
 . "$scriptdir/mmfunctions" || { echo "Missing '$scriptdir/mmfunctions'. Exiting." ; exit 1 ;};
 
 add_mediaid_to_queue(){
@@ -176,7 +176,7 @@ mkdir -p "$logdir"
 submissiondocdir="$OUTDIR_INGESTFILE/$mediaid/metadata/submissionDocumentation"
 mkdir -p "$submissiondocdir"
 
-start=`get_iso8601`
+start=$(get_iso8601)
 
 # rsync
 report -dt "STATUS Copying the original file to library storage at $objectsdir."
@@ -205,7 +205,7 @@ if [ "$makeaccesscopies" == "Y" ] ; then
     "$scriptdir/makeyoutube" "$OUTDIR_INGESTFILE/$mediaid"
     [ "$deliveraccesscopies" = "Y" ] && makeyoutubeopts=(-d $YOUTUBEDELIVER)
     "$scriptdir/makeyoutube" "${makeyoutubeopts[@]}" "$OUTDIR_INGESTFILE/$mediaid"
-    if [ `echo "$mediaid" | grep "$REGEX4PODCAST"` ] ; then
+    if [ $(echo "$mediaid" | grep "$REGEX4PODCAST") ] ; then
         report -dt "${mediaid} qualifies for podcast creation."
         [ "$deliveraccesscopies" == "Y" ] && makepodcastopts=(-d $PODCASTDELIVER)
         sh "$scriptdir/makepodcast" "${makepodcastopts[@]}" "$OUTDIR_INGESTFILE/$mediaid"
@@ -213,7 +213,7 @@ if [ "$makeaccesscopies" == "Y" ] ; then
         report -dt "${media} does NOT qualify for podcast creation, skipping."
     fi
 fi
-end=`get_iso8601`
+end=$(get_iso8601)
 
 # start reporting to operator log
 echo -e "$log" >> "$logdir/capture.log"
@@ -223,7 +223,7 @@ echo "datetime_end: ${end}" >> "$logdir/capture.log"
 # move and cleanup
 if [ "$deliverytoaipstorage" == "Y" ] ; then
     rsync -rt --progress --remove-source-files "$OUTDIR_INGESTFILE/$mediaid" "$AIP_STORAGE/"
-    [ `du -s "$OUTDIR_INGESTFILE/$mediaid" | awk '{print $1}'` = "0" ] && rm -r "$OUTDIR_INGESTFILE/$mediaid"
+    [ $(du -s "$OUTDIR_INGESTFILE/$mediaid" | awk '{print $1}') = "0" ] && rm -r "$OUTDIR_INGESTFILE/$mediaid"
     report -dt "STATUS Done. Final package has been delivered to $AIP_STORAGE/${mediaid}"
 fi
 if [ "$cleanup" == "Y" ] ; then

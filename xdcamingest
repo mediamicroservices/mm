@@ -1,7 +1,7 @@
 #!/bin/bash
 # xdcamingest
 # ingest an xdcam disc, make a package, and deliver select files
-scriptdir=`dirname "$0"`
+scriptdir=$(dirname "$0")
 . "$scriptdir/mmfunctions" || { echo "Missing '$scriptdir/mmfunctions'. Exiting." ; exit 1 ;};
 
 cleanup(){
@@ -39,7 +39,7 @@ defaults write com.apple.desktopservices DSDontWriteNetworkStores true
 while true ; do
 
     # check to make sure there is only 1 XDCam deck with mounted disk attached.
-    xdcam_count=`find /Volumes -name 'XDCAM*' -maxdepth 1 | wc -l | awk '{print $1}'`
+    xdcam_count=$(find /Volumes -name 'XDCAM*' -maxdepth 1 | wc -l | awk '{print $1}')
     while [ $xdcam_count -ne 1 ]; do
         if [ $xdcam_count -gt 1 ]; then
             report -wt "More than 1 XDCam deck appears to be mounted, please connect only one."
@@ -51,12 +51,12 @@ while true ; do
                 exit 0
             fi
         fi
-        xdcam_count=`find /Volumes -name 'XDCAM*' -maxdepth 1 | wc -l | awk '{print $1}'`
+        xdcam_count=$(find /Volumes -name 'XDCAM*' -maxdepth 1 | wc -l | awk '{print $1}')
     done
 
     #identify deck
-    xdcam_mount=`find /Volumes -name 'XDCAM*' -maxdepth 1`
-    deck1=`basename "$xdcam_mount"`
+    xdcam_mount=$(find /Volumes -name 'XDCAM*' -maxdepth 1)
+    deck1=$(basename "$xdcam_mount")
     report -dt "Found the XDCAM deck: ${deck1}"
 
     report -qn "Scan the barcode1, type 1st media_id, or 'q' to quit: "
@@ -81,18 +81,18 @@ while true ; do
     # b. A mediaid-only barcode (other values will be requested).
     if [ "$(echo ${#barcode1})" -eq 58 ] ; then
         # process barcodes with barcode_interpret and parse results into pieces
-        barcode_values1=`${scriptdir}/barcodeinterpret $barcode1`
-        deviceid1=`echo $barcode_values1 | cut -d , -f 2`
-        materialid1=`echo $barcode_values1 | cut -d , -f 4`
-        som1=`echo $barcode_values1 | cut -d , -f 6`
-        duration1=`echo $barcode_values1 | cut -d , -f 8`
+        barcode_values1=$(${scriptdir}/barcodeinterpret $barcode1)
+        deviceid1=$(echo $barcode_values1 | cut -d , -f 2)
+        materialid1=$(echo $barcode_values1 | cut -d , -f 4)
+        som1=$(echo $barcode_values1 | cut -d , -f 6)
+        duration1=$(echo $barcode_values1 | cut -d , -f 8)
 
         if [ "$barcode2" != "" ] ; then
-            barcode_values2=`${scriptdir}/barcodeinterpret $barcode2`
-            deviceid2=`echo $barcode_values2 | cut -d , -f 2`
-            materialid2=`echo $barcode_values2 | cut -d , -f 4`
-            som2=`echo $barcode_values2 | cut -d , -f 6`
-            duration2=`echo $barcode_values2 | cut -d , -f 8`
+            barcode_values2=$(${scriptdir}/barcodeinterpret $barcode2)
+            deviceid2=$(echo $barcode_values2 | cut -d , -f 2)
+            materialid2=$(echo $barcode_values2 | cut -d , -f 4)
+            som2=$(echo $barcode_values2 | cut -d , -f 6)
+            duration2=$(echo $barcode_values2 | cut -d , -f 8)
         fi
     else
         # use the barcode for mediaid and deviceid and request other values
@@ -153,21 +153,21 @@ while true ; do
             report -dt "It looks like $deviceid1 was already ingested. If you want to overwrite the existing one please delete $OUTDIR_INGESTXDCAM/$deviceid1 first and then try again."
         else
             # start xdcam ingest process
-            start=`date -u "+%Y%m%dT%H%M%SZ"`
+            start=$(date -u "+%Y%m%dT%H%M%SZ")
             mkdir -p "$OUTDIR_INGESTXDCAM/$deviceid1/object"
             report -dt "copying disc..."
             rsync -rtv --stats --progress --log-file="$OUTDIR_INGESTXDCAM/$deviceid1/object/cp.log" "/Volumes/${deck1}" "$OUTDIR_INGESTXDCAM/$deviceid1/object/"
-            end=`date -u "+%Y%m%dT%H%M%SZ"`
+            end=$(date -u "+%Y%m%dT%H%M%SZ")
             hdiutil eject "/Volumes/${deck1}"
 
-            mxffile=`find "${OUTDIR_INGESTXDCAM}/${deviceid1}/object/${deck1}/Clip" -name "*.MXF"`
-            if [[ `echo "$mxffile" | wc -l | sed 's/ //g'` > 1 ]] ; then
+            mxffile=$(find "${OUTDIR_INGESTXDCAM}/${deviceid1}/object/${deck1}/Clip" -name "*.MXF")
+            if [[ $(echo "$mxffile" | wc -l | sed 's/ //g') > 1 ]] ; then
                 echo error. The clip directory of "$deviceid1" has more than 1 MXF file.
                 exit 1
             fi
 
             # test for data track
-            hasdata1=`if [ $(ffprobe -show_streams "$mxffile" 2>&1 | grep codec_type=data | wc -l) = 0 ] ; then echo no; else echo yes; fi`
+            hasdata1=$(if [ $(ffprobe -show_streams "$mxffile" 2>&1 | grep codec_type=data | wc -l) = 0 ] ; then echo no; else echo yes; fi)
 
             # start reporting to operator log
             echo "datetime_start: ${start}" >> "$OUTDIR_INGESTXDCAM/$deviceid1/object/op.log"
@@ -207,7 +207,7 @@ while true ; do
 
             report -dt "starting initial checksum and packaging..."
             bag baginplace "${OUTDIR_INGESTXDCAM}/${deviceid1}"
-            report -dt "done with $deviceid1 at `date`"
+            report -dt "done with $deviceid1 at $(date)"
         fi
     fi
 done

@@ -2,7 +2,7 @@
 # makebroadcast
 # make broadcast version
 
-scriptdir=`dirname "$0"`
+scriptdir=$(dirname "$0")
 . "$scriptdir/mmfunctions" || { echo "Missing '$scriptdir/mmfunctions'. Exiting." ; exit 1 ;};
 
 # command-line options to set mediaid and original variables
@@ -35,12 +35,12 @@ while [ "$*" != ""  -o "$once" = "y" ] ; do
     once="n"
     [ "$#" != 0 ] && input="$1"
     [ -d "$input" ] && { outputdir="$input/objects/service" && logdir="$input/metadata/submissionDocumentation/logs" ;};
-    [ -f "$input" ] && { outputdir=`dirname "$input"`"/service" && logdir="`dirname "$input"`/service/logs" ;};
+    [ -f "$input" ] && { outputdir=$(dirname "$input")"/service" && logdir="$(dirname "$input")/service/logs" ;};
     [ ! "$outputdir" ] && { outputdir="$input/objects/service" && logdir="$input/metadata/submissionDocumentation/logs" ;};
     find_input "$input"
 
-    filename=`basename "$sourcefile"`
-    mediaid=`basename "$input" | cut -d. -f1`
+    filename=$(basename "$sourcefile")
+    mediaid=$(basename "$input" | cut -d. -f1)
 
     log -b
 
@@ -65,8 +65,8 @@ while [ "$*" != ""  -o "$once" = "y" ] ; do
     fi
     # decide on an output codec
     get_dar "$sourcefile"
-    darratio=`echo "scale=3 ; $dar" | bc`
-    if [ `echo "scale=5 ; $darratio > 1.5" | bc -l` = 1 ] ; then
+    darratio=$(echo "scale=3 ; $dar" | bc)
+    if [ $(echo "scale=5 ; $darratio > 1.5" | bc -l) = 1 ] ; then
         ffmpeg_opts+=" -vf '${filterchain_start}pad=ih*16/9/sar:ih:(ow-iw)/2:(oh-ih)/2,scale=1920:1080:interl=1'"
         ffmpeg_opts+=" -target xdcamhd422 -vtag xd5b -tff -aspect 16:9 -threads 4"
     else

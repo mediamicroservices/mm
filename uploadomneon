@@ -1,7 +1,7 @@
 #!/bin/bash
 # uploadomneon
 # upload to omneon
-scriptdir=`dirname "$0"`
+scriptdir=$(dirname "$0")
 . "$scriptdir/mmfunctions" || { echo "Missing '$scriptdir/mmfunctions'. Exiting." ; exit 1 ;};
 
 cleanup(){
@@ -49,15 +49,15 @@ while [ "$*" != ""  -o "$once" = "y" ] ; do
 once="n"
 [ "$#" != 0 ] && sourcefile="$1"
 removetmp="n"
-filename=`basename "$sourcefile"`
+filename=$(basename "$sourcefile")
 
 log -b
 
-status=`ftp -a "$OMNEONIP" <<END_SCRIPT
+status=$(ftp -a "$OMNEONIP" <<END_SCRIPT
 binary
 ls "${OMNEONPATH}/${filename}"
 exit
-END_SCRIPT`
+END_SCRIPT)
 if [ "$status" = "Name not found." ] ; then
 report "The file named $filename is not currently on the omneon, proceeding..."
 
@@ -80,8 +80,8 @@ report -wt "ftp exited with code ${?}"
 report -dt "${filename} is uploaded to the omneon"
 [ "$?" = "0" ] && [ "$removetmp" = "y" ] && rm "${TMPDIR}/${filename}"
 else
-size=`echo "$status" | grep "$filename" | awk '{print $5}'`
-size_g=`echo "scale=3; $size / 1073741824" | bc`
+size=$(echo "$status" | grep "$filename" | awk '{print $5}')
+size_g=$(echo "scale=3; $size / 1073741824" | bc)
 report -wt "$filename is already on the omneon as a $size_g gigabyte file."
 fi
 shift

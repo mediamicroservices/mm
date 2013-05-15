@@ -1,7 +1,7 @@
 #!/bin/bash
 # this script takes one argument which is a video file. It evaluates the audio of the file, determines the difference needed to change the audio to -30dB as a mean_volume and then makes that adjustment to an output MXF file. The video track is simply copied.
 
-scriptdir=`dirname "$0"`
+scriptdir=$(dirname "$0")
 . "$scriptdir/mmfunctions" || { echo "Missing '$scriptdir/mmfunctions'. Exiting." ; exit 1 ;};
 
 cleanup(){

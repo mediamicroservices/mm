@@ -1,6 +1,6 @@
 #!/bin/bash
 
-scriptdir=`dirname "$0"`
+scriptdir=$(dirname "$0")
 . "$scriptdir/mmfunctions" || { echo "Missing '$scriptdir/mmfunctions'. Exiting." ; exit 1 ;};
 
 [ "$#" = 0 -a ! "$input" ] && { ask_input ; once="y" ;};
@@ -30,19 +30,19 @@ while [ "$*" != ""  -o "$once" = "y" ] ; do
     once="n"
     [ "$#" != 0 ] && input="$1"
     [ -d "$input" ] && { outputdir="$input/objects/access/images" && logdir="$input/metadata/submissionDocumentation/logs" ;};
-    [ -f "$input" ] && { outputdir=`dirname "$input"`"/access/images" && logdir="`dirname "$input"`/access/logs" ;};
+    [ -f "$input" ] && { outputdir=$(dirname "$input")"/access/images" && logdir="$(dirname "$input")/access/logs" ;};
     [ ! "$outputdir" ] && { outputdir="$input/objects/access/images" && logdir="$input/metadata/submissionDocumentation/logs" ;};
     find_input "$input" 
 
-    mediaid=`basename "$1" | cut -d. -f1`
+    mediaid=$(basename "$1" | cut -d. -f1)
 
     log -b
     [ -s "$outputdir" ] && { report -wt "WARNING $outputdir already exists, skipping transcode" ; shift ; continue ;};
-    BASE=`basename "$sourcefile"`
-    DURATION=`ffprobe 2>/dev/null $sourcefile -show_format | grep duration | cut -d= -f2` 
+    BASE=$(basename "$sourcefile")
+    DURATION=$(ffprobe 2>/dev/null $sourcefile -show_format | grep duration | cut -d= -f2) 
     mkdir -p "$outputdir"
-    for IMAGENUMBER in `seq 1 "$IMAGECOUNT"` ; do
-        START=`echo "( $DURATION / ( $IMAGECOUNT + 1 )) * $IMAGENUMBER" | bc`
+    for IMAGENUMBER in $(seq 1 "$IMAGECOUNT") ; do
+        START=$(echo "( $DURATION / ( $IMAGECOUNT + 1 )) * $IMAGENUMBER" | bc)
         report -d "Making frame $IMAGENUMBER of $IMAGECOUNT $outputdir/${BASE%.*}_${IMAGENUMBER}.tiff"
         ffmpeg -y -v warning -ss "$START" -i $sourcefile -vf yadif,thumbnail=100 -frames:v 1 "$outputdir/${mediaid}_${IMAGENUMBER}.tiff" 
     done

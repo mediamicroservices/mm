@@ -3,7 +3,7 @@
 # makes a file appropriate for uploading to youtube
 version="1.0"
 
-scriptdir=`dirname "$0"`
+scriptdir=$(dirname "$0")
 . "$scriptdir/mmfunctions" || { echo "Missing '$scriptdir/mmfunctions'. Exiting." ; exit 1 ;};
 
 cleanup(){
@@ -44,12 +44,12 @@ while [ "$*" != ""  -o "$once" = "y" ] ; do
     once="n"
     [ "$#" != 0 ] && input="$1"
     [ -d "$input" ] && { outputdir="$input/objects/access/youtube_up" && logdir="$input/metadata/submissionDocumentation/logs" ;};
-    [ -f "$input" ] && { outputdir=`dirname "$input"`"/access/youtube_up" && logdir="`dirname "$input"`/access/logs" ;};
+    [ -f "$input" ] && { outputdir=$(dirname "$input")"/access/youtube_up" && logdir="$(dirname "$input")/access/logs" ;};
     [ ! "$outputdir" ] && { outputdir="$input/objects/access/youtube_up" && logdir="$input/metadata/submissionDocumentation/logs" ;};
     find_input "$input"
 
-    filename=`basename "$sourcefile"`
-    mediaid=`basename "$1" | cut -d. -f1`
+    filename=$(basename "$sourcefile")
+    mediaid=$(basename "$1" | cut -d. -f1)
 
     log -b
 

@@ -1,6 +1,6 @@
 #!/bin/bash
 
-scriptdir=`dirname "$0"`
+scriptdir=$(dirname "$0")
 . "$scriptdir/mmfunctions" || { echo "Missing '$scriptdir/mmfunctions'. Exiting." ; exit 1 ;};
 
 cleanup(){
@@ -30,20 +30,20 @@ mkdir -p "$origdir"
 mkdir -p "$submissionMetadataDir"
 mkdir -p "$logdir"
   
-start=`date -u "+%Y%m%dT%H%M%SZ"`
+start=$(date -u "+%Y%m%dT%H%M%SZ")
 
 command="fscanx  --adf --rgb --bits 8 --resolution 600 --paper-width 10200 --paper-height 13200 --rotate-n-n --left 0 --width 10200 --top 0 --height 13200 --double-feed n --tiff --no-jpeg --images-per-file 1 --compress zlib '$origdir/${mediaid}_.tif'"
 exec &> "$submissionMetadataDir/fscanx_process.txt"
 eval "$command"
-first=`find "$origdir" -type f -mindepth 1 -maxdepth 1 ! -name ".*" -exec ls -1rt '{}' \; | head -n 1`
-last=`ls -1t "$origdir" | head -n 1`
+first=$(find "$origdir" -type f -mindepth 1 -maxdepth 1 ! -name ".*" -exec ls -1rt '{}' \; | head -n 1)
+last=$(ls -1t "$origdir" | head -n 1)
 open -a /Applications/Preview.app/ "$first" "$origdir/$last"
-end=`date -u "+%Y%m%dT%H%M%SZ"`
-system_data=`system_profiler SPHardwareDataType`
+end=$(date -u "+%Y%m%dT%H%M%SZ")
+system_data=$(system_profiler SPHardwareDataType)
 #These retrieved the right info on the Mac I'm using, but I don't know how standard the output is
-serial_number=`echo "$system_data" | grep "Serial Number" | awk '{ print $4 }'`
-model=`echo "$system_data" | grep "Model Identifier" | awk '{ print $3; }'`
-os=`system_profiler SPSoftwareDataType | grep "System Version" | awk '{ print substr($0, index($0,$3)); }'`
+serial_number=$(echo "$system_data" | grep "Serial Number" | awk '{ print $4 }')
+model=$(echo "$system_data" | grep "Model Identifier" | awk '{ print $3; }')
+os=$(system_profiler SPSoftwareDataType | grep "System Version" | awk '{ print substr($0, index($0,$3)); }')
 echo "datetime_start: ${start}" >> "$submissionMetadataDir/operation_process.txt"
 echo "datetime_end: ${end}" >> "$submissionMetadataDir/operation_process.txt"
 echo "serial number: ${serial_number}" >> "$submissionMetadataDir/operation_process.txt"

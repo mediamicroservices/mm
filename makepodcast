@@ -3,7 +3,7 @@
 # makes a file appropriate for podcasting
 version="1.0"
 
-scriptdir=`dirname "$0"`
+scriptdir=$(dirname "$0")
 . "$scriptdir/mmfunctions" || { echo "Missing '$scriptdir/mmfunctions'. Exiting." ; exit 1 ;};
 
 cleanup(){
@@ -44,11 +44,11 @@ while [ "$*" != ""  -o "$once" = "y" ] ; do
     once="n"
     [ "$#" != 0 ] && input="$1"
     [ -d "$input" ] && { outputdir="$input/objects/access/podcast" && logdir="$input/metadata/submissionDocumentation/logs" ;};
-    [ -f "$input" ] && { outputdir=`dirname "$input"`"/access/podcast" && logdir="`dirname "$input"`/access/logs" ;};
+    [ -f "$input" ] && { outputdir=$(dirname "$input")"/access/podcast" && logdir="$(dirname "$input")/access/logs" ;};
     [ ! "$outputdir" ] && { outputdir="$input/objects/access/podcast" && logdir="$input/metadata/submissionDocumentation/logs" ;};
     find_input "$input"
-    filename=`basename "$sourcefile"`
-    mediaid=`basename "$input" | cut -d. -f1`
+    filename=$(basename "$sourcefile")
+    mediaid=$(basename "$input" | cut -d. -f1)
     log -b
     podcastoutput="$outputdir/${mediaid%.*}_podcast.mov"
     [ -s "${podcastoutput}" ] && { report -wt "WARNING ${podcastoutput} already exists, skipping transcode" ; exit 1 ;};

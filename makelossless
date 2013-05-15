@@ -1,5 +1,5 @@
 #!/bin/bash
-scriptdir=`dirname "$0"`
+scriptdir=$(dirname "$0")
 . "$scriptdir/mmfunctions" || { echo "Missing '$scriptdir/mmfunctions'. Exiting." ; exit 1 ;};
 
 check_dependencies ffmpeg muxmovie mediainfo
@@ -13,15 +13,15 @@ trap cleanup SIGHUP SIGINT SIGTERM
 
 while [ "$*" != "" ] ; do
     file="$1"
-    filename=`basename "$file"`
-    dirname=`dirname "$file"`
+    filename=$(basename "$file")
+    dirname=$(dirname "$file")
     
     [ "$#" != 0 ] && input="$1"
     [ -d "$input" ] && { outputdir="$input/objects" && logdir="$input/metadata/submissionDocumentation/logs" ;};
-    [ -f "$input" ] && { outputdir=`dirname "$input"`"/lossless" && logdir="`dirname "$input"`/lossless/logs" ;};
+    [ -f "$input" ] && { outputdir=$(dirname "$input")"/lossless" && logdir="$(dirname "$input")/lossless/logs" ;};
     [ ! "$outputdir" ] && { outputdir="$input/objects" && logdir="$input/metadata/submissionDocumentation/logs" ;};
     
-    [ -d "$input" ] && sourcefile=`find "$1/objects" -maxdepth 1 -mindepth 1 -type f \( -name "*.mov" -o -name "*.mxf" -o -name "*.mp4" -o -name "*.dv" \) ! -name ".*"`
+    [ -d "$input" ] && sourcefile=$(find "$1/objects" -maxdepth 1 -mindepth 1 -type f \( -name "*.mov" -o -name "*.mxf" -o -name "*.mp4" -o -name "*.dv" \) ! -name ".*")
     [ -f "$input" ] && sourcefile="$input"
     
     log -b 
@@ -40,7 +40,7 @@ while [ "$*" != "" ] ; do
         muxmovie "$sourcefile" -track "Timecode Track" -track "Closed Caption Track" -self-contained -o "$outputdir/${filename%.*}_tc_e608.mov"
         muxmovie_err="$?"
         [ "$muxmovie_err" -gt 0 ] && echo muxmovie ended with error && exit 1
-        if [ `md5 -q "$logdir/${filename%.*}.framemd5"` = `md5 -q "$logdir/${filename%.*}_ffv1.framemd5"` ] ; then
+        if [ $(md5 -q "$logdir/${filename%.*}.framemd5") = $(md5 -q "$logdir/${filename%.*}_ffv1.framemd5") ] ; then
             echo Everything looks safe. Going to delete the original.
             mediainfo -f --language=raw --output=XML "$sourcefile" > "$logdir/${filename%.*}_mediainfo.xml"
             #rm -f -v "$sourcefile"
@@ -60,7 +60,7 @@ while [ "$*" != "" ] ; do
         muxmovie "$sourcefile" -track "Timecode Track" -track "Closed Caption Track" -self-contained -o "$outputdir/${filename%.*}_tc_e608.mov"
         muxmovie_err="$?"
         [ "$muxmovie_err" -gt 0 ] && echo muxmovie ended with error && exit 1
-        if [ `md5 -q "$logdir/${filename%.*}.framemd5"` = `md5 -q "$logdir/${filename%.*}_ffv1.framemd5"` ] ; then
+        if [ $(md5 -q "$logdir/${filename%.*}.framemd5") = $(md5 -q "$logdir/${filename%.*}_ffv1.framemd5") ] ; then
             echo Everything looks safe. Going to delete the original.
             mediainfo -f --language=raw --output=XML "$sourcefile" > "$logdir/${filename%.*}_mediainfo.xml"
             #rm -f -v "$sourcefile"

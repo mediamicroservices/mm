@@ -1,7 +1,7 @@
 #!/bin/bash
 # blackatends
 # Accepts one or many video files as an input and determines how many frames of black are at the beginning and at the end
-scriptdir=`dirname "$0"`
+scriptdir=$(dirname "$0")
 . "$scriptdir/mmfunctions" || { echo "Missing '$scriptdir/mmfunctions'. Exiting." ; exit 1 ;};
 
 cleanup(){

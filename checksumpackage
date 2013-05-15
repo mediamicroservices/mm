@@ -4,7 +4,7 @@
 # version 1.1 adds use of dfxml
 version=1.1
 
-scriptdir=`dirname "$0"`
+scriptdir=$(dirname "$0")
 . "$scriptdir/mmfunctions" || { echo "Missing '$scriptdir/mmfunctions'. Exiting." ; exit 1 ;};
 
 cleanup(){
@@ -23,7 +23,7 @@ DFXMLNAME="dfxml.xml"
 
 while [ "$*" != "" ] ; do
     if [ -d "$1" ] ; then
-        PWD=`pwd`
+        PWD=$(pwd)
         "$scriptdir/removeDSStore" "$1"
         if [ -d "$1/objects" ] ; then
             INDIR="objects"
