@@ -223,6 +223,13 @@ get_dar(){
     fi
 }
 
+get_sar(){
+    sar=$(ffprobe "$1" -show_streams -select_streams v 2> /dev/null | grep sample_aspect_ratio= | cut -d = -f 2 | sed 's|:|/|g')
+    if [ "$sar" = "0/1" ] ; then
+        sar="1/1"
+    fi
+}
+
 get_codectagstring(){
     codec_tag_string=$(ffprobe "$1" -show_streams -select_streams v 2> /dev/null | grep codec_tag_string= | cut -d = -f 2)
 }

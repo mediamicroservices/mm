@@ -5,12 +5,12 @@
 scriptdir=$(dirname "$0")
 . "$scriptdir/mmfunctions" || { echo "Missing '$scriptdir/mmfunctions'. Exiting." ; exit 1 ;};
 
-# command-line options to set mediaid and original variables
+# command line arguments
 OPTIND=1
 while getopts lc opt ; do
     case $opt in
-        l) audiomapping=" -map_audio_channel 0:1:0:0:1:0 -map_audio_channel 0:1:0:0:1:1 " ;;
-        r) audiomapping=" -map_audio_channel 0:1:1:0:1:0 -map_audio_channel 0:1:1:0:1:1 " ;;
+        l) audiomapping=(-map_audio_channel 0:1:0:0:1:0 -map_audio_channel 0:1:0:0:1:1) ;;
+        r) audiomapping=(-map_audio_channel 0:1:1:0:1:0 -map_audio_channel 0:1:1:0:1:1) ;;
         c) cropdetect="Y" ;;
         f) input="$OPTARG" ; once="y" ;;
     esac
@@ -33,6 +33,12 @@ trap cleanup SIGHUP SIGINT SIGTERM
 
 while [ "$*" != ""  -o "$once" = "y" ] ; do
     once="n"
+    
+    # clear local arrays
+    unset audiomapping
+    unset inputoptions
+    unset ffmbc_opts
+    
     [ "$#" != 0 ] && input="$1"
     [ -d "$input" ] && { outputdir="$input/objects/service" && logdir="$input/metadata/submissionDocumentation/logs" ;};
     [ -f "$input" ] && { outputdir=$(dirname "$input")"/service" && logdir="$(dirname "$input")/service/logs" ;};
@@ -48,42 +54,69 @@ while [ "$*" != ""  -o "$once" = "y" ] ; do
     [ -s "$servicefile" ] && { report -wt "$servicefile already exists, skipping transcode" ; shift ; continue ;};
 
     report -dt "Starting transcode of $(basename $sourcefile) for broadcast compliance."
-    ffmpeg_opts=" -r ntsc"
+    
+    # set fixed transcoding options
+    ffmbc_opts+=(-r ntsc)
+    ffmbc_opts+=(-tff)
+    ffmbc_opts+=(-threads 4)
+    
     if [ -n "$audiomapping" ] ; then
-        ffmpeg_opts+=" $audiomapping"
+        ffmbc_opts+=($audiomapping)
     else
         has_first_two_tracks_mono "$sourcefile"
         if [ "$MULTIMONO" = "Y" ] ; then
             report -wt "The first two audio tracks are both mono. Considering track 1 for left and track 2 for right."
-            audiomapping=" -map_audio_channel 0.1:0:0.1:0 -map_audio_channel 0.2:0:0.1:1 "
-            ffmpeg_opts+=" $audiomapping"
+            audiomapping=(-map_audio_channel 0.1:0:0.1:0 -map_audio_channel 0.2:0:0.1:1)
+            ffmbc_opts+=($audiomapping)
         fi
     fi
+    # decide on an output codec, aspect ratio, and padding strategy
+    get_sar "$sourcefile"
     if [ "$cropdetect" = "Y" ] ; then
         get_cropdetection "$sourcefile"
         filterchain_start="${CROPADJ},"
-    fi
-    # decide on an output codec
-    get_dar "$sourcefile"
-    darratio=$(echo "scale=3 ; $dar" | bc)
-    if [ $(echo "scale=5 ; $darratio > 1.5" | bc -l) = 1 ] ; then
-        ffmpeg_opts+=" -vf '${filterchain_start}pad=ih*16/9/sar:ih:(ow-iw)/2:(oh-ih)/2,scale=1920:1080:interl=1'"
-        ffmpeg_opts+=" -target xdcamhd422 -vtag xd5b -tff -aspect 16:9 -threads 4"
+        width=$(echo "$CROPADJ" | cut -d= -f2 | cut -d: -f1)
+        height=$(echo "$CROPADJ" | cut -d= -f2 | cut -d: -f2)
+        dar="(${width}/${height})*${sar}"
     else
-        ffmpeg_opts+=" -vf '${filterchain_start}pad=ih*4/3/sar:ih:(ow-iw)/2:(oh-ih)/2,scale=720:480:interl=1'"
-        ffmpeg_opts+=" -target imx30 -tff -aspect 4:3 -threads 4"
+        get_width "$sourcefile"
+        get_height "$sourcefile"
+        get_dar "$sourcefile"
+    fi
+    darratio=$(echo "scale=3 ; $dar" | bc)
+    if [ "$width" = "1920" -a "$height" = "1080" -a ! "$cropdetect" = "Y" ] ; then
+        echo yep
+        ffmbc_opts+=(-target xdcamhd422)
+        ffmbc_opts+=(-vtag xd5b)
+        ffmbc_opts+=(-aspect 16:9)
+    elif [ $(echo "scale=5 ; $darratio > (16/9)" | bc -l) = 1 ] ; then
+        ffmbc_opts+=(-vf "${filterchain_start}pad=${width}:${width}*(9/16)*(${sar}):(ow-${width})/2:(oh-${height})/2,scale=1920:1080:interl=1")
+        ffmbc_opts+=(-target xdcamhd422)
+        ffmbc_opts+=(-vtag xd5b)
+        ffmbc_opts+=(-aspect 16:9)
+    elif [ $(echo "scale=5 ; $darratio > (3/2)" | bc -l) = 1 ] ; then
+        ffmbc_opts+=(-vf "${filterchain_start}pad=${height}*(16/9)/(${sar}):${height}:(ow-${width})/2:(oh-${height})/2,scale=1920:1080:interl=1")
+        ffmbc_opts+=(-target xdcamhd422)
+        ffmbc_opts+=(-vtag xd5b)
+        ffmbc_opts+=(-aspect 16:9)
+    else
+        ffmbc_opts+=(-vf "${filterchain_start}pad=${height}*(4/3)/(${sar}):${height}:(ow-${width})/2:(oh-${height})/2,scale=720:480:interl=1")
+        ffmbc_opts+=(-target imx30)
+        ffmbc_opts+=(-aspect 4:3)
     fi
 
     # add audio options
-    ffmpeg_opts+=" -acodec pcm_s24le -ar 48k -ac 2"
+    ffmbc_opts+=(-acodec pcm_s24le)
+    ffmbc_opts+=(-ar 48k)
+    ffmbc_opts+=(-ac 2)
 
-    # set input options for ffmpeg
-    inputoptions=" -y"
-    inputoptions+=" -threads 8"
-    inputoptions+=" -loglevel verbose"
+    # set input options for ffmbc
+    inputoptions+=(-y)
+    inputoptions+=(-threads 8)
+    inputoptions+=(-loglevel verbose)
+    
     mkdir -p "$outputdir"
-    ffmpeg_command="ffmbc $inputoptions -i \"$sourcefile\" $ffmpeg_opts \"$servicefile\""
-    # log ffmpeg process
+    # log ffmbc process
     if [ "$logdir" != "" ] ; then
         mkdir -p "$logdir"
         reportfile="ffmbc_$(date '+%Y%m%d-%H%M%S')_$(basename $0)_${version}.txt"
@@ -91,11 +124,10 @@ while [ "$*" != ""  -o "$once" = "y" ] ; do
         echo "Report written to \"${reportfile}\"" >> "${logdir}/${reportfile}"
         echo "Command line:" >> "${logdir}/${reportfile}"
     fi
-    report -dt "Running: ${ffmpeg_command}"
-    echo "$ffmpeg_command" >> "${logdir}/${reportfile}"
-    eval "$ffmpeg_command"
-    ffmpeg_err="$?"
-    [ "$ffmpeg_err" -gt "0" ] && { report -wt "ffmpeg failed with error ${ffmpeg_err}" && exit 1;};
+    echo "ffmbc ${inputoptions[@]} -i ${sourcefile} ${ffmbc_opts[@]} ${servicefile}" >> "${logdir}/${reportfile}"
+    ffmbc ${inputoptions[@]} -i ${sourcefile} ${ffmbc_opts[@]} ${servicefile}
+    ffmbc_err="$?"
+    [ "$ffmbc_err" -gt "0" ] && { report -wt "ffmbc failed with error ${ffmbc_err}" && exit 1;};
     shift
 done
 log -e
