@@ -234,6 +234,10 @@ get_codectagstring(){
     codec_tag_string=$(ffprobe "$1" -show_streams -select_streams v 2> /dev/null | grep codec_tag_string= | cut -d = -f 2)
 }
 
+get_fieldorder(){
+    field_order=$(ffprobe-bc "$1" -show_streams 2> /dev/null | grep interlaced= | cut -d = -f 2)
+}
+
 get_duration(){
     DURATION=$(ffprobe "$1" -show_format 2> /dev/null | grep duration= | cut -d = -f 2)
 }
