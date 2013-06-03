@@ -85,7 +85,7 @@ while [ "$*" != ""  -o "$once" = "y" ] ; do
     fi
     get_fieldorder "$sourcefile"
     if [ "$fieldorder" = "bff" ] ; then
-        filterchain_start="fieldorder=tff,"
+        filterchain_start+="fieldorder=tff,"
     fi
     darratio=$(echo "scale=3 ; $dar" | bc)
     if [ "$width" = "1920" -a "$height" = "1080" -a ! "$cropdetect" = "Y" ] ; then
@@ -104,7 +104,20 @@ while [ "$*" != ""  -o "$once" = "y" ] ; do
         ffmbc_opts+=(-vtag xd5b)
         ffmbc_opts+=(-aspect 16:9)
     elif [ "$width" = "720" -a "$height" = "480" -a $(echo "scale=5 ; $darratio < (3/2)" | bc -l) = 1 -a ! "$cropdetect" = "Y" ] ; then
-        ffmbc_opts+=(-vf fieldorder=tff)
+        filterchain_start=$(echo "$filterchain_start" | sed 's/,$//g')
+        ffmbc_opts+=(-vf ${filterchain_start})
+        ffmbc_opts+=(-target imx30)
+        ffmbc_opts+=(-aspect 4:3)
+    elif [ "${height}" -eq "486" -a "${width}" -eq "720" ] ; then
+        filterchain_start+="crop=720:480:0:4"
+        filterchain_start=$(echo "$filterchain_start" | sed 's/,$//g')
+        ffmbc_opts+=(-vf ${filterchain_start})
+        ffmbc_opts+=(-target imx30)
+        ffmbc_opts+=(-aspect 4:3)
+    elif  [ "${height}" -eq "512" -a "${width}" -eq "720" ] ;then
+        filterchain_start+="crop=720:480:0:32"
+        filterchain_start=$(echo "$filterchain_start" | sed 's/,$//g')
+        ffmbc_opts+=(-vf ${filterchain_start})
         ffmbc_opts+=(-target imx30)
         ffmbc_opts+=(-aspect 4:3)
     else
