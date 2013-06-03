@@ -83,6 +83,10 @@ while [ "$*" != ""  -o "$once" = "y" ] ; do
         get_height "$sourcefile"
         get_dar "$sourcefile"
     fi
+    get_fieldorder "$sourcefile"
+    if [ "$fieldorder" = "bff" ] ; then
+        filterchain_start="fieldorder=tff,"
+    fi
     darratio=$(echo "scale=3 ; $dar" | bc)
     if [ "$width" = "1920" -a "$height" = "1080" -a ! "$cropdetect" = "Y" ] ; then
         echo yep
@@ -99,6 +103,10 @@ while [ "$*" != ""  -o "$once" = "y" ] ; do
         ffmbc_opts+=(-target xdcamhd422)
         ffmbc_opts+=(-vtag xd5b)
         ffmbc_opts+=(-aspect 16:9)
+    elif [ "$width" = "720" -a "$height" = "480" -a $(echo "scale=5 ; $darratio < (3/2)" | bc -l) = 1 -a ! "$cropdetect" = "Y" ] ; then
+        ffmbc_opts+=(-vf fieldorder=tff)
+        ffmbc_opts+=(-target imx30)
+        ffmbc_opts+=(-aspect 4:3)
     else
         ffmbc_opts+=(-vf "${filterchain_start}pad=${height}*(4/3)/(${sar}):${height}:(ow-${width})/2:(oh-${height})/2,scale=720:480:interl=1")
         ffmbc_opts+=(-target imx30)
