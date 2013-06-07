@@ -56,7 +56,7 @@ while [ "$*" != "" ] ; do
     log -b
 
     isooutput="$outputdir/${mediaid%.*}.iso"
-    [ -s "$isooutput" ] && { report -wt "WARNING $isooutput already exists, skipping transcode" ; exit 1 ;};
+    [ -s "$isooutput" ] && { report -wt "WARNING $isooutput already exists, skipping transcode" ; [ "$#" = 1 ] && exit 86 || { shift ; continue ;} ;};
     mkdir -p "$outputdir"
     get_height "$sourcefile"
     get_width "$sourcefile"

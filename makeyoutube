@@ -54,7 +54,7 @@ while [ "$*" != ""  -o "$once" = "y" ] ; do
     log -b
 
     youtubeoutput="${outputdir}/${mediaid%.*}.mp4"
-    [ -s "${youtubeoutput}" ] && { report -wt "WARNING ${youtubeoutput} already exists, skipping transcode" ; exit 1 ;};
+    [ -s "${youtubeoutput}" ] && { report -wt "WARNING ${youtubeoutput} already exists, skipping transcode" ; [ "$#" = 1 ] && exit 86 || { shift ; continue ;} ;};
     mkdir -p "${outputdir}"
     get_height "${sourcefile}"
     get_width "${sourcefile}"

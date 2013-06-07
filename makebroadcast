@@ -51,7 +51,7 @@ while [ "$*" != ""  -o "$once" = "y" ] ; do
     log -b
 
     servicefile="$outputdir/${mediaid%.*}.mov"
-    [ -s "$servicefile" ] && { report -wt "$servicefile already exists, skipping transcode" ; shift ; continue ;};
+    [ -s "$servicefile" ] && { report -wt "$servicefile already exists, skipping transcode" ; [ "$#" = 1 ] && exit 86 || { shift ; continue ;} ;};
 
     report -dt "Starting transcode of $(basename $sourcefile) for broadcast compliance."
     
