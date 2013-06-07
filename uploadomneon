@@ -38,9 +38,9 @@ while getopts ":hm:f:t:ip" opt; do
     esac
 done
 
-[ ! -d "$TMPDIR" ] && echo "The temporary directory must be set. Use [ -t /path/to/temporary/directory ]." && exit 1
-[ ! -d "$OMNEONIP"] && echo "The Omneon IP must be set." && exit 1
-[ ! -d "$OMNEONPATH"] && echo "The Omneon Path must be set." && exit 1
+[ ! -d "$TMPDIR" ] && { echo "The temporary directory must be set. Use [ -t /path/to/temporary/directory ]." ; exit 1 ;};
+[ ! -d "$OMNEONIP"] && { echo "The Omneon IP must be set." ; exit 1 ;};
+[ ! -d "$OMNEONPATH"] && { echo "The Omneon Path must be set." ; exit 1 ;};
 
 shift $(( ${OPTIND} - 1 ))
 [ "$#" = 0 -a ! "$input" ] && { ask_input ; once="y" ;};

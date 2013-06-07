@@ -33,13 +33,13 @@ while [ "$*" != "" ] ; do
         export FFREPORT="file=${logdir}/%p_%t_convert-to-ffv1.log"
         ffmpeg -v warning -stats -vsync 0 -i "$sourcefile" -map 0:v -map 0:a -c:v ffv1 -g 1 -c:a copy "$outputdir/${filename%.*}_ffv1.mov" -f framemd5 -an "$logdir/${filename%.*}.framemd5"
         ffmpeg_ffv1_err="$?"
-        [ "$ffmpeg_ffv1_err" -gt 0 ] && echo ffmpeg ended with error && exit 1
+        [ "$ffmpeg_ffv1_err" -gt 0 ] && { echo ffmpeg ended with error ; exit 1 ;};
         ffmpeg -i "$outputdir/${filename%.*}_ffv1.mov"  -f framemd5 -pix_fmt uyvy422 -an "$logdir/${filename%.*}_ffv1.framemd5"
         ffmpeg_md5_err="$?"
-        [ "$ffmpeg_md5_err" -gt 0 ] && echo ffmpeg md5 ended with error && exit 1
+        [ "$ffmpeg_md5_err" -gt 0 ] && { echo ffmpeg md5 ended with error ; exit 1 ;};
         muxmovie "$sourcefile" -track "Timecode Track" -track "Closed Caption Track" -self-contained -o "$outputdir/${filename%.*}_tc_e608.mov"
         muxmovie_err="$?"
-        [ "$muxmovie_err" -gt 0 ] && echo muxmovie ended with error && exit 1
+        [ "$muxmovie_err" -gt 0 ] && { echo muxmovie ended with error ; exit 1 ;};
         if [ $(md5 -q "$logdir/${filename%.*}.framemd5") = $(md5 -q "$logdir/${filename%.*}_ffv1.framemd5") ] ; then
             echo Everything looks safe. Going to delete the original.
             mediainfo -f --language=raw --output=XML "$sourcefile" > "$logdir/${filename%.*}_mediainfo.xml"
@@ -53,13 +53,13 @@ while [ "$*" != "" ] ; do
         export FFREPORT="file=${logdir}/%p_%t_convert-to-ffv1.log"
         ffmpeg -v warning -stats -vsync 0 -i "$sourcefile" -map 0:v -map 0:a -c:v ffv1 -g 1 -c:a copy "$outputdir/${filename%.*}_ffv1.mov" -f framemd5 -an "$logdir/${filename%.*}.framemd5"
         ffmpeg_ffv1_err="$?"
-        [ "$ffmpeg_ffv1_err" -gt 0 ] && echo ffmpeg ended with error && exit 1
+        [ "$ffmpeg_ffv1_err" -gt 0 ] && { echo ffmpeg ended with error ; exit 1 ;};
         ffmpeg -i "$outputdir/${filename%.*}_ffv1.mov"  -f framemd5 -an "$logdir/${filename%.*}_ffv1.framemd5"
         ffmpeg_md5_err="$?"
-        [ "$ffmpeg_md5_err" -gt 0 ] && echo ffmpeg md5 ended with error && exit 1
+        [ "$ffmpeg_md5_err" -gt 0 ] && { echo ffmpeg md5 ended with error ; exit 1 ;};
         muxmovie "$sourcefile" -track "Timecode Track" -track "Closed Caption Track" -self-contained -o "$outputdir/${filename%.*}_tc_e608.mov"
         muxmovie_err="$?"
-        [ "$muxmovie_err" -gt 0 ] && echo muxmovie ended with error && exit 1
+        [ "$muxmovie_err" -gt 0 ] && { echo muxmovie ended with error ; exit 1 ;};
         if [ $(md5 -q "$logdir/${filename%.*}.framemd5") = $(md5 -q "$logdir/${filename%.*}_ffv1.framemd5") ] ; then
             echo Everything looks safe. Going to delete the original.
             mediainfo -f --language=raw --output=XML "$sourcefile" > "$logdir/${filename%.*}_mediainfo.xml"

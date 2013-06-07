@@ -148,7 +148,7 @@ while [ "$*" != ""  -o "$once" = "y" ] ; do
     echo "ffmbc ${inputoptions[@]} -i ${sourcefile} ${ffmbc_opts[@]} ${servicefile}" >> "${logdir}/${reportfile}"
     ffmbc ${inputoptions[@]} -i ${sourcefile} ${ffmbc_opts[@]} ${servicefile}
     ffmbc_err="$?"
-    [ "$ffmbc_err" -gt "0" ] && { report -wt "ffmbc failed with error ${ffmbc_err}" && exit 1;};
+    [ "$ffmbc_err" -gt "0" ] && { report -wt "ffmbc failed with error ${ffmbc_err}" ; exit 1 ;};
     shift
 done
 log -e

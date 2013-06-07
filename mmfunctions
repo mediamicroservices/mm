@@ -102,8 +102,8 @@ ask_mediaid(){
         # option to quit
         [ "$mediaid" == "q" ] && exit 0
         # validate id and perhaps fail with exit
-        [ -z "$mediaid" ] && report -wt "ERROR You must enter a valid MEDIA ID" && exit
-        [ ! -z $(echo "$mediaid" | grep -v "^[A-Z0-9_-]*$") ] && report -wt "ERROR The MEDIA ID must only contain capital letters, letters, hyphen and underscore" && exit 1
+        [ -z "$mediaid" ] && { report -wt "ERROR You must enter a valid MEDIA ID" ; exit ;};
+        [ ! -z $(echo "$mediaid" | grep -v "^[A-Z0-9_-]*$") ] && { report -wt "ERROR The MEDIA ID must only contain capital letters, letters, hyphen and underscore" ; exit 1 ;};
     fi
     [ ! -z "$mediaid" ] && log+="mediaid: ${mediaid}\n"
 }

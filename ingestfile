@@ -14,14 +14,14 @@ scriptdir=$(dirname "$0")
 . "$scriptdir/mmfunctions" || { echo "Missing '$scriptdir/mmfunctions'. Exiting." ; exit 1 ;};
 
 add_mediaid_to_queue(){
-    [ -z "$mediaid" ] || { report -wt "Error: mediaid is undefined in add_media_to_queue function" && exit 1 ;};
-    [ -f "$queuefile"] || { report -wt "Error: queuefile is undefined in add_media_to_queue function" && exit 1 ;};
+    [ -z "$mediaid" ] || { report -wt "Error: mediaid is undefined in add_media_to_queue function" ; exit 1 ;};
+    [ -f "$queuefile"] || { report -wt "Error: queuefile is undefined in add_media_to_queue function" ; exit 1 ;};
     echo "$mediaid" >> "$queuefile"
 }
 
 remove_mediaid_from_queue(){
-    [ -z "$mediaid" ] || { report -wt "Error: mediaid is undefined in add_media_to_queue function" && exit 1 ;};
-    [ -f "$queuefile"] || { report -wt "Error: queuefile is undefined in add_media_to_queue function" && exit 1 ;};
+    [ -z "$mediaid" ] || { report -wt "Error: mediaid is undefined in add_media_to_queue function" ; exit 1 ;};
+    [ -f "$queuefile"] || { report -wt "Error: queuefile is undefined in add_media_to_queue function" ; exit 1 ;};
     grep -v "^${mediaid}$" "$queuefile" | grep "^[A-Z0-9_-]\+$" > "${queuefile}_tmp"
     rm "$queuefile"
     mv "${queuefile}_tmp" "$queuefile"
@@ -76,10 +76,10 @@ while getopts ":hm:f:p:a:w:y:xlcro:q" opt; do
 done
 
 # check environment
-[ -z "$OUTDIR_INGESTFILE" ] && echo "The processing directory must be set. Use [ -p /path/to/processing/directory ] or run mmconfig to set OUTDIR_INGESTFILE." && exit 1
-[ -z "$AIP_STORAGE" ] && echo "The AIP Storage directory must be set. Use [ -a /path/to/AIP/storage/directory ] or run mmconfig to set AIP_STORAGE." && exit 1
-[ -z "$PODCASTDELIVER" ] && echo "A directory for podcast delivery must be set. Use [ -w /path/to/deliver/podcastfiles] or run mmconfig to set PODCASTDELIVER." && exit 1
-[ -z "$YOUTUBEDELIVER" ] && echo "A directory for youtube delivery must be set. Use [ -y /path/to/deliver/youtubefiles] or run mmconfig to set YOUTUBEDELIVER." && exit 1
+[ -z "$OUTDIR_INGESTFILE" ] && { echo "The processing directory must be set. Use [ -p /path/to/processing/directory ] or run mmconfig to set OUTDIR_INGESTFILE." ; exit 1 ;};
+[ -z "$AIP_STORAGE" ] && { echo "The AIP Storage directory must be set. Use [ -a /path/to/AIP/storage/directory ] or run mmconfig to set AIP_STORAGE." ; exit 1 ;};
+[ -z "$PODCASTDELIVER" ] && { echo "A directory for podcast delivery must be set. Use [ -w /path/to/deliver/podcastfiles] or run mmconfig to set PODCASTDELIVER." ; exit 1 ;};
+[ -z "$YOUTUBEDELIVER" ] && { echo "A directory for youtube delivery must be set. Use [ -y /path/to/deliver/youtubefiles] or run mmconfig to set YOUTUBEDELIVER." ; exit 1 ;};
 
 [ -n "$mediaid" ] && op="batch process"
 
@@ -87,8 +87,8 @@ done
 ask_operator
 ask_mediaid
 ## check for existing output
-[ -d "$OUTDIR_INGESTFILE/$mediaid" ] && report -wt "It looks like $mediaid was already ingested. If you want to overwrite the existing one please delete $OUTDIR_INGESTFILE/$mediaid first and then try again." && exit 1
-[ -d "$AIP_STORAGE/$mediaid" ] && report -wt "It looks like $mediaid was already ingested. If you want to overwrite the existing one please delete $AIP_STORAGE/$mediaid first and then try again." && exit 1
+[ -d "$OUTDIR_INGESTFILE/$mediaid" ] && { report -wt "It looks like $mediaid was already ingested. If you want to overwrite the existing one please delete $OUTDIR_INGESTFILE/$mediaid first and then try again." ; exit 1 ;};
+[ -d "$AIP_STORAGE/$mediaid" ] && { report -wt "It looks like $mediaid was already ingested. If you want to overwrite the existing one please delete $AIP_STORAGE/$mediaid first and then try again." ; exit 1 ;};
 ask_input
 
 if [ "$audiodecision" = "" ] ; then
@@ -183,7 +183,7 @@ report -dt "STATUS Copying the original file to library storage at $objectsdir."
 rsync -rt --progress --log-file="$logdir/rsync_$(get_iso8601_c)_$(basename $0)_${version}.txt" "$input" "$objectsdir/"
 
 rsync_err="$?"
-[ "$rsync_err" -gt "0" ] && report -wt "rsync failed with error ${rsync_err}" && exit 1
+[ "$rsync_err" -gt "0" ] && { report -wt "rsync failed with error ${rsync_err}" ; exit 1 ;};
 
 # make copy for broadcast
 unset makebroadcastopts
