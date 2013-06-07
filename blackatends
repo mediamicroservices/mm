@@ -3,6 +3,7 @@
 # Accepts one or many video files as an input and determines how many frames of black are at the beginning and at the end
 scriptdir=$(dirname "$0")
 . "$scriptdir/mmfunctions" || { echo "Missing '$scriptdir/mmfunctions'. Exiting." ; exit 1 ;};
+version=1.0
 
 cleanup(){
     log -a "Process aborted"
@@ -10,12 +11,35 @@ cleanup(){
 }
 
 trap cleanup SIGHUP SIGINT SIGTERM
+
+usage(){
+    echo
+    echo "$(basename "$0") ${version}"
+    echo "This program will report on the number of black frames at the beginning and end of a video file."
+    echo
+    echo "Usage: $(basename $0) [ options ] file1 [ file2 ... ]"
+    echo
+    echo "Options:"
+    echo "  -h display this help"
+    echo
+    exit
+}
+[ "$#" = 0 ] && usage
+
 log -b
 
-[ "$#" = 0 ] && { ask_input ; once="y" ;};
+# command-line options to set mediaid and original variables
+OPTIND=1
+while getopts ":h" opt; do
+    case "$opt" in
+        h) usage ;;
+        \?) echo "Invalid option: -$OPTARG" ; exit 1 ;;
+        :) echo "Option -$OPTARG requires an argument" ; exit 1 ;;
+    esac
+done
+shift $(( ${OPTIND} - 1 ))
 
-while [ "$*" != ""  -o "$once" = "y" ] ; do
-    once="n"
+while [ "$*" != "" ] ; do
     [ "$#" != 0 ] && sourcefile="$1"
     black_at_ends "$sourcefile"
     shift
