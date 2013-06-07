@@ -1,8 +1,26 @@
 #!/bin/bash
 # uploadomneon
 # upload to omneon
+version="1.0"
+
 scriptdir=$(dirname "$0")
 . "$scriptdir/mmfunctions" || { echo "Missing '$scriptdir/mmfunctions'. Exiting." ; exit 1 ;};
+
+usage(){
+    echo
+    echo "$(basename $0) ${version}"
+    echo "This application will upload file(s) to a server via rsync in sequential order. Options are specified via 'mmconfig'."
+    echo
+    echo "Settings:"
+    echo "OMNEONIP=${OMNEONIP}"
+    echo "OMNEONPATH=${OMNEONPATH}"
+    echo "TMPDIR=${TMPDIR}"
+    echo "Usage: $(basename $0) file1 [ file2 ...]"
+    echo "  -h ( display this help )"
+    echo
+    exit
+}
+[ "$#" = 0 ] && usage
 
 cleanup(){
     log -a "Process aborted"
@@ -12,42 +30,24 @@ cleanup(){
 trap cleanup SIGHUP SIGINT SIGTERM
 log -b
 
-usage(){
-    echo
-    echo "$(basename $0) ${version}"
-    echo "This script may be run interactively by running it with no arguments or may be used with the following options."
-    echo "Usage: $(basename $0) [ -f sourcefile ] [ -i omneon_ip ] [ -n omneon_path ] [ -t tmp_dir]"
-    echo "  -f sourcefile"
-    echo "  -i omneonip"
-    echo "  -n omneonpath"
-    echo "  -t tmpdir"
-    exit
-}
-
 # command-line options to set mediaid and original variables
 OPTIND=1
-while getopts ":hm:f:t:ip" opt; do
+while getopts ":h" opt; do
     case "$opt" in
         h) usage ;;
-        f) input="$OPTARG" ; once="y" ;;
-        i) OMNEONIP="$OPTARG" ;;
-        n) OMNEONPATH="$OPTARG" ;;
-        t) TMPDIR="$OPTARG" ;;
-        \?) echo "Invalid option: -$OPTARG" ; exit 1 ;;
+        *) echo "Invalid option: -$OPTARG" ; exit 1 ;;
         :) echo "Option -$OPTARG requires an argument" ; exit 1 ;;
     esac
 done
-
-[ ! -d "$TMPDIR" ] && { echo "The temporary directory must be set. Use [ -t /path/to/temporary/directory ]." ; exit 1 ;};
-[ ! -d "$OMNEONIP"] && { echo "The Omneon IP must be set." ; exit 1 ;};
-[ ! -d "$OMNEONPATH"] && { echo "The Omneon Path must be set." ; exit 1 ;};
-
 shift $(( ${OPTIND} - 1 ))
-[ "$#" = 0 -a ! "$input" ] && { ask_input ; once="y" ;};
 
-while [ "$*" != ""  -o "$once" = "y" ] ; do
-once="n"
-[ "$#" != 0 ] && sourcefile="$1"
+[ ! -d "$TMPDIR" ] && { echo "The temporary directory must be set and be available. Run 'mmconfig'." ; exit 1 ;};
+[ ! -d "$OMNEONIP"] && { echo "The Omneon IP must be set. Run 'mmconfig'." ; exit 1 ;};
+[ ! -d "$OMNEONPATH"] && { echo "The Omneon Path must be set. Run 'mmconfig'." ; exit 1 ;};
+
+while [ "$*" != "" ] ; do
+
+sourcefile="$1"
 removetmp="n"
 filename=$(basename "$sourcefile")
 
@@ -76,9 +76,10 @@ binary
 put "$uploadfile" "${OMNEONPATH}/${filename}"
 exit
 END_SCRIPT
-report -wt "ftp exited with code ${?}"
+upload_err="${?}"
+report -wt "ftp exited with code ${upload_err}"
 report -dt "${filename} is uploaded to the omneon"
-[ "$?" = "0" ] && [ "$removetmp" = "y" ] && rm "${TMPDIR}/${filename}"
+[ "$upload_err" = "0" ] && [ "$removetmp" = "y" ] && rm "${TMPDIR}/${filename}"
 else
 size=$(echo "$status" | grep "$filename" | awk '{print $5}')
 size_g=$(echo "scale=3; $size / 1073741824" | bc)

@@ -1,28 +1,45 @@
 #!/bin/bash
 # makebroadcast
 # make broadcast version
+# history
+# v 1.1 change from mov output to mxf output, force all output to hd
+# v 1.2 revert to mov and ffmbc
+version="1.2"
+unset dependencies
+dependencies=(ffmbc)
 
 scriptdir=$(dirname "$0")
 . "$scriptdir/mmfunctions" || { echo "Missing '$scriptdir/mmfunctions'. Exiting." ; exit 1 ;};
 
+usage(){
+    echo
+    echo "$(basename $0) ${version}"
+    echo "This application will create a file suitable for broadcast or editing from a video file or package input with the following options."
+    echo "Dependencies: ${dependencies[@]}"
+    echo "Usage: $(basename $0) [ -l ] [ -r ] [ -c ] fileorpackage1 [ fileorpackage2 ...]"
+    echo "  -l (only use the left channel of the first audio track)"
+    echo "  -r (only use the right channel of the first audio track)"
+    echo "  -c (run the video through a crop detection filter, then crop the video accordingly during transcoding, slower)"
+    echo "  -h display this help"
+    echo
+    exit
+}
+[ "$#" = 0 ] && usage
+check_dependencies "${dependencies[@]}"
+
 # command line arguments
 OPTIND=1
-while getopts lc opt ; do
+while getopts ":lrch" opt ; do
     case $opt in
         l) audiomapping=(-map_audio_channel 0:1:0:0:1:0 -map_audio_channel 0:1:0:0:1:1) ;;
         r) audiomapping=(-map_audio_channel 0:1:1:0:1:0 -map_audio_channel 0:1:1:0:1:1) ;;
         c) cropdetect="Y" ;;
-        f) input="$OPTARG" ; once="y" ;;
+        h) usage ;;
+        *) echo "Invalid option: -$OPTARG" ; exit 1 ;;
+        :) echo "Option -$OPTARG requires an argument" ; exit 1 ;;
     esac
 done
 shift $(( ${OPTIND} - 1 ))
-
-[ "$#" = 0 -a ! "$input" ] && { ask_input ; once="y" ;};
-
-version="1.2"
-# history
-# v 1.1 change from mov output to mxf output, force all output to hd
-# v 1.2 revert to mov and ffmbc
 
 cleanup(){
     log -a "Process aborted"
@@ -31,15 +48,14 @@ cleanup(){
 
 trap cleanup SIGHUP SIGINT SIGTERM
 
-while [ "$*" != ""  -o "$once" = "y" ] ; do
-    once="n"
+while [ "$*" != "" ] ; do
     
     # clear local arrays
     unset audiomapping
     unset inputoptions
     unset ffmbc_opts
     
-    [ "$#" != 0 ] && input="$1"
+    input="$1"
     [ -d "$input" ] && { outputdir="$input/objects/service" && logdir="$input/metadata/submissionDocumentation/logs" ;};
     [ -f "$input" ] && { outputdir=$(dirname "$input")"/service" && logdir="$(dirname "$input")/service/logs" ;};
     [ ! "$outputdir" ] && { outputdir="$input/objects/service" && logdir="$input/metadata/submissionDocumentation/logs" ;};

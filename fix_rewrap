@@ -1,8 +1,23 @@
 #!/bin/bash
 # this script takes one argument which is a video file. It then rewraps it to make a new file.
+version=1.1
+unset dependencies
+dependencies=(ffmbc)
 
 scriptdir=$(dirname "$0")
 . "$scriptdir/mmfunctions" || { echo "Missing '$scriptdir/mmfunctions'. Exiting." ; exit 1 ;};
+
+usage(){
+    echo
+    echo "$(basename $0) ${version}"
+    echo "This application takes an input video file(s) and produces outputs through re-multiplexing all tracks of the input into a new container."
+    echo "Dependencies: ${dependencies[@]}"
+    echo "Usage: $(basename $0) file1 [ file2 ...]"
+    echo
+    exit
+}
+[ "$#" = 0 ] && usage
+check_dependencies "${dependencies[@]}"
 
 cleanup(){
     log -a "Process aborted"
@@ -14,8 +29,6 @@ suffix="_rewrap"
 
 trap cleanup SIGHUP SIGINT SIGTERM
 log -b
-
-[ $# = 0 ] && { report -wt "You must supply one or many arguments. Usage: $(basename $0) [ file1 file2 ... ] ."; exit 2 ;};
 
 while [ "$*" != "" ] ; do
 

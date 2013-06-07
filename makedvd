@@ -33,7 +33,7 @@ check_dependencies "${dependencies[@]}"
 
 # command-line options to set mediaid and original variables
 OPTIND=1
-while getopts ":hm:v:" opt; do
+while getopts ":hv:" opt; do
     case "$opt" in
         h) usage ;;
         v) DVDLABELPREFIX="$OPTARG";;
@@ -44,7 +44,7 @@ done
 shift $(( ${OPTIND} - 1 ))
 
 while [ "$*" != "" ] ; do
-    [ "$#" != 0 ] && input="$1"
+    input="$1"
     [ -d "$input" ] && { outputdir="$input/objects/access/dvd" && logdir="$input/metadata/submissionDocumentation/logs" ;};
     [ -f "$input" ] && { outputdir=$(dirname "$input")"/access/dvd" && logdir="$(dirname "$input")/access/logs" ;};
     [ ! "$outputdir" ] && { outputdir="$input/objects/access/dvd" && logdir="$input/metadata/submissionDocumentation/logs" ;};

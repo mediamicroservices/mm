@@ -1,9 +1,24 @@
 #!/bin/bash
+# makeframes
+version="1.0"
+unset dependencies
+dependencies=(ffmpeg)
 
 scriptdir=$(dirname "$0")
 . "$scriptdir/mmfunctions" || { echo "Missing '$scriptdir/mmfunctions'. Exiting." ; exit 1 ;};
 
-[ "$#" = 0 -a ! "$input" ] && { ask_input ; once="y" ;};
+usage(){
+    echo
+    echo "$(basename $0) ${version}"
+    echo "This application will create a series of still images from a video file or package input with the following options."
+    echo "Dependencies: ${dependencies[@]}"
+    echo "Usage: $(basename $0) fileorpackage1 [ fileorpackage2 ...]"
+    echo "  -h display this help"
+    echo
+    exit
+}
+[ "$#" = 0 ] && usage
+check_dependencies "${dependencies[@]}"
 
 # local variables
 IMAGECOUNT=10
@@ -16,19 +31,17 @@ trap cleanup SIGHUP SIGINT SIGTERM
 
 # command-line options to set mediaid and original variables
 OPTIND=1
-while getopts ":m:f:" opt; do
+while getopts ":h" opt; do
     case "$opt" in
-        m) mediaid="$OPTARG";;
-        f) input="$OPTARG" ; once="y" ;;
-        \?) echo "Invalid option: -$OPTARG" ; exit 1 ;;
+        h) usage;;
+        *) echo "Invalid option: -$OPTARG" ; exit 1 ;;
         :) echo "Option -$OPTARG requires an argument" ; exit 1 ;;
     esac
 done
 shift $(( ${OPTIND} - 1 ))
 
-while [ "$*" != ""  -o "$once" = "y" ] ; do
-    once="n"
-    [ "$#" != 0 ] && input="$1"
+while [ "$*" != "" ] ; do
+    input="$1"
     [ -d "$input" ] && { outputdir="$input/objects/access/images" && logdir="$input/metadata/submissionDocumentation/logs" ;};
     [ -f "$input" ] && { outputdir=$(dirname "$input")"/access/images" && logdir="$(dirname "$input")/access/logs" ;};
     [ ! "$outputdir" ] && { outputdir="$input/objects/access/images" && logdir="$input/metadata/submissionDocumentation/logs" ;};

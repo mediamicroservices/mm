@@ -2,9 +2,26 @@
 # makeyoutube
 # makes a file appropriate for uploading to youtube
 version="1.0"
+unset dependencies
+dependencies=(ffmpeg)
+deliverdir=""
 
 scriptdir=$(dirname "$0")
 . "$scriptdir/mmfunctions" || { echo "Missing '$scriptdir/mmfunctions'. Exiting." ; exit 1 ;};
+
+usage(){
+    echo
+    echo "$(basename $0) ${version}"
+    echo "This application will create a high quality h264 file (suitable for uploading to YouTube) from a video file or package input with the following options."
+    echo "Dependencies: ${dependencies[@]}"
+    echo "Usage: $(basename $0) [ -d /path/to/deliver/to/ ] fileorpackage1 [ fileorpackage2 ...]"
+    echo "  -d directory ( directory to deliver the resulting file to )"
+    echo "  -h ( display this help )"
+    echo
+    exit
+}
+[ "$#" = 0 ] && usage
+check_dependencies "${dependencies[@]}"
 
 cleanup(){
     log -a "Process aborted"
@@ -13,36 +30,23 @@ cleanup(){
 
 trap cleanup SIGHUP SIGINT SIGTERM
 
-usage(){
-    echo
-    echo "$(basename $0) ${version}"
-    echo "This script may be run interactively by running it with no arguments or may be used with the following options."
-    echo "Usage: $(basename $0) [ -m mediaid ] [ -f sourcefile ]"
-    echo "  -m mediaid"
-    echo "  -f sourcefile"
-    exit
-}
-
 # command-line options to set mediaid and original variables
 OPTIND=1
-while getopts ":hm:f:d:" opt; do
+while getopts ":hd:" opt; do
     case "$opt" in
         h) usage ;;
-        m) mediaid="$OPTARG";;
-        f) input="$OPTARG" ; once="y" ;;
-        d) deliverdir="$OPTARG";;
+        d) 
+            deliverdir="$OPTARG"
+            [ ! -d "$deliverdir" ] && { report -wt "The delivery directory, ${deliverdir}, does exit. Exiting." ; exit 1 ;};
+            ;;
         *) echo "bad option -$OPTARG" ; usage ;;
         :) echo "Option -$OPTARG requires an argument" ; exit 1 ;;
     esac
 done
-
 shift $(( ${OPTIND} - 1 ))
 
-[ "$#" = 0 -a ! "$input" ] && { ask_input ; once="y" ;};
-
-while [ "$*" != ""  -o "$once" = "y" ] ; do
-    once="n"
-    [ "$#" != 0 ] && input="$1"
+while [ "$*" != "" ] ; do
+    input="$1"
     [ -d "$input" ] && { outputdir="$input/objects/access/youtube_up" && logdir="$input/metadata/submissionDocumentation/logs" ;};
     [ -f "$input" ] && { outputdir=$(dirname "$input")"/access/youtube_up" && logdir="$(dirname "$input")/access/logs" ;};
     [ ! "$outputdir" ] && { outputdir="$input/objects/access/youtube_up" && logdir="$input/metadata/submissionDocumentation/logs" ;};
@@ -96,7 +100,7 @@ while [ "$*" != ""  -o "$once" = "y" ] ; do
         #eval "$segmentcommand"
     #fi
     report -dt "$(basename ${youtubeoutput}) is done."
-    [ -d "${deliverdir}" ] && cp -av "${youtubeoutput}" "${deliverdir}/"
+    [ -d "${deliverdir}" ] && { report -dt "Delivering output" ; cp -av "${youtubeoutput}" "${deliverdir}/" ;};
     shift
     log -e
 done
