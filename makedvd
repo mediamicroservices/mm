@@ -15,14 +15,12 @@ cleanup(){
 
 trap cleanup SIGHUP SIGINT SIGTERM
 
-
 usage(){
     echo
     echo "$(basename $0) ${version}"
     echo "This application will create a DVD .iso file from a video file or package input with the following options."
     echo "Dependencies: ${dependencies[@]}"
     echo "Usage: $(basename $0) [ -v dvd_label_prefix ] fileorpackage1 [ fileorpackage2 ...]"
-    echo "  -m mediaid (default: input filename without extension of package name)"
     echo "  -v dvdlabelprefix (optional)"
     echo "  -h display this help"
     echo
@@ -72,6 +70,9 @@ while [ "$*" != "" ] ; do
     middleoptions+=(-c:v mpeg2video)
     middleoptions+=(-c:a ac3)
     middleoptions+=(-f dvd)
+    middleoptions+=(-q:v 1)
+    middleoptions+=(-qscale:v 2)
+    middleoptions+=(-mbd rd)
     middleoptions+=(-s 720x480)
     middleoptions+=(-pix_fmt yuv420p)
     middleoptions+=(-g 18)
@@ -81,16 +82,18 @@ while [ "$*" != "" ] ; do
     middleoptions+=(-bufsize 1835008)
     middleoptions+=(-packetsize 2048)
     middleoptions+=(-muxrate 10080000)
+    middleoptions+=(-lmin 1)
+    middleoptions+=(-lmax 200000)
     middleoptions+=(-b:a 448000)
     middleoptions+=(-ar 48000)
     if  [ "$height" -eq "486" -a "$width" -eq "720" ] ; then
-        middleoptions+=(-vf "crop=720:480:0:4,setdar=${aspect}" -aspect $aspect)
+        middleoptions+=(-vf "fieldorder=bff,crop=720:480:0:4,setdar=${aspect}" -aspect $aspect)
     elif  [ "$height" -eq "480" -a "$width" -eq "720" ] ; then
-        middleoptions+=(-vf "setdar=${aspect}" -aspect $aspect)
+        middleoptions+=(-vf "fieldorder=bff,setdar=${aspect}" -aspect $aspect)
     elif  [ "$height" -eq "512" -a "$width" -eq "720" ] ; then
-        middleoptions+=(-vf "crop=720:480:0:32,setdar=${aspect}" -aspect $aspect)
+        middleoptions+=(-vf "fieldorder=bff,crop=720:480:0:32,setdar=${aspect}" -aspect $aspect)
     else
-        middleoptions+=(-vf "scale=720:480:interl=1,setdar=${aspect}" -aspect $aspect)
+        middleoptions+=(-vf "fieldorder=bff,scale=720:480:interl=1,setdar=${aspect}" -aspect $aspect)
     fi
     inputoptions+=" -y"
     if [ "$logdir" != "" ] ; then
