@@ -1,21 +1,45 @@
 #!/bin/bash
 # this script takes one argument which is a video file. It evaluates the audio of the file, determines the difference needed to change the audio to -30dB as a mean_volume and then makes that adjustment to an output MXF file. The video track is simply copied.
+unset dependencies
+dependencies=(ffmbc ffmbc)
+
+# local variables
+suffix="_voladj"
 
 scriptdir=$(dirname "$0")
 . "$scriptdir/mmfunctions" || { echo "Missing '$scriptdir/mmfunctions'. Exiting." ; exit 1 ;};
+
+usage(){
+    echo
+    echo "$(basename $0) ${version}"
+    echo "This application will use an input video file to produce an output video file where the audio is adjusted to meet an integrated loudness of -23dB. If the integrated loudness of the input is already within 1dB of the target then no change will occur. The output file will be produced in the same directory as the input but be distinguished by a suffix in the filename: ${suffix}."
+    echo "Dependencies: ${dependencies[@]}"
+    echo "Usage: $(basename $0) file1 [ file2 ...]"
+    echo "  -h display this help"
+    echo
+    exit
+}
+[ "$#" = 0 ] && usage
+check_dependencies "${dependencies[@]}"
+
+# command line arguments
+OPTIND=1
+while getopts ":h" opt ; do
+    case $opt in
+        h) usage ;;
+        *) echo "Invalid option: -$OPTARG" ; exit 1 ;;
+        :) echo "Option -$OPTARG requires an argument" ; exit 1 ;;
+    esac
+done
+shift $(( ${OPTIND} - 1 ))
 
 cleanup(){
     log -a "Process aborted"
     exit 1
 }
 
-# local variables
-suffix="_voladj"
-
 trap cleanup SIGHUP SIGINT SIGTERM
 log -b
-
-[ $# = 0 ] && { report -wt "You must supply one or many arguments. Usage: $(basename $0) [ file1 file2 ... ] ."; exit 2 ;};
 
 while [ "$*" != "" ] ; do
     input_movie="$1"
@@ -23,10 +47,10 @@ while [ "$*" != "" ] ; do
     extension="${name#*.}"
     
     get_codectagstring
-    unset ffmpeg_opts
     unset ffmbc_opts
-    ffmpeg_opts+=(-c:v copy -c:a pcm_s24le -ar 48000 -ac 2)
-    ffmbc_opts+=(-vcodec copy -f s24le -ar 48000 -ac 2)
+    unset audio_pipe_opts
+    audio_pipe_opts=(-f s24le -ar 48000 -ac 2)
+    ffmbc_opts+=(-vcodec copy)
     [ "${codec_tag_string}" = "mpeg" ] && extension="mxf"
 
     output_movie="${input_movie%.*}${suffix}.${extension}"
@@ -36,7 +60,8 @@ while [ "$*" != "" ] ; do
         get_volume_adjustment "${input_movie}"
         if [ -n "${VOLADJ}" ] ; then
             report -dt "Generating ${output_movie} ..."
-            ffmpeg -i ${input_movie} ${ffmpeg_opts[@]} -af volume=${VOLADJ}dB -f s24le -ar 48000 -ac 2 - | ffmbc -i ${input_movie} ${ffmbc_opts[@]} -i pipe:0 -acodec pcm_s24le -ar 48000 -ac 2 ${output_movie}
+            echo "ffmpeg -i ${input_movie} -af volume=${VOLADJ}dB ${audio_pipe_opts[@]} - | ffmbc -i ${input_movie} ${ffmbc_opts[@]} ${audio_pipe_opts[@]} -i pipe:0 -map 0:v -map 1:a -acodec pcm_s24le -ar 48000 -ac 2 ${output_movie}"
+            ffmpeg -i ${input_movie} -af volume=${VOLADJ}dB ${audio_pipe_opts[@]} - | ffmbc -i ${input_movie} ${ffmbc_opts[@]} ${audio_pipe_opts[@]} -i pipe:0 -map 0:v -map 1:a -acodec pcm_s24le -ar 48000 -ac 2 ${output_movie}
             report -dst "Done with ${name}."
         else
             report -dst "Integrated loudness for $name is ${integrated_loudness}dB. Reference is ${reference}. No adjustment is needed for ${name}, skipping."
