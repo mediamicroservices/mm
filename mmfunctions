@@ -6,7 +6,7 @@ WHAT_IS_THIS="mediamicroservices"
 # load configuration file
 if [ -f "$CONFIG_FILE" ] ; then
     . "$CONFIG_FILE"
-elif [ ! "$CONFIG" = "Y" ] ; then
+elif [ ! "$CONFIG" = "Y" -a "$requireconfig" = "Y" ] ; then
     echo "The configuration file is not set. You must first create $CONFIG_FILE by running mmconfig." 1>&2
     exit 1
 fi

@@ -1,6 +1,8 @@
 #!/bin/bash
 # xdcamingest
 # ingest an xdcam disc, make a package, and deliver select files
+requireconfig="Y"
+
 scriptdir=$(dirname "$0")
 . "$scriptdir/mmfunctions" || { echo "Missing '$scriptdir/mmfunctions'. Exiting." ; exit 1 ;};
 

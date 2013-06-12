@@ -1,6 +1,8 @@
 #!/bin/bash
 # uploadomneon
 # upload to omneon
+requireconfig="Y"
+
 version="1.0"
 
 scriptdir=$(dirname "$0")
