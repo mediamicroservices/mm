@@ -274,7 +274,7 @@ get_volume_adjustment(){
     report -dt "Getting volume data for $(basename "$input_movie") ..."
     volume_data=$(ffprobe -v error -of compact=p=0:nk=1 -show_entries frame=metadata:tags=lavfi.r128.I -f lavfi "amovie='${input_movie}',ebur128=metadata=1")
     [ $? -ne 0 ] && { report -wt "Volume analysis for $input_movie exited with $?." ; exit ;};
-    for i in $(echo "$volume_data" | xargs); do
+    for i in $(echo "$volume_data"); do
         [ "$i" != "" ] && integrated_loudness="$i"
     done
     VOLADJ=$(echo "$reference - $integrated_loudness" | bc)
@@ -293,7 +293,7 @@ get_cropdetection(){
     crop_data=$(ffmpeg -i "${input_movie}" -an -vf cropdetect -f null - 2>&1 | grep -o "crop=[0-9:]*")
     crop_err="$?"
     [ "$crop_err" -ne 0 ] && { report -wt "Crop detection analysis for $input_movie exited with $crop_err." ; exit ;};
-    for i in $(echo "$crop_data" | xargs); do
+    for i in $(echo "$crop_data"); do
         [ "$i" != "" ] && CROPADJ="$i"
     done
     report -dt "Crop detection complete. Will crop by ${CROPADJ} (width,height,from_left,from_top) before scaling."
