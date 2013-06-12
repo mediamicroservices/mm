@@ -250,9 +250,9 @@ get_duration(){
 
 get_maxdvdbitrate(){
     get_duration "$1"
-    local DVDCAPACITY=37000000000  # in bits
+    local DVDCAPACITY=33840000000  # in bits, minus 10%
     local CAPDVDBITRATE=6000000    # in bits/second
-    MAXDVDBITRATE=$(echo "(37000000000 - ( $DURATION * 224000 )) / $DURATION" | bc)
+    MAXDVDBITRATE=$(echo "($DVDCAPACITY - ( $DURATION * 224000 )) / $DURATION" | bc)
     if ! [[ "$MAXDVDBITRATE" =~ ^[0-9]+$ ]] ; then
         report -wt "Calculation of dvd bitrate failed. Evaluated to ${MAXDVDBITRATE}. Using 4000000 as bitrate instead."
         MAXDVDBITRATE=4000000
