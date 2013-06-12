@@ -21,6 +21,7 @@ usage(){
     echo "  -l (only use the left channel of the first audio track)"
     echo "  -r (only use the right channel of the first audio track)"
     echo "  -c (run the video through a crop detection filter, then crop the video accordingly during transcoding, slower)"
+    echo "  -v (run the video through a volume adjustment filter, then adjust the volume accordingly during transcoding, slower)"
     echo "  -h display this help"
     echo
     exit
@@ -30,13 +31,14 @@ check_dependencies "${dependencies[@]}"
 
 # command line arguments
 OPTIND=1
-while getopts ":lrch" opt ; do
+while getopts ":lrcvh" opt ; do
     case $opt in
         l)  get_audio_index "$sourcefile"
             audiomapping=(-map_audio_channel 0:${audio_index}:0:0:1:0 -map_audio_channel 0:${audio_index}:0:0:1:1);;
         r)  get_audio_index "$sourcefile"
             audiomapping=(-map_audio_channel 0:${audio_index}:1:0:1:0 -map_audio_channel 0:${audio_index}:1:0:1:1);;
         c) cropdetect="Y" ;;
+        v) voladjust="Y" ;;
         h) usage ;;
         *) echo "Invalid option: -$OPTARG" ; exit 1 ;;
         :) echo "Option -$OPTARG requires an argument" ; exit 1 ;;
@@ -157,13 +159,23 @@ while [ "$*" != "" ] ; do
     # log ffmbc process
     if [ "$logdir" != "" ] ; then
         mkdir -p "$logdir"
+        export FFREPORT="file=${logdir}/%p_%t_$(basename $0)_${version}.txt"
         reportfile="ffmbc_$(date '+%Y%m%d-%H%M%S')_$(basename $0)_${version}.txt"
         echo "ffmbc started on $(date '+%F at %T')" > "${logdir}/${reportfile}"
         echo "Report written to \"${reportfile}\"" >> "${logdir}/${reportfile}"
         echo "Command line:" >> "${logdir}/${reportfile}"
     fi
-    echo "ffmbc ${inputoptions[@]} -i ${sourcefile} ${ffmbc_opts[@]} ${servicefile}" >> "${logdir}/${reportfile}"
-    ffmbc ${inputoptions[@]} -i ${sourcefile} ${ffmbc_opts[@]} ${servicefile}
+    if [ "$voladjust" = "Y" ] ; then
+        get_volume_adjustment "$sourcefile"
+        unset audio_pipe_opts
+        audio_pipe_opts=(-f s24le -ar 48000 -ac 2)
+        report -dt "ffmpeg -v warning -stats -i ${input_movie} -af volume=${VOLADJ}dB ${audio_pipe_opts[@]} - | ffmbc ${inputoptions[@]} -i ${input_movie} ${audio_pipe_opts[@]} -i pipe:0 -map 0:v -map 1:a ${ffmbc_opts[@]} ${servicefile}" 
+        echo "ffmpeg -v warning -stats -i ${input_movie} -af volume=${VOLADJ}dB ${audio_pipe_opts[@]} - | ffmbc ${inputoptions[@]} -i ${input_movie} ${audio_pipe_opts[@]} -i pipe:0 -map 0:v -map 1:a ${ffmbc_opts[@]} ${servicefile}"  >> "${logdir}/${reportfile}"
+        ffmpeg -v warning -stats -i ${input_movie} -af volume=${VOLADJ}dB ${audio_pipe_opts[@]} - | ffmbc ${inputoptions[@]} -i ${input_movie} ${audio_pipe_opts[@]} -i pipe:0 -map 0:v -map 1:a ${ffmbc_opts[@]} ${servicefile}
+    else
+        echo "ffmbc ${inputoptions[@]} -i ${sourcefile} ${ffmbc_opts[@]} ${servicefile}" >> "${logdir}/${reportfile}"
+        ffmbc ${inputoptions[@]} -i ${sourcefile} ${ffmbc_opts[@]} ${servicefile}
+    fi
     ffmbc_err="$?"
     [ "$ffmbc_err" -gt "0" ] && { report -wt "ffmbc failed with error ${ffmbc_err}" ; exit 1 ;};
     shift
