@@ -6,6 +6,7 @@
 # v 1.2 revert to mov and ffmbc
 version="1.2"
 unset dependencies
+unset audiomapping
 dependencies=(ffmbc)
 
 scriptdir=$(dirname "$0")
@@ -31,8 +32,10 @@ check_dependencies "${dependencies[@]}"
 OPTIND=1
 while getopts ":lrch" opt ; do
     case $opt in
-        l) audiomapping=(-map_audio_channel 0:1:0:0:1:0 -map_audio_channel 0:1:0:0:1:1) ;;
-        r) audiomapping=(-map_audio_channel 0:1:1:0:1:0 -map_audio_channel 0:1:1:0:1:1) ;;
+        l)  get_audio_index "$sourcefile"
+            audiomapping=(-map_audio_channel 0:${audio_index}:0:0:1:0 -map_audio_channel 0:${audio_index}:0:0:1:1);;
+        r)  get_audio_index "$sourcefile"
+            audiomapping=(-map_audio_channel 0:${audio_index}:1:0:1:0 -map_audio_channel 0:${audio_index}:1:0:1:1);;
         c) cropdetect="Y" ;;
         h) usage ;;
         *) echo "Invalid option: -$OPTARG" ; exit 1 ;;
@@ -49,12 +52,11 @@ cleanup(){
 trap cleanup SIGHUP SIGINT SIGTERM
 
 while [ "$*" != "" ] ; do
-    
+
     # clear local arrays
-    unset audiomapping
     unset inputoptions
     unset ffmbc_opts
-    
+
     input="$1"
     [ -d "$input" ] && { outputdir="$input/objects/service" && logdir="$input/metadata/submissionDocumentation/logs" ;};
     [ -f "$input" ] && { outputdir=$(dirname "$input")"/service" && logdir="$(dirname "$input")/service/logs" ;};
@@ -70,12 +72,12 @@ while [ "$*" != "" ] ; do
     [ -s "$servicefile" ] && { report -wt "$servicefile already exists, skipping transcode" ; [ "$#" = 1 ] && exit 86 || { shift ; continue ;} ;};
 
     report -dt "Starting transcode of $(basename $sourcefile) for broadcast compliance."
-    
+
     # set fixed transcoding options
     ffmbc_opts+=(-r ntsc)
     ffmbc_opts+=(-tff)
     ffmbc_opts+=(-threads 4)
-    
+
     if [ -n "$audiomapping" ] ; then
         ffmbc_opts+=($audiomapping)
     else
@@ -105,7 +107,6 @@ while [ "$*" != "" ] ; do
     fi
     darratio=$(echo "scale=3 ; $dar" | bc)
     if [ "$width" = "1920" -a "$height" = "1080" -a ! "$cropdetect" = "Y" ] ; then
-        echo yep
         ffmbc_opts+=(-target xdcamhd422)
         ffmbc_opts+=(-vtag xd5b)
         ffmbc_opts+=(-aspect 16:9)
