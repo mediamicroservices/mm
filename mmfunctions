@@ -199,6 +199,7 @@ make_mezz_for_xdcam(){
 }
 
 find_input (){
+    sourcefile=""
     [ -d "$1" ] && [ -d "$1/objects/service" ] && sourcefile=$(find "$1/objects/service" -maxdepth 1 -mindepth 1 -type f \( -name "*.mov" -o -name "*.mxf" -o -name "*.mp4" -o -name "*.dv" \) ! -name ".*")
     [ -f "$1" ] && sourcefile="$1"
     [ ! "$sourcefile" ] && sourcefile=$(find "$1/objects" -maxdepth 1 -mindepth 1 -type f \( -name "*.mov" -o -name "*.mxf" -o -name "*.mp4" -o -name "*.dv" \) ! -name ".*")
