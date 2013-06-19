@@ -16,7 +16,7 @@ scriptdir=$(dirname "$0")
 
 add_mediaid_to_queue(){
     [ -z "$mediaid" ] || { report -wt "Error: mediaid is undefined in add_media_to_queue function" ; exit 1 ;};
-    [ -f "$queuefile"] || { report -wt "Error: queuefile is undefined in add_media_to_queue function" ; exit 1 ;};
+    [ -z "$queuefile"] || { report -wt "Error: queuefile is undefined in add_media_to_queue function" ; exit 1 ;};
     echo "$mediaid" >> "$queuefile"
 }
 
