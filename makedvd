@@ -102,7 +102,7 @@ while [ "$*" != "" ] ; do
         inputoptions+=(-v warning -stats)
     fi
     report -dt "Working on $(basename $isooutput) DVD image."
-    ffmpeg ${inputoptions[@]} -i ${sourcefile} ${middleoptions[@]} ${outputdir}/${mediaid%.*}.mpeg
+    ffmpeg ${inputoptions[@]} -i "${sourcefile}" ${middleoptions[@]} "${outputdir}/${mediaid%.*}.mpeg"
     export VIDEO_FORMAT=NTSC
     # chapters every 5 minutes, dvdauthor will ignore chapter markers greater than duration
     report -dt "Making DVD VIDEO_TS folder."

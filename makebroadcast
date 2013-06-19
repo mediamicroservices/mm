@@ -169,12 +169,12 @@ while [ "$*" != "" ] ; do
         get_volume_adjustment "$sourcefile"
         unset audio_pipe_opts
         audio_pipe_opts=(-f s24le -ar 48000 -ac 2)
-        report -dt "ffmpeg -v warning -stats -i ${input_movie} -af volume=${VOLADJ}dB ${audio_pipe_opts[@]} - | ffmbc ${inputoptions[@]} -i ${input_movie} ${audio_pipe_opts[@]} -i pipe:0 -map 0:v -map 1:a ${ffmbc_opts[@]} ${servicefile}" 
-        echo "ffmpeg -v warning -stats -i ${input_movie} -af volume=${VOLADJ}dB ${audio_pipe_opts[@]} - | ffmbc ${inputoptions[@]} -i ${input_movie} ${audio_pipe_opts[@]} -i pipe:0 -map 0:v -map 1:a ${ffmbc_opts[@]} ${servicefile}"  >> "${logdir}/${reportfile}"
-        ffmpeg -v warning -stats -i ${input_movie} -af volume=${VOLADJ}dB ${audio_pipe_opts[@]} - | ffmbc ${inputoptions[@]} -i ${input_movie} ${audio_pipe_opts[@]} -i pipe:0 -map 0:v -map 1:a ${ffmbc_opts[@]} ${servicefile}
+        report -dt "ffmpeg -v warning -stats -i \"${input_movie}\" -af volume=${VOLADJ}dB ${audio_pipe_opts[@]} - | ffmbc ${inputoptions[@]} -i ${input_movie} ${audio_pipe_opts[@]} -i pipe:0 -map 0:v -map 1:a ${ffmbc_opts[@]} ${servicefile}" 
+        echo "ffmpeg -v warning -stats -i \"${input_movie}\" -af volume=${VOLADJ}dB ${audio_pipe_opts[@]} - | ffmbc ${inputoptions[@]} -i \"${input_movie}\" ${audio_pipe_opts[@]} -i pipe:0 -map 0:v -map 1:a ${ffmbc_opts[@]} \"${servicefile}\""  >> "${logdir}/${reportfile}"
+        ffmpeg -v warning -stats -i "${input_movie}" -af volume=${VOLADJ}dB ${audio_pipe_opts[@]} - | ffmbc ${inputoptions[@]} -i "${input_movie}" ${audio_pipe_opts[@]} -i pipe:0 -map 0:v -map 1:a ${ffmbc_opts[@]} "${servicefile}"
     else
-        echo "ffmbc ${inputoptions[@]} -i ${sourcefile} ${ffmbc_opts[@]} ${servicefile}" >> "${logdir}/${reportfile}"
-        ffmbc ${inputoptions[@]} -i ${sourcefile} ${ffmbc_opts[@]} ${servicefile}
+        echo "ffmbc ${inputoptions[@]} -i \"${sourcefile}\" ${ffmbc_opts[@]} \"${servicefile}\"" >> "${logdir}/${reportfile}"
+        ffmbc ${inputoptions[@]} -i "${sourcefile}" ${ffmbc_opts[@]} "${servicefile}"
     fi
     ffmbc_err="$?"
     [ "$ffmbc_err" -gt "0" ] && { report -wt "ffmbc failed with error ${ffmbc_err}" ; exit 1 ;};

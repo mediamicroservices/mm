@@ -74,8 +74,8 @@ while [ "$*" != "" ] ; do
         export FFREPORT="file=${logdir}/%p_%t_$(basename $0)_${version}.txt"
         inputoptions+=(-v warning -stats)
     fi
-    report -dt "Running: ffmpeg ${inputoptions[@]} -i ${sourcefile} ${middleoptions[@]} ${podcastoutput}"
-    ffmpeg ${inputoptions[@]} -i ${sourcefile} ${middleoptions[@]} ${podcastoutput}
+    report -dt "Running: ffmpeg ${inputoptions[@]} -i \"${sourcefile}\" ${middleoptions[@]} \"${podcastoutput}\""
+    ffmpeg ${inputoptions[@]} -i "${sourcefile}" ${middleoptions[@]} "${podcastoutput}"
     [ -d "${deliverdir}" ] && { report -dt "Delivering output" ; cp -av "${podcastoutput}" "${deliverdir}/" ;};
     log -e
     shift
