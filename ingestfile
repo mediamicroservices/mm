@@ -204,11 +204,11 @@ if [ "$makeaccesscopies" == "Y" ] ; then
     report -dt "STATUS Making access copies."
     "$scriptdir/makedvd" "$OUTDIR_INGESTFILE/$mediaid"
     "$scriptdir/makeyoutube" "$OUTDIR_INGESTFILE/$mediaid"
-    [ "$deliveraccesscopies" = "Y" ] && makeyoutubeopts=(-d $YOUTUBEDELIVER)
+    [ "$deliveraccesscopies" = "Y" ] && makeyoutubeopts=(-d "$YOUTUBEDELIVER")
     "$scriptdir/makeyoutube" "${makeyoutubeopts[@]}" "$OUTDIR_INGESTFILE/$mediaid"
     if [ $(echo "$mediaid" | grep "$REGEX4PODCAST") ] ; then
         report -dt "${mediaid} qualifies for podcast creation."
-        [ "$deliveraccesscopies" == "Y" ] && makepodcastopts=(-d $PODCASTDELIVER)
+        [ "$deliveraccesscopies" == "Y" ] && makepodcastopts=(-d "$PODCASTDELIVER")
         sh "$scriptdir/makepodcast" "${makepodcastopts[@]}" "$OUTDIR_INGESTFILE/$mediaid"
     else
         report -dt "${media} does NOT qualify for podcast creation, skipping."
