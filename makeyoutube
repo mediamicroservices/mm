@@ -37,7 +37,7 @@ while getopts ":hd:" opt; do
         h) usage ;;
         d) 
             deliverdir="$OPTARG"
-            [ ! -d "$deliverdir" ] && { report -wt "The delivery directory, ${deliverdir}, does exit. Exiting." ; exit 1 ;};
+            [ ! -d "$deliverdir" ] && report -wt "The delivery directory, ${deliverdir}, does not exist. Can not deliver the output of $(basename "$0")."
             ;;
         *) echo "bad option -$OPTARG" ; usage ;;
         :) echo "Option -$OPTARG requires an argument" ; exit 1 ;;
@@ -89,6 +89,7 @@ while [ "$*" != "" ] ; do
     report -dt "Working on $(basename ${youtubeoutput}) for youtube upload."
     report -dt "Running: ffmpeg ${inputoptions[@]} -i \"${sourcefile}\" ${middleoptions[@]} \"${youtubeoutput}\""
     ffmpeg ${inputoptions[@]} -i "${sourcefile}" ${middleoptions[@]} "${youtubeoutput}"
+    echo
     #chapterlist=$(ffmpeg -i "$sourcefile" 2>&1 | grep "Chapter #0." | awk '{print $4}' | tr -d "\n" | sed '$s/.$//') && { chaptered="Y" ; report "Found chapters found in $sourcefile" ;};
     #if [ chaptered="Y" ] ; then
         #if [ "$logdir" != "" ] ; then
