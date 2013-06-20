@@ -22,7 +22,7 @@ add_mediaid_to_queue(){
 
 remove_mediaid_from_queue(){
     [ -n "$mediaid" ] || { report -wt "Error: mediaid is undefined in remove_media_from_queue function" ; exit 1 ;};
-    [ -f "$queuefile"] || { report -wt "Error: queuefile is undefined in remove_media_from_queue function" ; exit 1 ;};
+    [ -f "$queuefile" ] || { report -wt "Error: queuefile is undefined in remove_media_from_queue function" ; exit 1 ;};
     grep -v "^${mediaid}$" "$queuefile" | grep "^[A-Z0-9_-]\+$" > "${queuefile}_tmp"
     rm "$queuefile"
     mv "${queuefile}_tmp" "$queuefile"
