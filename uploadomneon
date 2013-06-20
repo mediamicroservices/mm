@@ -60,7 +60,7 @@ binary
 ls "${OMNEONPATH}/${filename}"
 exit
 END_SCRIPT)
-if [ ! $(echo "$status" | grep "${OMNEONPATH}") ] ; then
+if [[ ! $(echo "$status" | grep "${OMNEONPATH}") ]] ; then
 report "The file named $filename is not currently on the omneon, proceeding..."
 
 if echo "$sourcefile" | grep -q "/Volumes/[AB][0-9]\{5\}" ; then
@@ -79,7 +79,7 @@ put "$uploadfile" "${OMNEONPATH}/${filename}"
 exit
 END_SCRIPT
 upload_err="${?}"
-report -wt "ftp exited with code ${upload_err}"
+report -dt "ftp exited with code ${upload_err}"
 report -dt "${filename} is uploaded to the omneon"
 [ "$upload_err" = "0" ] && [ "$removetmp" = "y" ] && rm -v "${TMPDIR}/${filename}"
 else
