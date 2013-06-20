@@ -15,14 +15,14 @@ scriptdir=$(dirname "$0")
 . "$scriptdir/mmfunctions" || { echo "Missing '$scriptdir/mmfunctions'. Exiting." ; exit 1 ;};
 
 add_mediaid_to_queue(){
-    [ -z "$mediaid" ] || { report -wt "Error: mediaid is undefined in add_media_to_queue function" ; exit 1 ;};
-    [ -z "$queuefile"] || { report -wt "Error: queuefile is undefined in add_media_to_queue function" ; exit 1 ;};
+    [ -n "$mediaid" ] || { report -wt "Error: mediaid is undefined in add_media_to_queue function" ; exit 1 ;};
+    [ -n "$queuefile" ] || { report -wt "Error: queuefile is undefined in add_media_to_queue function" ; exit 1 ;};
     echo "$mediaid" >> "$queuefile"
 }
 
 remove_mediaid_from_queue(){
-    [ -z "$mediaid" ] || { report -wt "Error: mediaid is undefined in add_media_to_queue function" ; exit 1 ;};
-    [ -f "$queuefile"] || { report -wt "Error: queuefile is undefined in add_media_to_queue function" ; exit 1 ;};
+    [ -n "$mediaid" ] || { report -wt "Error: mediaid is undefined in remove_media_from_queue function" ; exit 1 ;};
+    [ -f "$queuefile"] || { report -wt "Error: queuefile is undefined in remove_media_from_queue function" ; exit 1 ;};
     grep -v "^${mediaid}$" "$queuefile" | grep "^[A-Z0-9_-]\+$" > "${queuefile}_tmp"
     rm "$queuefile"
     mv "${queuefile}_tmp" "$queuefile"
