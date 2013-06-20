@@ -1,0 +1,87 @@
+#!/bin/bash
+# makeprores
+# makes a file appropriate for keeping editors happy
+version="1.0"
+unset dependencies
+dependencies=(ffmpeg)
+outputdir="$HOME/Desktop/$(basename $0)" # default output directory, override with -o
+
+scriptdir=$(dirname "$0")
+. "$scriptdir/mmfunctions" || { echo "Missing '$scriptdir/mmfunctions'. Exiting." ; exit 1 ;};
+
+usage(){
+    echo
+    echo "$(basename $0) ${version}"
+    echo "This application will create a prores/quicktime file (suitable for editing) from a video file or package input with the following options. By default the output will be written to ${outputdir}. You can override this with the -o option."
+    echo "Dependencies: ${dependencies[@]}"
+    echo "Usage: $(basename $0) [ -o /directory/to/write/to/ ] fileorpackage1 [ fileorpackage2 ...]"
+    echo "  -o directory ( directory to write the resulting file to )"
+    echo "  -h ( display this help )"
+    echo
+    exit
+}
+[ "$#" = 0 ] && usage
+check_dependencies "${dependencies[@]}"
+
+cleanup(){
+    log -a "Process aborted"
+    exit 1
+}
+
+trap cleanup SIGHUP SIGINT SIGTERM
+
+OPTIND=1
+while getopts ":ho:" opt; do
+    case "$opt" in
+        h) usage ;;
+        o) 
+            outputdir="$OPTARG"
+            if [ ! -d "$outputdir" ] ; then
+                report -wt "The output directory option, $outputdir, does not refer to an actual directory. Quitting."
+                exit 1
+            fi
+            ;;
+        *) echo "bad option -$OPTARG" ; usage ;;
+        :) echo "Option -$OPTARG requires an argument" ; exit 1 ;;
+    esac
+done
+shift $(( ${OPTIND} - 1 ))
+
+while [ "$*" != "" ] ; do
+    input="$1"
+    logdir="$outputdir/logs"
+    find_input "$input"
+
+    filename=$(basename "$sourcefile")
+    mediaid=$(basename "$1" | cut -d. -f1)
+
+    log -b
+
+    outputfile="${outputdir}/${mediaid%.*}_prores.mov"
+    [ -s "${outputfile}" ] && { report -wt "WARNING ${outputfile} already exists, skipping transcode" ; [ "$#" = 1 ] && exit 86 || { shift ; continue ;} ;};
+    mkdir -p "${outputdir}"
+    get_height "${sourcefile}"
+    get_width "${sourcefile}"
+
+    unset inputoptions
+    inputoptions+=(-vsync 0)
+    unset middleoptions
+    middleoptions+=(-map 0:v)
+    middleoptions+=(-map 0:a)
+    middleoptions+=(-c:v prores)
+    middleoptions+=(-c:a pcm_s16le)
+
+    if [ "${logdir}" != "" ] ; then
+        mkdir -p "${logdir}"
+        export FFREPORT="file=${logdir}/%p_%t_$(basename $0)_${version}.txt"
+        inputoptions+=(-v warning -stats)
+    fi
+    report -dt "Working on $(basename ${outputfile})."
+    report -dt "Running: ffmpeg ${inputoptions[@]} -i \"${sourcefile}\" ${middleoptions[@]} \"${outputfile}\""
+    ffmpeg ${inputoptions[@]} -i "${sourcefile}" ${middleoptions[@]} "${outputfile}"
+    echo
+    report -dt "$(basename ${outputfile}) is done."
+    shift
+    log -e
+done
+
