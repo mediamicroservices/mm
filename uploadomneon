@@ -43,9 +43,9 @@ while getopts ":h" opt; do
 done
 shift $(( ${OPTIND} - 1 ))
 
-[ ! -d "$TMPDIR" ] && { echo "The temporary directory must be set and be available. Run 'mmconfig'." ; exit 1 ;};
-[ ! -d "$OMNEONIP"] && { echo "The Omneon IP must be set. Run 'mmconfig'." ; exit 1 ;};
-[ ! -d "$OMNEONPATH"] && { echo "The Omneon Path must be set. Run 'mmconfig'." ; exit 1 ;};
+[ ! -d "$TMPDIR" ] && { report -wt "The temporary directory must be set and be available. Run 'mmconfig'." ; exit 1 ;};
+[ ! -n "$OMNEONIP" ] && { report -wt "The Omneon IP must be set. Run 'mmconfig'." ; exit 1 ;};
+[ ! -n "$OMNEONPATH" ] && { report -wt "The Omneon Path must be set. Run 'mmconfig'." ; exit 1 ;};
 
 while [ "$*" != "" ] ; do
 
@@ -60,7 +60,7 @@ binary
 ls "${OMNEONPATH}/${filename}"
 exit
 END_SCRIPT)
-if [ "$status" = "Name not found." ] ; then
+if [ ! $(echo "$status" | grep "${OMNEONPATH}") ] ; then
 report "The file named $filename is not currently on the omneon, proceeding..."
 
 if echo "$sourcefile" | grep -q "/Volumes/[AB][0-9]\{5\}" ; then
@@ -81,7 +81,7 @@ END_SCRIPT
 upload_err="${?}"
 report -wt "ftp exited with code ${upload_err}"
 report -dt "${filename} is uploaded to the omneon"
-[ "$upload_err" = "0" ] && [ "$removetmp" = "y" ] && rm "${TMPDIR}/${filename}"
+[ "$upload_err" = "0" ] && [ "$removetmp" = "y" ] && rm -v "${TMPDIR}/${filename}"
 else
 size=$(echo "$status" | grep "$filename" | awk '{print $5}')
 size_g=$(echo "scale=3; $size / 1073741824" | bc)
