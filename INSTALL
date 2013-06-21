@@ -12,7 +12,7 @@ end
 
 pwd = File.expand_path File.join(__FILE__, "..")
 
-%w[barcodeinterpret blackatends checksumpackage fix_left2stereo fix_rewrap fix_volume ingestfile ingestfile makebroadcast makedvd makeframes makelossless makemetadata makepodcast makeyoutube mmconfig mmfunctions mmhelp paperingest quickcompare removeDSStore uploadomneon xdcamingest].each do |file|
+%w[barcodeinterpret blackatends checksumpackage fix_left2stereo fix_rewrap fix_volume ingestfile ingestfile makebroadcast makedvd makeframes makelossless makemetadata makepodcast makeprores makeyoutube mmconfig mmfunctions mmhelp paperingest quickcompare removeDSStore uploadomneon xdcamingest].each do |file|
   system command+'"'+pwd+'/'+file+'"'+" /usr/local/bin"
 end
 puts
