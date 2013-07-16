@@ -270,6 +270,11 @@ has_first_two_tracks_mono(){
     MULTIMONO="Y"
 }
 
+is_video(){
+    # use ffmpeg's index value and stream specifier to determine if the input is a recognized as a video file by ffmpeg
+    audio_index=$(ffprobe "$1" -show_streams -select_streams v 2> /dev/null | grep "index=")
+}
+
 get_volume_adjustment(){
     reference=-23
     input_movie="$1"
