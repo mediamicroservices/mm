@@ -10,7 +10,7 @@ deliverytoomneon="Y"       # use 'Y' for yes or any other character for no
 deliveraccesscopies="Y"    # use 'Y' for yes or any other character for no
 deliverytoaipstorage="Y"   # use 'Y' for yes or any other character for no
 
-queuefile="/tmp/queue.txt"
+queuefile="$HOME/Desktop/queue.txt"
 scriptdir=$(dirname "$0")
 . "$scriptdir/mmfunctions" || { echo "Missing '$scriptdir/mmfunctions'. Exiting." ; exit 1 ;};
 
