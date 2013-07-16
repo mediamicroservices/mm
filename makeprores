@@ -49,7 +49,14 @@ shift $(( ${OPTIND} - 1 ))
 
 while [ "$*" != "" ] ; do
     input="$1"
-    logdir="$outputdir/logs"
+    if [ -z "${outputdir}" ] ; then
+        [ -d "$input" ] && { outputdir="$input/objects/access/prores" && logdir="$input/metadata/submissionDocumentation/logs" ;};
+        [ -f "$input" ] && { outputdir=$(dirname "$input")"/access/prores" && logdir="$(dirname "$input")/access/logs" ;};
+        [ ! "$outputdir" ] && { outputdir="$input/objects/access/prores" && logdir="$input/metadata/submissionDocumentation/logs" ;};
+    else
+        logdir="$outputdir/logs"
+    fi
+    
     find_input "$input"
 
     filename=$(basename "$sourcefile")
