@@ -242,7 +242,7 @@ get_codectagstring(){
 }
 
 get_fieldorder(){
-    field_order=$(ffprobe-bc "$1" -show_streams 2> /dev/null | grep interlaced= | cut -d = -f 2)
+    fieldorder=$(ffprobe-bc "$1" -show_streams 2> /dev/null | grep interlaced= | cut -d = -f 2)
 }
 
 get_duration(){
@@ -254,12 +254,14 @@ get_maxdvdbitrate(){
     local DVDCAPACITY=33840000000  # in bits, minus 10%
     local CAPDVDBITRATE=6000000    # in bits/second
     MAXDVDBITRATE=$(echo "($DVDCAPACITY - ( $DURATION * 224000 )) / $DURATION" | bc)
-    if [[ "$MAXDVDBITRATE" =~ ^[0-9]+$ ]] ; then
+    report -dt "Data rate could be up to $MAXDVDBITRATE"
+    if ! [[ "$MAXDVDBITRATE" =~ ^[0-9]+$ ]] ; then
         report -wt "Calculation of dvd bitrate failed. Evaluated to ${MAXDVDBITRATE}. Using 4000000 as bitrate instead."
         MAXDVDBITRATE=4000000
     elif [ "$MAXDVDBITRATE" -gt "$CAPDVDBITRATE" ] ; then
         MAXDVDBITRATE="$CAPDVDBITRATE"
     fi
+    report -dt "Data rate for DVD is evaluated to $MAXDVDBITRATE"
 }
 
 has_first_two_tracks_mono(){
@@ -312,4 +314,3 @@ free_space(){
       exit 1
     fi
 }
-
