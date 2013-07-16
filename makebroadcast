@@ -33,9 +33,9 @@ check_dependencies "${dependencies[@]}"
 OPTIND=1
 while getopts ":lrcvh" opt ; do
     case $opt in
-        l)  get_audio_index "$sourcefile"
+        l)  get_audio_index "${sourcefile}"
             audiomapping=(-map_audio_channel 0:${audio_index}:0:0:1:0 -map_audio_channel 0:${audio_index}:0:0:1:1);;
-        r)  get_audio_index "$sourcefile"
+        r)  get_audio_index "${sourcefile}"
             audiomapping=(-map_audio_channel 0:${audio_index}:1:0:1:0 -map_audio_channel 0:${audio_index}:1:0:1:1);;
         c) cropdetect="Y" ;;
         v) voladjust="Y" ;;
@@ -60,38 +60,38 @@ while [ "$*" != "" ] ; do
     unset ffmbc_opts
 
     input="$1"
-    [ -d "$input" ] && { outputdir="$input/objects/service" && logdir="$input/metadata/submissionDocumentation/logs" ;};
-    [ -f "$input" ] && { outputdir=$(dirname "$input")"/service" && logdir="$(dirname "$input")/service/logs" ;};
-    [ ! "$outputdir" ] && { outputdir="$input/objects/service" && logdir="$input/metadata/submissionDocumentation/logs" ;};
-    find_input "$input"
+    [ -d "${input}" ] && { outputdir="${input}/objects/service" && logdir="${input}/metadata/submissionDocumentation/logs" ;};
+    [ -f "${input}" ] && { outputdir=$(dirname "${input}")"/service" && logdir="$(dirname "${input}")/service/logs" ;};
+    [ ! "${outputdir}" ] && { outputdir="${input}/objects/service" && logdir="${input}/metadata/submissionDocumentation/logs" ;};
+    find_input "${input}"
 
-    filename=$(basename "$sourcefile")
-    mediaid=$(basename "$input" | cut -d. -f1)
+    filename=$(basename "${sourcefile}")
+    mediaid=$(basename "${input}" | cut -d. -f1)
 
     log -b
 
     servicefile="$outputdir/${mediaid%.*}.mov"
-    [ -s "$servicefile" ] && { report -wt "$servicefile already exists, skipping transcode" ; [ "$#" = 1 ] && exit 86 || { shift ; continue ;} ;};
+    [ -s "${servicefile}" ] && { report -wt "${servicefile} already exists, skipping transcode" ; [ "$#" = 1 ] && exit 86 || { shift ; continue ;} ;};
 
-    report -dt "Starting transcode of $(basename $sourcefile) for broadcast compliance."
+    report -dt "Starting transcode of $(basename "${sourcefile}") for broadcast compliance."
 
     # set fixed transcoding options
     ffmbc_opts+=(-r ntsc)
     ffmbc_opts+=(-tff)
     ffmbc_opts+=(-threads 4)
 
-    if [ -n "$audiomapping" ] ; then
-        ffmbc_opts+=($audiomapping)
+    if [ -n "${audiomapping}" ] ; then
+        ffmbc_opts+=(${audiomapping})
     else
-        has_first_two_tracks_mono "$sourcefile"
-        if [ "$MULTIMONO" = "Y" ] ; then
+        has_first_two_tracks_mono "${sourcefile}"
+        if [ "${MULTIMONO}" = "Y" ] ; then
             report -wt "The first two audio tracks are both mono. Considering track 1 for left and track 2 for right."
             audiomapping=(-map_audio_channel 0.1:0:0.1:0 -map_audio_channel 0.2:0:0.1:1)
-            ffmbc_opts+=($audiomapping)
+            ffmbc_opts+=(${audiomapping})
         fi
     fi
     # decide on an output codec, aspect ratio, and padding strategy
-    get_sar "$sourcefile"
+    get_sar "${sourcefile}"
     if [ "$cropdetect" = "Y" ] ; then
         get_cropdetection "$sourcefile"
         filterchain_start="${CROPADJ},"
