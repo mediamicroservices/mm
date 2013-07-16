@@ -91,6 +91,9 @@ ask_mediaid
 [ -d "$OUTDIR_INGESTFILE/$mediaid" ] && { report -wt "It looks like $mediaid was already ingested. If you want to overwrite the existing one please delete $OUTDIR_INGESTFILE/$mediaid first and then try again." ; exit 1 ;};
 [ -d "$AIP_STORAGE/$mediaid" ] && { report -wt "It looks like $mediaid was already ingested. If you want to overwrite the existing one please delete $AIP_STORAGE/$mediaid first and then try again." ; exit 1 ;};
 ask_input
+if [ ! is_video "$input" ] ; then
+    report -wt "WARNING: $input is not recognized as a video file. Please press CONTROL-C to halt ingest or continue if you know what you're doing."
+fi
 
 if [ "$audiodecision" = "" ] ; then
     report -q "Select an audio strategy? "
