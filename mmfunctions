@@ -233,8 +233,7 @@ get_sar(){
 
 get_audio_index(){
     # get ffmpeg's index value of the first audio stream. Useful for do custom channel mappings through ffmbc.
-    audio_index=`ffprobe "$1" -show_streams -select_streams a 2> /dev/null | grep index= | cut -d = -f 2 | sed 's|:|/|g' | head -n 1`
-    audio_index
+    audio_index=$(ffprobe "$1" -show_streams -select_streams a 2> /dev/null | grep index= | cut -d = -f 2 | sed 's|:|/|g' | head -n 1)
 }
 
 get_codectagstring(){
