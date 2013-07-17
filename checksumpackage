@@ -4,7 +4,7 @@
 # version 1.1 adds use of dfxml
 version=1.1
 unset dependencies
-dependencies=(md5deep xml)
+dependencies=(md5deep xml removeDSStore)
 
 scriptdir=$(dirname "$0")
 . "$scriptdir/mmfunctions" || { echo "Missing '$scriptdir/mmfunctions'. Exiting." ; exit 1 ;};
@@ -36,7 +36,7 @@ DFXMLNAME="dfxml.xml"
 while [ "$*" != "" ] ; do
     if [ -d "$1" ] ; then
         PWD=$(pwd)
-        "$scriptdir/removeDSStore" "$1"
+        removeDSStore "$1"
         if [ -d "$1/objects" ] ; then
             INDIR="objects"
             OUTDIR="metadata"
@@ -47,11 +47,11 @@ while [ "$*" != "" ] ; do
         [ ! -d "$1/$OUTDIR" ] && mkdir -p "$1/$OUTDIR"
         if [ ! -s "${1}/$OUTDIR/$CHECKSUMNAME" ] ; then
             report -dt "making Digital Forensics XML (${DFXMLNAME}) and ($CHECKSUMNAME) for ${1}"
-            cd "$1"
+            cd "$1/$INDIR"
             maketemp
-            md5deep -drl "$INDIR" > $TMPFILE
-            mv $TMPFILE "$OUTDIR/$DFXMLNAME"
-            xml sel -T -t -m "/dfxml/fileobject" -v "hashdigest" -o " " -v "ctime" -o "  " -v "filename" -n "$OUTDIR/$DFXMLNAME" > "$OUTDIR/$CHECKSUMNAME"
+            md5deep -drl . > $TMPFILE
+            mv $TMPFILE "$1/$OUTDIR/$DFXMLNAME"
+            xml sel -T -t -m "/dfxml/fileobject" -v "hashdigest" -o "  " -v "filename" -n "$1/$OUTDIR/$DFXMLNAME" > "$1/$OUTDIR/$CHECKSUMNAME"
             cd "$PWD"
         else
             report -dt "${CHECKSUMNAME} already exists, skipping for ${1}"
