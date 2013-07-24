@@ -208,15 +208,15 @@ find_input (){
 }
 
 get_width(){
-    width=$(ffprobe "$1" -show_streams -select_streams v 2> /dev/null | grep width= | cut -d = -f 2)
+    width=$(ffprobe "$1" -show_streams -select_streams v:0 2> /dev/null | grep width= | cut -d = -f 2)
 }
 
 get_height(){
-    height=$(ffprobe "$1" -show_streams -select_streams v 2> /dev/null | grep height= | cut -d = -f 2)
+    height=$(ffprobe "$1" -show_streams -select_streams v:0 2> /dev/null | grep height= | cut -d = -f 2)
 }
 
 get_dar(){
-    dar=$(ffprobe "$1" -show_streams -select_streams v 2> /dev/null | grep display_aspect_ratio= | cut -d = -f 2 | sed 's|:|/|g')
+    dar=$(ffprobe "$1" -show_streams -select_streams v:0 2> /dev/null | grep display_aspect_ratio= | cut -d = -f 2 | sed 's|:|/|g')
     if [ "$dar" = "0/1" ] ; then
         get_width "$1"
         get_height "$1"
@@ -225,7 +225,7 @@ get_dar(){
 }
 
 get_sar(){
-    sar=$(ffprobe "$1" -show_streams -select_streams v 2> /dev/null | grep sample_aspect_ratio= | cut -d = -f 2 | sed 's|:|/|g')
+    sar=$(ffprobe "$1" -show_streams -select_streams v:0 2> /dev/null | grep sample_aspect_ratio= | cut -d = -f 2 | sed 's|:|/|g')
     if [ "$sar" = "0/1" ] ; then
         sar="1/1"
     fi
@@ -237,7 +237,7 @@ get_audio_index(){
 }
 
 get_codectagstring(){
-    codec_tag_string=$(ffprobe "$1" -show_streams -select_streams v 2> /dev/null | grep codec_tag_string= | cut -d = -f 2)
+    codec_tag_string=$(ffprobe "$1" -show_streams -select_streams v:0 2> /dev/null | grep codec_tag_string= | cut -d = -f 2)
 }
 
 get_fieldorder(){
@@ -272,7 +272,7 @@ has_first_two_tracks_mono(){
 
 is_video(){
     # use ffmpeg's index value and stream specifier to determine if the input is a recognized as a video file by ffmpeg
-    ffprobe "$1" -show_streams -select_streams v 2> /dev/null | grep "index="
+    ffprobe "$1" -show_streams -select_streams v:0 2> /dev/null | grep "index="
 }
 
 get_volume_adjustment(){
