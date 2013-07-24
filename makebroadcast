@@ -109,21 +109,22 @@ while [ "$*" != "" ] ; do
         filterchain_start+="fieldorder=tff,"
     fi
     darratio=$(echo "scale=3 ; $dar" | bc)
-    if [ "$width" = "1920" -a "$height" = "1080" -a ! "$cropdetect" = "Y" ] ; then
+    if [ "$darratio" = "1.777" -a ! "$cropdetect" = "Y" ] ; then
+        ffmbc_opts+=(-s 1920x1080)
         ffmbc_opts+=(-target xdcamhd422)
         ffmbc_opts+=(-vtag xd5b)
         ffmbc_opts+=(-aspect 16:9)
-    elif [ $(echo "scale=5 ; $darratio > (16/9)" | bc -l) = 1 ] ; then
+    elif [ $(echo "scale=3 ; $darratio > (16/9)" | bc -l) = 1 ] ; then
         ffmbc_opts+=(-vf "${filterchain_start}pad=${width}:${width}*(9/16)*(${sar}):(ow-${width})/2:(oh-${height})/2,scale=1920:1080:interl=1")
         ffmbc_opts+=(-target xdcamhd422)
         ffmbc_opts+=(-vtag xd5b)
         ffmbc_opts+=(-aspect 16:9)
-    elif [ $(echo "scale=5 ; $darratio > (3/2)" | bc -l) = 1 ] ; then
+    elif [ $(echo "scale=3 ; $darratio > (3/2)" | bc -l) = 1 ] ; then
         ffmbc_opts+=(-vf "${filterchain_start}pad=${height}*(16/9)/(${sar}):${height}:(ow-${width})/2:(oh-${height})/2,scale=1920:1080:interl=1")
         ffmbc_opts+=(-target xdcamhd422)
         ffmbc_opts+=(-vtag xd5b)
         ffmbc_opts+=(-aspect 16:9)
-    elif [ "$width" = "720" -a "$height" = "480" -a $(echo "scale=5 ; $darratio < (3/2)" | bc -l) = 1 -a ! "$cropdetect" = "Y" ] ; then
+    elif [ "$width" = "720" -a "$height" = "480" -a $(echo "scale=3 ; $darratio < (3/2)" | bc -l) = 1 -a ! "$cropdetect" = "Y" ] ; then
         filterchain_start=$(echo "$filterchain_start" | sed 's/,$//g')
         ffmbc_opts+=(-vf ${filterchain_start})
         ffmbc_opts+=(-target imx30)
