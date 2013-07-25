@@ -244,6 +244,10 @@ get_fieldorder(){
     fieldorder=$(ffprobe-bc "$1" -show_streams -select_streams v:0 2> /dev/null | grep "\(progressive\|interlaced=\)" | cut -d = -f 2)
 }
 
+get_pix_fmt(){
+    pixfmt=$(ffprobe "$1" -show_streams -select_streams v:0 2> /dev/null | grep pix_fmt= | cut -d = -f 2)
+}
+
 get_duration(){
     DURATION=$(ffprobe "$1" -show_format 2> /dev/null | grep duration= | cut -d = -f 2)
 }
