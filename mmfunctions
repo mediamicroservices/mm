@@ -241,7 +241,6 @@ get_codectagstring(){
 }
 
 get_fieldorder(){
-    echo hi
     fieldorder=$(ffprobe-bc "$1" -show_streams 2> /dev/null | grep "\(progressive\|interlaced=\)" | cut -d = -f 2)
 }
 
