@@ -23,18 +23,20 @@ while [ "$*" != "" ] ; do
     [ ! "$logdir" ] && logdir="$input/metadata/submissionDocumentation/logs"
 
     find "$input" -type f \( -name "*.mov" -o -name "*.avi" -o -name "*.mxf" \) -print0 | while read -d $'\0' file ; do
-        sourcefile="$file"
+	    sourcefile="$file"
 	    outputdir=$(dirname "$sourcefile")
 	    sourcefilename=$(basename "$sourcefile")
 	    
 	    log -b 
 	    
 	    get_codectagstring "$sourcefile"
+	    get_fieldorder "$sourcefile"
+	    get_pix_fmt "$sourcefile"
 	    if [ "$codec_tag_string" == "2vuy" ] ; then
 	        report -dt "$sourcefilename is 2vuy, starting encode"
 	        mkdir -p "$outputdir" "$logdir" "$trimmingsdir"
 	        export FFREPORT="file=${logdir}/%p_%t_makelossless.log"
-	        ffmpeg -v warning -stats -vsync 0 -i "$sourcefile" -map 0:v -map 0:a -c:v ffv1 -g 1 -c:a copy "$outputdir/${sourcefilename%.*}_ffv1.mov" -f framemd5 -an "$logdir/${sourcefilename%.*}.framemd5"
+	        ffmpeg -v warning -stats -vsync 0 -i "$sourcefile" -map 0:v -map 0:a -c:v ffv1 -vf setfield=bff -g 1 -c:a copy "$outputdir/${sourcefilename%.*}_ffv1.mov" -f framemd5 -an "$logdir/${sourcefilename%.*}.framemd5"
 	        ffmpeg_ffv1_err="$?"
 	        [ "$ffmpeg_ffv1_err" -gt 0 ] && { echo ffmpeg ended with error ; exit 1 ;};
 	        ffmpeg -v warning -stats -i "$outputdir/${sourcefilename%.*}_ffv1.mov" -f framemd5 -pix_fmt uyvy422 -an "$logdir/${sourcefilename%.*}_ffv1.framemd5"
@@ -55,7 +57,7 @@ while [ "$*" != "" ] ; do
 	        report -dt "$sourcefilename is v210, starting encode"
 	        mkdir -p "$outputdir" "$logdir" "$trimmingsdir"
 	        export FFREPORT="file=${logdir}/%p_%t_makelossless.log"
-	        ffmpeg -v warning -stats -vsync 0 -i "$sourcefile" -map 0:v -map 0:a -c:v ffv1 -g 1 -c:a copy "$outputdir/${sourcefilename%.*}_ffv1.mov" -f framemd5 -an "$logdir/${sourcefilename%.*}.framemd5"
+	        ffmpeg -v warning -stats -vsync 0 -i "$sourcefile" -map 0:v -map 0:a -c:v ffv1 -vf setfield=bff -g 1 -c:a copy "$outputdir/${sourcefilename%.*}_ffv1.mov" -f framemd5 -an "$logdir/${sourcefilename%.*}.framemd5"
 	        ffmpeg_ffv1_err="$?"
 	        [ "$ffmpeg_ffv1_err" -gt 0 ] && { echo ffmpeg ended with error ; exit 1 ;};
 	        ffmpeg -v warning -stats -i "$outputdir/${sourcefilename%.*}_ffv1.mov" -f framemd5 -an "$logdir/${sourcefilename%.*}_ffv1.framemd5"
@@ -72,8 +74,46 @@ while [ "$*" != "" ] ; do
 	        else
 	            report -wt "Not looking safe. Going to keep the original."
 	        fi
+	    elif [ "$codec_tag_string" == "FFV1" -a "$fieldorder" == "progressive" ] ; then
+	    	if [ "$pixfmt" == "yuv422p" ] ; then
+		    	report -dt "$sourcefilename is yuv422p ffv1 progressive, starting encode"
+		        mkdir -p "$outputdir" "$logdir"
+		        export FFREPORT="file=${logdir}/%p_%t_makelossless_bfffix.log"
+		        ffmpeg -v warning -stats -vsync 0 -i "$sourcefile" -map 0:v -map 0:a -c:v ffv1 -vf setfield=bff -g 1 -c:a copy "$outputdir/${sourcefilename%.*}_bfffix.mov"
+		        ffmpeg_ffv1_err="$?"
+		        [ "$ffmpeg_ffv1_err" -gt 0 ] && { echo ffmpeg ended with error ; exit 1 ;};
+		        ffmpeg -v warning -stats -i "$outputdir/${sourcefilename%.*}_bfffix.mov" -f framemd5 -pix_fmt uyvy422 -an "$logdir/${sourcefilename%.*}_bfffix.framemd5"
+		        ffmpeg_md5_err="$?"
+		        [ "$ffmpeg_md5_err" -gt 0 ] && { echo ffmpeg md5 ended with error ; exit 1 ;};
+		        if [ $(md5 -q "$logdir/${sourcefilename%.*}.framemd5") = $(md5 -q "$logdir/${sourcefilename%.*}_bfffix.framemd5") ] ; then
+		            report -dt "Everything looks safe. Going to delete the original."
+		            mediainfo -f --language=raw --output=XML "$sourcefile" > "$logdir/${sourcefilename%.*}_bfffix_mediainfo.xml"
+		            mv -f -v "$outputdir/${sourcefilename%.*}_bfffix.mov" "$sourcefile"
+		        else
+		            report -wt "Not looking safe. Going to keep the original."
+		        fi
+	    	elif [ "$pixfmt" == "yuv422p10le" ] ; then
+	    		report -dt "$sourcefilename is yuv422p10le ffv1 progressive, starting encode"
+		        mkdir -p "$outputdir" "$logdir"
+		        export FFREPORT="file=${logdir}/%p_%t_makelossless_bfffix.log"
+		        ffmpeg -v warning -stats -vsync 0 -i "$sourcefile" -map 0:v -map 0:a -c:v ffv1 -vf setfield=bff -g 1 -c:a copy "$outputdir/${sourcefilename%.*}_bfffix.mov"
+		        ffmpeg_ffv1_err="$?"
+		        [ "$ffmpeg_ffv1_err" -gt 0 ] && { echo ffmpeg ended with error ; exit 1 ;};
+		        ffmpeg -v warning -stats -i "$outputdir/${sourcefilename%.*}_bfffix.mov" -f framemd5 -an "$logdir/${sourcefilename%.*}_bfffix.framemd5"
+		        ffmpeg_md5_err="$?"
+		        [ "$ffmpeg_md5_err" -gt 0 ] && { echo ffmpeg md5 ended with error ; exit 1 ;};
+		        if [ $(md5 -q "$logdir/${sourcefilename%.*}.framemd5") = $(md5 -q "$logdir/${sourcefilename%.*}_bfffix.framemd5") ] ; then
+		            report -dt "Everything looks safe. Going to delete the original."
+		            mediainfo -f --language=raw --output=XML "$sourcefile" > "$logdir/${sourcefilename%.*}_bfffix_mediainfo.xml"
+		            mv -f -v "$outputdir/${sourcefilename%.*}_bfffix.mov" "$sourcefile"
+		        else
+		            report -wt "Not looking safe. Going to keep the original."
+		        fi
+	    	else
+	    		echo uh oh unsupported
+	    	fi
 	    else
-	        report -wt "$sourcefilename is not 2vuy or v210, quitting"
+	        report -wt "$sourcefilename is not 2vuy or v210 or progress ffv1, quitting"
 	        continue
 	    fi
 	    report -dt done with "$sourcefile"
