@@ -105,7 +105,7 @@ while [ "$*" != "" ] ; do
         get_dar "$sourcefile"
     fi
     get_fieldorder "$sourcefile"
-    if [ "$fieldorder" = "bff" ] ; then
+    if [ "$fieldorder" != "tff" ] ; then
         filterchain_start+="fieldorder=tff,"
     fi
     darratio=$(echo "scale=3 ; $dar" | bc)
