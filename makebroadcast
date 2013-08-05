@@ -82,13 +82,13 @@ while [ "$*" != "" ] ; do
     ffmbc_opts+=(-threads 4)
 
     if [ -n "${audiomapping}" ] ; then
-        ffmbc_opts+=(${audiomapping})
+        ffmbc_opts+=(${audiomapping[@]})
     else
         has_first_two_tracks_mono "${sourcefile}"
         if [ "${MULTIMONO}" = "Y" ] ; then
             report -wt "The first two audio tracks are both mono. Considering track 1 for left and track 2 for right."
             audiomapping=(-map_audio_channel 0.1:0:0.1:0 -map_audio_channel 0.2:0:0.1:1)
-            ffmbc_opts+=(${audiomapping})
+            ffmbc_opts+=(${audiomapping[@]})
         fi
     fi
     # decide on an output codec, aspect ratio, and padding strategy
