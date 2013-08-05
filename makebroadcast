@@ -7,7 +7,6 @@
 version="1.2"
 unset dependencies
 unset audiomapping
-filterchain_start=""
 dependencies=(ffmbc)
 
 scriptdir=$(dirname "$0")
@@ -59,6 +58,7 @@ while [ "$*" != "" ] ; do
     # clear local arrays
     unset inputoptions
     unset ffmbc_opts
+    filterchain_start=""
 
     input="$1"
     [ -d "${input}" ] && { outputdir="${input}/objects/service" && logdir="${input}/metadata/submissionDocumentation/logs" ;};
