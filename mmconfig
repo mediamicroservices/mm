@@ -15,7 +15,7 @@ config_edit(){
 }
 
 test_config(){
-    for directoryvariable in OUTDIR_INGESTFILE OUTDIR_INGEST XDCAM OUTDIR_PAPER AIP_STORAGE PODCASTDELIVER YOUTUBEDELIVER TMPDIR ; do
+    for directoryvariable in OUTDIR_INGESTFILE OUTDIR_INGEST XDCAM OUTDIR_PAPER AIP_STORAGE PODCASTDELIVER YOUTUBEDELIVER TMPDIR CUSTOM_LOG_DIR ; do
         if [ -d "${!directoryvariable}" ] ; then
             report -d "${directoryvariable} is a valid directory"
         else
@@ -24,16 +24,23 @@ test_config(){
     done
 }
 
+add_key(){
+    key_to_add="$1"
+    if [ ! $(grep "^$key_to_add=" "$CONFIG_FILE") ] ; then
+        echo "$key_to_add=" >> "$CONFIG_FILE"
+    fi
+}
+
 # set up configuration file if required
 if [ ! -f "$CONFIG_FILE" ] ; then
     echo "# $(basename $CONFIG_FILE)" >> "$CONFIG_FILE"
     echo "# This configuration file contains variables used throughout $WHAT_IS_THIS." >> "$CONFIG_FILE"
     echo "# Edit the lines below to form KEY=VALUE. Please do not add or remove the existing KEYs. Do not edit CONFIG_FILE_VERSION." >> "$CONFIG_FILE"
     echo "CONFIG_FILE_VERSION=$CONFIG_VERSION" >> "$CONFIG_FILE"
-    for KEY in "${REQUIRED_VARIABLES[@]}" ; do
-        echo "$KEY=" >> "$CONFIG_FILE"
-    done
 fi
+for KEY in "${REQUIRED_VARIABLES[@]}" ; do
+    add_key "$KEY"
+done
 
 report -d "Testing $CONFIG_FILE validity"
 test_config
