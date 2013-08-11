@@ -20,7 +20,16 @@ get_iso8601_c(){
 }
 
 log(){
-    logfile="$HOME/Library/Logs/mediamicroservices.log"
+    logname="mm.log"
+    logdir="${CUSTOM_LOG_DIR:-/tmp}"
+    logfile="${logdir}/${logname}"
+    if [ ! -d "${logdir}" ] ; then
+        mkdir -p "${logdir}"
+        if [ ${?} -ne 0 ]; then
+            echo "${0}: Can't create log directory at ${logdir}, exiting... Use mmconfig to change logging directory."
+            exit 1
+        fi
+    fi
     OPTIND=1
     while getopts ":beac" opt; do
         case "$opt" in
