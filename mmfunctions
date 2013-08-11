@@ -1,13 +1,13 @@
 # assign variables
 SCRIPTNAME=$(basename "$0")
-CONFIG_FILE="$scriptdir/mm.conf"
+CONFIG_FILE="${scriptdir}/mm.conf"
 WHAT_IS_THIS="mediamicroservices"
 
 # load configuration file
-if [ -f "$CONFIG_FILE" ] ; then
-    . "$CONFIG_FILE"
-elif [ ! "$CONFIG" = "Y" -a "$requireconfig" = "Y" ] ; then
-    echo "The configuration file is not set. You must first create $CONFIG_FILE by running mmconfig." 1>&2
+if [ -f "${CONFIG_FILE}" ] ; then
+    . "${CONFIG_FILE}"
+elif [ ! "${CONFIG}" = "Y" -a "${requireconfig}" = "Y" ] ; then
+    echo "The configuration file is not set. You amust first create ${CONFIG_FILE} by running mmconfig." 1>&2
     exit 1
 fi
 
@@ -78,7 +78,7 @@ black_at_ends(){
 
 maketemp(){
     tempfoo=$(basename $0)
-    TMPFILE=$(mktemp -q /tmp/${tempfoo}.XXXXXX)
+    mktemp -q "/tmp/${tempfoo}.XXXXXX"
     if [ $? -ne 0 ]; then
         echo "$0: Can't create temp file, exiting..."
         exit 1
