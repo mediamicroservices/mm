@@ -11,7 +11,9 @@ REQUIRED_VARIABLES=("OUTDIR_INGESTFILE" "OUTDIR_INGESTXDCAM" "OUTDIR_PAPER" "AIP
 
 config_edit(){
     [ -z "$1" -o -z "$2" ] && { report -w "The config_edit function requires two arguments. Error." ; exit ;};
-    sed -i '' "s:^$1=[^ ]*:$1=$2:" "$CONFIG_FILE"
+    sedtemp=$(maketemp)
+    sed "s:^$1=[^ ]*:$1=$2:" "$CONFIG_FILE" > "$sedtemp"
+    cp "$sedtemp" "$CONFIG_FILE"
 }
 
 test_config(){
