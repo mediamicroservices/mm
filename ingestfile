@@ -202,12 +202,21 @@ if [ "$deliverytoomneon" == "Y" ] ; then
     "$scriptdir/uploadomneon" "$objectsdir/service/${mediaid%.*}.mov"
 fi
 
-# make access copies
 if [ "$makeaccesscopies" == "Y" ] ; then
+	# make access copies
+	unset makeframesopts
+	unset makeyoutubeopts
+	unset makepodcastopts
     report -dt "STATUS Making access copies."
+    # makedvd
     "$scriptdir/makedvd" "$OUTDIR_INGESTFILE/$mediaid"
+    # makeframes
+    [ "$deliveraccesscopies" = "Y" ] && makeframesopts=(-d "$YOUTUBEDELIVER")
+    "$scriptdir/makeframes" "${makeframesopts[@]}" "$OUTDIR_INGESTFILE/$mediaid"
+    # makeyoutube
     [ "$deliveraccesscopies" = "Y" ] && makeyoutubeopts=(-d "$YOUTUBEDELIVER")
     "$scriptdir/makeyoutube" "${makeyoutubeopts[@]}" "$OUTDIR_INGESTFILE/$mediaid"
+    # makepodcast
     if [ $(echo "$mediaid" | grep -E "${REGEX4PODCAST}") ] ; then
         report -dt "${mediaid} qualifies for podcast creation."
         [ "$deliveraccesscopies" == "Y" ] && makepodcastopts=(-d "$PODCASTDELIVER")
