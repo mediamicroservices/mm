@@ -28,7 +28,7 @@ test_config(){
 
 add_key(){
     key_to_add="$1"
-    if [ ! $(grep "^$key_to_add=" "$CONFIG_FILE") ] ; then
+    if [ ! $(grep -q "^$key_to_add=" "$CONFIG_FILE") ] ; then
         echo "$key_to_add=" >> "$CONFIG_FILE"
     fi
 }
@@ -50,7 +50,7 @@ echo
 
 report -d "Table of existing variables:"
 for KEY in "${REQUIRED_VARIABLES[@]}" ; do
-    VALUE=$(grep -q "^$KEY=" "$CONFIG_FILE" | cut -d= -f2)
+    VALUE=$(grep "^$KEY=" "$CONFIG_FILE" | cut -d= -f2)
     printf '\t%-25s %-40s\n' "$KEY" "$VALUE"
 done
 while true ; do
