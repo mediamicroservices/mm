@@ -17,7 +17,7 @@ config_edit(){
 }
 
 test_config(){
-    for directoryvariable in OUTDIR_INGESTFILE OUTDIR_INGEST XDCAM OUTDIR_PAPER AIP_STORAGE PODCASTDELIVER YOUTUBEDELIVER TMPDIR CUSTOM_LOG_DIR ; do
+    for directoryvariable in OUTDIR_INGESTFILE OUTDIR_INGESTXDCAM OUTDIR_PAPER AIP_STORAGE PODCASTDELIVER YOUTUBEDELIVER TMPDIR CUSTOM_LOG_DIR ; do
         if [ -d "${!directoryvariable}" ] ; then
             report -d "${directoryvariable} is a valid directory"
         else
@@ -28,7 +28,8 @@ test_config(){
 
 add_key(){
     key_to_add="$1"
-    if [ ! $(grep -q "^$key_to_add=" "$CONFIG_FILE") ] ; then
+    if [ $(grep -q "^$key_to_add=" "$CONFIG_FILE") ] ; then
+        report -td Adding NEW variable "$key_to_add" to "$CONFIG_FILE"
         echo "$key_to_add=" >> "$CONFIG_FILE"
     fi
 }
