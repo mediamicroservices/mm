@@ -50,7 +50,7 @@ echo
 
 report -d "Table of existing variables:"
 for KEY in "${REQUIRED_VARIABLES[@]}" ; do
-    VALUE=$(grep "^$KEY=" "$CONFIG_FILE" | cut -d= -f2)
+    VALUE=$(grep -q "^$KEY=" "$CONFIG_FILE" | cut -d= -f2)
     printf '\t%-25s %-40s\n' "$KEY" "$VALUE"
 done
 while true ; do
