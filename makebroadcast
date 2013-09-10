@@ -154,7 +154,7 @@ while [ "$*" != "" ] ; do
     fi
 
     # add audio options
-    ffmbc_opts+=(-acodec pcm_s24le)
+    ffmbc_opts+=(-acodec pcm_s24be)
     ffmbc_opts+=(-ar 48k)
     ffmbc_opts+=(-ac 2)
 
