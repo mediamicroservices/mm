@@ -36,7 +36,7 @@ while [ "$*" != "" ] ; do
 	        report -dt "$sourcefilename is 2vuy, starting encode"
 	        mkdir -p "$outputdir" "$logdir" "$trimmingsdir"
 	        export FFREPORT="file=${logdir}/%p_%t_makelossless.log"
-	        ffmpeg -v warning -stats -vsync 0 -i "$sourcefile" -map 0:v -map 0:a -c:v ffv1 -vf setfield=bff -g 1 -c:a copy "$outputdir/${sourcefilename%.*}_ffv1.mov" -f framemd5 -an "$logdir/${sourcefilename%.*}.framemd5"
+	        ffmpeg -v warning -stats -vsync 0 -i "$sourcefile" -map 0:v -map 0:a -c:v ffv1 -level 3 -vf setfield=bff -g 1 -c:a copy "$outputdir/${sourcefilename%.*}_ffv1.mov" -f framemd5 -an "$logdir/${sourcefilename%.*}.framemd5"
 	        ffmpeg_ffv1_err="$?"
 	        [ "$ffmpeg_ffv1_err" -gt 0 ] && { echo ffmpeg ended with error ; exit 1 ;};
 	        ffmpeg -v warning -stats -i "$outputdir/${sourcefilename%.*}_ffv1.mov" -f framemd5 -pix_fmt uyvy422 -an "$logdir/${sourcefilename%.*}_ffv1.framemd5"
@@ -57,7 +57,7 @@ while [ "$*" != "" ] ; do
 	        report -dt "$sourcefilename is v210, starting encode"
 	        mkdir -p "$outputdir" "$logdir" "$trimmingsdir"
 	        export FFREPORT="file=${logdir}/%p_%t_makelossless.log"
-	        ffmpeg -v warning -stats -vsync 0 -i "$sourcefile" -map 0:v -map 0:a -c:v ffv1 -vf setfield=bff -g 1 -c:a copy "$outputdir/${sourcefilename%.*}_ffv1.mov" -f framemd5 -an "$logdir/${sourcefilename%.*}.framemd5"
+	        ffmpeg -v warning -stats -vsync 0 -i "$sourcefile" -map 0:v -map 0:a -c:v ffv1 -level 3 -vf setfield=bff -g 1 -c:a copy "$outputdir/${sourcefilename%.*}_ffv1.mov" -f framemd5 -an "$logdir/${sourcefilename%.*}.framemd5"
 	        ffmpeg_ffv1_err="$?"
 	        [ "$ffmpeg_ffv1_err" -gt 0 ] && { echo ffmpeg ended with error ; exit 1 ;};
 	        ffmpeg -v warning -stats -i "$outputdir/${sourcefilename%.*}_ffv1.mov" -f framemd5 -an "$logdir/${sourcefilename%.*}_ffv1.framemd5"
@@ -79,7 +79,7 @@ while [ "$*" != "" ] ; do
 		    	report -dt "$sourcefilename is yuv422p ffv1 progressive, starting encode"
 		        mkdir -p "$outputdir" "$logdir"
 		        export FFREPORT="file=${logdir}/%p_%t_makelossless_bfffix.log"
-		        ffmpeg -v warning -stats -vsync 0 -i "$sourcefile" -map 0:v -map 0:a -c:v ffv1 -vf setfield=bff -g 1 -c:a copy "$outputdir/${sourcefilename%.*}_bfffix.mov"
+		        ffmpeg -v warning -stats -vsync 0 -i "$sourcefile" -map 0:v -map 0:a -c:v  -level 3 -vf setfield=bff -g 1 -c:a copy "$outputdir/${sourcefilename%.*}_bfffix.mov"
 		        ffmpeg_ffv1_err="$?"
 		        [ "$ffmpeg_ffv1_err" -gt 0 ] && { echo ffmpeg ended with error ; exit 1 ;};
 		        ffmpeg -v warning -stats -i "$outputdir/${sourcefilename%.*}_bfffix.mov" -f framemd5 -pix_fmt uyvy422 -an "$logdir/${sourcefilename%.*}_bfffix.framemd5"
@@ -96,7 +96,7 @@ while [ "$*" != "" ] ; do
 	    		report -dt "$sourcefilename is yuv422p10le ffv1 progressive, starting encode"
 		        mkdir -p "$outputdir" "$logdir"
 		        export FFREPORT="file=${logdir}/%p_%t_makelossless_bfffix.log"
-		        ffmpeg -v warning -stats -vsync 0 -i "$sourcefile" -map 0:v -map 0:a -c:v ffv1 -vf setfield=bff -g 1 -c:a copy "$outputdir/${sourcefilename%.*}_bfffix.mov"
+		        ffmpeg -v warning -stats -vsync 0 -i "$sourcefile" -map 0:v -map 0:a -c:v ffv1 -level 3 -vf setfield=bff -g 1 -c:a copy "$outputdir/${sourcefilename%.*}_bfffix.mov"
 		        ffmpeg_ffv1_err="$?"
 		        [ "$ffmpeg_ffv1_err" -gt 0 ] && { echo ffmpeg ended with error ; exit 1 ;};
 		        ffmpeg -v warning -stats -i "$outputdir/${sourcefilename%.*}_bfffix.mov" -f framemd5 -an "$logdir/${sourcefilename%.*}_bfffix.framemd5"
