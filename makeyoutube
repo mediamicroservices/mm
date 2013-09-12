@@ -86,7 +86,7 @@ while [ "$*" != "" ] ; do
         export FFREPORT="file=${logdir}/%p_%t_$(basename $0)_${version}.txt"
         inputoptions+=(-v warning -stats)
     fi
-    report -dt "Working on $(basename ${youtubeoutput}) for youtube upload."
+    report -dt "Working on $(basename "${youtubeoutput}") for youtube upload."
     report -dt "Running: ffmpeg ${inputoptions[@]} -i \"${sourcefile}\" ${middleoptions[@]} \"${youtubeoutput}\""
     ffmpeg ${inputoptions[@]} -i "${sourcefile}" ${middleoptions[@]} "${youtubeoutput}"
     echo
