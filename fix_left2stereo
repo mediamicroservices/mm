@@ -38,7 +38,7 @@ while [ "$*" != "" ] ; do
     
     get_codectagstring
     unset ffmbc_opts
-    ffmbc_opts+=(-vcodec copy -acodec pcm_s24le -ar 48000 -ac 2)
+    ffmbc_opts+=(-vcodec copy -acodec pcm_s24be -ar 48000 -ac 2)
     ffmbc_opts+=(-map_audio_channel 0:1:0:0:1:0 -map_audio_channel 0:1:0:0:1:1)
     [ "${codec_tag_string}" = "mpeg" ] && extension="mxf"
 

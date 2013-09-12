@@ -60,8 +60,8 @@ while [ "$*" != "" ] ; do
         get_volume_adjustment "${input_movie}"
         if [ -n "${VOLADJ}" ] ; then
             report -dt "Generating ${output_movie} ..."
-            echo "ffmpeg -i ${input_movie} -af volume=${VOLADJ}dB ${audio_pipe_opts[@]} - | ffmbc -i ${input_movie} ${ffmbc_opts[@]} ${audio_pipe_opts[@]} -i pipe:0 -map 0:v -map 1:a -acodec pcm_s24le -ar 48000 -ac 2 ${output_movie}"
-            ffmpeg -i ${input_movie} -af volume=${VOLADJ}dB ${audio_pipe_opts[@]} - | ffmbc -i ${input_movie} ${ffmbc_opts[@]} ${audio_pipe_opts[@]} -i pipe:0 -map 0:v -map 1:a -acodec pcm_s24le -ar 48000 -ac 2 ${output_movie}
+            echo "ffmpeg -i ${input_movie} -af volume=${VOLADJ}dB ${audio_pipe_opts[@]} - | ffmbc -i ${input_movie} ${ffmbc_opts[@]} ${audio_pipe_opts[@]} -i pipe:0 -map 0:v -map 1:a -acodec pcm_s24be -ar 48000 -ac 2 ${output_movie}"
+            ffmpeg -i ${input_movie} -af volume=${VOLADJ}dB ${audio_pipe_opts[@]} - | ffmbc -i ${input_movie} ${ffmbc_opts[@]} ${audio_pipe_opts[@]} -i pipe:0 -map 0:v -map 1:a -acodec pcm_s24be -ar 48000 -ac 2 ${output_movie}
             report -dst "Done with ${name}."
         else
             report -dst "Integrated loudness for $name is ${integrated_loudness}dB. Reference is ${reference}. No adjustment is needed for ${name}, skipping."
