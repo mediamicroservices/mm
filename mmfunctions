@@ -20,13 +20,13 @@ get_iso8601_c(){
 }
 
 log(){
-    logname="mm.log"
-    logdir="${CUSTOM_LOG_DIR:-/tmp}"
-    logfile="${logdir}/${logname}"
-    if [ ! -d "${logdir}" ] ; then
-        mkdir -p "${logdir}"
+    mmlogname="mm.log"
+    mmlogdir="${CUSTOM_LOG_DIR:-/tmp}"
+    mmlogfile="${mmlogdir}/${mmlogname}"
+    if [ ! -d "${mmlogdir}" ] ; then
+        mkdir -p "${mmlogdir}"
         if [ ${?} -ne 0 ]; then
-            echo "${0}: Can't create log directory at ${logdir}, exiting... Use mmconfig to change logging directory."
+            echo "${0}: Can't create log directory at ${mmlogdir}, exiting... Use mmconfig to change logging directory."
             exit 1
         fi
     fi
@@ -42,7 +42,7 @@ log(){
     done
     shift $(( ${OPTIND} - 1 ))
     note="$1"
-    echo $(get_iso8601)", $(basename $0), $status, $op, $mediaid, $note" >> "$logfile"
+    echo $(get_iso8601)", $(basename $0), $status, $op, $mediaid, $note" >> "$mmlogfile"
 }
 
 report(){
