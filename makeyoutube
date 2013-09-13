@@ -52,7 +52,6 @@ while [ "$*" != "" ] ; do
     [ ! "$outputdir" ] && { outputdir="$input/objects/access/youtube_up" && logdir="$input/metadata/submissionDocumentation/logs" ;};
     find_input "$input"
 
-    filename=$(basename "$sourcefile")
     mediaid=$(basename "$1" | cut -d. -f1)
 
     log -b

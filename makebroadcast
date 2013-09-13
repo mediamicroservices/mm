@@ -72,7 +72,6 @@ while [ "${*}" != "" ] ; do
         audiomapping=(-map_audio_channel 0:${audio_index}:1:0:1:0 -map_audio_channel 0:${audio_index}:1:0:1:1)
     fi
 
-    filename=$(basename "${sourcefile}")
     mediaid=$(basename "${input}" | cut -d. -f1)
 
     log -b

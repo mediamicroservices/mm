@@ -13,8 +13,6 @@ trap cleanup SIGHUP SIGINT SIGTERM
 
 while [ "${*}" != "" ] ; do
     file="${1}"
-    filename=$(basename "${file}")
-    dirname=$(dirname "${file}")
     outputdir=""
     
     [ "${#}" != 0 ] && input="${1}"

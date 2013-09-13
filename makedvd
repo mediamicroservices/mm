@@ -48,7 +48,6 @@ while [ "$*" != "" ] ; do
     [ ! "$outputdir" ] && { outputdir="$input/objects/access/dvd" && logdir="$input/metadata/submissionDocumentation/logs" ;};
     find_input "$input"
 
-    filename=$(basename "$sourcefile")
     mediaid=$(basename "$input" | cut -d. -f1)
 
     log -b

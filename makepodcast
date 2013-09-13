@@ -51,7 +51,6 @@ while [ "$*" != "" ] ; do
     [ -f "$input" ] && { outputdir=$(dirname "$input")"/access/podcast" && logdir="$(dirname "$input")/access/logs" ;};
     [ ! "$outputdir" ] && { outputdir="$input/objects/access/podcast" && logdir="$input/metadata/submissionDocumentation/logs" ;};
     find_input "$input"
-    filename=$(basename "$sourcefile")
     mediaid=$(basename "$input" | cut -d. -f1)
     log -b
     podcastoutput="$outputdir/${mediaid%.*}_podcast.mov"
