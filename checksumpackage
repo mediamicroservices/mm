@@ -27,13 +27,13 @@ cleanup(){
 }
 
 trap cleanup SIGHUP SIGINT SIGTERM
-log -b
 
 # local variables
 CHECKSUMNAME="checksum.md5"
 DFXMLNAME="dfxml.xml"
 
 while [ "${*}" != "" ] ; do
+    log -b
     if [ -d "${1}" ] ; then
         PWD=$(pwd)
         "${scriptdir}/removeDSStore" "$1"
@@ -59,6 +59,6 @@ while [ "${*}" != "" ] ; do
     else
     report -dt "ERROR: ${0} requires directories as input and $1 is not a directory."
     fi
+    log -e
     shift
 done
-log -e
