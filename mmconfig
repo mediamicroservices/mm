@@ -7,7 +7,7 @@ scriptdir=$(dirname "$0")
 . "$scriptdir/mmfunctions" || { echo "Missing '$scriptdir/mmfunctions'. Exiting." ; exit 1 ;};
 
 # local variables
-REQUIRED_VARIABLES=("OUTDIR_INGESTFILE" "OUTDIR_INGESTXDCAM" "OUTDIR_PAPER" "AIP_STORAGE" "PODCASTDELIVER" "YOUTUBEDELIVER" "TMPDIR" "REGEX4PODCAST" "DVDLABELPREFIX" "OMNEONIP" "OMNEONPATH" "CUSTOM_LOG_DIR")
+REQUIRED_VARIABLES=("OUTDIR_INGESTFILE" "OUTDIR_INGESTXDCAM" "OUTDIR_PAPER" "AIP_STORAGE" "PODCASTDELIVER" "YOUTUBEDELIVER" "TMPDIR" "REGEX4PODCAST" "DVDLABELPREFIX" "OMNEONIP" "OMNEONPATH" "CUSTOM_LOG_DIR" "LTO_INDEX_DIR")
 
 config_edit(){
     [ -z "$1" -o -z "$2" ] && { report -w "The config_edit function requires two arguments. Error." ; exit ;};
@@ -17,7 +17,7 @@ config_edit(){
 }
 
 test_config(){
-    for directoryvariable in OUTDIR_INGESTFILE OUTDIR_INGESTXDCAM OUTDIR_PAPER AIP_STORAGE PODCASTDELIVER YOUTUBEDELIVER TMPDIR CUSTOM_LOG_DIR ; do
+    for directoryvariable in OUTDIR_INGESTFILE OUTDIR_INGESTXDCAM OUTDIR_PAPER AIP_STORAGE PODCASTDELIVER YOUTUBEDELIVER TMPDIR CUSTOM_LOG_DIR LTO_INDEX_DIR ; do
         if [ -d "${!directoryvariable}" ] ; then
             report -d "${directoryvariable} is a valid directory"
         else
