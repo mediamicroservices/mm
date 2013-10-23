@@ -237,7 +237,7 @@ get_audio_index(){
 
 get_codectagstring(){
     codec_tag_string=$(ffprobe "$1" -show_streams -select_streams v:0 2> /dev/null | grep codec_tag_string= | cut -d = -f 2)
-    if [ "$codec_tag_string" = "ffv1" ] ; then
+    if [ "$codec_tag_string" = "FFV1" ] ; then
         ffv1_version=$(ffmpeg -debug 1 -i "$1" -t 0.1 -f null - 2>&1 | grep -o "ver:[0-9]*" | tail -n1 | cut -d: -f2)
     else
         ffv1_version=""
