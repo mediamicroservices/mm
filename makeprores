@@ -59,7 +59,6 @@ while [ "$*" != "" ] ; do
     
     find_input "$input"
 
-    filename=$(basename "$sourcefile")
     mediaid=$(basename "$1" | cut -d. -f1)
 
     log -b

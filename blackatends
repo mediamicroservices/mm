@@ -17,7 +17,7 @@ usage(){
     echo "$(basename "$0") ${version}"
     echo "This program will report on the number of black frames at the beginning and end of a video file."
     echo
-    echo "Usage: $(basename $0) [ options ] file1 [ file2 ... ]"
+    echo "Usage: $(basename $0) file1 [ file2 ... ]"
     echo
     echo "Options:"
     echo "  -h display this help"
@@ -25,8 +25,6 @@ usage(){
     exit
 }
 [ "$#" = 0 ] && usage
-
-log -b
 
 # command-line options to set mediaid and original variables
 OPTIND=1
@@ -40,8 +38,9 @@ done
 shift $(( ${OPTIND} - 1 ))
 
 while [ "$*" != "" ] ; do
+    log -b
     [ "$#" != 0 ] && sourcefile="$1"
     black_at_ends "$sourcefile"
+    log -e
     shift
 done
-log -e

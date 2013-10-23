@@ -3,22 +3,22 @@
 # make checksum.md5 via md5deep for package
 # version 1.1 adds use of dfxml
 version=1.1
-unset dependencies
-dependencies=(md5deep xml removeDSStore)
 
-scriptdir=$(dirname "$0")
-. "$scriptdir/mmfunctions" || { echo "Missing '$scriptdir/mmfunctions'. Exiting." ; exit 1 ;};
+scriptdir=$(dirname "${0}")
+. "${scriptdir}/mmfunctions" || { echo "Missing '${scriptdir}/mmfunctions'. Exiting." ; exit 1 ;};
+unset dependencies
+dependencies=(md5deep xml "${scriptdir}/removeDSStore")
 
 usage(){
     echo
-    echo "$(basename $0) ${version}"
+    echo "$(basename ${0}) ${version}"
     echo "This application will create a checksum from a directory or package input with the following options."
     echo "Dependencies: ${dependencies[@]}"
-    echo "Usage: $(basename $0) directoryorpackage1 [ directoryorpackage2 ...]"
+    echo "Usage: $(basename ${0}) directoryorpackage1 [ directoryorpackage2 ...]"
     echo
     exit
 }
-[ "$#" = 0 ] && usage
+[ "${#}" = 0 ] && usage
 check_dependencies "${dependencies[@]}"
 
 cleanup(){
@@ -27,38 +27,46 @@ cleanup(){
 }
 
 trap cleanup SIGHUP SIGINT SIGTERM
-log -b
 
 # local variables
 CHECKSUMNAME="checksum.md5"
 DFXMLNAME="dfxml.xml"
 
-while [ "$*" != "" ] ; do
-    if [ -d "$1" ] ; then
+while [ "${*}" != "" ] ; do
+    log -b
+    if [ -d "${1}" ] ; then
         PWD=$(pwd)
-        removeDSStore "$1"
-        if [ -d "$1/objects" ] ; then
+        "${scriptdir}/removeDSStore" "$1"
+        if [ -d "${1}/objects" ] ; then
             INDIR="objects"
             OUTDIR="metadata"
         else
             INDIR="."
             OUTDIR="."
         fi
-        [ ! -d "$1/$OUTDIR" ] && mkdir -p "$1/$OUTDIR"
-        if [ ! -s "${1}/$OUTDIR/$CHECKSUMNAME" ] ; then
-            report -dt "making Digital Forensics XML (${DFXMLNAME}) and ($CHECKSUMNAME) for ${1}"
+        [ ! -d "${1}/${OUTDIR}" ] && mkdir -p "${1}/${OUTDIR}"
+        if [ ! -s "${1}/${OUTDIR}/${CHECKSUMNAME}" ] ; then
+            report -dt "making Digital Forensics XML (${DFXMLNAME}) and (${CHECKSUMNAME}) for ${1}"
             cd "$1/$INDIR"
+<<<<<<< HEAD
             checksumtmp=$(maketemp)
             md5deep -drl . > "$checksumtmp"
             mv "$checksumtmp" "$1/$OUTDIR/$DFXMLNAME"
             xml sel -T -t -m "/dfxml/fileobject" -v "hashdigest" -o "  " -v "filename" -n "$1/$OUTDIR/$DFXMLNAME" > "$1/$OUTDIR/$CHECKSUMNAME"
             cd "$PWD"
+=======
+            DFXMLTMP=$(maketemp)
+            md5deep -drl . > $DFXMLTMP
+            mv "${DFXMLTMP}" "${1}/${OUTDIR}/${DFXMLNAME}"
+            xml sel -T -t -m "/dfxml/fileobject" -v "hashdigest" -o "  " -v "filename" -n "${1}/${OUTDIR}/${DFXMLNAME}" > "${1}/${OUTDIR}/${CHECKSUMNAME}"
+            cd "${PWD}"
+>>>>>>> 7c51a847ec957f7afd20e0bc6d0f15972bddcc73
         else
             report -dt "${CHECKSUMNAME} already exists, skipping for ${1}"
         fi
     else
-    report -dt "ERROR: $0 requires directories as input and $1 is not a directory."
+    report -dt "ERROR: ${0} requires directories as input and $1 is not a directory."
     fi
+    log -e
     shift
 done
-log -e

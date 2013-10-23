@@ -9,15 +9,15 @@ unset dependencies
 unset audiomapping
 dependencies=(ffmbc ffprobe)
 
-scriptdir=$(dirname "$0")
-. "$scriptdir/mmfunctions" || { echo "Missing '$scriptdir/mmfunctions'. Exiting." ; exit 1 ;};
+scriptdir=$(dirname "${0}")
+. "${scriptdir}/mmfunctions" || { echo "Missing '${scriptdir}/mmfunctions'. Exiting." ; exit 1 ;};
 
 usage(){
     echo
-    echo "$(basename $0) ${version}"
+    echo "$(basename ${0}) ${version}"
     echo "This application will create a file suitable for broadcast or editing from a video file or package input with the following options."
     echo "Dependencies: ${dependencies[@]}"
-    echo "Usage: $(basename $0) [ -l ] [ -r ] [ -c ] fileorpackage1 [ fileorpackage2 ...]"
+    echo "Usage: $(basename ${0}) [ -l ] [ -r ] [ -c ] fileorpackage1 [ fileorpackage2 ...]"
     echo "  -l (only use the left channel of the first audio track)"
     echo "  -r (only use the right channel of the first audio track)"
     echo "  -c (run the video through a crop detection filter, then crop the video accordingly during transcoding, slower)"
@@ -26,22 +26,20 @@ usage(){
     echo
     exit
 }
-[ "$#" = 0 ] && usage
+[ "${#}" = 0 ] && usage
 check_dependencies "${dependencies[@]}"
 
 # command line arguments
 OPTIND=1
 while getopts ":lrcvh" opt ; do
-    case $opt in
-        l)  get_audio_index "${sourcefile}"
-            audiomapping=(-map_audio_channel 0:${audio_index}:0:0:1:0 -map_audio_channel 0:${audio_index}:0:0:1:1);;
-        r)  get_audio_index "${sourcefile}"
-            audiomapping=(-map_audio_channel 0:${audio_index}:1:0:1:0 -map_audio_channel 0:${audio_index}:1:0:1:1);;
+    case ${opt} in
+        l) audiomap="L";;
+        r) audiomap="R";;
         c) cropdetect="Y" ;;
         v) voladjust="Y" ;;
         h) usage ;;
-        *) echo "Invalid option: -$OPTARG" ; exit 1 ;;
-        :) echo "Option -$OPTARG requires an argument" ; exit 1 ;;
+        *) echo "Invalid option: -${OPTARG}" ; exit 1 ;;
+        :) echo "Option -${OPTARG} requires an argument" ; exit 1 ;;
     esac
 done
 shift $(( ${OPTIND} - 1 ))
@@ -53,7 +51,7 @@ cleanup(){
 
 trap cleanup SIGHUP SIGINT SIGTERM
 
-while [ "$*" != "" ] ; do
+while [ "${*}" != "" ] ; do
 
     # clear local arrays
     unset inputoptions
@@ -65,14 +63,21 @@ while [ "$*" != "" ] ; do
     [ -f "${input}" ] && { outputdir=$(dirname "${input}")"/service" && logdir="$(dirname "${input}")/service/logs" ;};
     [ ! "${outputdir}" ] && { outputdir="${input}/objects/service" && logdir="${input}/metadata/submissionDocumentation/logs" ;};
     find_input "${input}"
+    
+    if [ "${audiomap}" = "L" ] ; then
+        get_audio_index "${sourcefile}"
+        audiomapping=(-map_audio_channel 0:${audio_index}:0:0:1:0 -map_audio_channel 0:${audio_index}:0:0:1:1)
+    elif [ "${audiomap}" = "R" ] ; then
+        get_audio_index "${sourcefile}"
+        audiomapping=(-map_audio_channel 0:${audio_index}:1:0:1:0 -map_audio_channel 0:${audio_index}:1:0:1:1)
+    fi
 
-    filename=$(basename "${sourcefile}")
     mediaid=$(basename "${input}" | cut -d. -f1)
 
     log -b
 
-    servicefile="$outputdir/${mediaid%.*}.mov"
-    [ -s "${servicefile}" ] && { report -wt "${servicefile} already exists, skipping transcode" ; [ "$#" = 1 ] && exit 86 || { shift ; continue ;} ;};
+    servicefile="${outputdir}/${mediaid%.*}.mov"
+    [ -s "${servicefile}" ] && { report -wt "${servicefile} already exists, skipping transcode" ; [ "${#}" = 1 ] && exit 86 || { shift ; continue ;} ;};
 
     report -dt "Starting transcode of $(basename "${sourcefile}") for broadcast compliance."
 
@@ -93,28 +98,28 @@ while [ "$*" != "" ] ; do
     fi
     # decide on an output codec, aspect ratio, and padding strategy
     get_sar "${sourcefile}"
-    if [ "$cropdetect" = "Y" ] ; then
-        get_cropdetection "$sourcefile"
+    if [ "${cropdetect}" = "Y" ] ; then
+        get_cropdetection "${sourcefile}"
         filterchain_start="${CROPADJ},"
-        width=$(echo "$CROPADJ" | cut -d= -f2 | cut -d: -f1)
-        height=$(echo "$CROPADJ" | cut -d= -f2 | cut -d: -f2)
+        width=$(echo "${CROPADJ}" | cut -d= -f2 | cut -d: -f1)
+        height=$(echo "${CROPADJ}" | cut -d= -f2 | cut -d: -f2)
         dar="(${width}/${height})*${sar}"
     else
-        get_width "$sourcefile"
-        get_height "$sourcefile"
-        get_dar "$sourcefile"
+        get_width "${sourcefile}"
+        get_height "${sourcefile}"
+        get_dar "${sourcefile}"
     fi
-    get_fieldorder "$sourcefile"
-    if [ "$fieldorder" != "tff" ] ; then
+    get_fieldorder "${sourcefile}"
+    if [ "${fieldorder}" != "tff" ] ; then
         filterchain_start+="fieldorder=tff,"
     fi
-    darratio=$(echo "scale=3 ; $dar" | bc)
-    if [ "$darratio" = "1.777" -a ! "$cropdetect" = "Y" ] ; then
+    darratio=$(echo "scale=3 ; ${dar}" | bc)
+    if [ "${darratio}" = "1.777" -a ! "${cropdetect}" = "Y" ] ; then
         ffmbc_opts+=(-s 1920x1080)
         ffmbc_opts+=(-target xdcamhd422)
         ffmbc_opts+=(-vtag xd5b)
         ffmbc_opts+=(-aspect 16:9)
-    elif [ $(echo "scale=3 ; $darratio > (16/9)" | bc -l) = 1 ] ; then
+    elif [ $(echo "scale=3 ; ${darratio} > (16/9)" | bc -l) = 1 ] ; then
         ffmbc_opts+=(-vf "${filterchain_start}pad=${width}:${width}*(9/16)*(${sar}):(ow-${width})/2:(oh-${height})/2,scale=1920:1080:interl=1")
         ffmbc_opts+=(-target xdcamhd422)
         ffmbc_opts+=(-vtag xd5b)
@@ -125,7 +130,7 @@ while [ "$*" != "" ] ; do
         ffmbc_opts+=(-vtag xd5b)
         ffmbc_opts+=(-aspect 16:9)
     elif [ "$width" = "720" -a "$height" = "480" -a $(echo "scale=3 ; $darratio < (3/2)" | bc -l) = 1 -a ! "$cropdetect" = "Y" ] ; then
-        filterchain_start=$(echo "$filterchain_start" | sed 's/,$//g')
+        filterchain_start=$(echo "${filterchain_start}" | sed 's/,$//g')
         ffmbc_opts+=(-vf ${filterchain_start})
         ffmbc_opts+=(-target imx30)
         ffmbc_opts+=(-aspect 4:3)
@@ -137,7 +142,7 @@ while [ "$*" != "" ] ; do
         ffmbc_opts+=(-aspect 4:3)
     elif  [ "${height}" -eq "512" -a "${width}" -eq "720" ] ;then
         filterchain_start+="crop=720:480:0:32"
-        filterchain_start=$(echo "$filterchain_start" | sed 's/,$//g')
+        filterchain_start=$(echo "${filterchain_start}" | sed 's/,$//g')
         ffmbc_opts+=(-vf ${filterchain_start})
         ffmbc_opts+=(-target imx30)
         ffmbc_opts+=(-aspect 4:3)
@@ -148,7 +153,7 @@ while [ "$*" != "" ] ; do
     fi
 
     # add audio options
-    ffmbc_opts+=(-acodec pcm_s24le)
+    ffmbc_opts+=(-acodec pcm_s24be)
     ffmbc_opts+=(-ar 48k)
     ffmbc_opts+=(-ac 2)
 
@@ -157,18 +162,18 @@ while [ "$*" != "" ] ; do
     inputoptions+=(-threads 8)
     inputoptions+=(-loglevel verbose)
     
-    mkdir -p "$outputdir"
+    mkdir -p "${outputdir}"
     # log ffmbc process
-    if [ "$logdir" != "" ] ; then
-        mkdir -p "$logdir"
+    if [ "${logdir}" != "" ] ; then
+        mkdir -p "${logdir}"
         export FFREPORT="file=${logdir}/%p_%t_$(basename $0)_${version}.txt"
         reportfile="ffmbc_$(date '+%Y%m%d-%H%M%S')_$(basename $0)_${version}.txt"
         echo "ffmbc started on $(date '+%F at %T')" > "${logdir}/${reportfile}"
         echo "Report written to \"${reportfile}\"" >> "${logdir}/${reportfile}"
         echo "Command line:" >> "${logdir}/${reportfile}"
     fi
-    if [ "$voladjust" = "Y" ] ; then
-        get_volume_adjustment "$sourcefile"
+    if [ "${voladjust}" = "Y" ] ; then
+        get_volume_adjustment "${sourcefile}"
         unset audio_pipe_opts
         audio_pipe_opts=(-f s24le -ar 48000 -ac 2)
         report -dt "ffmpeg -v warning -stats -i \"${input_movie}\" -af volume=${VOLADJ}dB ${audio_pipe_opts[@]} - | ffmbc ${inputoptions[@]} -i ${input_movie} ${audio_pipe_opts[@]} -i pipe:0 -map 0:v -map 1:a ${ffmbc_opts[@]} ${servicefile}" 
@@ -188,7 +193,7 @@ while [ "$*" != "" ] ; do
         fi
     fi
     ffmbc_err="$?"
-    [ "$ffmbc_err" -gt "0" ] && { report -wt "ffmbc failed with error ${ffmbc_err}" ; exit 1 ;};
+    [ "${ffmbc_err}" -gt "0" ] && { report -wt "ffmbc failed with error ${ffmbc_err}" ; exit 1 ;};
     shift
 done
 log -e

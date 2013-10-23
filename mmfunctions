@@ -1,13 +1,13 @@
 # assign variables
 SCRIPTNAME=$(basename "$0")
-CONFIG_FILE="$scriptdir/mm.conf"
+CONFIG_FILE="${scriptdir}/mm.conf"
 WHAT_IS_THIS="mediamicroservices"
 
 # load configuration file
-if [ -f "$CONFIG_FILE" ] ; then
-    . "$CONFIG_FILE"
-elif [ ! "$CONFIG" = "Y" -a "$requireconfig" = "Y" ] ; then
-    echo "The configuration file is not set. You must first create $CONFIG_FILE by running mmconfig." 1>&2
+if [ -f "${CONFIG_FILE}" ] ; then
+    . "${CONFIG_FILE}"
+elif [ ! "${CONFIG}" = "Y" -a "${requireconfig}" = "Y" ] ; then
+    echo "The configuration file is not set. You amust first create ${CONFIG_FILE} by running mmconfig." 1>&2
     exit 1
 fi
 
@@ -20,7 +20,16 @@ get_iso8601_c(){
 }
 
 log(){
-    logfile="$HOME/Library/Logs/mediamicroservices.log"
+    mmlogname="mm.log"
+    mmlogdir="${CUSTOM_LOG_DIR:-/tmp}"
+    mmlogfile="${mmlogdir}/${mmlogname}"
+    if [ ! -d "${mmlogdir}" ] ; then
+        mkdir -p "${mmlogdir}"
+        if [ ${?} -ne 0 ]; then
+            echo "${0}: Can't create log directory at ${mmlogdir}, exiting... Use mmconfig to change logging directory."
+            exit 1
+        fi
+    fi
     OPTIND=1
     while getopts ":beac" opt; do
         case "$opt" in
@@ -33,7 +42,7 @@ log(){
     done
     shift $(( ${OPTIND} - 1 ))
     note="$1"
-    echo $(get_iso8601)", $(basename $0), $status, $op, $mediaid, $note" >> "$logfile"
+    echo $(get_iso8601)", $(basename $0), $status, $op, $mediaid, $note" >> "$mmlogfile"
 }
 
 report(){
@@ -79,7 +88,11 @@ black_at_ends(){
 maketemp(){
     mktemp -q "/tmp/$(basename $0).XXXXXX"
     if [ ${?} -ne 0 ]; then
+<<<<<<< HEAD
 echo "${0}: Can't create temp file, exiting..."
+=======
+        echo "${0}: Can't create temp file, exiting..."
+>>>>>>> 7c51a847ec957f7afd20e0bc6d0f15972bddcc73
         exit 1
     fi
 }

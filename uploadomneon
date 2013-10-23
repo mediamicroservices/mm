@@ -43,7 +43,8 @@ while getopts ":h" opt; do
 done
 shift $(( ${OPTIND} - 1 ))
 
-[ ! -d "$TMPDIR" ] && { report -wt "The temporary directory must be set and be available. Run 'mmconfig'." ; exit 1 ;};
+[ ! "$TMPDIR" ] && { report -wt "The temporary directory must be set and be available. Run 'mmconfig'." ; exit 1 ;};
+[ ! -d "$TMPDIR" ] && mkdir -p "$TMPDIR"
 [ ! -n "$OMNEONIP" ] && { report -wt "The Omneon IP must be set. Run 'mmconfig'." ; exit 1 ;};
 [ ! -n "$OMNEONPATH" ] && { report -wt "The Omneon Path must be set. Run 'mmconfig'." ; exit 1 ;};
 

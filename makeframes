@@ -1,8 +1,10 @@
 #!/bin/bash
 # makeframes
+
 version="1.0"
 unset dependencies
 dependencies=(ffmpeg)
+deliverdir=""
 
 scriptdir=$(dirname "$0")
 . "$scriptdir/mmfunctions" || { echo "Missing '$scriptdir/mmfunctions'. Exiting." ; exit 1 ;};
@@ -12,7 +14,8 @@ usage(){
     echo "$(basename $0) ${version}"
     echo "This application will create a series of still images from a video file or package input with the following options."
     echo "Dependencies: ${dependencies[@]}"
-    echo "Usage: $(basename $0) fileorpackage1 [ fileorpackage2 ...]"
+    echo "Usage: $(basename $0) [ -d /path/to/deliver/to/ ] fileorpackage1 [ fileorpackage2 ...]"
+    echo "  -d directory ( directory to deliver the resulting file to )"
     echo "  -h display this help"
     echo
     exit
@@ -31,9 +34,13 @@ trap cleanup SIGHUP SIGINT SIGTERM
 
 # command-line options to set mediaid and original variables
 OPTIND=1
-while getopts ":h" opt; do
+while getopts ":hd:" opt; do
     case "$opt" in
         h) usage;;
+        d) 
+            deliverdir="$OPTARG"
+            [ ! -d "$deliverdir" ] && report -wt "The delivery directory, ${deliverdir}, does not exist. Can not deliver the output of $(basename "$0")."
+            ;;
         *) echo "Invalid option: -$OPTARG" ; exit 1 ;;
         :) echo "Option -$OPTARG requires an argument" ; exit 1 ;;
     esac
@@ -59,6 +66,13 @@ while [ "$*" != "" ] ; do
         report -d "Making frame $IMAGENUMBER of $IMAGECOUNT $outputdir/${BASE%.*}_${IMAGENUMBER}.tiff"
         ffmpeg -y -v warning -ss "$START" -i $sourcefile -vf yadif,thumbnail=100 -frames:v 1 "$outputdir/${mediaid}_${IMAGENUMBER}.tiff" 
     done
+    echo
+    if [ -d "${deliverdir}" ] ; then
+    	report -dt "Delivering output"
+    	mkdir -p "${deliverdir}/${mediaid}_images/"
+    	cp -av "${outputdir}/" "${deliverdir}/${mediaid}_images/"
+    fi
+    log -e
     shift
 done
 log -e
