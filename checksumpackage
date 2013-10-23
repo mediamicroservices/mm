@@ -48,9 +48,9 @@ while [ "$*" != "" ] ; do
         if [ ! -s "${1}/$OUTDIR/$CHECKSUMNAME" ] ; then
             report -dt "making Digital Forensics XML (${DFXMLNAME}) and ($CHECKSUMNAME) for ${1}"
             cd "$1/$INDIR"
-            maketemp
-            md5deep -drl . > $TMPFILE
-            mv $TMPFILE "$1/$OUTDIR/$DFXMLNAME"
+            checksumtmp=$(maketemp)
+            md5deep -drl . > "$checksumtmp"
+            mv "$checksumtmp" "$1/$OUTDIR/$DFXMLNAME"
             xml sel -T -t -m "/dfxml/fileobject" -v "hashdigest" -o "  " -v "filename" -n "$1/$OUTDIR/$DFXMLNAME" > "$1/$OUTDIR/$CHECKSUMNAME"
             cd "$PWD"
         else
