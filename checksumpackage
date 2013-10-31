@@ -48,19 +48,11 @@ while [ "${*}" != "" ] ; do
         if [ ! -s "${1}/${OUTDIR}/${CHECKSUMNAME}" ] ; then
             report -dt "making Digital Forensics XML (${DFXMLNAME}) and (${CHECKSUMNAME}) for ${1}"
             cd "$1/$INDIR"
-<<<<<<< HEAD
-            checksumtmp=$(maketemp)
-            md5deep -drl . > "$checksumtmp"
-            mv "$checksumtmp" "$1/$OUTDIR/$DFXMLNAME"
-            xml sel -T -t -m "/dfxml/fileobject" -v "hashdigest" -o "  " -v "filename" -n "$1/$OUTDIR/$DFXMLNAME" > "$1/$OUTDIR/$CHECKSUMNAME"
-            cd "$PWD"
-=======
             DFXMLTMP=$(maketemp)
             md5deep -drl . > $DFXMLTMP
             mv "${DFXMLTMP}" "${1}/${OUTDIR}/${DFXMLNAME}"
             xml sel -T -t -m "/dfxml/fileobject" -v "hashdigest" -o "  " -v "filename" -n "${1}/${OUTDIR}/${DFXMLNAME}" > "${1}/${OUTDIR}/${CHECKSUMNAME}"
             cd "${PWD}"
->>>>>>> 7c51a847ec957f7afd20e0bc6d0f15972bddcc73
         else
             report -dt "${CHECKSUMNAME} already exists, skipping for ${1}"
         fi
