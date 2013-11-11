@@ -5,6 +5,7 @@ version="1.0"
 unset dependencies
 dependencies=(ffmpeg)
 deliverdir=""
+DRYRUN=false
 
 scriptdir=$(dirname "$0")
 . "$scriptdir/mmfunctions" || { echo "Missing '$scriptdir/mmfunctions'. Exiting." ; exit 1 ;};
@@ -16,6 +17,7 @@ usage(){
     echo "Dependencies: ${dependencies[@]}"
     echo "Usage: $(basename $0) [ -d /path/to/deliver/to/ ] fileorpackage1 [ fileorpackage2 ...]"
     echo "  -d directory ( directory to deliver the resulting file to )"
+    echo "  -n (dry-run mode, show the commands that would be run but don't do anything)"
     echo "  -h display this help"
     echo
     exit
@@ -34,8 +36,9 @@ trap cleanup SIGHUP SIGINT SIGTERM
 
 # command-line options to set mediaid and original variables
 OPTIND=1
-while getopts ":hd:" opt; do
+while getopts ":hd:n" opt; do
     case "$opt" in
+        n) DRYRUN=true;;
         h) usage;;
         d) 
             deliverdir="$OPTARG"
@@ -60,17 +63,17 @@ while [ "$*" != "" ] ; do
     [ -s "$outputdir" ] && { report -wt "WARNING $outputdir already exists, skipping transcode" ; [ "$#" = 1 ] && exit 86 || { shift ; continue ;} ;};
     BASE=$(basename "$sourcefile")
     DURATION=$(ffprobe 2>/dev/null $sourcefile -show_format | grep duration | cut -d= -f2) 
-    mkdir -p "$outputdir"
+    _run mkdir -p "$outputdir"
     for IMAGENUMBER in $(seq 1 "$IMAGECOUNT") ; do
         START=$(echo "( $DURATION / ( $IMAGECOUNT + 1 )) * $IMAGENUMBER" | bc)
         report -d "Making frame $IMAGENUMBER of $IMAGECOUNT $outputdir/${BASE%.*}_${IMAGENUMBER}.tiff"
-        ffmpeg -y -v warning -ss "$START" -i $sourcefile -vf yadif,thumbnail=100 -frames:v 1 "$outputdir/${mediaid}_${IMAGENUMBER}.tiff" 
+        _run ffmpeg -y -v warning -ss "$START" -i $sourcefile -vf yadif,thumbnail=100 -frames:v 1 "$outputdir/${mediaid}_${IMAGENUMBER}.tiff" 
     done
     echo
     if [ -d "${deliverdir}" ] ; then
     	report -dt "Delivering output"
-    	mkdir -p "${deliverdir}/${mediaid}_images/"
-    	cp -av "${outputdir}/" "${deliverdir}/${mediaid}_images/"
+    	_run mkdir -p "${deliverdir}/${mediaid}_images/"
+    	_run cp -av "${outputdir}/" "${deliverdir}/${mediaid}_images/"
     fi
     log -e
     shift

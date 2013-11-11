@@ -1,6 +1,8 @@
 #!/bin/bash
 # make metadata
 version="0.2"
+DRYRUN=false
+
 scriptdir=$(dirname $(which "$0"))
 . "$scriptdir/mmfunctions" || { echo "Missing '$scriptdir/mmfunctions'. Exiting." ; exit 1 ;};
 
@@ -16,14 +18,16 @@ usage(){
     echo "$(basename $0) ${version}"
     echo "This script may be run interactively by running it with no arguments or may be used with the following options."
     echo "Usage: $(basename $0) [ -m mediaid ]"
+    echo "  -n (dry-run mode, show the commands that would be run but don't do anything)"
     echo "  -m mediaid"
     exit
 }
 
 # command-line options to set mediaid and original variables
 OPTIND=1
-while getopts ":hm:" opt; do
+while getopts ":hm:n" opt; do
     case "$opt" in
+        n) DRYRUN=true;;
         h) usage ;;
         m) mediaid="$OPTARG" ;;
         \?) echo "Invalid option: -$OPTARG" ; exit 1 ;;
@@ -34,7 +38,7 @@ shift $(( ${OPTIND} - 1 ))
 
 log -b
 outputdir="./metadata/submissionDocumentation/fileMeta"
-mkdir -p "$outputdir"
+_run mkdir -p "$outputdir"
 
 while [ "$*" != "" ] ; do
     uuid=$(uuidgen)
@@ -54,17 +58,17 @@ while [ "$*" != "" ] ; do
         filenameroot=$(basename "$file")
         parentdir=$(dirname "$file")
         fileoutput="$outputdir/$parentdir"
-        mkdir -p "$fileoutput"
-        ffprobe 2> /dev/null "$file" -show_format -show_streams -show_data -show_error -show_versions -show_chapters -noprivate -of xml="q=1:x=1" > "$fileoutput/${filenameroot%.*}_ffprobe.xml"
-        ffprobe 2> /dev/null "$file" -show_format -show_streams -show_data -show_error -show_versions -show_chapters -of json > "$fileoutput/${filenameroot%.*}_ffprobe.json"
-        mediainfo --language=raw -f --output=XML "$file" > "$fileoutput/${filenameroot%.*}_mediainfo.xml"
-        mediainfo --inform="Details;1" "$file" > "$fileoutput/${filenameroot%.*}_mediainfo_trace.txt"
-        exiftool -X "$file" > "$fileoutput/${filenameroot%.*}_exiftool.xml"
-        exiftool "$file" > "$fileoutput/${filenameroot%.*}_exiftool.txt"
+        _run mkdir -p "$fileoutput"
+        _run ffprobe 2> /dev/null "$file" -show_format -show_streams -show_data -show_error -show_versions -show_chapters -noprivate -of xml="q=1:x=1" > "$fileoutput/${filenameroot%.*}_ffprobe.xml"
+        _run ffprobe 2> /dev/null "$file" -show_format -show_streams -show_data -show_error -show_versions -show_chapters -of json > "$fileoutput/${filenameroot%.*}_ffprobe.json"
+        _run mediainfo --language=raw -f --output=XML "$file" > "$fileoutput/${filenameroot%.*}_mediainfo.xml"
+        _run mediainfo --inform="Details;1" "$file" > "$fileoutput/${filenameroot%.*}_mediainfo_trace.txt"
+        _run exiftool -X "$file" > "$fileoutput/${filenameroot%.*}_exiftool.xml"
+        _run exiftool "$file" > "$fileoutput/${filenameroot%.*}_exiftool.txt"
     done < "$FILELIST"
     
     cd "$pwd"
-    rm -r -f "$FILELIST"
+    _run rm -r -f "$FILELIST"
     shift
 
 done

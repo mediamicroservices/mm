@@ -71,6 +71,14 @@ report(){
         [ "$log" = "Y" ] && log -w "$message"
 }
 
+function _run(){
+    if [[ ! $DRYRUN == true ]] ; then
+       "$@"
+   else
+       report -sdt "Running: $*"
+    fi
+}
+
 black_at_ends(){
     input_movie="$1"
     name=$(basename "$input_movie")

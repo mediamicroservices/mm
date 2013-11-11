@@ -5,6 +5,7 @@ version="1.0"
 unset dependencies
 dependencies=(ffmpeg)
 deliverdir=""
+DRYRUN=false
 
 scriptdir=$(dirname "$0")
 . "$scriptdir/mmfunctions" || { echo "Missing '$scriptdir/mmfunctions'. Exiting." ; exit 1 ;};
@@ -16,6 +17,7 @@ usage(){
     echo "Dependencies: ${dependencies[@]}"
     echo "Usage: $(basename $0) [ -d /path/to/deliver/to/ ] fileorpackage1 [ fileorpackage2 ...]"
     echo "  -d directory ( directory to deliver the resulting file to )"
+    echo "  -n (dry-run mode, show the commands that would be run but don't do anything)"
     echo "  -h ( display this help )"
     echo
     exit
@@ -32,8 +34,9 @@ trap cleanup SIGHUP SIGINT SIGTERM
 
 # command-line options to set mediaid and original variables
 OPTIND=1
-while getopts ":hd:" opt; do
+while getopts ":hd:n" opt; do
     case "$opt" in
+        n) DRYRUN=true;;
         h) usage ;;
         d) 
             deliverdir="$OPTARG"
@@ -55,7 +58,7 @@ while [ "$*" != "" ] ; do
     log -b
     podcastoutput="$outputdir/${mediaid%.*}_podcast.mov"
     [ -s "${podcastoutput}" ] && { report -wt "WARNING ${podcastoutput} already exists, skipping transcode" ; [ "$#" = 1 ] && exit 86 || { shift ; continue ;} ;};
-    mkdir -p "${outputdir}"
+    _run mkdir -p "${outputdir}"
     unset inputoptions
     unset middleoptions
     middleoptions+=(-movflags faststart)
@@ -69,14 +72,17 @@ while [ "$*" != "" ] ; do
     middleoptions+=(-c:a libfaac)
     middleoptions+=(-b:a 96k)
     if [ "${logdir}" != "" ] ; then
-        mkdir -p "${logdir}"
+        _run mkdir -p "${logdir}"
         export FFREPORT="file=${logdir}/%p_%t_$(basename $0)_${version}.txt"
         inputoptions+=(-v warning -stats)
     fi
     report -dt "Running: ffmpeg ${inputoptions[@]} -i \"${sourcefile}\" ${middleoptions[@]} \"${podcastoutput}\""
-    ffmpeg ${inputoptions[@]} -i "${sourcefile}" ${middleoptions[@]} "${podcastoutput}"
+    _run ffmpeg ${inputoptions[@]} -i "${sourcefile}" ${middleoptions[@]} "${podcastoutput}"
     echo
-    [ -d "${deliverdir}" ] && { report -dt "Delivering output" ; cp -av "${podcastoutput}" "${deliverdir}/" ;};
+    if [ -d "${deliverdir}" ] ;then
+        report -dt "Delivering output"
+        _run cp -av "${podcastoutput}" "${deliverdir}/"
+    fi
     log -e
     shift
 done

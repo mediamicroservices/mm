@@ -4,6 +4,7 @@
 version="1.0"
 unset dependencies
 dependencies=(ffmpeg dvdauthor mkisofs)
+DRYRUN=false
 
 scriptdir=$(dirname "$0")
 . "$scriptdir/mmfunctions" || { echo "Missing '$scriptdir/mmfunctions'. Exiting." ; exit 1 ;};
@@ -22,6 +23,7 @@ usage(){
     echo "Dependencies: ${dependencies[@]}"
     echo "Usage: $(basename $0) [ -v dvd_label_prefix ] fileorpackage1 [ fileorpackage2 ...]"
     echo "  -v dvdlabelprefix (optional)"
+    echo "  -n (dry-run mode, show the commands that would be run but don't do anything)"
     echo "  -h display this help"
     echo
     exit
@@ -31,8 +33,9 @@ check_dependencies "${dependencies[@]}"
 
 # command-line options to set mediaid and original variables
 OPTIND=1
-while getopts ":hv:" opt; do
+while getopts ":hv:n" opt; do
     case "$opt" in
+        n) DRYRUN=true;;
         h) usage ;;
         v) DVDLABELPREFIX="$OPTARG";;
         *) echo "bad option -$OPTARG" ; usage ;;
@@ -54,7 +57,7 @@ while [ "$*" != "" ] ; do
 
     isooutput="$outputdir/${mediaid%.*}.iso"
     [ -s "$isooutput" ] && { report -wt "WARNING $isooutput already exists, skipping transcode" ; [ "$#" = 1 ] && exit 86 || { shift ; continue ;} ;};
-    mkdir -p "$outputdir"
+    _run mkdir -p "$outputdir"
     get_height "$sourcefile"
     get_width "$sourcefile"
     get_dar "$sourcefile"
@@ -96,33 +99,33 @@ while [ "$*" != "" ] ; do
     fi
     inputoptions+=" -y"
     if [ "$logdir" != "" ] ; then
-        mkdir -p "$logdir"
+        _run mkdir -p "$logdir"
         export FFREPORT="file=${logdir}/%p_%t_$(basename $0)_${version}.txt"
         inputoptions+=(-v warning -stats)
     fi
     report -dt "Working on $(basename $isooutput) DVD image."
-    ffmpeg ${inputoptions[@]} -i "${sourcefile}" ${middleoptions[@]} "${outputdir}/${mediaid%.*}.mpeg"
+    _run ffmpeg ${inputoptions[@]} -i "${sourcefile}" ${middleoptions[@]} "${outputdir}/${mediaid%.*}.mpeg"
     export VIDEO_FORMAT=NTSC
     # chapters every 5 minutes, dvdauthor will ignore chapter markers greater than duration
     report -dt "Making DVD VIDEO_TS folder."
-    dvdauthor --title -v "ntsc+${dvdaspect}" -a ac3+en -c 0,5:00,10:00,15:00,20:00,25:00,30:00,35:00,40:00,45:00,50:00,55:00,1:00:00,1:05:00,1:10:00,1:15:00,1:20:00,1:25:00,1:30:00,1:35:00,1:40:00,1:45:00,1:50:00,1:55:00,2:00:00,2:05:00,2:10:00,2:15:00,2:20:00,2:25:00,2:30:00,2:35:00,2:40:00,2:45:00,2:50:00,2:55:00,3:00:00,3:05:00,3:10:00,3:15:00,3:20:00,3:25:00,3:30:00,3:35:00,3:40:00,3:45:00,3:50:00,3:55:00 -f "$outputdir/${mediaid%.*}.mpeg" -o "$outputdir/${mediaid%.*}/" 2> "${logdir}/dvdauthor_$(get_iso8601_c)_$(basename $0)_${version}.txt"
+    _run dvdauthor --title -v "ntsc+${dvdaspect}" -a ac3+en -c 0,5:00,10:00,15:00,20:00,25:00,30:00,35:00,40:00,45:00,50:00,55:00,1:00:00,1:05:00,1:10:00,1:15:00,1:20:00,1:25:00,1:30:00,1:35:00,1:40:00,1:45:00,1:50:00,1:55:00,2:00:00,2:05:00,2:10:00,2:15:00,2:20:00,2:25:00,2:30:00,2:35:00,2:40:00,2:45:00,2:50:00,2:55:00,3:00:00,3:05:00,3:10:00,3:15:00,3:20:00,3:25:00,3:30:00,3:35:00,3:40:00,3:45:00,3:50:00,3:55:00 -f "$outputdir/${mediaid%.*}.mpeg" -o "$outputdir/${mediaid%.*}/" 2> "${logdir}/dvdauthor_$(get_iso8601_c)_$(basename $0)_${version}.txt"
     dvdauthor_err="$?"
     if [ "$dvdauthor_err" -gt "0" ] ; then
         report -wt "ERROR dvdauthor reported error code $dvdauthor_err. Please review $outputdir/${mediaid%.*}/"
         exit "$dvdauthor_err"
     else
-        rm "$outputdir/${mediaid%.*}.mpeg"
+        _run rm "$outputdir/${mediaid%.*}.mpeg"
     fi
-    dvdauthor -T -o "$outputdir/${mediaid%.*}/"
+    _run dvdauthor -T -o "$outputdir/${mediaid%.*}/"
     volname=$(echo "${DVDLABELPREFIX}${mediaid}")
     report -dt "Making DVD image file."
-    mkisofs -f -dvd-video -udf -V "${volname:0:32}" -v -v -o "$isooutput"  "$outputdir/${mediaid%.*}" 2> "${logdir}/mkisofs_$(get_iso8601_c)_$(basename $0)_${version}.txt"
+    _run mkisofs -f -dvd-video -udf -V "${volname:0:32}" -v -v -o "$isooutput"  "$outputdir/${mediaid%.*}" 2> "${logdir}/mkisofs_$(get_iso8601_c)_$(basename $0)_${version}.txt"
     mkisofs_err="$?"
     if [ "$mkisofs_err" -gt "0" ] ; then
         report -wt "ERROR mkisofs reported error code $mkisofs_err. Please review $isooutput."
         exit "$mkisofs_err"
     else
-    rm -r "$outputdir/${mediaid%.*}/"
+    _run rm -r "$outputdir/${mediaid%.*}/"
     fi
     report -dt "$(basename $isooutput) is done."
     log -e

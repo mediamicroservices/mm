@@ -8,6 +8,7 @@ version="1.2"
 unset dependencies
 unset audiomapping
 dependencies=(ffmbc ffprobe)
+DRYRUN=false
 
 scriptdir=$(dirname "${0}")
 . "${scriptdir}/mmfunctions" || { echo "Missing '${scriptdir}/mmfunctions'. Exiting." ; exit 1 ;};
@@ -22,6 +23,7 @@ usage(){
     echo "  -r (only use the right channel of the first audio track)"
     echo "  -c (run the video through a crop detection filter, then crop the video accordingly during transcoding, slower)"
     echo "  -v (run the video through a volume adjustment filter, then adjust the volume accordingly during transcoding, slower)"
+    echo "  -n (dry-run mode, show the commands that would be run but don't do anything)"
     echo "  -h display this help"
     echo
     exit
@@ -31,8 +33,9 @@ check_dependencies "${dependencies[@]}"
 
 # command line arguments
 OPTIND=1
-while getopts ":lrcvh" opt ; do
+while getopts ":lrcvhn" opt ; do
     case ${opt} in
+        n) DRYRUN=true;;
         l) audiomap="L";;
         r) audiomap="R";;
         c) cropdetect="Y" ;;
@@ -162,10 +165,10 @@ while [ "${*}" != "" ] ; do
     inputoptions+=(-threads 8)
     inputoptions+=(-loglevel verbose)
     
-    mkdir -p "${outputdir}"
+    _run mkdir -p "${outputdir}"
     # log ffmbc process
     if [ "${logdir}" != "" ] ; then
-        mkdir -p "${logdir}"
+        _run mkdir -p "${logdir}"
         export FFREPORT="file=${logdir}/%p_%t_$(basename $0)_${version}.txt"
         reportfile="ffmbc_$(date '+%Y%m%d-%H%M%S')_$(basename $0)_${version}.txt"
         echo "ffmbc started on $(date '+%F at %T')" > "${logdir}/${reportfile}"
@@ -178,7 +181,7 @@ while [ "${*}" != "" ] ; do
         audio_pipe_opts=(-f s24le -ar 48000 -ac 2)
         report -dt "ffmpeg -v warning -stats -i \"${input_movie}\" -af volume=${VOLADJ}dB ${audio_pipe_opts[@]} - | ffmbc ${inputoptions[@]} -i ${input_movie} ${audio_pipe_opts[@]} -i pipe:0 -map 0:v -map 1:a ${ffmbc_opts[@]} ${servicefile}" 
         echo "ffmpeg -v warning -stats -i \"${input_movie}\" -af volume=${VOLADJ}dB ${audio_pipe_opts[@]} - | ffmbc ${inputoptions[@]} -i \"${input_movie}\" ${audio_pipe_opts[@]} -i pipe:0 -map 0:v -map 1:a ${ffmbc_opts[@]} \"${servicefile}\""  >> "${logdir}/${reportfile}"
-        ffmpeg -v warning -stats -i "${input_movie}" -af volume=${VOLADJ}dB ${audio_pipe_opts[@]} - | ffmbc ${inputoptions[@]} -i "${input_movie}" ${audio_pipe_opts[@]} -i pipe:0 -map 0:v -map 1:a ${ffmbc_opts[@]} "${servicefile}"
+        _run ffmpeg -v warning -stats -i "${input_movie}" -af volume=${VOLADJ}dB ${audio_pipe_opts[@]} - | ffmbc ${inputoptions[@]} -i "${input_movie}" ${audio_pipe_opts[@]} -i pipe:0 -map 0:v -map 1:a ${ffmbc_opts[@]} "${servicefile}"
     else
         echo "ffmbc ${inputoptions[@]} -i \"${sourcefile}\" ${ffmbc_opts[@]} \"${servicefile}\"" >> "${logdir}/${reportfile}"
         get_codectagstring "${sourcefile}"
@@ -188,10 +191,10 @@ while [ "${*}" != "" ] ; do
             if [ "${logdir}" != "" ] ; then
 		        rm "${logdir}/${reportfile}"
 		    fi
-            ffmpeg -report ${inputoptions[@]} -i "${sourcefile}" -vf "fieldorder=tff,pad=720:512:0:24,format=yuv422p,setsar=1/1,setdar=4/3,fps=fps=ntsc" -c:v mpeg2video -intra_vlc 1 -non_linear_quant 1 -qmin 1 -qmax 12 -intra -top 1 -b:v 30M -maxrate:v 30M -minrate:v 30M -bufsize 1001000 -rc_init_occupancy 1001000 -rc_max_vbv_use 1 -rc_min_vbv_use 1 -rc_buf_aggressivity 0.25 -dc 10 -lmin QP2LAMBDA -vbsf imxdump -flags +ildct+ilme+low_delay -ps 1 -tag:v mx3n -c:a pcm_s24be -ar 48k -ac 2 "${servicefile}"
+            _run ffmpeg -report ${inputoptions[@]} -i "${sourcefile}" -vf "fieldorder=tff,pad=720:512:0:24,format=yuv422p,setsar=1/1,setdar=4/3,fps=fps=ntsc" -c:v mpeg2video -intra_vlc 1 -non_linear_quant 1 -qmin 1 -qmax 12 -intra -top 1 -b:v 30M -maxrate:v 30M -minrate:v 30M -bufsize 1001000 -rc_init_occupancy 1001000 -rc_max_vbv_use 1 -rc_min_vbv_use 1 -rc_buf_aggressivity 0.25 -dc 10 -lmin QP2LAMBDA -vbsf imxdump -flags +ildct+ilme+low_delay -ps 1 -tag:v mx3n -c:a pcm_s24be -ar 48k -ac 2 "${servicefile}"
         else
             echo "ffmbc ${inputoptions[@]} -i \"${sourcefile}\" ${ffmbc_opts[@]} \"${servicefile}\"" >> "${logdir}/${reportfile}"
-            ffmbc ${inputoptions[@]} -i "${sourcefile}" ${ffmbc_opts[@]} "${servicefile}"
+            _run ffmbc ${inputoptions[@]} -i "${sourcefile}" ${ffmbc_opts[@]} "${servicefile}"
         fi
     fi
     ffmbc_err="$?"

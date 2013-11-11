@@ -5,6 +5,7 @@ version="1.0"
 unset dependencies
 dependencies=(ffmpeg)
 outputdir="$HOME/Desktop/$(basename $0)" # default output directory, override with -o
+DRYRUN=false
 
 scriptdir=$(dirname "$0")
 . "$scriptdir/mmfunctions" || { echo "Missing '$scriptdir/mmfunctions'. Exiting." ; exit 1 ;};
@@ -15,6 +16,7 @@ usage(){
     echo "This application will create a prores/quicktime file (suitable for editing) from a video file or package input with the following options. By default the output will be written to ${outputdir}. You can override this with the -o option."
     echo "Dependencies: ${dependencies[@]}"
     echo "Usage: $(basename $0) [ -o /directory/to/write/to/ ] fileorpackage1 [ fileorpackage2 ...]"
+    echo "  -n (dry-run mode, show the commands that would be run but don't do anything)"
     echo "  -o directory ( directory to write the resulting file to )"
     echo "  -h ( display this help )"
     echo
@@ -31,8 +33,9 @@ cleanup(){
 trap cleanup SIGHUP SIGINT SIGTERM
 
 OPTIND=1
-while getopts ":ho:" opt; do
+while getopts ":ho:n" opt; do
     case "$opt" in
+        n) DRYRUN=true;;
         h) usage ;;
         o) 
             outputdir="$OPTARG"
@@ -65,7 +68,7 @@ while [ "$*" != "" ] ; do
 
     outputfile="${outputdir}/${mediaid%.*}_prores.mov"
     [ -s "${outputfile}" ] && { report -wt "WARNING ${outputfile} already exists, skipping transcode" ; [ "$#" = 1 ] && exit 86 || { shift ; continue ;} ;};
-    mkdir -p "${outputdir}"
+    _run mkdir -p "${outputdir}"
     get_height "${sourcefile}"
     get_width "${sourcefile}"
 
@@ -78,13 +81,13 @@ while [ "$*" != "" ] ; do
     middleoptions+=(-c:a pcm_s16le)
 
     if [ "${logdir}" != "" ] ; then
-        mkdir -p "${logdir}"
+        _run mkdir -p "${logdir}"
         export FFREPORT="file=${logdir}/%p_%t_$(basename $0)_${version}.txt"
         inputoptions+=(-v warning -stats)
     fi
     report -dt "Working on $(basename ${outputfile})."
     report -dt "Running: ffmpeg ${inputoptions[@]} -i \"${sourcefile}\" ${middleoptions[@]} \"${outputfile}\""
-    ffmpeg ${inputoptions[@]} -i "${sourcefile}" ${middleoptions[@]} "${outputfile}"
+    _run ffmpeg ${inputoptions[@]} -i "${sourcefile}" ${middleoptions[@]} "${outputfile}"
     echo
     report -dt "$(basename ${outputfile}) is done."
     shift
