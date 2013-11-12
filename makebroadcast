@@ -6,7 +6,7 @@
 # v 1.2 revert to mov and ffmbc
 version="1.2"
 unset dependencies
-unset audiomapping
+unset audiomapping_ffmbc
 dependencies=(ffmbc ffprobe)
 DRYRUN=false
 
@@ -67,13 +67,15 @@ while [ "${*}" != "" ] ; do
     [ ! "${outputdir}" ] && { outputdir="${input}/objects/service" && logdir="${input}/metadata/submissionDocumentation/logs" ;};
     find_input "${input}"
     
+    get_audio_index "${sourcefile}"
     if [ "${audiomap}" = "L" ] ; then
-        get_audio_index "${sourcefile}"
-        audiomapping=(-map_audio_channel 0:${audio_index}:0:0:1:0 -map_audio_channel 0:${audio_index}:0:0:1:1)
+        audiomapping_ffmbc=(-map_audio_channel 0:${audio_index_1}:0:0:1:0 -map_audio_channel 0:${audio_index_1}:0:0:1:1)
     elif [ "${audiomap}" = "R" ] ; then
-        get_audio_index "${sourcefile}"
-        audiomapping=(-map_audio_channel 0:${audio_index}:1:0:1:0 -map_audio_channel 0:${audio_index}:1:0:1:1)
+        audiomapping_ffmbc=(-map_audio_channel 0:${audio_index_1}:1:0:1:0 -map_audio_channel 0:${audio_index_1}:1:0:1:1)
+    else
+        get_audio_mapping "${sourcefile}"
     fi
+    ffmbc_opts+=(${audiomapping_ffmbc[@]})
 
     mediaid=$(basename "${input}" | cut -d. -f1)
 
@@ -89,16 +91,6 @@ while [ "${*}" != "" ] ; do
     ffmbc_opts+=(-tff)
     ffmbc_opts+=(-threads 4)
 
-    if [ -n "${audiomapping}" ] ; then
-        ffmbc_opts+=(${audiomapping[@]})
-    else
-        has_first_two_tracks_mono "${sourcefile}"
-        if [ "${MULTIMONO}" = "Y" ] ; then
-            report -wt "The first two audio tracks are both mono. Considering track 1 for left and track 2 for right."
-            audiomapping=(-map_audio_channel 0.1:0:0.1:0 -map_audio_channel 0.2:0:0.1:1)
-            ffmbc_opts+=(${audiomapping[@]})
-        fi
-    fi
     # decide on an output codec, aspect ratio, and padding strategy
     get_sar "${sourcefile}"
     if [ "${cropdetect}" = "Y" ] ; then
@@ -189,7 +181,7 @@ while [ "${*}" != "" ] ; do
         if [ "$codec_tag_string" = "FFV1" -a "$ffv1_version" = "3" ] ; then
             echo VERSION 3
             if [ "${logdir}" != "" ] ; then
-		        rm "${logdir}/${reportfile}"
+		        _run rm "${logdir}/${reportfile}"
 		    fi
             _run ffmpeg -report ${inputoptions[@]} -i "${sourcefile}" -vf "fieldorder=tff,pad=720:512:0:24,format=yuv422p,setsar=1/1,setdar=4/3,fps=fps=ntsc" -c:v mpeg2video -intra_vlc 1 -non_linear_quant 1 -qmin 1 -qmax 12 -intra -top 1 -b:v 30M -maxrate:v 30M -minrate:v 30M -bufsize 1001000 -rc_init_occupancy 1001000 -rc_max_vbv_use 1 -rc_min_vbv_use 1 -rc_buf_aggressivity 0.25 -dc 10 -lmin QP2LAMBDA -vbsf imxdump -flags +ildct+ilme+low_delay -ps 1 -tag:v mx3n -c:a pcm_s24be -ar 48k -ac 2 "${servicefile}"
         else

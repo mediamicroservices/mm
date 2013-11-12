@@ -71,6 +71,10 @@ while [ "$*" != "" ] ; do
     middleoptions+=(-vf "yadif,scale=640:trunc(ow/dar/2)*2:interl=1")
     middleoptions+=(-c:a libfaac)
     middleoptions+=(-b:a 96k)
+    
+    get_audio_mapping "${sourcefile}"
+    middleoptions+=(${audiomapping_ffmpeg[@]})
+    
     if [ "${logdir}" != "" ] ; then
         _run mkdir -p "${logdir}"
         export FFREPORT="file=${logdir}/%p_%t_$(basename $0)_${version}.txt"

@@ -83,6 +83,9 @@ while [ "$*" != "" ] ; do
     middleoptions+=(-ac 2)
     middleoptions+=(-b:a 128k)
     middleoptions+=(-f mp4)
+    
+    get_audio_mapping "${sourcefile}"
+    middleoptions+=(${audiomapping_ffmpeg[@]})
 
     if [ "${logdir}" != "" ] ; then
         _run mkdir -p "${logdir}"
