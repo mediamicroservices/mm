@@ -64,7 +64,7 @@ while [ "$*" != "" ] ; do
     BASE=$(basename "$sourcefile")
     DURATION=$(ffprobe 2>/dev/null $sourcefile -show_format | grep duration | cut -d= -f2) 
     _run mkdir -p "$outputdir"
-    for IMAGENUMBER in $(seq 1 "$IMAGECOUNT") ; do
+    for (( IMAGENUMBER=1; IMAGENUMBER<=$IMAGECOUNT; IMAGENUMBER++)) ; do
         START=$(echo "( $DURATION / ( $IMAGECOUNT + 1 )) * $IMAGENUMBER" | bc)
         report -d "Making frame $IMAGENUMBER of $IMAGECOUNT $outputdir/${BASE%.*}_${IMAGENUMBER}.tiff"
         _run ffmpeg -y -v warning -ss "$START" -i $sourcefile -vf yadif,thumbnail=100 -frames:v 1 "$outputdir/${mediaid}_${IMAGENUMBER}.tiff" 
