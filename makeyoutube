@@ -96,16 +96,6 @@ while [ "$*" != "" ] ; do
     report -dt "Running: ffmpeg ${inputoptions[@]} -i \"${sourcefile}\" ${middleoptions[@]} \"${youtubeoutput}\""
     _run ffmpeg ${inputoptions[@]} -i "${sourcefile}" ${middleoptions[@]} "${youtubeoutput}"
     echo
-    #chapterlist=$(ffmpeg -i "$sourcefile" 2>&1 | grep "Chapter #0." | awk '{print $4}' | tr -d "\n" | sed '$s/.$//') && { chaptered="Y" ; report "Found chapters found in $sourcefile" ;};
-    #if [ chaptered="Y" ] ; then
-        #if [ "$logdir" != "" ] ; then
-            #export FFREPORT="file=${logdir}/%p_%t_$(basename $0)_segmented_${version}.txt"
-        #fi
-        #-force_key_frames $chapterlist
-        #segmentcommand="ffmpeg $inputoptions -i \"$sourcefile\" $middleoptions -r:v ntsc -map 0:v -map 0:a -f segment -segment_times $chapterlist -reset_timestamps 1 #-segment_start_number 1 -segment_time_delta 0.05 \"${youtubeoutput%.*}_S%02d.mp4\""
-        #report -dt "Running: $segmentcommand"
-        #eval "$segmentcommand"
-    #fi
     report -dt "$(basename ${youtubeoutput}) is done."
     [ -d "${deliverdir}" ] && { report -dt "Delivering output" ; cp -av "${youtubeoutput}" "${deliverdir}/" ;};
     shift
