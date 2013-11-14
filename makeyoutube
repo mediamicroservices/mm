@@ -6,6 +6,7 @@ unset dependencies
 dependencies=(ffmpeg)
 deliverdir=""
 DRYRUN=false
+emailaddress=""
 
 scriptdir=$(dirname "$0")
 . "$scriptdir/mmfunctions" || { echo "Missing '$scriptdir/mmfunctions'. Exiting." ; exit 1 ;};
@@ -18,6 +19,7 @@ usage(){
     echo "Usage: $(basename $0) [ -d /path/to/deliver/to/ ] fileorpackage1 [ fileorpackage2 ...]"
     echo "  -d directory ( directory to deliver the resulting file to )"
     echo "  -n (dry-run mode, show the commands that would be run but don't do anything)"
+    echo "  -e emailaddress ( send an email about the delivery, only valid if -d is used )"
     echo "  -h ( display this help )"
     echo
     exit
@@ -34,7 +36,7 @@ trap cleanup SIGHUP SIGINT SIGTERM
 
 # command-line options to set mediaid and original variables
 OPTIND=1
-while getopts ":hd:n" opt; do
+while getopts ":hd:e:n" opt; do
     case "$opt" in
         n) DRYRUN=true;;
         h) usage ;;
@@ -42,6 +44,7 @@ while getopts ":hd:n" opt; do
             deliverdir="$OPTARG"
             [ ! -d "$deliverdir" ] && report -wt "The delivery directory, ${deliverdir}, does not exist. Can not deliver the output of $(basename "$0")."
             ;;
+        e) emailaddress="$OPTARG" ;;
         *) echo "bad option -$OPTARG" ; usage ;;
         :) echo "Option -$OPTARG requires an argument" ; exit 1 ;;
     esac
@@ -94,11 +97,18 @@ while [ "$*" != "" ] ; do
     fi
     report -dt "Working on $(basename "${youtubeoutput}") for youtube upload."
     report -dt "Running: ffmpeg ${inputoptions[@]} -i \"${sourcefile}\" ${middleoptions[@]} \"${youtubeoutput}\""
-    _run ffmpeg ${inputoptions[@]} -i "${sourcefile}" ${middleoptions[@]} "${youtubeoutput}"
+    ffmpeg ${inputoptions[@]} -i "${sourcefile}" ${middleoptions[@]} "${youtubeoutput}"
     echo
     report -dt "$(basename ${youtubeoutput}) is done."
-    [ -d "${deliverdir}" ] && { report -dt "Delivering output" ; cp -av "${youtubeoutput}" "${deliverdir}/" ;};
+    if [ -d "${deliverdir}" ] ; then
+    	report -dt "Delivering output"
+    	cp -av "${youtubeoutput}" "${deliverdir}/"
+    	cp_exit="$?"
+    	if [[ "${email}" == "Y" ]] ; then
+    		echo -e "Subject: $(basename ${youtubeoutput}) delivered\nBody A file has been delivered to ${deliverdir}.\n\n Filename: ${youtubeoutput}\nProcess: $(basename $0)\nMediaID: ${mediaid}\nSourcefile: ${sourcefile}\nDecoding_options: ${inputoptions[@]}\nEncoding_options: ${middleoptions[@]}\nOperator ${op}.\n\nEnjoy!" | sendmail "${emailaddress}"
+    	fi
+    fi
+    done
     shift
     log -e
 done
-
