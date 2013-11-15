@@ -108,7 +108,6 @@ while [ "$*" != "" ] ; do
             echo -e "Subject: $(basename ${youtubeoutput}) delivered\nBody A file has been delivered to ${deliverdir}.\n\n Filename: ${youtubeoutput}\nProcess: $(basename $0)\nMediaID: ${mediaid}\nSourcefile: ${sourcefile}\nDecoding_options: ${inputoptions[@]}\nEncoding_options: ${middleoptions[@]}\nOperator ${op}.\n\nEnjoy!" | sendmail "${emailaddress}"
         fi
     fi
-    done
     shift
     log -e
 done
