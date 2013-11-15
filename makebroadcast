@@ -181,8 +181,8 @@ while [ "${*}" != "" ] ; do
         if [ "$codec_tag_string" = "FFV1" -a "$ffv1_version" = "3" ] ; then
             echo VERSION 3
             if [ "${logdir}" != "" ] ; then
-		        _run rm "${logdir}/${reportfile}"
-		    fi
+                _run rm "${logdir}/${reportfile}"
+            fi
             _run ffmpeg -report ${inputoptions[@]} -i "${sourcefile}" -vf "fieldorder=tff,pad=720:512:0:24,format=yuv422p,setsar=1/1,setdar=4/3,fps=fps=ntsc" -c:v mpeg2video -intra_vlc 1 -non_linear_quant 1 -qmin 1 -qmax 12 -intra -top 1 -b:v 30M -maxrate:v 30M -minrate:v 30M -bufsize 1001000 -rc_init_occupancy 1001000 -rc_max_vbv_use 1 -rc_min_vbv_use 1 -rc_buf_aggressivity 0.25 -dc 10 -lmin QP2LAMBDA -vbsf imxdump -flags +ildct+ilme+low_delay -ps 1 -tag:v mx3n -c:a pcm_s24be -ar 48k -ac 2 "${servicefile}"
         else
             echo "ffmbc ${inputoptions[@]} -i \"${sourcefile}\" ${ffmbc_opts[@]} \"${servicefile}\"" >> "${logdir}/${reportfile}"

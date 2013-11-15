@@ -101,12 +101,12 @@ while [ "$*" != "" ] ; do
     echo
     report -dt "$(basename "${youtubeoutput}") is done."
     if [ -d "${deliverdir}" ] ; then
-    	report -dt "Delivering output"
-    	cp -av "${youtubeoutput}" "${deliverdir}/"
-    	cp_exit="$?"
-    	if [[ "${email}" == "Y" ]] ; then
-    		echo -e "Subject: $(basename ${youtubeoutput}) delivered\nBody A file has been delivered to ${deliverdir}.\n\n Filename: ${youtubeoutput}\nProcess: $(basename $0)\nMediaID: ${mediaid}\nSourcefile: ${sourcefile}\nDecoding_options: ${inputoptions[@]}\nEncoding_options: ${middleoptions[@]}\nOperator ${op}.\n\nEnjoy!" | sendmail "${emailaddress}"
-    	fi
+        report -dt "Delivering output"
+        cp -av "${youtubeoutput}" "${deliverdir}/"
+        cp_exit="$?"
+        if [[ "${email}" == "Y" ]] ; then
+            echo -e "Subject: $(basename ${youtubeoutput}) delivered\nBody A file has been delivered to ${deliverdir}.\n\n Filename: ${youtubeoutput}\nProcess: $(basename $0)\nMediaID: ${mediaid}\nSourcefile: ${sourcefile}\nDecoding_options: ${inputoptions[@]}\nEncoding_options: ${middleoptions[@]}\nOperator ${op}.\n\nEnjoy!" | sendmail "${emailaddress}"
+        fi
     fi
     done
     shift

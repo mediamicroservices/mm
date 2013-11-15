@@ -96,7 +96,7 @@ black_at_ends(){
 maketemp(){
     mktemp -q "/tmp/$(basename $0).XXXXXX"
     if [ ${?} -ne 0 ]; then
-		echo "${0}: Can't create temp file, exiting..."
+        echo "${0}: Can't create temp file, exiting..."
         exit 1
     fi
 }

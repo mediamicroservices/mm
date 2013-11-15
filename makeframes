@@ -71,9 +71,9 @@ while [ "$*" != "" ] ; do
     done
     echo
     if [ -d "${deliverdir}" ] ; then
-    	report -dt "Delivering output"
-    	_run mkdir -p "${deliverdir}/${mediaid}_images/"
-    	_run cp -av "${outputdir}/" "${deliverdir}/${mediaid}_images/"
+        report -dt "Delivering output"
+        _run mkdir -p "${deliverdir}/${mediaid}_images/"
+        _run cp -av "${outputdir}/" "${deliverdir}/${mediaid}_images/"
     fi
     log -e
     shift

@@ -203,10 +203,10 @@ if [ "${deliverytoomneon}" == "Y" ] ; then
 fi
 
 if [ "${makeaccesscopies}" == "Y" ] ; then
-	# make access copies
-	unset makeframesopts
-	unset makeyoutubeopts
-	unset makepodcastopts
+    # make access copies
+    unset makeframesopts
+    unset makeyoutubeopts
+    unset makepodcastopts
     report -dt "STATUS Making access copies."
     # makedvd
     "$scriptdir/makedvd" "${OUTDIR_INGESTFILE}/${mediaid}"
