@@ -127,7 +127,7 @@ while [ "$*" != "" ] ; do
     else
     _run rm -r "$outputdir/${mediaid%.*}/"
     fi
-    report -dt "$(basename $isooutput) is done."
+    report -dt "$(basename "${isooutput}") is done."
     log -e
     shift
 done

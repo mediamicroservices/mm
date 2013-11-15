@@ -99,7 +99,7 @@ while [ "$*" != "" ] ; do
     report -dt "Running: ffmpeg ${inputoptions[@]} -i \"${sourcefile}\" ${middleoptions[@]} \"${youtubeoutput}\""
     ffmpeg ${inputoptions[@]} -i "${sourcefile}" ${middleoptions[@]} "${youtubeoutput}"
     echo
-    report -dt "$(basename ${youtubeoutput}) is done."
+    report -dt "$(basename "${youtubeoutput}") is done."
     if [ -d "${deliverdir}" ] ; then
     	report -dt "Delivering output"
     	cp -av "${youtubeoutput}" "${deliverdir}/"

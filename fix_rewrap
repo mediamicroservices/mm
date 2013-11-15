@@ -47,7 +47,7 @@ while [ "$*" != "" ] ; do
     else
         report -dt "Generating ${outputmovie} ..."
         ffmbc -i ${input_movie} ${ffmbc_opts[@]} ${output_movie}
-        report -dt "$(basename $0) is done with ${name}."
+        report -dt "$(basename "${0}") is done with ${name}."
     fi
     shift
 done

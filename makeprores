@@ -89,7 +89,7 @@ while [ "$*" != "" ] ; do
     report -dt "Running: ffmpeg ${inputoptions[@]} -i \"${sourcefile}\" ${middleoptions[@]} \"${outputfile}\""
     _run ffmpeg ${inputoptions[@]} -i "${sourcefile}" ${middleoptions[@]} "${outputfile}"
     echo
-    report -dt "$(basename ${outputfile}) is done."
+    report -dt "$(basename "${outputfile}") is done."
     shift
     log -e
 done
