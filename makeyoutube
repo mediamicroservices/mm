@@ -104,7 +104,7 @@ while [ "$*" != "" ] ; do
         report -dt "Delivering output"
         cp -av "${youtubeoutput}" "${deliverdir}/"
         cp_exit="$?"
-        if [[ "${email}" == "Y" ]] ; then
+        if [[ "${emailaddress}" == "Y" ]] ; then
             echo -e "Subject: $(basename ${youtubeoutput}) delivered\nBody A file has been delivered to ${deliverdir}.\n\n Filename: ${youtubeoutput}\nProcess: $(basename $0)\nMediaID: ${mediaid}\nSourcefile: ${sourcefile}\nDecoding_options: ${inputoptions[@]}\nEncoding_options: ${middleoptions[@]}\nOperator ${op}.\n\nEnjoy!" | sendmail "${emailaddress}"
         fi
     fi
