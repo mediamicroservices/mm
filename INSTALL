@@ -1,20 +1,6 @@
-#!/usr/bin/ruby
-if !File.exist?("/usr/local")
-  puts "Please enter your password to allow the installer to make changes."
-  system "sudo mkdir /usr/local"
-  command = "sudo cp "
-elsif !File.writable_real?("/usr/local")
-  puts "Please enter your password to allow the installer to make changes."
-  command = "sudo cp "
-else
-  command = "cp "
-end
+#!/bin/bash
 
-pwd = File.expand_path File.join(__FILE__, "..")
-
-%w[barcodeinterpret blackatends checksumpackage fix_left2stereo fix_rewrap fix_volume ingestfile ingestfile makebroadcast makedvd makeframes makelossless makemetadata makepodcast makeprores makeyoutube mmconfig mmfunctions mmhelp paperingest quickcompare removeDSStore uploadomneon xdcamingest].each do |file|
-  system command+'"'+pwd+'/'+file+'"'+" /usr/local/bin"
-end
-puts
-puts "Microservices have been installed. Please close this window."
-
+for script in barcodeinterpret blackatends checksumpackage fix_left2stereo fix_rewrap fix_volume ingestfile ingestfile makebroadcast makedvd makeframes makelossless makemetadata makepodcast makeprores makeyoutube mmconfig mmfunctions mmhelp paperingest quickcompare removeDSStore uploadomneon xdcamingest ; do
+    cp -v "$script" /usr/local/bin/
+done
+echo "Microservices have been installed. Please close this window."
