@@ -1,96 +1,82 @@
 #!/bin/bash
-# makeprores
-# makes a file appropriate for keeping editors happy
+# makeprores, makes a file appropriate for keeping editors happy
 version="1.0"
-unset dependencies
-dependencies=(ffmpeg)
-outputdir="$HOME/Desktop/$(basename $0)" # default output directory, override with -o
-DRYRUN=false
-
-scriptdir=$(dirname "$0")
+scriptdir=$(dirname $(which "$0"))
 . "$scriptdir/mmfunctions" || { echo "Missing '$scriptdir/mmfunctions'. Exiting." ; exit 1 ;};
+dependencies=(ffmpeg)
+_initialize_make
+
+outputdir="$HOME/Desktop/$(basename $0)" # default output directory, override with -o
 
 usage(){
     echo
-    echo "$(basename $0) ${version}"
+    echo "$(basename ${0}) ${version}"
     echo "This application will create a prores/quicktime file (suitable for editing) from a video file or package input with the following options. By default the output will be written to ${outputdir}. You can override this with the -o option."
     echo "Dependencies: ${dependencies[@]}"
     echo "Usage: $(basename $0) [ -o /directory/to/write/to/ ] fileorpackage1 [ fileorpackage2 ...]"
-    echo "  -n (dry-run mode, show the commands that would be run but don't do anything)"
+    echo "  -d directory ( directory to deliver the resulting file to )"
     echo "  -o directory ( directory to write the resulting file to )"
+    echo "  -n (dry-run mode, show the commands that would be run but don't do anything)"
+    echo "  -e emailaddress ( send an email about the delivery, only valid if -d is used )"
+    echo "  -E emailaddress ( send an email about process outcome )"
     echo "  -h ( display this help )"
     echo
     exit
 }
-[ "$#" = 0 ] && usage
-check_dependencies "${dependencies[@]}"
+[ "${#}" = 0 ] && usage
 
-cleanup(){
-    log -a "Process aborted"
-    exit 1
-}
-
-trap cleanup SIGHUP SIGINT SIGTERM
-
+# command-line options to set mediaid and original variables
 OPTIND=1
-while getopts ":ho:n" opt; do
-    case "$opt" in
+while getopts ":o:d:e:E:nh" opt ; do
+    case "${opt}" in
+        o) outputdir="$OPTARG" && check_outputdir ;;
+        d) deliverdir="$OPTARG" && check_deliverdir ;;
+        e) emailaddress_delivery="$OPTARG" && check_emailaddress "${emailaddress_delivery}" ;;
+        E) emailaddress_outcome="$OPTARG" && check_emailaddress "${emailaddress_outcome}" ;;
         n) DRYRUN=true;;
         h) usage ;;
-        o) 
-            outputdir="$OPTARG"
-            if [ ! -d "$outputdir" ] ; then
-                report -wt "The output directory option, $outputdir, does not refer to an actual directory. Quitting."
-                exit 1
-            fi
-            ;;
         *) echo "bad option -$OPTARG" ; usage ;;
         :) echo "Option -$OPTARG requires an argument" ; exit 1 ;;
     esac
 done
 shift $(( ${OPTIND} - 1 ))
 
-while [ "$*" != "" ] ; do
+while [ "${*}" != "" ] ; do
+    # get context about the input
     input="$1"
     if [ -z "${outputdir}" ] ; then
-        [ -d "$input" ] && { outputdir="$input/objects/access/prores" && logdir="$input/metadata/submissionDocumentation/logs" ;};
-        [ -f "$input" ] && { outputdir=$(dirname "$input")"/access/prores" && logdir="$(dirname "$input")/access/logs" ;};
-        [ ! "$outputdir" ] && { outputdir="$input/objects/access/prores" && logdir="$input/metadata/submissionDocumentation/logs" ;};
+        [ -d "${input}" ] && { outputdir="${input}/objects/access/prores" && logdir="${input}/metadata/submissionDocumentation/logs" ;};
+        [ -f "${input}" ] && { outputdir=$(dirname "${input}")"/access/prores" && logdir="$(dirname "${input}")/access/logs" ;};
+        [ ! "${outputdir}" ] && { outputdir="${input}/objects/access/prores" && logdir="${input}/metadata/submissionDocumentation/logs" ;};
     else
-        logdir="$outputdir/logs"
+        logdir="${outputdir}/logs"
     fi
-    
-    find_input "$input"
+    _find_input "${input}"
+    mediaid=$(basename "${input}" | cut -d. -f1)
 
-    mediaid=$(basename "$1" | cut -d. -f1)
-
-    log -b
-
-    outputfile="${outputdir}/${mediaid%.*}_prores.mov"
-    [ -s "${outputfile}" ] && { report -wt "WARNING ${outputfile} already exists, skipping transcode" ; [ "$#" = 1 ] && exit 86 || { shift ; continue ;} ;};
+    # set up output
+    _log -b
+    output="${outputdir}/${mediaid%.*}_prores.mov"
+    [ -s "${output}" ] && { report -wt "WARNING ${output} already exists, skipping transcode" ; shift ; continue ;};
     _run mkdir -p "${outputdir}"
-    get_height "${sourcefile}"
-    get_width "${sourcefile}"
 
+    # clear local arrays
     unset inputoptions
-    inputoptions+=(-vsync 0)
     unset middleoptions
+
+    # encoding options
+    inputoptions+=(-vsync 0)
     middleoptions+=(-map 0:v)
     middleoptions+=(-map 0:a)
     middleoptions+=(-c:v prores)
     middleoptions+=(-c:a pcm_s16le)
 
-    if [ "${logdir}" != "" ] ; then
-        _run mkdir -p "${logdir}"
-        export FFREPORT="file=${logdir}/%p_%t_$(basename $0)_${version}.txt"
-        inputoptions+=(-v warning -stats)
-    fi
-    report -dt "Working on $(basename ${outputfile})."
-    report -dt "Running: ffmpeg ${inputoptions[@]} -i \"${sourcefile}\" ${middleoptions[@]} \"${outputfile}\""
-    _run ffmpeg ${inputoptions[@]} -i "${sourcefile}" ${middleoptions[@]} "${outputfile}"
+    _prep_ffmpeg_log
+    _run ffmpeg ${inputoptions[@]} -i "${sourcefile}" ${middleoptions[@]} "${output}"
     echo
-    report -dt "$(basename "${outputfile}") is done."
+    _summarize_make
+    _deliver_output
+    _email_outcome
     shift
-    log -e
+    _log -e
 done
-

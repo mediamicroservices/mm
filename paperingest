@@ -5,12 +5,12 @@ scriptdir=$(dirname "$0")
 . "$scriptdir/mmfunctions" || { echo "Missing '$scriptdir/mmfunctions'. Exiting." ; exit 1 ;};
 
 cleanup(){
-    log -a "Process aborted"
+    _log -a "Process aborted"
     exit 1
 }
 
 trap cleanup SIGHUP SIGINT SIGTERM
-log -b
+_log -b
 
 ask_operator
 
@@ -56,4 +56,4 @@ echo "command: ${command}"  >> "$submissionMetadataDir/operation_process.txt"
 
 echo done scanning "$mediaid"
 
-log -e
+_log -e

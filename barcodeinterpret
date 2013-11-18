@@ -5,12 +5,12 @@ scriptdir=$(dirname "$0")
 . "$scriptdir/mmfunctions" || { echo "Missing '$scriptdir/mmfunctions'. Exiting." ; exit 1 ;};
 
 cleanup(){
-    log -a "Process aborted"
+    _log -a "Process aborted"
     exit 1
 }
 
 trap cleanup SIGHUP SIGINT SIGTERM
-log -b
+_log -b
 
 if test $# != 1 ; then
     echo "You must supply one argument, a scanned interleaved 2/5 barcode value"; exit
@@ -65,4 +65,4 @@ if [[ $(echo "$materialid" | tail -c +9 | head -c 1) == "H" ]] ; then
    materialid="${materialid}D"
 fi
 echo deviceid,$(echo $ids | cut -d ' ' -f 1),materialid,$materialid,som,$(addcolons $(echo $barcode | cut -c 42-49)),duration,$(addcolons $(echo $barcode | cut -c 50-57))
-log -e
+_log -e

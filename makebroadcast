@@ -1,17 +1,12 @@
 #!/bin/bash
 # makebroadcast
-# make broadcast version
-# history
 # v 1.1 change from mov output to mxf output, force all output to hd
 # v 1.2 revert to mov and ffmbc
 version="1.2"
-unset dependencies
-unset audiomapping_ffmbc
+scriptdir=$(dirname $(which "$0"))
+. "$scriptdir/mmfunctions" || { echo "Missing '$scriptdir/mmfunctions'. Exiting." ; exit 1 ;};
 dependencies=(ffmbc ffprobe)
-DRYRUN=false
-
-scriptdir=$(dirname "${0}")
-. "${scriptdir}/mmfunctions" || { echo "Missing '${scriptdir}/mmfunctions'. Exiting." ; exit 1 ;};
+_initialize_make
 
 usage(){
     echo
@@ -23,75 +18,64 @@ usage(){
     echo "  -r (only use the right channel of the first audio track)"
     echo "  -c (run the video through a crop detection filter, then crop the video accordingly during transcoding, slower)"
     echo "  -v (run the video through a volume adjustment filter, then adjust the volume accordingly during transcoding, slower)"
+    echo "  -d directory ( directory to deliver the resulting file to )"
+    echo "  -o directory ( directory to write the resulting file to )"
     echo "  -n (dry-run mode, show the commands that would be run but don't do anything)"
-    echo "  -h display this help"
+    echo "  -e emailaddress ( send an email about the delivery, only valid if -d is used )"
+    echo "  -E emailaddress ( send an email about process outcome )"
+    echo "  -h ( display this help )"
     echo
     exit
 }
 [ "${#}" = 0 ] && usage
-check_dependencies "${dependencies[@]}"
 
-# command line arguments
+# command-line options to set mediaid and original variables
 OPTIND=1
-while getopts ":lrcvhn" opt ; do
-    case ${opt} in
-        n) DRYRUN=true;;
+while getopts ":lrcvo:d:e:E:nh" opt ; do
+    case "${opt}" in
         l) audiomap="L";;
         r) audiomap="R";;
         c) cropdetect="Y" ;;
         v) voladjust="Y" ;;
+        o) outputdir="$OPTARG" && check_outputdir ;;
+        d) deliverdir="$OPTARG" && check_deliverdir ;;
+        e) emailaddress_delivery="$OPTARG" && check_emailaddress "${emailaddress_delivery}" ;;
+        E) emailaddress_outcome="$OPTARG" && check_emailaddress "${emailaddress_outcome}" ;;
+        n) DRYRUN=true;;
         h) usage ;;
-        *) echo "Invalid option: -${OPTARG}" ; exit 1 ;;
-        :) echo "Option -${OPTARG} requires an argument" ; exit 1 ;;
+        *) echo "bad option -$OPTARG" ; usage ;;
+        :) echo "Option -$OPTARG requires an argument" ; exit 1 ;;
     esac
 done
 shift $(( ${OPTIND} - 1 ))
 
-cleanup(){
-    log -a "Process aborted"
-    exit 1
-}
-
-trap cleanup SIGHUP SIGINT SIGTERM
-
 while [ "${*}" != "" ] ; do
+    # get context about the input
+    input="$1"
+    if [ -z "${outputdir}" ] ; then
+        [ -d "${input}" ] && { outputdir="${input}/objects/service" && logdir="${input}/metadata/submissionDocumentation/logs" ;};
+        [ -f "${input}" ] && { outputdir=$(dirname "${input}")"/service" && logdir="$(dirname "${input}")/service/logs" ;};
+        [ ! "${outputdir}" ] && { outputdir="${input}/objects/service" && logdir="${input}/metadata/submissionDocumentation/logs" ;};
+    else
+        logdir="${outputdir}/logs"
+    fi
+    _find_input "${input}"
+    mediaid=$(basename "${input}" | cut -d. -f1)
+
+    # set up output
+    _log -b
+    output="${outputdir}/${mediaid%.*}.mov"
+    [ -s "${output}" ] && { report -wt "WARNING ${output} already exists, skipping transcode" ; shift ; continue ;};
+    _run mkdir -p "${outputdir}"
 
     # clear local arrays
     unset inputoptions
-    unset ffmbc_opts
+    unset middleoptions
+    unset audiomapping_ffmbc
     filterchain_start=""
 
-    input="$1"
-    [ -d "${input}" ] && { outputdir="${input}/objects/service" && logdir="${input}/metadata/submissionDocumentation/logs" ;};
-    [ -f "${input}" ] && { outputdir=$(dirname "${input}")"/service" && logdir="$(dirname "${input}")/service/logs" ;};
-    [ ! "${outputdir}" ] && { outputdir="${input}/objects/service" && logdir="${input}/metadata/submissionDocumentation/logs" ;};
-    find_input "${input}"
-    
+    # get information on the input
     get_audio_index "${sourcefile}"
-    if [ "${audiomap}" = "L" ] ; then
-        audiomapping_ffmbc=(-map_audio_channel 0:${audio_index_1}:0:0:1:0 -map_audio_channel 0:${audio_index_1}:0:0:1:1)
-    elif [ "${audiomap}" = "R" ] ; then
-        audiomapping_ffmbc=(-map_audio_channel 0:${audio_index_1}:1:0:1:0 -map_audio_channel 0:${audio_index_1}:1:0:1:1)
-    else
-        get_audio_mapping "${sourcefile}"
-    fi
-    ffmbc_opts+=(${audiomapping_ffmbc[@]})
-
-    mediaid=$(basename "${input}" | cut -d. -f1)
-
-    log -b
-
-    servicefile="${outputdir}/${mediaid%.*}.mov"
-    [ -s "${servicefile}" ] && { report -wt "${servicefile} already exists, skipping transcode" ; [ "${#}" = 1 ] && exit 86 || { shift ; continue ;} ;};
-
-    report -dt "Starting transcode of $(basename "${sourcefile}") for broadcast compliance."
-
-    # set fixed transcoding options
-    ffmbc_opts+=(-r ntsc)
-    ffmbc_opts+=(-tff)
-    ffmbc_opts+=(-threads 4)
-
-    # decide on an output codec, aspect ratio, and padding strategy
     get_sar "${sourcefile}"
     if [ "${cropdetect}" = "Y" ] ; then
         get_cropdetection "${sourcefile}"
@@ -108,56 +92,71 @@ while [ "${*}" != "" ] ; do
     if [ "${fieldorder}" != "tff" ] ; then
         filterchain_start+="fieldorder=tff,"
     fi
+
+    if [ "${audiomap}" = "L" ] ; then
+        audiomapping_ffmbc=(-map_audio_channel 0:${audio_index_1}:0:0:1:0 -map_audio_channel 0:${audio_index_1}:0:0:1:1)
+    elif [ "${audiomap}" = "R" ] ; then
+        audiomapping_ffmbc=(-map_audio_channel 0:${audio_index_1}:1:0:1:0 -map_audio_channel 0:${audio_index_1}:1:0:1:1)
+    else
+        get_audio_mapping "${sourcefile}"
+    fi
+    middleoptions+=(${audiomapping_ffmbc[@]})
+
+    # set fixed transcoding options
+    middleoptions+=(-r ntsc)
+    middleoptions+=(-tff)
+    middleoptions+=(-threads 4)
+
+    # decide on an output codec, aspect ratio, and padding strategy
     darratio=$(echo "scale=3 ; ${dar}" | bc)
     if [ "${darratio}" = "1.777" -a ! "${cropdetect}" = "Y" ] ; then
-        ffmbc_opts+=(-s 1920x1080)
-        ffmbc_opts+=(-target xdcamhd422)
-        ffmbc_opts+=(-vtag xd5b)
-        ffmbc_opts+=(-aspect 16:9)
+        middleoptions+=(-s 1920x1080)
+        middleoptions+=(-target xdcamhd422)
+        middleoptions+=(-vtag xd5b)
+        middleoptions+=(-aspect 16:9)
     elif [ $(echo "scale=3 ; ${darratio} > (16/9)" | bc -l) = 1 ] ; then
-        ffmbc_opts+=(-vf "${filterchain_start}pad=${width}:${width}*(9/16)*(${sar}):(ow-${width})/2:(oh-${height})/2,scale=1920:1080:interl=1")
-        ffmbc_opts+=(-target xdcamhd422)
-        ffmbc_opts+=(-vtag xd5b)
-        ffmbc_opts+=(-aspect 16:9)
+        middleoptions+=(-vf "${filterchain_start}pad=${width}:${width}*(9/16)*(${sar}):(ow-${width})/2:(oh-${height})/2,scale=1920:1080:interl=1")
+        middleoptions+=(-target xdcamhd422)
+        middleoptions+=(-vtag xd5b)
+        middleoptions+=(-aspect 16:9)
     elif [ $(echo "scale=3 ; $darratio > (3/2)" | bc -l) = 1 ] ; then
-        ffmbc_opts+=(-vf "${filterchain_start}pad=${height}*(16/9)/(${sar}):${height}:(ow-${width})/2:(oh-${height})/2,scale=1920:1080:interl=1")
-        ffmbc_opts+=(-target xdcamhd422)
-        ffmbc_opts+=(-vtag xd5b)
-        ffmbc_opts+=(-aspect 16:9)
+        middleoptions+=(-vf "${filterchain_start}pad=${height}*(16/9)/(${sar}):${height}:(ow-${width})/2:(oh-${height})/2,scale=1920:1080:interl=1")
+        middleoptions+=(-target xdcamhd422)
+        middleoptions+=(-vtag xd5b)
+        middleoptions+=(-aspect 16:9)
     elif [ "$width" = "720" -a "$height" = "480" -a $(echo "scale=3 ; $darratio < (3/2)" | bc -l) = 1 -a ! "$cropdetect" = "Y" ] ; then
         filterchain_start=$(echo "${filterchain_start}" | sed 's/,$//g')
-        ffmbc_opts+=(-vf ${filterchain_start})
-        ffmbc_opts+=(-target imx30)
-        ffmbc_opts+=(-aspect 4:3)
+        middleoptions+=(-vf ${filterchain_start})
+        middleoptions+=(-target imx30)
+        middleoptions+=(-aspect 4:3)
     elif [ "${height}" -eq "486" -a "${width}" -eq "720" ] ; then
         filterchain_start+="crop=720:480:0:4"
         filterchain_start=$(echo "$filterchain_start" | sed 's/,$//g')
-        ffmbc_opts+=(-vf ${filterchain_start})
-        ffmbc_opts+=(-target imx30)
-        ffmbc_opts+=(-aspect 4:3)
+        middleoptions+=(-vf ${filterchain_start})
+        middleoptions+=(-target imx30)
+        middleoptions+=(-aspect 4:3)
     elif  [ "${height}" -eq "512" -a "${width}" -eq "720" ] ;then
         filterchain_start+="crop=720:480:0:32"
         filterchain_start=$(echo "${filterchain_start}" | sed 's/,$//g')
-        ffmbc_opts+=(-vf ${filterchain_start})
-        ffmbc_opts+=(-target imx30)
-        ffmbc_opts+=(-aspect 4:3)
+        middleoptions+=(-vf ${filterchain_start})
+        middleoptions+=(-target imx30)
+        middleoptions+=(-aspect 4:3)
     else
-        ffmbc_opts+=(-vf "${filterchain_start}pad=${height}*(4/3)/(${sar}):${height}:(ow-${width})/2:(oh-${height})/2,scale=720:480:interl=1")
-        ffmbc_opts+=(-target imx30)
-        ffmbc_opts+=(-aspect 4:3)
+        middleoptions+=(-vf "${filterchain_start}pad=${height}*(4/3)/(${sar}):${height}:(ow-${width})/2:(oh-${height})/2,scale=720:480:interl=1")
+        middleoptions+=(-target imx30)
+        middleoptions+=(-aspect 4:3)
     fi
 
     # add audio options
-    ffmbc_opts+=(-acodec pcm_s24be)
-    ffmbc_opts+=(-ar 48k)
-    ffmbc_opts+=(-ac 2)
+    middleoptions+=(-acodec pcm_s24be)
+    middleoptions+=(-ar 48k)
+    middleoptions+=(-ac 2)
 
     # set input options for ffmbc
     inputoptions+=(-y)
     inputoptions+=(-threads 8)
     inputoptions+=(-loglevel verbose)
-    
-    _run mkdir -p "${outputdir}"
+
     # log ffmbc process
     if [ "${logdir}" != "" ] ; then
         _run mkdir -p "${logdir}"
@@ -171,26 +170,22 @@ while [ "${*}" != "" ] ; do
         get_volume_adjustment "${sourcefile}"
         unset audio_pipe_opts
         audio_pipe_opts=(-f s24le -ar 48000 -ac 2)
-        report -dt "ffmpeg -v warning -stats -i \"${input_movie}\" -af volume=${VOLADJ}dB ${audio_pipe_opts[@]} - | ffmbc ${inputoptions[@]} -i ${input_movie} ${audio_pipe_opts[@]} -i pipe:0 -map 0:v -map 1:a ${ffmbc_opts[@]} ${servicefile}" 
-        echo "ffmpeg -v warning -stats -i \"${input_movie}\" -af volume=${VOLADJ}dB ${audio_pipe_opts[@]} - | ffmbc ${inputoptions[@]} -i \"${input_movie}\" ${audio_pipe_opts[@]} -i pipe:0 -map 0:v -map 1:a ${ffmbc_opts[@]} \"${servicefile}\""  >> "${logdir}/${reportfile}"
-        _run ffmpeg -v warning -stats -i "${input_movie}" -af volume=${VOLADJ}dB ${audio_pipe_opts[@]} - | ffmbc ${inputoptions[@]} -i "${input_movie}" ${audio_pipe_opts[@]} -i pipe:0 -map 0:v -map 1:a ${ffmbc_opts[@]} "${servicefile}"
+        _run ffmpeg -v warning -stats -i "${input_movie}" -af volume=${VOLADJ}dB ${audio_pipe_opts[@]} - | ffmbc ${inputoptions[@]} -i "${input_movie}" ${audio_pipe_opts[@]} -i pipe:0 -map 0:v -map 1:a ${middleoptions[@]} "${output}"
     else
-        echo "ffmbc ${inputoptions[@]} -i \"${sourcefile}\" ${ffmbc_opts[@]} \"${servicefile}\"" >> "${logdir}/${reportfile}"
         get_codectagstring "${sourcefile}"
-        echo "codec $codec_tag_string version $ffv1_version"
         if [ "$codec_tag_string" = "FFV1" -a "$ffv1_version" = "3" ] ; then
-            echo VERSION 3
             if [ "${logdir}" != "" ] ; then
                 _run rm "${logdir}/${reportfile}"
             fi
-            _run ffmpeg -report ${inputoptions[@]} -i "${sourcefile}" -vf "fieldorder=tff,pad=720:512:0:24,format=yuv422p,setsar=1/1,setdar=4/3,fps=fps=ntsc" -c:v mpeg2video -intra_vlc 1 -non_linear_quant 1 -qmin 1 -qmax 12 -intra -top 1 -b:v 30M -maxrate:v 30M -minrate:v 30M -bufsize 1001000 -rc_init_occupancy 1001000 -rc_max_vbv_use 1 -rc_min_vbv_use 1 -rc_buf_aggressivity 0.25 -dc 10 -lmin QP2LAMBDA -vbsf imxdump -flags +ildct+ilme+low_delay -ps 1 -tag:v mx3n -c:a pcm_s24be -ar 48k -ac 2 "${servicefile}"
+            _run ffmpeg -report ${inputoptions[@]} -i "${sourcefile}" -vf "fieldorder=tff,pad=720:512:0:24,format=yuv422p,setsar=1/1,setdar=4/3,fps=fps=ntsc" -c:v mpeg2video -intra_vlc 1 -non_linear_quant 1 -qmin 1 -qmax 12 -intra -top 1 -b:v 30M -maxrate:v 30M -minrate:v 30M -bufsize 1001000 -rc_init_occupancy 1001000 -rc_max_vbv_use 1 -rc_min_vbv_use 1 -rc_buf_aggressivity 0.25 -dc 10 -lmin QP2LAMBDA -vbsf imxdump -flags +ildct+ilme+low_delay -ps 1 -tag:v mx3n -c:a pcm_s24be -ar 48k -ac 2 "${output}"
         else
-            echo "ffmbc ${inputoptions[@]} -i \"${sourcefile}\" ${ffmbc_opts[@]} \"${servicefile}\"" >> "${logdir}/${reportfile}"
-            _run ffmbc ${inputoptions[@]} -i "${sourcefile}" ${ffmbc_opts[@]} "${servicefile}"
+            _run ffmbc ${inputoptions[@]} -i "${sourcefile}" ${middleoptions[@]} "${output}"
         fi
     fi
-    ffmbc_err="$?"
-    [ "${ffmbc_err}" -gt "0" ] && { report -wt "ffmbc failed with error ${ffmbc_err}" ; exit 1 ;};
+    echo
+    _summarize_make
+    _deliver_output
+    _email_outcome
     shift
+    _log -e
 done
-log -e

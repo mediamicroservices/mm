@@ -22,7 +22,7 @@ usage(){
 check_dependencies "${dependencies[@]}"
 
 cleanup(){
-    log -a "Process aborted"
+    _log -a "Process aborted"
     exit 1
 }
 
@@ -33,7 +33,7 @@ CHECKSUMNAME="checksum.md5"
 DFXMLNAME="dfxml.xml"
 
 while [ "${*}" != "" ] ; do
-    log -b
+    _log -b
     if [ -d "${1}" ] ; then
         PWD=$(pwd)
         "${scriptdir}/removeDSStore" "$1"
@@ -59,6 +59,6 @@ while [ "${*}" != "" ] ; do
     else
     report -dt "ERROR: ${0} requires directories as input and $1 is not a directory."
     fi
-    log -e
+    _log -e
     shift
 done

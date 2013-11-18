@@ -9,7 +9,7 @@ scriptdir=$(dirname "$0")
 
 usage(){
     echo
-    echo "$(basename $0) ${version}"
+    echo "$(basename ${0}) ${version}"
     echo "This application takes an input video file(s) and produces outputs that are map the left channel of the input to a stereo mix in the output."
     echo "Dependencies: ${dependencies[@]}"
     echo "Usage: $(basename $0) file1 [ file2 ...]"
@@ -20,7 +20,7 @@ usage(){
 check_dependencies "${dependencies[@]}"
 
 cleanup(){
-    log -a "Process aborted"
+    _log -a "Process aborted"
     exit 1
 }
 
@@ -28,7 +28,7 @@ cleanup(){
 suffix="_left2stereo"
 
 trap cleanup SIGHUP SIGINT SIGTERM
-log -b
+_log -b
 
 while [ "$*" != "" ] ; do
 
@@ -52,4 +52,4 @@ while [ "$*" != "" ] ; do
     fi
     shift
 done
-log -e
+_log -e

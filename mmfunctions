@@ -19,7 +19,7 @@ get_iso8601_c(){
     date +%Y%m%d-%I%M%S
 }
 
-log(){
+_log(){
     mmlogname="mm.log"
     mmlogdir="${CUSTOM_LOG_DIR:-/tmp}"
     mmlogfile="${mmlogdir}/${mmlogname}"
@@ -68,14 +68,26 @@ report(){
         shift $(( ${OPTIND} - 1 ))
         message="$1"
         echo $echoopt "${color}${startmessage[@]}${message}${NC}"
-        [ "$log" = "Y" ] && log -w "$message"
+        [ "$log" = "Y" ] && _log -w "$message"
 }
 
-function _run(){
+_run(){
+    run_err=""
+    report -sdt "Running: $*"
     if [[ ! $DRYRUN == true ]] ; then
-       "$@"
-   else
-       report -sdt "Running: $*"
+        "$@"
+    fi
+    run_err="$?"
+    if [[ "${run_err}" != 0 ]] ; then
+    report -wts "Error: Running: \"$*\" gave an Error Code - $run_err"
+    fi
+}
+
+_run_critical(){
+    _run "${@}"
+    if [[ "${run_err}" != 0 ]] ; then
+        report -wts "The process ran into a critical error and can not proceed."
+        exit 1
     fi
 }
 
@@ -158,6 +170,82 @@ check_dependencies(){
     fi
 }
 
+_initialize_make(){
+    check_dependencies "${dependencies[@]}"
+    unset dependencies
+    unset audiomapping_ffmbc
+    deliverdir=""
+    DRYRUN=false
+    emailaddress=""
+    cleanup(){
+        _log -a "Process aborted"
+        echo
+        report -wts "THE PROCESS WAS ABORTED"
+        exit 1
+    }
+    trap cleanup SIGHUP SIGINT SIGTERM
+}
+
+check_deliverdir(){
+    if [ ! -d "$deliverdir" ] ; then
+        report -wt "The delivery directory, ${deliverdir}, does not exist. Can not deliver the output of $(basename "$0")."
+    fi
+}
+
+check_outputdir(){
+    if [ ! -d "$outputdir" ] ; then
+        report -wt "The output directory, ${outputdir}, does not exist. Can not write the output of $(basename "$0")."
+    fi
+}
+
+check_emailaddress(){
+    emailregex="^[a-z0-9!#\$%&'*+/=?^_\`{|}~-]+(\.[a-z0-9!#$%&'*+/=?^_\`{|}~-]+)*@([a-z0-9]([a-z0-9-]*[a-z0-9])?\.)+[a-z0-9]([a-z0-9-]*[a-z0-9])?\$"
+    if [[ ! "$1" =~ "$emailregex" ]] ; then
+        report -wt "$1 is not a valid email address."
+    fi
+}
+
+email_delivery(){
+    if [[ "${emailaddress}" == "Y" ]] ; then
+        echo -e "Subject: $(basename ${youtubeoutput}) delivered
+        A file has been delivered to ${deliverdir}.
+        
+        Filename: ${youtubeoutput}
+        Process: $(basename $0)
+        MediaID: ${mediaid}
+        Sourcefile: ${sourcefile}
+        Decoding_options: ${inputoptions[@]}
+        Encoding_options: ${middleoptions[@]}
+        Operator ${op}.
+        
+        Enjoy!" | sendmail "${emailaddress}"
+    fi
+}
+
+_email_outcome(){
+    if [[ "${emailaddress}" == "Y" ]] ; then
+        echo -e "Subject: $(basename ${youtubeoutput}) processed
+        Delivery directory: ${deliverdir}.
+        Filename: ${youtubeoutput}
+        Process: $(basename $0)
+        MediaID: ${mediaid}
+        Sourcefile: ${sourcefile}
+        Decoding_options: ${inputoptions[@]}
+        Encoding_options: ${middleoptions[@]}
+        Operator ${op}.
+        
+        Enjoy!" | sendmail "${emailaddress}"
+    fi
+}
+
+_deliver_output(){
+    if [[ "${deliverdir}" ]] ; then
+        report -dt "Delivering ${output} to ${deliverdir}"
+        _run cp -av "${output}" "${deliverdir}/"
+        email_delivery
+    fi
+}
+
 ask(){
     # This function requires 3 arguments
     # 1) A prompt
@@ -214,7 +302,7 @@ make_mezz_for_xdcam(){
     popd
 }
 
-find_input (){
+_find_input (){
     sourcefile=""
     [ -d "$1" ] && [ -d "$1/objects/service" ] && sourcefile=$(find "$1/objects/service" -maxdepth 1 -mindepth 1 -type f \( -name "*.mov" -o -name "*.mxf" -o -name "*.mp4" -o -name "*.dv" \) ! -name ".*")
     [ -f "$1" ] && sourcefile="$1"
@@ -365,5 +453,19 @@ free_space(){
     if [ $freespace -lt $space ]; then
       report -wts "ERROR only $freespace gb free in this directory. This script requires at least $space gigabytes"
       exit 1
+    fi
+}
+
+_summarize_make(){
+    report -dt "$(basename "${output}") is done."
+}
+
+_prep_ffmpeg_log(){
+    if [ "${logdir}" != "" ] ; then
+        _run mkdir -p "${logdir}"
+        export FFREPORT="file=${logdir}/%p_%t_$(basename "$0")_${version}.txt"
+        inputoptions+=(-v warning -stats)
+    else
+        export FFREPORT=""
     fi
 }

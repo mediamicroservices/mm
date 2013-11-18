@@ -6,7 +6,7 @@ scriptdir=$(dirname "$0")
 version=1.0
 
 cleanup(){
-    log -a "Process aborted"
+    _log -a "Process aborted"
     exit 1
 }
 
@@ -38,9 +38,9 @@ done
 shift $(( ${OPTIND} - 1 ))
 
 while [ "$*" != "" ] ; do
-    log -b
+    _log -b
     [ "$#" != 0 ] && sourcefile="$1"
     black_at_ends "$sourcefile"
-    log -e
+    _log -e
     shift
 done

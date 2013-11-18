@@ -10,7 +10,7 @@ scriptdir=$(dirname "$0")
 
 usage(){
     echo
-    echo "$(basename $0) ${version}"
+    echo "$(basename ${0}) ${version}"
     echo "This application will upload file(s) to a server via rsync in sequential order. Options are specified via 'mmconfig'."
     echo
     echo "Settings:"
@@ -25,12 +25,12 @@ usage(){
 [ "$#" = 0 ] && usage
 
 cleanup(){
-    log -a "Process aborted"
+    _log -a "Process aborted"
     exit 1
 }
 
 trap cleanup SIGHUP SIGINT SIGTERM
-log -b
+_log -b
 
 # command-line options to set mediaid and original variables
 OPTIND=1
@@ -54,7 +54,7 @@ sourcefile="$1"
 removetmp="n"
 filename=$(basename "$sourcefile")
 
-log -b
+_log -b
 
 status=$(ftp -a "$OMNEONIP" <<END_SCRIPT
 binary
@@ -90,4 +90,4 @@ report -wt "$filename is already on the omneon as a $size_g gigabyte file."
 fi
 shift
 done
-log -e
+_log -e

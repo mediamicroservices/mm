@@ -29,7 +29,7 @@ remove_mediaid_from_queue(){
 }
 
 cleanup(){
-    log -a "Process aborted"
+    _log -a "Process aborted"
     remove_mediaid_from_queue
     [ -d "${OUTDIR_INGESTFILE}/${mediaid}" ] && mv "${OUTDIR_INGESTFILE}/${mediaid}" "${OUTDIR_INGESTFILE}/${mediaid}_aborted_ingest_$(get_iso8601_c)"
     exit 1
@@ -171,23 +171,20 @@ if [ "${priority}" = "put in queue" ] ; then
     done
 fi
 
-log -b
+_log -b
 
 # set up package directories
-mkdir -p "${objectsdir}"
+_run_critical mkdir -p "${objectsdir}"
 logdir="${OUTDIR_INGESTFILE}/${mediaid}/metadata/submissionDocumentation/logs"
-mkdir -p "${logdir}"
+_run mkdir -p "${logdir}"
 submissiondocdir="${OUTDIR_INGESTFILE}/${mediaid}/metadata/submissionDocumentation"
-mkdir -p "${submissiondocdir}"
+_run mkdir -p "${submissiondocdir}"
 
 start=$(get_iso8601)
 
 # rsync
 report -dt "STATUS Copying the original file to library storage at ${objectsdir}."
-rsync -rt --progress --log-file="${logdir}/rsync_$(get_iso8601_c)_$(basename $0)_${version}.txt" "${input}" "${objectsdir}/"
-
-rsync_err="${?}"
-[ "${rsync_err}" -gt "0" ] && { report -wt "rsync failed with error ${rsync_err}" ; exit 1 ;};
+_run_critical rsync -rt --progress --log-file="${logdir}/rsync_$(get_iso8601_c)_$(basename $0)_${version}.txt" "${input}" "${objectsdir}/"
 
 # make copy for broadcast
 unset makebroadcastopts
@@ -243,11 +240,11 @@ if [ "${cleanup}" == "Y" ] ; then
         report -wt "Cancelling requested deletion of source file, not looking safe."
     else
         report -dt "Removing the source file from ${input} as requested."
-        rm -f "${input}"
+        _run rm -f "${input}"
     fi
 fi
 
 # clean up queue
 [ "${priority}" == "put in queue" ] && remove_mediaid_from_queue
 
-log -e
+_log -e

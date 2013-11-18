@@ -34,12 +34,12 @@ done
 shift $(( ${OPTIND} - 1 ))
 
 cleanup(){
-    log -a "Process aborted"
+    _log -a "Process aborted"
     exit 1
 }
 
 trap cleanup SIGHUP SIGINT SIGTERM
-log -b
+_log -b
 
 while [ "$*" != "" ] ; do
     input_movie="${1}"
@@ -69,4 +69,4 @@ while [ "$*" != "" ] ; do
     fi
     shift
 done
-log -e
+_log -e

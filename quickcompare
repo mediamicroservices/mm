@@ -6,16 +6,16 @@ scriptdir=$(dirname "$0")
 . "$scriptdir/mmfunctions" || { echo "Missing '$scriptdir/mmfunctions'. Exiting." ; exit 1 ;};
 
 cleanup(){
-    log -a "Process aborted"
+    _log -a "Process aborted"
     exit 1
 }
 
 trap cleanup SIGHUP SIGINT SIGTERM
-log -b
+_log -b
 
 [ ! "$#" = "2" ] && { echo Use two possibly similar files are arguments. ; exit 1 ;};
 #[ ! $(du "$1" | cut -f1) = $(du "$2" | cut -f1) ] && echo The files are different sizes
 [ ! $(head -c "$checksize" "$1" | md5) = $(head -c "$checksize" "$2" | md5) ] && echo The first "$checksize" bytes have different md5s.
 [ ! $(tail -c "$checksize" "$1" | md5) = $(tail -c "$checksize" "$2" | md5) ] && echo The last "$checksize" bytes have different md5s.
 
-log -e
+_log -e

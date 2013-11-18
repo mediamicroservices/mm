@@ -1,76 +1,73 @@
 #!/bin/bash
-# makeyoutube
-# makes a file appropriate for uploading to youtube
+# makeyoutube, makes a file appropriate for uploading to youtube
 version="1.0"
-unset dependencies
-dependencies=(ffmpeg)
-deliverdir=""
-DRYRUN=false
-emailaddress=""
-
-scriptdir=$(dirname "$0")
+scriptdir=$(dirname $(which "$0"))
 . "$scriptdir/mmfunctions" || { echo "Missing '$scriptdir/mmfunctions'. Exiting." ; exit 1 ;};
+dependencies=(ffmpeg)
+_initialize_make
 
 usage(){
     echo
-    echo "$(basename $0) ${version}"
+    echo "$(basename ${0}) ${version}"
     echo "This application will create a high quality h264 file (suitable for uploading to YouTube) from a video file or package input with the following options."
     echo "Dependencies: ${dependencies[@]}"
     echo "Usage: $(basename $0) [ -d /path/to/deliver/to/ ] fileorpackage1 [ fileorpackage2 ...]"
     echo "  -d directory ( directory to deliver the resulting file to )"
+    echo "  -o directory ( directory to write the resulting file to )"
     echo "  -n (dry-run mode, show the commands that would be run but don't do anything)"
     echo "  -e emailaddress ( send an email about the delivery, only valid if -d is used )"
+    echo "  -E emailaddress ( send an email about process outcome )"
     echo "  -h ( display this help )"
     echo
     exit
 }
-[ "$#" = 0 ] && usage
-check_dependencies "${dependencies[@]}"
-
-cleanup(){
-    log -a "Process aborted"
-    exit 1
-}
-
-trap cleanup SIGHUP SIGINT SIGTERM
+[ "${#}" = 0 ] && usage
 
 # command-line options to set mediaid and original variables
 OPTIND=1
-while getopts ":hd:e:n" opt; do
-    case "$opt" in
+while getopts ":o:d:e:E:nh" opt ; do
+    case "${opt}" in
+        o) outputdir="$OPTARG" && check_outputdir ;;
+        d) deliverdir="$OPTARG" && check_deliverdir ;;
+        e) emailaddress_delivery="$OPTARG" && check_emailaddress "${emailaddress_delivery}" ;;
+        E) emailaddress_outcome="$OPTARG" && check_emailaddress "${emailaddress_outcome}" ;;
         n) DRYRUN=true;;
         h) usage ;;
-        d) 
-            deliverdir="$OPTARG"
-            [ ! -d "$deliverdir" ] && report -wt "The delivery directory, ${deliverdir}, does not exist. Can not deliver the output of $(basename "$0")."
-            ;;
-        e) emailaddress="$OPTARG" ;;
         *) echo "bad option -$OPTARG" ; usage ;;
         :) echo "Option -$OPTARG requires an argument" ; exit 1 ;;
     esac
 done
 shift $(( ${OPTIND} - 1 ))
 
-while [ "$*" != "" ] ; do
+while [ "${*}" != "" ] ; do
+    # get context about the input
     input="$1"
-    [ -d "$input" ] && { outputdir="$input/objects/access/youtube_up" && logdir="$input/metadata/submissionDocumentation/logs" ;};
-    [ -f "$input" ] && { outputdir=$(dirname "$input")"/access/youtube_up" && logdir="$(dirname "$input")/access/logs" ;};
-    [ ! "$outputdir" ] && { outputdir="$input/objects/access/youtube_up" && logdir="$input/metadata/submissionDocumentation/logs" ;};
-    find_input "$input"
+    if [ -z "${outputdir}" ] ; then
+        [ -d "${input}" ] && { outputdir="${input}/objects/access/youtube_up" && logdir="${input}/metadata/submissionDocumentation/logs" ;};
+        [ -f "${input}" ] && { outputdir=$(dirname "${input}")"/access/youtube_up" && logdir="$(dirname "${input}")/access/logs" ;};
+        [ ! "${outputdir}" ] && { outputdir="${input}/objects/access/youtube_up" && logdir="${input}/metadata/submissionDocumentation/logs" ;};
+    else
+        logdir="${outputdir}/logs"
+    fi
+    _find_input "${input}"
+    mediaid=$(basename "${input}" | cut -d. -f1)
 
-    mediaid=$(basename "$1" | cut -d. -f1)
-
-    log -b
-
-    youtubeoutput="${outputdir}/${mediaid%.*}.mp4"
-    [ -s "${youtubeoutput}" ] && { report -wt "WARNING ${youtubeoutput} already exists, skipping transcode" ; [ "$#" = 1 ] && exit 86 || { shift ; continue ;} ;};
+    # set up output
+    _log -b
+    output="${outputdir}/${mediaid%.*}.mp4"
+    [ -s "${output}" ] && { report -wt "WARNING ${output} already exists, skipping transcode" ; shift ; continue ;};
     _run mkdir -p "${outputdir}"
+
+    # get information on the input
     get_height "${sourcefile}"
     get_width "${sourcefile}"
 
+    # clear local arrays
     unset inputoptions
-    inputoptions+=(-vsync 0)
     unset middleoptions
+
+    # encoding options
+    inputoptions+=(-vsync 0)
     middleoptions+=(-movflags faststart)
     middleoptions+=(-pix_fmt yuv420p)
     middleoptions+=(-c:v libx264)
@@ -86,28 +83,16 @@ while [ "$*" != "" ] ; do
     middleoptions+=(-ac 2)
     middleoptions+=(-b:a 128k)
     middleoptions+=(-f mp4)
-    
+
     get_audio_mapping "${sourcefile}"
     middleoptions+=(${audiomapping_ffmpeg[@]})
 
-    if [ "${logdir}" != "" ] ; then
-        _run mkdir -p "${logdir}"
-        export FFREPORT="file=${logdir}/%p_%t_$(basename $0)_${version}.txt"
-        inputoptions+=(-v warning -stats)
-    fi
-    report -dt "Working on $(basename "${youtubeoutput}") for youtube upload."
-    report -dt "Running: ffmpeg ${inputoptions[@]} -i \"${sourcefile}\" ${middleoptions[@]} \"${youtubeoutput}\""
-    ffmpeg ${inputoptions[@]} -i "${sourcefile}" ${middleoptions[@]} "${youtubeoutput}"
+    _prep_ffmpeg_log
+    _run_critical ffmpeg ${inputoptions[@]} -i "${sourcefile}" ${middleoptions[@]} "${output}"
     echo
-    report -dt "$(basename "${youtubeoutput}") is done."
-    if [ -d "${deliverdir}" ] ; then
-        report -dt "Delivering output"
-        cp -av "${youtubeoutput}" "${deliverdir}/"
-        cp_exit="$?"
-        if [[ "${emailaddress}" == "Y" ]] ; then
-            echo -e "Subject: $(basename ${youtubeoutput}) delivered\nBody A file has been delivered to ${deliverdir}.\n\n Filename: ${youtubeoutput}\nProcess: $(basename $0)\nMediaID: ${mediaid}\nSourcefile: ${sourcefile}\nDecoding_options: ${inputoptions[@]}\nEncoding_options: ${middleoptions[@]}\nOperator ${op}.\n\nEnjoy!" | sendmail "${emailaddress}"
-        fi
-    fi
+    _summarize_make
+    _deliver_output
+    _email_outcome
     shift
-    log -e
+    _log -e
 done

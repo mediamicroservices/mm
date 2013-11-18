@@ -1,18 +1,17 @@
 #!/bin/bash
 # makeframes
-
 version="1.0"
-unset dependencies
-dependencies=(ffmpeg)
-deliverdir=""
-DRYRUN=false
-
-scriptdir=$(dirname "$0")
+scriptdir=$(dirname $(which "$0"))
 . "$scriptdir/mmfunctions" || { echo "Missing '$scriptdir/mmfunctions'. Exiting." ; exit 1 ;};
+dependencies=(ffmpeg)
+_initialize_make
+
+# local variables
+IMAGECOUNT=10
 
 usage(){
     echo
-    echo "$(basename $0) ${version}"
+    echo "$(basename ${0}) ${version}"
     echo "This application will create a series of still images from a video file or package input with the following options."
     echo "Dependencies: ${dependencies[@]}"
     echo "Usage: $(basename $0) [ -d /path/to/deliver/to/ ] fileorpackage1 [ fileorpackage2 ...]"
@@ -22,29 +21,18 @@ usage(){
     echo
     exit
 }
-[ "$#" = 0 ] && usage
-check_dependencies "${dependencies[@]}"
-
-# local variables
-IMAGECOUNT=10
-
-cleanup(){
-    log -a "Process aborted"
-    exit 1
-}
-trap cleanup SIGHUP SIGINT SIGTERM
+[ "${#}" = 0 ] && usage
 
 # command-line options to set mediaid and original variables
 OPTIND=1
-while getopts ":hd:n" opt; do
-    case "$opt" in
+while getopts ":d:e:E:nh" opt ; do
+    case "${opt}" in
+        d) deliverdir="$OPTARG" && check_deliverdir ;;
+        e) emailaddress_delivery="$OPTARG" && check_emailaddress "${emailaddress_delivery}" ;;
+        E) emailaddress_outcome="$OPTARG" && check_emailaddress "${emailaddress_outcome}" ;;
         n) DRYRUN=true;;
-        h) usage;;
-        d) 
-            deliverdir="$OPTARG"
-            [ ! -d "$deliverdir" ] && report -wt "The delivery directory, ${deliverdir}, does not exist. Can not deliver the output of $(basename "$0")."
-            ;;
-        *) echo "Invalid option: -$OPTARG" ; exit 1 ;;
+        h) usage ;;
+        *) echo "bad option -$OPTARG" ; usage ;;
         :) echo "Option -$OPTARG requires an argument" ; exit 1 ;;
     esac
 done
@@ -55,19 +43,20 @@ while [ "$*" != "" ] ; do
     [ -d "$input" ] && { outputdir="$input/objects/access/images" && logdir="$input/metadata/submissionDocumentation/logs" ;};
     [ -f "$input" ] && { outputdir=$(dirname "$input")"/access/images" && logdir="$(dirname "$input")/access/logs" ;};
     [ ! "$outputdir" ] && { outputdir="$input/objects/access/images" && logdir="$input/metadata/submissionDocumentation/logs" ;};
-    find_input "$input" 
+    _find_input "$input" 
 
     mediaid=$(basename "$1" | cut -d. -f1)
 
-    log -b
-    [ -s "$outputdir" ] && { report -wt "WARNING $outputdir already exists, skipping transcode" ; [ "$#" = 1 ] && exit 86 || { shift ; continue ;} ;};
-    BASE=$(basename "$sourcefile")
-    DURATION=$(ffprobe 2>/dev/null $sourcefile -show_format | grep duration | cut -d= -f2) 
-    _run mkdir -p "$outputdir"
+    _log -b
+    DURATION=$(ffprobe 2>/dev/null $sourcefile -show_format | grep duration | cut -d= -f2)
+    _run_critical mkdir -p "$outputdir"
     for (( IMAGENUMBER=1; IMAGENUMBER<=$IMAGECOUNT; IMAGENUMBER++)) ; do
         START=$(echo "( $DURATION / ( $IMAGECOUNT + 1 )) * $IMAGENUMBER" | bc)
-        report -d "Making frame $IMAGENUMBER of $IMAGECOUNT $outputdir/${BASE%.*}_${IMAGENUMBER}.tiff"
-        _run ffmpeg -y -v warning -ss "$START" -i $sourcefile -vf yadif,thumbnail=100 -frames:v 1 "$outputdir/${mediaid}_${IMAGENUMBER}.tiff" 
+        output="$outputdir/${mediaid}_${IMAGENUMBER}.tiff"
+        report -d "Making frame $IMAGENUMBER of $IMAGECOUNT - $output"
+        [ -s "${output}" ] && { report -wt "WARNING ${output} already exists, skipping transcode" ; shift ; continue ;};
+        _prep_ffmpeg_log
+        _run ffmpeg -y -v warning -ss "$START" -i $sourcefile -vf yadif,thumbnail=100 -frames:v 1 "$output" 
     done
     echo
     if [ -d "${deliverdir}" ] ; then
@@ -75,7 +64,6 @@ while [ "$*" != "" ] ; do
         _run mkdir -p "${deliverdir}/${mediaid}_images/"
         _run cp -av "${outputdir}/" "${deliverdir}/${mediaid}_images/"
     fi
-    log -e
     shift
+    _log -e
 done
-log -e
