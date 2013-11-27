@@ -177,6 +177,7 @@ _initialize_make(){
     deliverdir=""
     DRYRUN=false
     emailaddress=""
+    outputdir_forced=""
     cleanup(){
         _log -a "Process aborted"
         echo
@@ -192,9 +193,9 @@ check_deliverdir(){
     fi
 }
 
-check_outputdir(){
-    if [ ! -d "$outputdir" ] ; then
-        report -wt "The output directory, ${outputdir}, does not exist. Can not write the output of $(basename "$0")."
+_check_outputdir_forced(){
+    if [ ! -d "$1" ] ; then
+        report -wt "The directory, ${1}, does not exist. Can not write the output of $(basename "$0")."
     fi
 }
 

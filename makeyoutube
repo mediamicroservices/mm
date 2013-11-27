@@ -27,7 +27,7 @@ usage(){
 OPTIND=1
 while getopts ":o:d:e:E:nh" opt ; do
     case "${opt}" in
-        o) outputdir="$OPTARG" && check_outputdir ;;
+        o) outputdir_forced="$OPTARG" && _check_outputdir_forced ;;
         d) deliverdir="$OPTARG" && check_deliverdir ;;
         e) emailaddress_delivery="$OPTARG" && check_emailaddress "${emailaddress_delivery}" ;;
         E) emailaddress_outcome="$OPTARG" && check_emailaddress "${emailaddress_outcome}" ;;
@@ -42,11 +42,12 @@ shift $(( ${OPTIND} - 1 ))
 while [ "${*}" != "" ] ; do
     # get context about the input
     input="$1"
-    if [ -z "${outputdir}" ] ; then
+    if [ -z "${outputdir_forced}" ] ; then
         [ -d "${input}" ] && { outputdir="${input}/objects/access/youtube_up" && logdir="${input}/metadata/submissionDocumentation/logs" ;};
         [ -f "${input}" ] && { outputdir=$(dirname "${input}")"/access/youtube_up" && logdir="$(dirname "${input}")/access/logs" ;};
         [ ! "${outputdir}" ] && { outputdir="${input}/objects/access/youtube_up" && logdir="${input}/metadata/submissionDocumentation/logs" ;};
     else
+        outputdir="${outputdir_forced}"
         logdir="${outputdir}/logs"
     fi
     _find_input "${input}"
