@@ -92,7 +92,9 @@ ask_mediaid
 [ -d "${AIP_STORAGE}/${mediaid}" ] && { report -wt "It looks like ${mediaid} was already ingested. If you want to overwrite the existing one please delete $AIP_STORAGE/$mediaid first and then try again." ; exit 1 ;};
 ask_input
 if [ ! $(is_video "${input}") ] ; then
-    report -wt "WARNING: ${input} is not recognized as a video file. Please press CONTROL-C to halt ingest or continue if you know what you're doing."
+    report -qnt "WARNING: ${input} is not recognized as a video file. Please press q to quit, any other key to continue (if you know what you're doing): "
+    read notvidresponse
+    [ "${notvidresponse}" == "q" ] && exit 0
 fi
 
 if [ "${audiodecision}" = "" ] ; then
