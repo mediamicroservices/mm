@@ -28,6 +28,17 @@ remove_mediaid_from_queue(){
     mv "${queuefile}_tmp" "${queuefile}"
 }
 
+_writeingestlog(){
+    if [ "${ingestlog}" ] ; then
+        key="$1"
+        value="$2"
+        # need to add yaml style escaping
+        echo "$key: ${value}" >> "${ingestlog}"
+    else
+        report -wt "The _writeingestlog function was called from the ingestlog variable is not declared."
+    fi
+}
+
 cleanup(){
     _log -a "Process aborted"
     remove_mediaid_from_queue
@@ -178,6 +189,7 @@ _log -b
 # set up package directories
 _run_critical mkdir -p "${objectsdir}"
 logdir="${OUTDIR_INGESTFILE}/${mediaid}/metadata/submissionDocumentation/logs"
+ingestlog="${logdir}/capture.log"
 _run mkdir -p "${logdir}"
 submissiondocdir="${OUTDIR_INGESTFILE}/${mediaid}/metadata/submissionDocumentation"
 _run mkdir -p "${submissiondocdir}"
