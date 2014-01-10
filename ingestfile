@@ -190,11 +190,11 @@ _log -b
 _run_critical mkdir -p "${objectsdir}"
 logdir="${OUTDIR_INGESTFILE}/${mediaid}/metadata/submissionDocumentation/logs"
 ingestlog="${logdir}/capture.log"
+echo -e "$log" >> "${logdir}/capture.log"
+_writeingestlog "datetime_start" "$(get_iso8601)"
 _run mkdir -p "${logdir}"
 submissiondocdir="${OUTDIR_INGESTFILE}/${mediaid}/metadata/submissionDocumentation"
 _run mkdir -p "${submissiondocdir}"
-
-start=$(get_iso8601)
 
 # rsync
 report -dt "STATUS Copying the original file to library storage at ${objectsdir}."
@@ -240,12 +240,7 @@ if [ "${makeaccesscopies}" == "Y" ] ; then
         "$scriptdir/checksumpackage" "${makeyoutubeopts[@]}" "$OUTDIR_INGESTFILE/$mediaid"
     fi
 fi
-end=$(get_iso8601)
-
-# start reporting to operator log
-echo -e "$log" >> "${logdir}/capture.log"
-echo "datetime_start: ${start}" >> "${logdir}/capture.log"
-echo "datetime_end: ${end}" >> "${logdir}/capture.log"
+_writeingestlog "datetime_end" "$(get_iso8601)"
 
 # move and cleanup
 if [ "${deliverytoaipstorage}" == "Y" ] ; then
