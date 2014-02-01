@@ -62,7 +62,7 @@ while [ "${*}" != "" ] ; do
             fi
             defaults write com.pair.3am.QTCoffee BugMe NO 
             _run_critical muxmovie "${sourcefile}" -track "Timecode Track" -track "Closed Caption Track" -self-contained -o "${trimmingsdir}/${sourcefilename%.*}_tc_c608.mov"
-            if [ $(md5 -q "${logdir}/${sourcefilename%.*}.framemd5") = $(md5 -q "${logdir}/${sourcefilename%.*}${suffix}.framemd5") ] ; then
+            if [ $(grep -v "^#" "${logdir}/${sourcefilename%.*}.framemd5" | md5 -q) = $(grep -v "^#" "${logdir}/${sourcefilename%.*}${suffix}.framemd5" | md5 -q) ] ; then
                 report -dt "Everything looks safe. Going to delete the original."
                 _run_critical mediainfo -f --language=raw --output=XML "${sourcefile}" > "${logdir}/${sourcefilename%.*}_mediainfo.xml"
                 _run_critical rm -f -v "${sourcefile}"
@@ -81,7 +81,7 @@ while [ "${*}" != "" ] ; do
             else
                 report -wt "uh oh unsupported"
             fi
-            if [ $(md5 -q "${logdir}/${sourcefilename%.*}.framemd5") = $(md5 -q "${logdir}/${sourcefilename%.*}${suffix}.framemd5") ] ; then
+            if [ $(grep -v "^#" "${logdir}/${sourcefilename%.*}.framemd5" | md5 -q) = $(grep -v "^#" "${logdir}/${sourcefilename%.*}${suffix}.framemd5" | md5 -q) ] ; then
                 report -dt "Everything looks safe. Going to delete the original."
                 _run_critical mediainfo -f --language=raw --output=XML "$sourcefile" > "${logdir}/${sourcefilename%.*}${suffix}_mediainfo.xml"
                 _run_critical mv -f -v "${outputdir}/${sourcefilename%.*}${suffix}.mov" "${sourcefile}"
