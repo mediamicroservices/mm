@@ -1,0 +1,16 @@
+#!/bin/bash
+# mmupdate
+# This script is only intended for use with computers that are not connceted to the internet to access github but need to efficiently install updates of mediamicroservices. A local path is setup via mmconfig and running 'mmupdate' will copy relavent files from that declared directory, $LOCAL_MM_DIR, to /usr/local/bin.
+
+scriptdir=`dirname "$0"`
+. "$scriptdir/mmfunctions" || { echo "Missing '$scriptdir/mmfunctions'. Exiting." ; exit 1 ;};
+
+[ -z "${LOCAL_MM_DIR}" ] && { echo "A local directory of mediamicoservice must be declared. Run mmconfig to set LOCAL_MM_DIR." ; exit 1 ;};
+[ ! -d "${LOCAL_MM_DIR}" ] && { echo "mmupdate is configured to use $LOCAL_MM_DIR, which is not available. Run mmconfig to set LOCAL_MM_DIR." ; exit 1 ;};
+for script in barcodeinterpret blackatends checksumpackage fix_left2stereo fix_rewrap fix_volume ingestfile ingestfile makebroadcast makedvd makeframes makelossless makemetadata makepodcast makeprores makeyoutube mmconfig mmfunctions mmhelp paperingest quickcompare removeDSStore uploadomneon xdcamingest mmupdate ; do
+    if [ -f "${LOCAL_MM_DIR}/${script}" ] ; then
+        rm "/usr/local/bin/${script}"
+    fi
+    cp -v -f -p "${LOCAL_MM_DIR}/${script}" /usr/local/bin/
+done
+echo "Microservices have been updated."
