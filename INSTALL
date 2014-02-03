@@ -1,8 +1,9 @@
 #!/bin/bash
 scriptdir=$(dirname "${0}")
-
-for script in barcodeinterpret blackatends checksumpackage fix_left2stereo fix_rewrap fix_volume ingestfile ingestfile makebroadcast makedvd makeframes makelossless makemetadata makepodcast makeprores makeyoutube mmconfig mmfunctions mmhelp paperingest quickcompare removeDSStore uploadomneon xdcamingest ; do
-	rm -v "/usr/local/bin/${script}"
+for script in barcodeinterpret blackatends checksumpackage fix_left2stereo fix_rewrap fix_volume ingestfile ingestfile makebroadcast makedvd makeframes makelossless makemetadata makepodcast makeprores makeyoutube mmconfig mmfunctions mmhelp paperingest quickcompare removeDSStore uploadomneon xdcamingest mmupdate ; do
+    if [ -f "${scriptdir}/${script}" ] ; then
+        [ -f "/usr/local/bin/${script}" ] || rm "/usr/local/bin/${script}"
+    fi
 	cp -v -f -p "${scriptdir}/${script}" /usr/local/bin/
 done
 echo "Microservices have been installed. Please close this window."
