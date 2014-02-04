@@ -237,7 +237,7 @@ if [ "${makeaccesscopies}" == "Y" ] ; then
     fi
     "$scriptdir/makemetadata" "$OUTDIR_INGESTFILE/$mediaid"
     if [ "$dochecksums" = "Y" ] ; then
-        "$scriptdir/checksumpackage" "${makeyoutubeopts[@]}" "$OUTDIR_INGESTFILE/$mediaid"
+        "$scriptdir/checksumpackage" "$OUTDIR_INGESTFILE/$mediaid"
     fi
 fi
 _writeingestlog "datetime_end" "$(get_iso8601)"
