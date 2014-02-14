@@ -64,7 +64,7 @@ END_SCRIPT)
 if [[ ! $(echo "$status" | grep "${OMNEONPATH}") ]] ; then
 report "The file named $filename is not currently on the omneon, proceeding..."
 
-if echo "$sourcefile" | grep -q "/Volumes/[AB][0-9]\{5\}" ; then
+if echo "$sourcefile" | grep -q "/Volumes/[A-Z][0-9]\{5\}" ; then
     report -dt "The file ${filename} is coming from an LTO tape. It will first move the file to ${TMPDIR} and then upload to the omneon."
     rsync -rtv --progress "$sourcefile" "${TMPDIR}/"
     uploadfile="${TMPDIR}/${filename}"
