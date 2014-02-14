@@ -217,7 +217,8 @@ email_delivery(){
         Sourcefile: ${sourcefile}
         Decoding_options: ${inputoptions[@]}
         Encoding_options: ${middleoptions[@]}
-        Operator ${op}.
+        Operator: ${op}
+        Delivery Exit Status: ${DELIVER_EXIT_STATUS}
         
         Enjoy!" | sendmail "${emailaddress}"
     fi
@@ -233,7 +234,7 @@ _email_outcome(){
         Sourcefile: ${sourcefile}
         Decoding_options: ${inputoptions[@]}
         Encoding_options: ${middleoptions[@]}
-        Operator ${op}.
+        Operator: ${op}.
         
         Enjoy!" | sendmail "${emailaddress}"
     fi
@@ -243,6 +244,7 @@ _deliver_output(){
     if [[ "${deliverdir}" ]] ; then
         report -dt "Delivering ${output} to ${deliverdir}"
         _run cp -av "${output}" "${deliverdir}/"
+        DELIVER_EXIT_STATUS="?"
         email_delivery
     fi
 }
