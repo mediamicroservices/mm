@@ -186,7 +186,6 @@ while [ "${*}" != "" ] ; do
     echo
     _summarize_make
     _deliver_output
-    _email_outcome
     shift
     _log -e
 done

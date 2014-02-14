@@ -223,20 +223,6 @@ email_delivery(){
         Enjoy!" | sendmail "${emailaddress}"
     fi
 }
-
-_email_outcome(){
-    if [[ "${emailaddress}" == "Y" ]] ; then
-        echo -e "Subject: $(basename ${youtubeoutput}) processed
-        Delivery directory: ${deliverdir}.
-        Filename: ${youtubeoutput}
-        Process: $(basename $0)
-        MediaID: ${mediaid}
-        Sourcefile: ${sourcefile}
-        Decoding_options: ${inputoptions[@]}
-        Encoding_options: ${middleoptions[@]}
-        Operator: ${op}.
-        
-        Enjoy!" | sendmail "${emailaddress}"
     fi
 }
 
