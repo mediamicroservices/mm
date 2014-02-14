@@ -223,6 +223,8 @@ email_delivery(){
         Enjoy!" | sendmail "${emailaddress}"
     fi
 }
+    if [ "${MAKEYOUTUBE_DELIVERY_EMAIL_TO}" ] ; then
+        Enjoy!" | sendmail -f "${EMAIL_FROM}" -F "${MAKEYOUTUBE_DELIVERY_EMAIL_TO}" "${MAKEYOUTUBE_DELIVERY_EMAIL_TO}"
     fi
 }
 
