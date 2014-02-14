@@ -83,9 +83,15 @@ put "$uploadfile" "${OMNEONPATH}/${filename}"
 exit
 END_SCRIPT
 upload_err="${?}"
-report -dt "ftp exited with code ${upload_err}"
-report -dt "${filename} is uploaded to the omneon"
-[ "$upload_err" = "0" ] && [ "$removetmp" = "y" ] && rm -v "${TMPDIR}/${filename}"
+report -wt "ftp exited with code ${upload_err}"
+if [ "$upload_err" = "0" ] ; then 
+    report -dt "${filename} is uploaded to the omneon"
+    if [ "$removetmp" = "y" ] ; then
+    rm -v "${TMPDIR}/${filename}"
+    fi
+else
+    report -wt "ftp exited with code ${upload_err} for $uploadfile"
+fi
 else
 size=$(echo "$status" | grep "$filename" | awk '{print $5}')
 size_g=$(echo "scale=3; $size / 1073741824" | bc)
