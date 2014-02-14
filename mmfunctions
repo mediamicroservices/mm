@@ -207,23 +207,19 @@ check_emailaddress(){
 }
 
 email_delivery(){
-    if [[ "${emailaddress}" == "Y" ]] ; then
-        echo -e "Subject: $(basename ${youtubeoutput}) delivered
-        A file has been delivered to ${deliverdir}.
-        
-        Filename: ${youtubeoutput}
-        Process: $(basename $0)
-        MediaID: ${mediaid}
-        Sourcefile: ${sourcefile}
-        Decoding_options: ${inputoptions[@]}
-        Encoding_options: ${middleoptions[@]}
-        Operator: ${op}
-        Delivery Exit Status: ${DELIVER_EXIT_STATUS}
-        
-        Enjoy!" | sendmail "${emailaddress}"
-    fi
-}
     if [ "${MAKEYOUTUBE_DELIVERY_EMAIL_TO}" ] ; then
+        echo -e "Subject: [delivery] $(basename ${output})\n
+        A file has been delivered to ${deliverdir}.\n
+        \n
+        Filename: ${output}\n
+        Process: $(basename $0)\n
+        MediaID: ${mediaid}\n
+        Sourcefile: ${sourcefile}\n
+        Decoding_options: ${inputoptions[@]}\n
+        Encoding_options: ${middleoptions[@]}\n
+        Operator: ${op}\n
+        Delivery Exit Status: ${DELIVER_EXIT_STATUS}\n
+        \n
         Enjoy!" | sendmail -f "${EMAIL_FROM}" -F "${MAKEYOUTUBE_DELIVERY_EMAIL_TO}" "${MAKEYOUTUBE_DELIVERY_EMAIL_TO}"
     fi
 }
