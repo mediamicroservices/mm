@@ -225,10 +225,11 @@ email_delivery(){
 }
 
 _deliver_output(){
-    if [[ "${deliverdir}" ]] ; then
+    if [ "${deliverdir}" ] ; then
+        echo DELIVERING OUTPUT ACTIVITED with "${deliverdir}"
         report -dt "Delivering ${output} to ${deliverdir}"
         _run cp -av "${output}" "${deliverdir}/"
-        DELIVER_EXIT_STATUS="?"
+        DELIVER_EXIT_STATUS="$?"
         email_delivery
     fi
 }
