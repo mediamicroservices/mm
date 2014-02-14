@@ -51,6 +51,9 @@ shift $(( ${OPTIND} - 1 ))
 while [ "$*" != "" ] ; do
 
 sourcefile="$1"
+extension=$(echo "$sourcefile" |awk -F . '{print $NF}')
+if [ "$extension" == "mov" -o "$extension" == "mxf" ] ; then
+
 removetmp="n"
 filename=$(basename "$sourcefile")
 
@@ -87,6 +90,9 @@ else
 size=$(echo "$status" | grep "$filename" | awk '{print $5}')
 size_g=$(echo "scale=3; $size / 1073741824" | bc)
 report -wt "$filename is already on the omneon as a $size_g gigabyte file."
+fi
+else
+    report -wt "$sourcefile does not use a mov or mxf extension. This will NOT be uploaded."
 fi
 shift
 done
