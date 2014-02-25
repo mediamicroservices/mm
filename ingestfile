@@ -190,6 +190,7 @@ _log -b
 _run_critical mkdir -p "${objectsdir}"
 logdir="${OUTDIR_INGESTFILE}/${mediaid}/metadata/submissionDocumentation/logs"
 ingestlog="${logdir}/capture.log"
+touch "${logdir}/capture.log"
 echo -e "$log" >> "${logdir}/capture.log"
 _writeingestlog "datetime_start" "$(get_iso8601)"
 _run mkdir -p "${logdir}"
@@ -225,19 +226,19 @@ if [ "${makeaccesscopies}" == "Y" ] ; then
     [ "$deliveraccesscopies" = "Y" ] && makeframesopts=(-d "$YOUTUBEDELIVER")
     "$scriptdir/makeframes" "${makeframesopts[@]}" "$OUTDIR_INGESTFILE/$mediaid"
     # makeyoutube
-    [ "$deliveraccesscopies" = "Y" ] && makeyoutubeopts=(-d "$YOUTUBEDELIVER" -e "$MAKEYOUTUBE_DELIVERY_EMAIL_TO")
+    [ "$deliveraccesscopies" = "Y" ] && makeyoutubeopts=(-d "$YOUTUBEDELIVER")
     "$scriptdir/makeyoutube" "${makeyoutubeopts[@]}" "$OUTDIR_INGESTFILE/$mediaid"
     # makepodcast
     if [ $(echo "$mediaid" | grep -E "${REGEX4PODCAST}") ] ; then
         report -dt "${mediaid} qualifies for podcast creation."
-        [ "$deliveraccesscopies" == "Y" ] && makepodcastopts=(-d "$PODCASTDELIVER" -e "$MAKEYOUTUBE_DELIVERY_EMAIL_TO")
+        [ "$deliveraccesscopies" == "Y" ] && makepodcastopts=(-d "$PODCASTDELIVER")
         sh "$scriptdir/makepodcast" "${makepodcastopts[@]}" "$OUTDIR_INGESTFILE/$mediaid"
     else
         report -dt "${mediaid} does NOT qualify for podcast creation, skipping."
     fi
     "$scriptdir/makemetadata" "$OUTDIR_INGESTFILE/$mediaid"
     if [ "$dochecksums" = "Y" ] ; then
-        "$scriptdir/checksumpackage" "$OUTDIR_INGESTFILE/$mediaid"
+        "$scriptdir/checksumpackage" "${makeyoutubeopts[@]}" "$OUTDIR_INGESTFILE/$mediaid"
     fi
 fi
 _writeingestlog "datetime_end" "$(get_iso8601)"
