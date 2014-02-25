@@ -189,11 +189,11 @@ _log -b
 # set up package directories
 _run_critical mkdir -p "${objectsdir}"
 logdir="${OUTDIR_INGESTFILE}/${mediaid}/metadata/submissionDocumentation/logs"
-ingestlog="${logdir}/capture.log"
-touch "${logdir}/capture.log"
-echo -e "$log" >> "${logdir}/capture.log"
-_writeingestlog "datetime_start" "$(get_iso8601)"
 _run mkdir -p "${logdir}"
+ingestlog="${logdir}/capture.log"
+echo -e "$log" >> "${ingestlog}"
+_writeingestlog "datetime_start" "$(get_iso8601)"
+
 submissiondocdir="${OUTDIR_INGESTFILE}/${mediaid}/metadata/submissionDocumentation"
 _run mkdir -p "${submissiondocdir}"
 
