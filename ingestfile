@@ -232,7 +232,7 @@ if [ "${makeaccesscopies}" == "Y" ] ; then
     if [ $(echo "$mediaid" | grep -E "${REGEX4PODCAST}") ] ; then
         report -dt "${mediaid} qualifies for podcast creation."
         [ "$deliveraccesscopies" == "Y" ] && makepodcastopts=(-d "$PODCASTDELIVER")
-        sh "$scriptdir/makepodcast" "${makepodcastopts[@]}" "$OUTDIR_INGESTFILE/$mediaid"
+        "$scriptdir/makepodcast" "${makepodcastopts[@]}" "$OUTDIR_INGESTFILE/$mediaid"
     else
         report -dt "${mediaid} does NOT qualify for podcast creation, skipping."
     fi
