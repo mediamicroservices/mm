@@ -457,3 +457,13 @@ _prep_ffmpeg_log(){
         export FFREPORT=""
     fi
 }
+
+emailoutcome(){
+    # fail only at the moment
+    MESSAGETEMPFILE=$(maketemp)
+    echo -e "To: $EMAIL_OUTCOME_TO" > $MESSAGETEMPFILE
+    echo -e "Subject: ${PACKAGE} failed during ${SCRIPTNAMESHORT}" >> $MESSAGETEMPFILE
+    echo -e ":(" >> $MESSAGETEMPFILE
+    sendmail -t < $MESSAGETEMPFILE
+    rm -f $MESSAGETEMPFILE
+}
