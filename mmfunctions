@@ -207,7 +207,8 @@ check_emailaddress(){
 }
 
 email_delivery(){
-    if [ "${MAKEYOUTUBE_DELIVERY_EMAIL_TO}" ] ; then
+    emailto="$1"
+    if [ "$emailto" ] ; then
         echo -e "Subject: [delivery] $(basename ${output})\n
         A file has been delivered to ${deliverdir}.\n
         \n
@@ -220,17 +221,19 @@ email_delivery(){
         Operator: ${op}\n
         Delivery Exit Status: ${DELIVER_EXIT_STATUS}\n
         \n
-        Enjoy!" | sendmail -f "${EMAIL_FROM}" -F "${MAKEYOUTUBE_DELIVERY_EMAIL_TO}" "${MAKEYOUTUBE_DELIVERY_EMAIL_TO}"
+        Enjoy!" | sendmail -f "${EMAIL_FROM}" -F "${emailto}" "${emailto}"
     fi
 }
 
 _deliver_output(){
+    # argument 1 if used should be the email to report delivery to
+    emailto="$1"
     if [ "${deliverdir}" ] ; then
         echo DELIVERING OUTPUT ACTIVITED with "${deliverdir}"
         report -dt "Delivering ${output} to ${deliverdir}"
         _run cp -av "${output}" "${deliverdir}/"
         DELIVER_EXIT_STATUS="$?"
-        email_delivery
+        email_delivery "$emailto"
     fi
 }
 

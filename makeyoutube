@@ -95,7 +95,7 @@ while [ "${*}" != "" ] ; do
     _run_critical ffmpeg ${inputoptions[@]} -i "${sourcefile}" ${middleoptions[@]} "${output}"
     echo
     _summarize_make
-    _deliver_output
+    _deliver_output "${MAKEYOUTUBE_DELIVERY_EMAIL_TO}"
     shift
     _log -e
 done
