@@ -212,6 +212,7 @@ unset makebroadcastopts
 if [ "${deliverytoomneon}" == "Y" ] ; then
     report -dt "STATUS Uploading ${objectsdir}/service/${mediaid%.*}.mov to the OMNEON."
     "${scriptdir}/uploadomneon" "${objectsdir}/service/${mediaid%.*}.mov"
+    email_delivery "${MAKEBROADCAST_DELIVERY_EMAIL_TO}"
 fi
 
 if [ "${makeaccesscopies}" == "Y" ] ; then

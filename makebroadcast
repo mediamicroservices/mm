@@ -185,7 +185,7 @@ while [ "${*}" != "" ] ; do
     fi
     echo
     _summarize_make
-    _deliver_output
+    _deliver_output "${MAKEBROADCAST_DELIVERY_EMAIL_TO}"
     shift
     _log -e
 done
