@@ -295,9 +295,9 @@ make_mezz_for_xdcam(){
 
 _find_input (){
     sourcefile=""
-    [ -d "$1" ] && [ -d "$1/objects/service" ] && sourcefile=$(find "$1/objects/service" -maxdepth 1 -mindepth 1 -type f \( -iname "*.mov" -o -iname "*.mxf" -o -iname "*.mp4" -o -iname "*.dv" \) ! -name ".*")
+    [ -d "$1" ] && [ -d "$1/objects/service" ] && sourcefile=$(find "$1/objects/service" -maxdepth 1 -mindepth 1 -type f \( -iname "*.mov" -o -iname "*.mxf" -o -iname "*.mp4" -o -iname "*.dv" -o -iname "*.mpeg" \) ! -name ".*")
     [ -f "$1" ] && sourcefile="$1"
-    [ ! "$sourcefile" ] && sourcefile=$(find "$1/objects" -maxdepth 1 -mindepth 1 -type f \( -iname "*.mov" -o -iname "*.mxf" -o -iname "*.mp4" -o -iname "*.dv" \) ! -name ".*")
+    [ ! "$sourcefile" ] && sourcefile=$(find "$1/objects" -maxdepth 1 -mindepth 1 -type f \( -iname "*.mov" -o -iname "*.mxf" -o -iname "*.mp4" -o -iname "*.dv" -o -iname "*.mpeg" \) ! -name ".*")
     [ ! "$sourcefile" ] && { report -wt "A valid source file isn't found." ; exit 1 ;};
     log+="sourcefile: ${sourcefile}\n"
 }
