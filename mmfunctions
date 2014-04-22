@@ -383,6 +383,10 @@ get_duration(){
     DURATION=$(ffprobe "$1" -show_format 2> /dev/null | grep duration= | cut -d = -f 2)
 }
 
+get_audiostreamcount(){
+    AUDIOSTREAMCOUNT=$(ffprobe "$1" -select_streams a -show_entries stream=index -of flat 2>/dev/null | awk 'END { print NR }')
+}
+
 get_maxdvdbitrate(){
     get_duration "$1"
     local DVDCAPACITY=33840000000  # in bits, minus 10%
