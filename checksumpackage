@@ -45,17 +45,18 @@ while [ "${*}" != "" ] ; do
             OUTDIR="."
         fi
         [ ! -d "${1}/${OUTDIR}" ] && mkdir -p "${1}/${OUTDIR}"
-        if [ ! -s "${1}/${OUTDIR}/${CHECKSUMNAME}" ] ; then
-            report -dt "making Digital Forensics XML (${DFXMLNAME}) and (${CHECKSUMNAME}) for ${1}"
-            cd "$1/$INDIR"
-            DFXMLTMP=$(maketemp)
-            md5deep -drl . > $DFXMLTMP
-            mv "${DFXMLTMP}" "${1}/${OUTDIR}/${DFXMLNAME}"
-            xml sel -T -t -m "/dfxml/fileobject" -v "hashdigest" -o "  " -v "filename" -n "${1}/${OUTDIR}/${DFXMLNAME}" > "${1}/${OUTDIR}/${CHECKSUMNAME}"
-            cd "${PWD}"
-        else
-            report -dt "${CHECKSUMNAME} already exists, skipping for ${1}"
+        if [ -s "${1}/${OUTDIR}/${CHECKSUMNAME}" ] ; then
+        	report -dt "${CHECKSUMNAME} already exists, skipping for ${1}"
+        	shift
+        	continue
         fi
+        report -dt "making Digital Forensics XML (${DFXMLNAME}) and (${CHECKSUMNAME}) for ${1}"
+        cd "$1/$INDIR"
+        DFXMLTMP=$(maketemp)
+        md5deep -drl . > $DFXMLTMP
+        mv "${DFXMLTMP}" "${1}/${OUTDIR}/${DFXMLNAME}"
+        xml sel -T -t -m "/dfxml/fileobject" -v "hashdigest" -o "  " -v "filename" -n "${1}/${OUTDIR}/${DFXMLNAME}" > "${1}/${OUTDIR}/${CHECKSUMNAME}"
+        cd "${PWD}"
     else
     report -dt "ERROR: ${0} requires directories as input and $1 is not a directory."
     fi
