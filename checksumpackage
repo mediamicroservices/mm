@@ -46,9 +46,17 @@ while [ "${*}" != "" ] ; do
         fi
         [ ! -d "${1}/${OUTDIR}" ] && mkdir -p "${1}/${OUTDIR}"
         if [ -s "${1}/${OUTDIR}/${CHECKSUMNAME}" ] ; then
-        	report -dt "${CHECKSUMNAME} already exists, skipping for ${1}"
-        	shift
-        	continue
+            if [ $(find "$1/$INDIR" -newer "${1}/${OUTDIR}/${CHECKSUMNAME}" -type f ! -name ".DS_Store") ] ; then
+                report -wdt "Found new files since last checksum. Including:"
+                find "$1/$INDIR" -newer "${1}/${OUTDIR}/${CHECKSUMNAME}" -type f ! -name ".DS_Store"
+                report -wdt "Creating a new version of the checksum files."
+                mv -v "${1}/${OUTDIR}/${CHECKSUMNAME}" "${1}/${OUTDIR}/${CHECKSUMNAME%.*}_$(stat -t '%Y%m%d-%H%M%S' -l "${1}/${OUTDIR}/${CHECKSUMNAME}" | awk '{print $6}').md5"
+                mv -v "${1}/${OUTDIR}/${DFXMLNAME}" "${1}/${OUTDIR}/${DFXMLNAME%.*}_$(stat -t '%Y%m%d-%H%M%S' -l "${1}/${OUTDIR}/${DFXMLNAME}" | awk '{print $6}').md5"
+            else
+                report -dt "${CHECKSUMNAME} already exists, skipping for ${1}"
+                shift
+                continue
+            fi
         fi
         report -dt "making Digital Forensics XML (${DFXMLNAME}) and (${CHECKSUMNAME}) for ${1}"
         cd "$1/$INDIR"
