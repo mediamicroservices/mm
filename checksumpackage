@@ -46,7 +46,7 @@ while [ "${*}" != "" ] ; do
         fi
         [ ! -d "${1}/${OUTDIR}" ] && mkdir -p "${1}/${OUTDIR}"
         if [ -s "${1}/${OUTDIR}/${CHECKSUMNAME}" ] ; then
-            if [ $(find "$1/$INDIR" -newer "${1}/${OUTDIR}/${CHECKSUMNAME}" -type f ! -name ".DS_Store") ] ; then
+            if [[ -n $(find "$1/$INDIR" -newer "${1}/${OUTDIR}/${CHECKSUMNAME}" -type f ! -name ".DS_Store") ]] ; then
                 report -wdt "Found new files since last checksum. Including:"
                 find "$1/$INDIR" -newer "${1}/${OUTDIR}/${CHECKSUMNAME}" -type f ! -name ".DS_Store"
                 report -wdt "Creating a new version of the checksum files."
