@@ -1,0 +1,32 @@
+#!/bin/bash
+# This script presumes that you've setup a filemaker database with Filemaker Server using two tables called "lto_tapes" and "lto_files" with fields according to the LTFS XML format.
+version=1.0
+
+SCRIPTDIR=$(dirname "${0}")
+. "${SCRIPTDIR}/mmfunctions" || { echo "Missing '${SCRIPTDIR}/mmfunctions'. Exiting." ; exit 1 ;};
+
+# check environment
+[ -z "${FILEMAKER_DB}" ] && { echo "The filemaker database must be set. Run mmconfig to set FILEMAKER_DB." ; exit 1 ;};
+[ -z "${FILEMAKER_XML_URL}" ] && { echo "The filemaker xml path must be set. Run mmconfig to set FILEMAKER_XML_URL." ; exit 1 ;};
+
+while [ "${*}" != "" ] ; do
+    input="$1"
+    if [[ ! -f "${input}/metadata/checksum.md5" ]] ; then
+        report -dt "${input} does not have a checksum.md5 file, skipping for $(basename "$input")"
+        shift
+        continue
+    fi
+    OLDIFS=$IFS
+    IFS=$'\n'
+    echo "Uploading checksum data for $(basename "$input"). Please wait…"
+    for hash in $(cat "${input}/metadata/checksum.md5"); do
+        if [[ "$hash" ]] ; then
+            hashinsert=$(echo "$hash" | awk '{ printf " --data-urlencode \"hashdigest=" $1 "\" --data-urlencode \"filename=" $NF "\" --data-urlencode \"hashdigest_type=MD5\"" }')" --data-urlencode \"source=$input\""
+            hashcmd="curl -s -S -G $hashinsert \"http://${FILEMAKER_XML_URL}?-db=${FILEMAKER_DB}&-lay=checksums&-new\" 1>/dev/null"
+            eval "$hashcmd"
+        fi
+    done
+    IFS=$OLDIFS
+    echo "Done uploading metadata for $(basename "$1")."
+    shift
+done
