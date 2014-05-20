@@ -1,8 +1,8 @@
 # assign variables
 SCRIPTNAME=$(basename "$0")
-CONFIG_FILE="${scriptdir}/mm.conf"
+SCRIPTDIR=$(dirname "$0")
+CONFIG_FILE="${SCRIPTDIR}/mm.conf"
 WHAT_IS_THIS="mediamicroservices"
-
 # load configuration file
 if [ -f "${CONFIG_FILE}" ] ; then
     . "${CONFIG_FILE}"
