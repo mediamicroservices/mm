@@ -29,7 +29,7 @@ usage(){
 OPTIND=1
 while getopts ":nh" opt ; do
     case "${opt}" in
-        n) deliverytoomneon="Y" ; deliveraccesscopies="Y" ;;
+        n) deliverytoomneon="N" ; deliveraccesscopies="N" ;;
         h) usage ;;
         *) echo "bad option -$OPTARG" ; usage ;;
         :) echo "Option -$OPTARG requires an argument" ; exit 1 ;;
