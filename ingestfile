@@ -14,6 +14,29 @@ queuefile="${HOME}/Desktop/queue.txt"
 scriptdir=$(dirname "${0}")
 . "${scriptdir}/mmfunctions" || { echo "Missing '${scriptdir}/mmfunctions'. Exiting." ; exit 1 ;};
 
+usage(){
+    echo
+    echo "$(basename ${0}) ${version}"
+    echo "This script will run an interactive interview and then process an input file accordingly."
+    echo "Dependencies: ${dependencies[@]}"
+    echo "Usage: $(basename $0) [ -options ]"
+    echo "  -n (do not make any deliveries except for sending the final package to ${AIP_STORAGE}.)"
+    echo "  -h display this help"
+    echo
+    exit
+}
+
+OPTIND=1
+while getopts ":nh" opt ; do
+    case "${opt}" in
+        n) deliverytoomneon="Y" ; deliveraccesscopies="Y" ;;
+        h) usage ;;
+        *) echo "bad option -$OPTARG" ; usage ;;
+        :) echo "Option -$OPTARG requires an argument" ; exit 1 ;;
+    esac
+done
+shift $(( ${OPTIND} - 1 ))
+
 add_mediaid_to_queue(){
     [ -n "${mediaid}" ] || { report -wt "Error: mediaid is undefined in add_media_to_queue function" ; exit 1 ;};
     [ -n "${queuefile}" ] || { report -wt "Error: queuefile is undefined in add_media_to_queue function" ; exit 1 ;};
