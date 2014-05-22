@@ -27,8 +27,9 @@ usage(){
 }
 
 OPTIND=1
-while getopts ":nh" opt ; do
+while getopts ":pnh" opt ; do
     case "${opt}" in
+        p) preservation_mode="Y" ; deliverytoomneon="Y" ; deliveraccesscopies="Y" ;;
         n) deliverytoomneon="N" ; deliveraccesscopies="N" ;;
         h) usage ;;
         *) echo "bad option -$OPTARG" ; usage ;;
@@ -130,7 +131,7 @@ if [ ! $(is_video "${input}") ] ; then
     read notvidresponse
     [ "${notvidresponse}" == "q" ] && exit 0
 fi
-
+ask_trimmed_materials
 if [ "${audiodecision}" = "" ] ; then
     report -q "Select an audio strategy? "
     PS3="Selection? "
@@ -223,6 +224,15 @@ _run mkdir -p "${submissiondocdir}"
 # rsync
 report -dt "STATUS Copying the original file to library storage at ${objectsdir}."
 _run_critical rsync -rt --progress --log-file="${logdir}/rsync_$(get_iso8601_c)_$(basename $0)_${version}.txt" "${input}" "${objectsdir}/"
+
+if [ "${preservation_mode}" == "Y" ] ; then
+    if [ ! -z "$trimmed[0]" ] ; then
+        trimmed_materials_dir="${objectsdir}/trimmed_materials"
+        _run_critical mkdir -p "${trimmed_materials_dir}"
+        _run_critical rsync -rt --progress --log-file="${logdir}/rsync_$(get_iso8601_c)_$(basename $0)_${version}.txt" "$trimmed[@]" "${trimmed_materials_dir}/"
+    fi
+    makelossless "${objectsdir}/"
+fi
 
 # make copy for broadcast
 unset makebroadcastopts

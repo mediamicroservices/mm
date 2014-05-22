@@ -147,6 +147,15 @@ ask_input(){
     fi
 }
 
+ask_trimmed_materials(){
+    if [ -z "$input" ] ; then
+        report -qn "Drag in any trimmed materials: "
+        read -a trimmed
+        [ "$trimmed[0]" == "q" ] && exit 0
+        [ ! -z "$trimmed" ] && log+="trimmed_materials: ${trimmed}\n"
+    fi
+}
+
 check_dependencies(){
     deps_ok=YES
     while [ "$*" != "" ] ; do
