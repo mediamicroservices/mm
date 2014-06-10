@@ -9,7 +9,7 @@ _initialize_make
 usage(){
     echo
     echo "$(basename ${0}) ${version}"
-    echo "This application will create lossless ffv1 files from a video file or package input with the following options."
+    echo "This application will losslessly transcode a video file or package input with the following options."
     echo "Dependencies: ${dependencies[@]}"
     echo "Usage: $(basename $0) fileorpackage1 [ fileorpackage2 ...]"
     echo "  -n (dry-run mode, show the commands that would be run but don't do anything)"
