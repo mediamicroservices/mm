@@ -3,7 +3,7 @@
 version="1.0"
 scriptdir=$(dirname $(which "$0"))
 . "$scriptdir/mmfunctions" || { echo "Missing '$scriptdir/mmfunctions'. Exiting." ; exit 1 ;};
-dependencies=(ffmpeg muxmovie mediainfo)
+dependencies=(ffmpeg mediainfo)
 _initialize_make
 
 usage(){
@@ -34,10 +34,9 @@ shift $(( ${OPTIND} - 1 ))
 while [ "${*}" != "" ] ; do
     # get context about the input
     input="$1"
-    [ -d "${input}" ] && { logdir="${input}/metadata/submissionDocumentation/logs" && trimmingsdir="${input}/objects/trimmed_materials" ;};
-    [ -f "${input}" ] && { logdir="$(dirname "${input}")/lossless/logs" && trimmingsdir="$(dirname "${input}")/lossless/trimmed_materials" ;};
+    [ -d "${input}" ] && logdir="${input}/metadata/submissionDocumentation/logs"
+    [ -f "${input}" ] && logdir="$(dirname "${input}")/lossless/logs"
     [ ! "${logdir}" ] && logdir="${input}/metadata/submissionDocumentation/logs"
-    [ ! "${trimmingsdir}" ] && trimmingsdir="${input}/lossless/trimmed_materials"
 
     find "${input}" -type f \( -name "*.mov" -o -name "*.avi" -o -name "*.mxf" \) -print0 | while read -d $'\0' sourcefile ; do
         outputdir=$(dirname "${sourcefile}")
@@ -52,16 +51,13 @@ while [ "${*}" != "" ] ; do
         if [ "${codec_tag_string}" == "2vuy" -o "${codec_tag_string}" == "v210" ] ; then
             suffix="_ffv1"
             report -dt "${sourcefilename} is ${codec_tag_string} at ${fieldorder}, starting encode"
-            _run mkdir -p "${trimmingsdir}"
             export FFREPORT="file=${logdir}/%p_%t_makelossless${suffix}.log"
-            _run_critical ffmpeg -nostdin -v warning -stats -vsync 0 -i "${sourcefile}" -map 0:v -map 0:a -c:v ffv1 -level 3 -vf setfield=bff -g 1 -c:a copy "${outputdir}/${sourcefilename%.*}${suffix}.mov" -f framemd5 -an "${logdir}/${sourcefilename%.*}.framemd5"
+            _run_critical ffmpeg -nostdin -v warning -stats -vsync 0 -i "${sourcefile}" -map 0:v -map 0:a -map 0:s -c:v ffv1 -level 3 -vf setfield=bff -g 1 -c:a copy -c:s copy "${outputdir}/${sourcefilename%.*}${suffix}.mov" -f framemd5 -an "${logdir}/${sourcefilename%.*}.framemd5"
             if [ "${codec_tag_string}" == "2vuy" ] ; then
                 _run_critical ffmpeg -nostdin -v warning -stats -i "${outputdir}/${sourcefilename%.*}${suffix}.mov" -f framemd5 -pix_fmt uyvy422 -an "${logdir}/${sourcefilename%.*}${suffix}.framemd5"
             else
                 _run_critical ffmpeg -nostdin -v warning -stats -i "${outputdir}/${sourcefilename%.*}${suffix}.mov" -f framemd5 -an "${logdir}/${sourcefilename%.*}${suffix}.framemd5"
-            fi
-            defaults write com.pair.3am.QTCoffee BugMe NO 
-            _run_critical muxmovie "${sourcefile}" -track "Timecode Track" -track "Closed Caption Track" -self-contained -o "${trimmingsdir}/${sourcefilename%.*}_tc_c608.mov"
+            fi 
             if [ $(grep -v "^#" "${logdir}/${sourcefilename%.*}.framemd5" | md5 -q) = $(grep -v "^#" "${logdir}/${sourcefilename%.*}${suffix}.framemd5" | md5 -q) ] ; then
                 report -dt "Everything looks safe. Going to delete the original."
                 _run_critical mediainfo -f --language=raw --output=XML "${sourcefile}" > "${logdir}/${sourcefilename%.*}_mediainfo.xml"
@@ -75,12 +71,12 @@ while [ "${*}" != "" ] ; do
             export FFREPORT="file=${logdir}/%p_%t_makelossless${suffix}.log"
             
             if [ -f "${logdir}/${sourcefilename%.*}.framemd5" ] ; then
-            _run_critical ffmpeg -nostdin -v warning -stats -vsync 0 -i "${sourcefile}" -map 0:v -map 0:a -c:v ffv1 -level 3 -vf setfield=bff -g 1 -c:a copy "${outputdir}/${sourcefilename%.*}${suffix}.mov"
+            _run_critical ffmpeg -nostdin -v warning -stats -vsync 0 -i "${sourcefile}" -map 0:v -map 0:a -map 0:s -c:v ffv1 -level 3 -vf setfield=bff -g 1 -c:a copy -c:s copy "${outputdir}/${sourcefilename%.*}${suffix}.mov"
             else
             if [ "${pixfmt}" == "yuv422p" ] ; then
-            _run_critical ffmpeg -nostdin -v warning -stats -vsync 0 -i "${sourcefile}" -map 0:v -map 0:a -c:v ffv1 -level 3 -vf setfield=bff -g 1 -c:a copy "${outputdir}/${sourcefilename%.*}${suffix}.mov" -pix_fmt uyvy422 -f framemd5 -an "${logdir}/${sourcefilename%.*}.framemd5"
+            _run_critical ffmpeg -nostdin -v warning -stats -vsync 0 -i "${sourcefile}" -map 0:v -map 0:a -map 0:s -c:v ffv1 -level 3 -vf setfield=bff -g 1 -c:a copy -c:s copy "${outputdir}/${sourcefilename%.*}${suffix}.mov" -pix_fmt uyvy422 -f framemd5 -an "${logdir}/${sourcefilename%.*}.framemd5"
             elif [ "${pixfmt}" == "yuv422p10le" ] ; then
-            _run_critical ffmpeg -nostdin -v warning -stats -vsync 0 -i "${sourcefile}" -map 0:v -map 0:a -c:v ffv1 -level 3 -vf setfield=bff -g 1 -c:a copy "${outputdir}/${sourcefilename%.*}${suffix}.mov" -f framemd5 -an "${logdir}/${sourcefilename%.*}.framemd5"
+            _run_critical ffmpeg -nostdin -v warning -stats -vsync 0 -i "${sourcefile}" -map 0:v -map 0:a -map 0:s -c:v ffv1 -level 3 -vf setfield=bff -g 1 -c:a copy -c:s copy "${outputdir}/${sourcefilename%.*}${suffix}.mov" -f framemd5 -an "${logdir}/${sourcefilename%.*}.framemd5"
             else
                 report -wt "uh oh unsupported"
             fi
