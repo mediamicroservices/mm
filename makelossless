@@ -44,17 +44,32 @@ while [ "${*}" != "" ] ; do
         
         _log -b 
         
+        # clear local arrays
+        unset inputoptions
+        unset middleoptions
+
+        # encoding options
+        inputoptions+=(-nostdin)
+        inputoptions+=(-vsync 0)
+        middleoptions+=(-map 0:v)
+        middleoptions+=(-map 0:a)
+        middleoptions+=(-map 0:s)
+        middleoptions+=(-c:v ffv1 -level 3 -g 1)
+        middleoptions+=(-vf setfield=bff) # this is a presumption but much of the uncompressed input is bff but not probably labelled
+        middleoptions+=(-c:a copy)
+        middleoptions+=(-c:s copy)
+        
         get_codectagstring "${sourcefile}"
         _run mkdir -p "${outputdir}" "${logdir}"
         if [ "${codec_tag_string}" == "2vuy" -o "${codec_tag_string}" == "v210" ] ; then
             suffix="_ffv1"
             report -dt "${sourcefilename} is ${codec_tag_string}, starting encode"
             _prep_ffmpeg_log
-            _run_critical ffmpeg -nostdin -vsync 0 -i "${sourcefile}" -map 0:v -map 0:a -map 0:s -c:v ffv1 -level 3 -vf setfield=bff -g 1 -c:a copy -c:s copy "${outputdir}/${sourcefilename%.*}${suffix}.mov" -f framemd5 -an "${logdir}/${sourcefilename%.*}.framemd5"
+            _run_critical ffmpeg ${inputoptions[@]} -i "${sourcefile}"  ${middleoptions[@]} "${outputdir}/${sourcefilename%.*}${suffix}.mov" -f framemd5 -an "${logdir}/${sourcefilename%.*}.framemd5"
             if [ "${codec_tag_string}" == "2vuy" ] ; then
-                _run_critical ffmpeg -nostdin -i "${outputdir}/${sourcefilename%.*}${suffix}.mov" -f framemd5 -pix_fmt uyvy422 -an "${logdir}/${sourcefilename%.*}${suffix}.framemd5"
+                _run_critical ffmpeg ${inputoptions[@]} -i "${outputdir}/${sourcefilename%.*}${suffix}.mov" -f framemd5 -pix_fmt uyvy422 -an "${logdir}/${sourcefilename%.*}${suffix}.framemd5"
             else
-                _run_critical ffmpeg -nostdin -i "${outputdir}/${sourcefilename%.*}${suffix}.mov" -f framemd5 -an "${logdir}/${sourcefilename%.*}${suffix}.framemd5"
+                _run_critical ffmpeg ${inputoptions[@]} -i "${outputdir}/${sourcefilename%.*}${suffix}.mov" -f framemd5 -an "${logdir}/${sourcefilename%.*}${suffix}.framemd5"
             fi 
             if [ $(grep -v "^#" "${logdir}/${sourcefilename%.*}.framemd5" | md5 -q) = $(grep -v "^#" "${logdir}/${sourcefilename%.*}${suffix}.framemd5" | md5 -q) ] ; then
                 report -dt "Everything looks safe. Going to delete the original."
