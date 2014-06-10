@@ -12,6 +12,7 @@ usage(){
     echo "This application will losslessly transcode a video file or package input with the following options."
     echo "Dependencies: ${dependencies[@]}"
     echo "Usage: $(basename $0) fileorpackage1 [ fileorpackage2 ...]"
+    echo "  -j (use lossless jpeg2000 instead of ffv1 version 3)"
     echo "  -n (dry-run mode, show the commands that would be run but don't do anything)"
     echo "  -h display this help"
     echo
@@ -21,8 +22,9 @@ usage(){
 
 # command-line options to set mediaid and original variables
 OPTIND=1
-while getopts ":nh" opt ; do
+while getopts ":jnh" opt ; do
     case "${opt}" in
+        j) jpeg2000mode="Y";;
         n) DRYRUN=true;;
         h) usage ;;
         *) echo "bad option -$OPTARG" ; usage ;;
@@ -54,7 +56,13 @@ while [ "${*}" != "" ] ; do
         middleoptions+=(-map 0:v)
         middleoptions+=(-map 0:a)
         middleoptions+=(-map 0:s)
-        middleoptions+=(-c:v ffv1 -level 3 -g 1)
+        if [[ "${jpeg2000mode}" == "Y" ]] ; then
+            middleoptions+=(-c:v libopenjpeg)
+            suffix="_j2k"
+        else
+            middleoptions+=(-c:v ffv1 -level 3 -g 1)
+            suffix="_ffv1"
+        fi
         middleoptions+=(-vf setfield=bff) # this is a presumption but much of the uncompressed input is bff but not probably labelled
         middleoptions+=(-c:a copy)
         middleoptions+=(-c:s copy)
@@ -62,7 +70,6 @@ while [ "${*}" != "" ] ; do
         get_codectagstring "${sourcefile}"
         _run mkdir -p "${outputdir}" "${logdir}"
         if [ "${codec_tag_string}" == "2vuy" -o "${codec_tag_string}" == "v210" ] ; then
-            suffix="_ffv1"
             report -dt "${sourcefilename} is ${codec_tag_string}, starting encode"
             _prep_ffmpeg_log
             _run_critical ffmpeg ${inputoptions[@]} -i "${sourcefile}"  ${middleoptions[@]} "${outputdir}/${sourcefilename%.*}${suffix}.mov" -f framemd5 -an "${logdir}/${sourcefilename%.*}.framemd5"
