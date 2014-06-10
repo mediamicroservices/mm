@@ -38,7 +38,7 @@ while [ "${*}" != "" ] ; do
     [ -f "${input}" ] && logdir="$(dirname "${input}")/lossless/logs"
     [ ! "${logdir}" ] && logdir="${input}/metadata/submissionDocumentation/logs"
 
-    find "${input}" -type f \( -name "*.mov" -o -name "*.avi" -o -name "*.mxf" \) -print0 | while read -d $'\0' sourcefile ; do
+    find "${input}" -type f \( -iname "*.mov" -o -iname "*.avi" -o -iname "*.mxf" \) -print0 | while read -d $'\0' sourcefile ; do
         outputdir=$(dirname "${sourcefile}")
         sourcefilename=$(basename "${sourcefile}")
         
