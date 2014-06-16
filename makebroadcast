@@ -2,10 +2,11 @@
 # makebroadcast
 # v 1.1 change from mov output to mxf output, force all output to hd
 # v 1.2 revert to mov and ffmbc
-version="1.2"
+# v 1.3 revert back to ffmpeg
+version="1.3"
 scriptdir=$(dirname $(which "$0"))
 . "$scriptdir/mmfunctions" || { echo "Missing '$scriptdir/mmfunctions'. Exiting." ; exit 1 ;};
-dependencies=(ffmbc ffprobe)
+dependencies=(ffmpeg ffprobe)
 _initialize_make
 
 usage(){
@@ -28,7 +29,7 @@ usage(){
     exit
 }
 [ "${#}" = 0 ] && usage
-
+voladjust="Y"
 # command-line options to set mediaid and original variables
 OPTIND=1
 while getopts ":lrcvo:d:e:E:nh" opt ; do
@@ -72,7 +73,7 @@ while [ "${*}" != "" ] ; do
     # clear local arrays
     unset inputoptions
     unset middleoptions
-    unset audiomapping_ffmbc
+    unset audiomapping_ffmpeg
     filterchain_start=""
 
     # get information on the input
@@ -95,57 +96,79 @@ while [ "${*}" != "" ] ; do
     fi
 
     if [ "${audiomap}" = "L" ] ; then
-        audiomapping_ffmbc=(-map_audio_channel 0:${audio_index_1}:0:0:1:0 -map_audio_channel 0:${audio_index_1}:0:0:1:1)
+        audiomapping_ffmpeg=(-map_channel 0.${audio_index_1}.0)
     elif [ "${audiomap}" = "R" ] ; then
-        audiomapping_ffmbc=(-map_audio_channel 0:${audio_index_1}:1:0:1:0 -map_audio_channel 0:${audio_index_1}:1:0:1:1)
+        audiomapping_ffmpeg=(-map_channel 0.${audio_index_1}.1)
     else
         get_audio_mapping "${sourcefile}"
     fi
-    middleoptions+=(${audiomapping_ffmbc[@]})
+    middleoptions+=(${audiomapping_ffmpeg[@]})
 
-    # set fixed transcoding options
+    #options for either xdcam or imx
     middleoptions+=(-r ntsc)
-    middleoptions+=(-tff)
-    middleoptions+=(-threads 4)
+    middleoptions+=(-c:v mpeg2video)
+    middleoptions+=(-intra_vlc 1)
+    middleoptions+=(-non_linear_quant 1)
+    middleoptions+=(-qmin 1)
+    middleoptions+=(-dc 10)
+    middleoptions+=(-lmin QP2LAMBDA)
+    middleoptions+=(-ps 1)
+    middleoptions+=(-flags +ildct+ilme)
+    middleoptions+=(-pix_fmt yuv422p)
+
+    #xdcam options
+    middleoptionsxdcam+=(-s 1920x1080)
+    middleoptionsxdcam+=(-vtag xd5b)
+    middleoptionsxdcam+=(-aspect 16:9)
+    middleoptionsxdcam+=(-q:v 1)
+    middleoptionsxdcam+=(-qmax 8)
+    middleoptionsxdcam+=(-g 15)
+    middleoptionsxdcam+=(-bf 2)
+    middleoptionsxdcam+=(-b:v 50M)
+    middleoptionsxdcam+=(-maxrate:v 50M)
+    middleoptionsxdcam+=(-minrate:v 50M)
+    middleoptionsxdcam+=(-bufsize 17825792)
+    middleoptionsxdcam+=(-rc_init_occupancy 17825792)
+    
+    # imx options
+    middleoptionsimx+=(-aspect 4:3)
+    middleoptionsimx+=(-qmax 12)
+    middleoptionsimx+=(-g 1)
+    middleoptionsimx+=(-intra)
+    middleoptionsimx+=(-b:v 30M)
+    middleoptionsimx+=(-maxrate:v 30M)
+    middleoptionsimx+=(-minrate:v 30M)
+    middleoptionsimx+=(-bufsize 1001000)
+    middleoptionsimx+=(-rc_init_occupancy 1001000)
+    middleoptionsimx+=(-rc_max_vbv_use 1)
+    middleoptionsimx+=(-rc_min_vbv_use 1)
+    middleoptionsimx+=(-rc_buf_aggressivity 0.25)
+    middleoptionsimx+=(-vbsf imxdump)
+    middleoptionsimx+=(-tag:v mx3n)
 
     # decide on an output codec, aspect ratio, and padding strategy
     darratio=$(echo "scale=3 ; ${dar}" | bc)
     if [ "${darratio}" = "1.777" -a ! "${cropdetect}" = "Y" ] ; then
-        middleoptions+=(-s 1920x1080)
-        middleoptions+=(-target xdcamhd422)
-        middleoptions+=(-vtag xd5b)
-        middleoptions+=(-aspect 16:9)
+        middleoptions+=(-vf "${filterchain_start}scale=size=hd1080:interl=1,format=yuv422p,setsar=1/1,setdar=16/9,fps=fps=ntsc")
+        middleoptions+=(${middleoptionsxdcam[@]})
     elif [ $(echo "scale=3 ; ${darratio} > (16/9)" | bc -l) = 1 ] ; then
-        middleoptions+=(-vf "${filterchain_start}pad=${width}:${width}*(9/16)*(${sar}):(ow-${width})/2:(oh-${height})/2,scale=1920:1080:interl=1")
-        middleoptions+=(-target xdcamhd422)
-        middleoptions+=(-vtag xd5b)
-        middleoptions+=(-aspect 16:9)
+        middleoptions+=(-vf "${filterchain_start}pad=${width}:${width}*(9/16)*(${sar}):(ow-${width})/2:(oh-${height})/2,scale=size=hd1080:interl=1")
+        middleoptions+=(${middleoptionsxdcam[@]})
     elif [ $(echo "scale=3 ; $darratio > (3/2)" | bc -l) = 1 ] ; then
-        middleoptions+=(-vf "${filterchain_start}pad=${height}*(16/9)/(${sar}):${height}:(ow-${width})/2:(oh-${height})/2,scale=1920:1080:interl=1")
-        middleoptions+=(-target xdcamhd422)
-        middleoptions+=(-vtag xd5b)
-        middleoptions+=(-aspect 16:9)
+        middleoptions+=(-vf "${filterchain_start}pad=${height}*(16/9)/(${sar}):${height}:(ow-${width})/2:(oh-${height})/2,scale=size=hd1080:interl=1")
+        middleoptions+=(${middleoptionsxdcam[@]})
     elif [ "$width" = "720" -a "$height" = "480" -a $(echo "scale=3 ; $darratio < (3/2)" | bc -l) = 1 -a ! "$cropdetect" = "Y" ] ; then
-        filterchain_start=$(echo "${filterchain_start}" | sed 's/,$//g')
-        middleoptions+=(-vf ${filterchain_start})
-        middleoptions+=(-target imx30)
-        middleoptions+=(-aspect 4:3)
+        middleoptions+=(-vf ${filterchain_start}pad=720:512:0:24,setsar=1/1,setdar=4/3)
+        middleoptions+=(${middleoptionsimx[@]})
     elif [ "${height}" -eq "486" -a "${width}" -eq "720" ] ; then
-        filterchain_start+="crop=720:480:0:4"
-        filterchain_start=$(echo "$filterchain_start" | sed 's/,$//g')
-        middleoptions+=(-vf ${filterchain_start})
-        middleoptions+=(-target imx30)
-        middleoptions+=(-aspect 4:3)
+        middleoptions+=(-vf "${filterchain_start}crop=720:480:0:4,pad=720:512:0:24,setsar=1/1,setdar=4/3")
+        middleoptions+=(${middleoptionsimx[@]})
     elif  [ "${height}" -eq "512" -a "${width}" -eq "720" ] ;then
-        filterchain_start+="crop=720:480:0:32"
-        filterchain_start=$(echo "${filterchain_start}" | sed 's/,$//g')
-        middleoptions+=(-vf ${filterchain_start})
-        middleoptions+=(-target imx30)
-        middleoptions+=(-aspect 4:3)
+        middleoptions+=(-vf "${filterchain_start}crop=720:480:0:32,pad=720:512:0:24,setsar=1/1,setdar=4/3")
+        middleoptions+=(${middleoptionsimx[@]})
     else
-        middleoptions+=(-vf "${filterchain_start}pad=${height}*(4/3)/(${sar}):${height}:(ow-${width})/2:(oh-${height})/2,scale=720:480:interl=1")
-        middleoptions+=(-target imx30)
-        middleoptions+=(-aspect 4:3)
+        middleoptions+=(-vf "${filterchain_start}scale=720:480,pad=720:512:0:24,setsar=1/1,setdar=4")
+        middleoptions+=(${middleoptionsimx[@]})
     fi
 
     # add audio options
@@ -153,36 +176,22 @@ while [ "${*}" != "" ] ; do
     middleoptions+=(-ar 48k)
     middleoptions+=(-ac 2)
 
-    # set input options for ffmbc
+    # set input options for ffmpeg
     inputoptions+=(-y)
-    inputoptions+=(-threads 8)
     inputoptions+=(-loglevel verbose)
 
-    # log ffmbc process
+    # log process
     if [ "${logdir}" != "" ] ; then
         _run mkdir -p "${logdir}"
-        export FFREPORT="file=${logdir}/%p_%t_$(basename $0)_${version}.txt"
-        reportfile="ffmbc_$(date '+%Y%m%d-%H%M%S')_$(basename $0)_${version}.txt"
-        echo "ffmbc started on $(date '+%F at %T')" > "${logdir}/${reportfile}"
-        echo "Report written to \"${reportfile}\"" >> "${logdir}/${reportfile}"
-        echo "Command line:" >> "${logdir}/${reportfile}"
     fi
+    _prep_ffmpeg_log
     if [ "${voladjust}" = "Y" ] ; then
         get_volume_adjustment "${sourcefile}"
-        unset audio_pipe_opts
-        audio_pipe_opts=(-f s24le -ar 48000 -ac 2)
-        _run ffmpeg -v warning -stats -i "${input_movie}" -af volume=${VOLADJ}dB ${audio_pipe_opts[@]} - | ffmbc ${inputoptions[@]} -i "${input_movie}" ${audio_pipe_opts[@]} -i pipe:0 -map 0:v -map 1:a ${middleoptions[@]} "${output}"
-    else
-        get_codectagstring "${sourcefile}"
-        if [ "$codec_tag_string" = "FFV1" -a "$ffv1_version" = "3" ] ; then
-            if [ "${logdir}" != "" ] ; then
-                _run rm "${logdir}/${reportfile}"
-            fi
-            _run ffmpeg -report ${inputoptions[@]} -i "${sourcefile}" -vf "fieldorder=tff,pad=720:512:0:24,format=yuv422p,setsar=1/1,setdar=4/3,fps=fps=ntsc" -c:v mpeg2video -intra_vlc 1 -non_linear_quant 1 -qmin 1 -qmax 12 -intra -top 1 -b:v 30M -maxrate:v 30M -minrate:v 30M -bufsize 1001000 -rc_init_occupancy 1001000 -rc_max_vbv_use 1 -rc_min_vbv_use 1 -rc_buf_aggressivity 0.25 -dc 10 -lmin QP2LAMBDA -vbsf imxdump -flags +ildct+ilme+low_delay -ps 1 -tag:v mx3n -c:a pcm_s24be -ar 48k -ac 2 "${output}"
-        else
-            _run ffmbc ${inputoptions[@]} -i "${sourcefile}" ${middleoptions[@]} "${output}"
+        if [ "${VOLADJ}" ] ; then
+            middleoptions+=(-af volume=${VOLADJ}dB)
         fi
     fi
+    _run ffmpeg ${inputoptions[@]} -i "${sourcefile}" ${middleoptions[@]} "${output}"
     echo
     _summarize_make
     _deliver_output "${MAKEBROADCAST_DELIVERY_EMAIL_TO}"
