@@ -75,11 +75,13 @@ if echo "$sourcefile" | grep -q "/Volumes/[A-Z][0-9]\{5\}" ; then
 else
     uploadfile="$sourcefile"
 fi
+extension=$(basename "${sourcefile##*.}")
 
 report -dt "Starting to ftp $filename to the Omneon..."
 ftp -a "$OMNEONIP" <<END_SCRIPT
 binary
-put "$uploadfile" "${OMNEONPATH}/${filename}"
+put "${uploadfile}" "${OMNEONPATH}/${filename}.uploading.${extension}"
+rename "${OMNEONPATH}/${filename}.uploading.${extension}" "${OMNEONPATH}/${filename}"
 exit
 END_SCRIPT
 upload_err="${?}"
