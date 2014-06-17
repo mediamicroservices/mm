@@ -92,11 +92,17 @@ rename "${OMNEONPATH}/${filename}.uploading.${extension}" "${OMNEONPATH}/${filen
 exit
 END_SCRIPT
 upload_err="${?}"
-report -wt "ftp exited with code ${upload_err}"
+get_ftp_status "${uploadfile}"
 if [ "$upload_err" = "0" ] ; then 
     report -dt "${filename} is uploaded to the omneon"
+    localsize=$(ls -l "${filename}" | awk '{print $5}')
+    if [[ "${localsize}" = "${size}" ]] ; then
+        report -dt "Uploaded file matches source file at ${size} bytes. Looks good."
+    else
+        report -wt "WARNING: Uploaded file is ${size} bytes and local file is ${localsize} bytes."
+    fi
     if [ "$removetmp" = "y" ] ; then
-    rm -v "${TMPDIR}/${filename}"
+        rm -v "${TMPDIR}/${filename}"
     fi
 else
     report -wt "ftp exited with code ${upload_err} for $uploadfile"
