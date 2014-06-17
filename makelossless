@@ -55,7 +55,6 @@ while [ "${*}" != "" ] ; do
         inputoptions+=(-vsync 0)
         middleoptions+=(-map 0:v)
         middleoptions+=(-map 0:a)
-        middleoptions+=(-map 0:s)
         if [[ "${jpeg2000mode}" == "Y" ]] ; then
             middleoptions+=(-c:v libopenjpeg)
             suffix="_j2k"
