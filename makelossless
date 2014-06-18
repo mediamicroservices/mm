@@ -64,7 +64,6 @@ while [ "${*}" != "" ] ; do
         fi
         middleoptions+=(-vf setfield=bff) # this is a presumption but much of the uncompressed input is bff but not probably labelled
         middleoptions+=(-c:a copy)
-        middleoptions+=(-c:s copy)
         
         get_codectagstring "${sourcefile}"
         _run mkdir -p "${outputdir}" "${logdir}"
