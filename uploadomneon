@@ -30,14 +30,16 @@ cleanup(){
 }
 
 get_ftp_status(){
-local filename+"$1"
+local filename="$1"
 status=$(ftp -a "$OMNEONIP" <<END_SCRIPT
 binary
 ls "${OMNEONPATH}/${filename}"
 exit
 END_SCRIPT)
 size=$(echo "$status" | grep "${filename}" | awk '{print $5}')
-size_g=$(echo "scale=3; $size / 1073741824" | bc)
+if [[ "$size" ]] ; then
+    size_g=$(echo "scale=3; $size / 1073741824" | bc)
+fi
 }
 
 trap cleanup SIGHUP SIGINT SIGTERM
@@ -70,7 +72,7 @@ filename=$(basename "$sourcefile")
 
 _log -b
 
-get_ftp_status "${filename}"
+get_ftp_status "${sourcefile}"
 if [[ ! $(echo "$status" | grep "${OMNEONPATH}") ]] ; then
 report "The file named $filename is not currently on the omneon, proceeding..."
 
@@ -95,7 +97,7 @@ upload_err="${?}"
 get_ftp_status "${uploadfile}"
 if [ "$upload_err" = "0" ] ; then 
     report -dt "${filename} is uploaded to the omneon"
-    localsize=$(ls -l "${filename}" | awk '{print $5}')
+    localsize=$(ls -l "${sourcefile}" | awk '{print $5}')
     if [[ "${localsize}" = "${size}" ]] ; then
         report -dt "Uploaded file matches source file at ${size} bytes. Looks good."
     else
