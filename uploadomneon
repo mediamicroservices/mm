@@ -37,9 +37,6 @@ ls "${OMNEONPATH}/${filename}"
 exit
 END_SCRIPT)
 size=$(echo "$status" | grep "${filename}" | awk '{print $5}')
-if [[ "$size" ]] ; then
-    size_g=$(echo "scale=3; $size / 1073741824" | bc)
-fi
 }
 
 trap cleanup SIGHUP SIGINT SIGTERM
@@ -72,7 +69,7 @@ filename=$(basename "$sourcefile")
 
 _log -b
 
-get_ftp_status "${sourcefile}"
+get_ftp_status "${filename}"
 if [[ ! $(echo "$status" | grep "${OMNEONPATH}") ]] ; then
 report "The file named $filename is not currently on the omneon, proceeding..."
 
@@ -94,7 +91,7 @@ rename "${OMNEONPATH}/${filename}.uploading.${extension}" "${OMNEONPATH}/${filen
 exit
 END_SCRIPT
 upload_err="${?}"
-get_ftp_status "${uploadfile}"
+get_ftp_status "${filename}"
 if [ "$upload_err" = "0" ] ; then 
     report -dt "${filename} is uploaded to the omneon"
     localsize=$(ls -l "${sourcefile}" | awk '{print $5}')
@@ -110,7 +107,7 @@ else
     report -wt "ftp exited with code ${upload_err} for $uploadfile"
 fi
 else
-report -wt "$filename is already on the omneon as a $size_g gigabyte file."
+report -wt "$filename is already on the omneon as a $size byte file."
 fi
 else
     report -wt "$sourcefile does not use a mov or mxf extension. This will NOT be uploaded."
