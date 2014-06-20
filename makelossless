@@ -48,6 +48,7 @@ while [ "${*}" != "" ] ; do
         
         # clear local arrays
         unset inputoptions
+        unset inputoptionsframemd5
         unset middleoptions
 
         # encoding options
@@ -57,6 +58,7 @@ while [ "${*}" != "" ] ; do
         middleoptions+=(-map 0:a)
         if [[ "${jpeg2000mode}" == "Y" ]] ; then
             middleoptions+=(-c:v libopenjpeg)
+            inputoptionsframemd5+=(-vcodec libopenjpeg)
             suffix="_j2k"
         else
             middleoptions+=(-c:v ffv1 -level 3 -g 1)
@@ -74,7 +76,7 @@ while [ "${*}" != "" ] ; do
             if [ "${codec_tag_string}" == "2vuy" ] ; then
                 _run_critical ffmpeg ${inputoptions[@]} -i "${outputdir}/${sourcefilename%.*}${suffix}.mov" -f framemd5 -pix_fmt uyvy422 -an "${logdir}/${sourcefilename%.*}${suffix}.framemd5"
             else
-                _run_critical ffmpeg ${inputoptions[@]} -i "${outputdir}/${sourcefilename%.*}${suffix}.mov" -f framemd5 -an "${logdir}/${sourcefilename%.*}${suffix}.framemd5"
+                _run_critical ffmpeg ${inputoptions[@]} ${inputoptionsframemd5[@]} -i "${outputdir}/${sourcefilename%.*}${suffix}.mov" -f framemd5 -an "${logdir}/${sourcefilename%.*}${suffix}.framemd5"
             fi 
             if [ $(grep -v "^#" "${logdir}/${sourcefilename%.*}.framemd5" | md5 -q) = $(grep -v "^#" "${logdir}/${sourcefilename%.*}${suffix}.framemd5" | md5 -q) ] ; then
                 report -dt "Everything looks safe. Going to delete the original."
