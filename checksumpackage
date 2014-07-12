@@ -63,7 +63,7 @@ while [ "${*}" != "" ] ; do
         DFXMLTMP=$(maketemp)
         md5deep -drl . > $DFXMLTMP
         mv "${DFXMLTMP}" "${1}/${OUTDIR}/${DFXMLNAME}"
-        xml sel -T -t -m "/dfxml/fileobject" -v "hashdigest" -o "  " -v "filename" -n "${1}/${OUTDIR}/${DFXMLNAME}" > "${1}/${OUTDIR}/${CHECKSUMNAME}"
+        xml sel -T -t -m "/_:dfxml/_:fileobject" -v "_:hashdigest" -o "  " -v "_:filename" -n "${1}/${OUTDIR}/${DFXMLNAME}" > "${1}/${OUTDIR}/${CHECKSUMNAME}"
         cd "${PWD}"
         if [ "$FILEMAKER_XML_URL" ] ; then
             "${scriptdir}/checksum2filemaker" "${1}"
