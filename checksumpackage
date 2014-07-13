@@ -51,7 +51,7 @@ while [ "${*}" != "" ] ; do
                 find "$1/$INDIR" -newer "${1}/${OUTDIR}/${CHECKSUMNAME}" -type f ! -name ".DS_Store"
                 report -wdt "Creating a new version of the checksum files."
                 mv -v "${1}/${OUTDIR}/${CHECKSUMNAME}" "${1}/${OUTDIR}/${CHECKSUMNAME%.*}_$(stat -t '%Y%m%d-%H%M%S' -l "${1}/${OUTDIR}/${CHECKSUMNAME}" | awk '{print $6}').md5"
-                mv -v "${1}/${OUTDIR}/${DFXMLNAME}" "${1}/${OUTDIR}/${DFXMLNAME%.*}_$(stat -t '%Y%m%d-%H%M%S' -l "${1}/${OUTDIR}/${DFXMLNAME}" | awk '{print $6}').md5"
+                mv -v "${1}/${OUTDIR}/${DFXMLNAME}" "${1}/${OUTDIR}/${DFXMLNAME%.*}_$(stat -t '%Y%m%d-%H%M%S' -l "${1}/${OUTDIR}/${DFXMLNAME}" | awk '{print $6}').xml"
             else
                 report -dt "${CHECKSUMNAME} already exists, skipping for ${1}"
                 shift
