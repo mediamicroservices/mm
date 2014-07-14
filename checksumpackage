@@ -9,6 +9,11 @@ scriptdir=$(dirname "${0}")
 unset dependencies
 dependencies=(md5deep xml "${scriptdir}/removeDSStore")
 
+# local variables
+CHECKSUMNAME="checksum.md5"
+DFXMLNAME="dfxml.xml"
+CHECKSUMPROCESSLOG="checksumchecks.log"
+
 usage(){
     echo
     echo "$(basename ${0}) ${version}"
@@ -31,10 +36,6 @@ cleanup(){
 
 trap cleanup SIGHUP SIGINT SIGTERM
 
-# local variables
-CHECKSUMNAME="checksum.md5"
-DFXMLNAME="dfxml.xml"
-CHECKSUMPROCESSLOG="checksumchecks.log"
 
 _check_dfxml(){
     PACKAGE="${1}"
