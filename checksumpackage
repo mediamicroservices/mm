@@ -111,15 +111,38 @@ while [ "${*}" != "" ] ; do
             INDIR="."
             OUTDIR="."
         fi
-        [ ! -d "${1}/${OUTDIR}" ] && mkdir -p "${1}/${OUTDIR}"
-        if [ -s "${1}/${OUTDIR}/${CHECKSUMNAME}" ] ; then
-            if [[ -n $(find "$1/$INDIR" -newer "${1}/${OUTDIR}/${CHECKSUMNAME}" -type f ! -name ".DS_Store") ]] ; then
-                report -wdt "Found new files since last checksum. Including:"
-                find "$1/$INDIR" -newer "${1}/${OUTDIR}/${CHECKSUMNAME}" -type f ! -name ".DS_Store"
-                report -wdt "Creating a new version of the checksum files."
-                mv -v "${1}/${OUTDIR}/${CHECKSUMNAME}" "${1}/${OUTDIR}/${CHECKSUMNAME%.*}_$(stat -t '%Y%m%d-%H%M%S' -l "${1}/${OUTDIR}/${CHECKSUMNAME}" | awk '{print $6}').md5"
-                mv -v "${1}/${OUTDIR}/${DFXMLNAME}" "${1}/${OUTDIR}/${DFXMLNAME%.*}_$(stat -t '%Y%m%d-%H%M%S' -l "${1}/${OUTDIR}/${DFXMLNAME}" | awk '{print $6}').xml"
+        if [ "${check}" = "Y" ] ; then
+            if [ -s "${1}/${OUTDIR}/${CHECKSUMNAME}" ] ; then
+                _check_dfxml "${1}"
+                if [ "${checkerr}" != "0" ] ; then
+                    echo opt 1
+                    shift
+                    continue
+                else
+                    echo opt 2
+                    if [ "${update}" = "Y" ] ; then
+                        _version_dfxml "${1}"
+                    else
+                        shift
+                        continue
+                    fi
+                fi
             else
+                report -dt "There is no dfxml.xml to check in ${1}, skipping."
+                shift
+                continue
+            fi
+        elif [ "${verify}" = "Y" ] ; then
+                if [ -s "${1}/${OUTDIR}/${CHECKSUMNAME}" ] ; then
+                    report -dt "Prepping for dfxml.xml verification."
+                    _version_dfxml "${1}"
+                else
+                    report -dt "There is no dfxml.xml to verify in ${1}, skipping."
+                    shift
+                    continue
+                fi
+        else
+            if [ -s "${1}/${OUTDIR}/${CHECKSUMNAME}" ] ; then
                 report -dt "${CHECKSUMNAME} already exists, skipping for ${1}"
                 shift
                 continue
@@ -129,14 +152,32 @@ while [ "${*}" != "" ] ; do
         cd "$1/$INDIR"
         DFXMLTMP=$(maketemp)
         md5deep -drl . > $DFXMLTMP
+        echo "$(get_iso8601): $(basename ${0}):${version}: ${DFXMLNAME} is generated" >> "${PACKAGE}/${OUTDIR}/${CHECKSUMPROCESSLOG}"
+        [ ! -d "${1}/${OUTDIR}" ] && mkdir -p "${1}/${OUTDIR}"
         mv "${DFXMLTMP}" "${1}/${OUTDIR}/${DFXMLNAME}"
         xml sel -T -t -m "/_:dfxml/_:fileobject" -v "_:hashdigest" -o "  " -v "_:filename" -n "${1}/${OUTDIR}/${DFXMLNAME}" > "${1}/${OUTDIR}/${CHECKSUMNAME}"
+        echo "$(get_iso8601): $(basename ${0}):${version}: ${CHECKSUMNAME} is generated" >> "${PACKAGE}/${OUTDIR}/${CHECKSUMPROCESSLOG}"
         cd "${PWD}"
-        if [ "$FILEMAKER_XML_URL" ] ; then
-            "${scriptdir}/checksum2filemaker" "${1}"
+        if [ "${verify}" = "Y" ] ; then
+            CHECKSUMCMP1=$(maketemp)
+            sort "${1}/${OUTDIR}/${CHECKSUMNAME}" > "${CHECKSUMCMP1}"
+            CHECKSUMCMP2=$(maketemp)
+            sort "${LASTMD5}" > "${CHECKSUMCMP2}"
+            if [[ $(diff "${CHECKSUMCMP1}" "${CHECKSUMCMP2}") ]] ; then
+                report -wt "checksums are different for ${1}"
+                diff "${CHECKSUMCMP1}" "${CHECKSUMCMP2}"
+                echo "$(get_iso8601): $(basename ${0}):${version}: FAILED to VERIFY by checksums - compare ${CHECKSUMNAME} and $(basename "${LASTMD5}")" >> "${PACKAGE}/${OUTDIR}/${CHECKSUMPROCESSLOG}"
+            else
+                report -dt "checksums are still valid for ${1}"
+                echo "$(get_iso8601): $(basename ${0}):${version}: verified by checksums" >> "${1}/${OUTDIR}/${CHECKSUMPROCESSLOG}"
+            fi
+            rm "${CHECKSUMCMP1}" "${CHECKSUMCMP2}"
         fi
+        #if [ "$FILEMAKER_XML_URL" ] ; then
+            #"${scriptdir}/checksum2filemaker" "${1}"
+            #fi
     else
-    report -dt "ERROR: ${0} requires directories as input and $1 is not a directory."
+        report -dt "ERROR: ${0} requires directories as input and $1 is not a directory."
     fi
     _log -e
     shift
