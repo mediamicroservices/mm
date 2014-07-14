@@ -66,6 +66,17 @@ _check_dfxml(){
     fi
 }
 
+_version_dfxml(){
+    PACKAGE="${1}"
+    report -wdt "Creating a new version of the checksum files."
+    LASTMD5="${PACKAGE}/${OUTDIR}/${CHECKSUMNAME%.*}_$(stat -t '%Y%m%d-%H%M%S' -l "${PACKAGE}/${OUTDIR}/${CHECKSUMNAME}" | awk '{print $6}').md5"
+    LASTDFXML="${PACKAGE}/${OUTDIR}/${DFXMLNAME%.*}_$(stat -t '%Y%m%d-%H%M%S' -l "${PACKAGE}/${OUTDIR}/${DFXMLNAME}" | awk '{print $6}').xml"
+    mv -v "${PACKAGE}/${OUTDIR}/${CHECKSUMNAME}" "${LASTMD5}"
+    mv -v "${PACKAGE}/${OUTDIR}/${DFXMLNAME}" "${LASTDFXML}"
+    report -dt "filepaths and sizes are still valid for ${1}"
+    echo "$(get_iso8601): $(basename ${0}):${version}: checksums are versioned - ${DFXMLNAME} -> ${LASTDFXML}" >> "${PACKAGE}/${OUTDIR}/${CHECKSUMPROCESSLOG}"
+    echo "$(get_iso8601): $(basename ${0}):${version}: checksums are versioned - ${CHECKSUMNAME} -> ${LASTDFXML}" >> "${PACKAGE}/${OUTDIR}/${CHECKSUMPROCESSLOG}"
+}
 
 while [ "${*}" != "" ] ; do
     _log -b
