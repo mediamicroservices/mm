@@ -34,6 +34,38 @@ trap cleanup SIGHUP SIGINT SIGTERM
 # local variables
 CHECKSUMNAME="checksum.md5"
 DFXMLNAME="dfxml.xml"
+CHECKSUMPROCESSLOG="checksumchecks.log"
+
+_check_dfxml(){
+    PACKAGE="${1}"
+    # make temp file that lists filenames and filesizes from dfxml.xml
+    DFXML_FILELIST="$(maketemp)"
+    xml sel -T -t -m "/_:dfxml/_:fileobject" -v "_:filename" -o " " -v "_:filesize" -n "${PACKAGE}/${OUTDIR}/${DFXMLNAME}" | sort > "${DFXML_FILELIST}"
+    pwd=$(pwd)
+    # make temp file that lists filenames and filesizes from current objects directory
+    NEW_FILELIST="$(maketemp)"
+    cd "${PACKAGE}/${INDIR}"
+    find . -type f ! -name '.DS_Store' | while read i ; do
+        echo -n "$i "
+        ls -l "$i" | awk '{print $5}'
+    done | sort > "${NEW_FILELIST}"
+    cd "${pwd}"
+    # compare them
+    if [[ $(diff "${DFXML_FILELIST}" "${NEW_FILELIST}") ]] ; then
+        report -wt "filepaths and sizes are different for ${1}"
+        diff "${DFXML_FILELIST}" "${NEW_FILELIST}"
+        echo "$(get_iso8601): $(basename ${0}):${version}: failed to verify by filepath and size" >> "${PACKAGE}/${OUTDIR}/${CHECKSUMPROCESSLOG}"
+        rm "${DFXML_FILELIST}" "${NEW_FILELIST}"
+        checkerr=0
+    else
+        echo hi
+        report -dt "filepaths and sizes are still valid for ${1}"
+        echo "$(get_iso8601): $(basename ${0}):${version}: verified by filepath and size" >> "${PACKAGE}/${OUTDIR}/${CHECKSUMPROCESSLOG}"
+        rm "${DFXML_FILELIST}" "${NEW_FILELIST}"
+        checkerr=1
+    fi
+}
+
 
 while [ "${*}" != "" ] ; do
     _log -b
