@@ -17,9 +17,13 @@ CHECKSUMPROCESSLOG="checksumchecks.log"
 usage(){
     echo
     echo "$(basename ${0}) ${version}"
-    echo "This application will create a checksum from a directory or package input with the following options."
+    echo "This application will create a checksum from a directory or package input with the following options. Actions and results will be logged to ${CHECKSUMPROCESSLOG}."
     echo "Dependencies: ${dependencies[@]}"
     echo "Usage: $(basename ${0}) directoryorpackage1 [ directoryorpackage2 ...]"
+    echo "  -c ( check filenames and filesizes in objects directory are the same as in existing checksum files, if none exists it will make the initial ones )"
+    echo "  -u ( valid only if -c is used. If the check is unsuccessful then make new checksums and version the previous ones. )"
+    echo "  -v ( fully verify checksum files against checksum files, if none exists it will make the initial ones. Note verification will version existing checksums and make new ones and log the difference to ${CHECKSUMPROCESSLOG})"
+    echo "  -h ( display this help )"
     echo
     exit
 }
@@ -34,8 +38,24 @@ cleanup(){
     exit 1
 }
 
-trap cleanup SIGHUP SIGINT SIGTERM
+# command-line options
+check=""
+verify=""
+update=""
+OPTIND=1
+while getopts ":cvuh" opt ; do
+   case "${opt}" in
+       c) check="Y";;
+       v) verify="Y";;
+       u) update="Y";;
+       h) usage ;;
+       *) echo "bad option -$OPTARG" ; usage ;;
+       :) echo "Option -$OPTARG requires an argument" ; exit 1 ;;
+   esac
+done
+shift $(( ${OPTIND} - 1 ))
 
+trap cleanup SIGHUP SIGINT SIGTERM
 
 _check_dfxml(){
     PACKAGE="${1}"
