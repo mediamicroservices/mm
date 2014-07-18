@@ -62,8 +62,12 @@ _check_dfxml(){
     PACKAGE="${1}"
     # make temp file that lists filenames and filesizes from dfxml.xml
     DFXML_FILELIST="$(maketemp)"
-    xml sel -T -t -m "/_:dfxml/_:fileobject" -v "_:filename" -o " " -v "_:filesize" -n "${PACKAGE}/${OUTDIR}/${DFXMLNAME}" | sort > "${DFXML_FILELIST}"
-    pwd=$(pwd)
+	if [ ! -z "$(xml sel -T -t -m "/_:dfxml/_:fileobject" -v "_:filename" -o " " -v "_:filesize" -n "${PACKAGE}/${OUTDIR}/${DFXMLNAME}" 2>/dev/null)" ] ; then
+	    xml sel -T -t -m "/_:dfxml/_:fileobject" -v "_:filename" -o " " -v "_:filesize" -n "${PACKAGE}/${OUTDIR}/${DFXMLNAME}" | sort > "${DFXML_FILELIST}"
+	else
+		xml sel -T -t -m "/dfxml/fileobject" -v "filename" -o " " -v "filesize" -n "${PACKAGE}/${OUTDIR}/${DFXMLNAME}" | sort > "${DFXML_FILELIST}"
+	fi
+	pwd=$(pwd)
     # make temp file that lists filenames and filesizes from current objects directory
     NEW_FILELIST="$(maketemp)"
     cd "${PACKAGE}/${INDIR}"
@@ -80,7 +84,6 @@ _check_dfxml(){
         rm "${DFXML_FILELIST}" "${NEW_FILELIST}"
         checkerr=0
     else
-        echo hi
         report -dt "filepaths and sizes are still valid for ${1}"
         echo "$(get_iso8601): $(basename ${0}):${version}: verified by filepath and size" >> "${PACKAGE}/${OUTDIR}/${CHECKSUMPROCESSLOG}"
         rm "${DFXML_FILELIST}" "${NEW_FILELIST}"
@@ -116,11 +119,9 @@ while [ "${*}" != "" ] ; do
             if [ -s "${1}/${OUTDIR}/${CHECKSUMNAME}" ] ; then
                 _check_dfxml "${1}"
                 if [ "${checkerr}" != "0" ] ; then
-                    echo opt 1
                     shift
                     continue
                 else
-                    echo opt 2
                     if [ "${update}" = "Y" ] ; then
                         _version_dfxml "${1}"
                     else
