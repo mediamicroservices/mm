@@ -9,21 +9,17 @@ _initialize_make
 usage(){
     echo
     echo "$(basename ${0}) ${version}"
-    echo "This script may be run interactively by running it with no arguments or may be used with the following options."
-    echo "Usage: $(basename $0) [ -m mediaid ]"
-    echo "  -n (dry-run mode, show the commands that would be run but don't do anything)"
-    echo "  -m mediaid"
+    echo "Produces a set of metadata reports for an archival information package on all files in the objects subdirectory."
+    echo "Usage: $(basename $0) [ -h ] package1 [ package2 ... ]"
+    echo "  -h (show usage)"
     exit
 }
 [ "${#}" = 0 ] && usage
 
 # command-line options to set mediaid and original variables
 OPTIND=1
-while getopts ":e:E:nh" opt ; do
+while getopts ":h" opt ; do
     case "${opt}" in
-        e) emailaddress_delivery="$OPTARG" && check_emailaddress "${emailaddress_delivery}" ;;
-        E) emailaddress_outcome="$OPTARG" && check_emailaddress "${emailaddress_outcome}" ;;
-        n) DRYRUN=true;;
         h) usage ;;
         *) echo "bad option -$OPTARG" ; usage ;;
         :) echo "Option -$OPTARG requires an argument" ; exit 1 ;;
