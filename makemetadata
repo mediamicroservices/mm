@@ -49,7 +49,7 @@ while [ "$*" != "" ] ; do
         service_file=$(find "./objects/service" -maxdepth 1 -mindepth 1 -type f ! -name ".*")
         servicebasename=$(basename "$service_file")
     fi
-
+    report -dt "Making metadata reports for ${package_path}."
     while read file ; do
         filenameroot=$(basename "$file")
         parentdir=$(dirname "$file")
