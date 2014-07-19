@@ -33,7 +33,9 @@ shift $(( ${OPTIND} - 1 ))
 
 _log -b
 outputdir="./metadata/submissionDocumentation/fileMeta"
-_run mkdir -p "$outputdir"
+if [ ! -d "$outputdir" ] ; then
+    _run mkdir -p "$outputdir"
+fi
 
 while [ "$*" != "" ] ; do
     uuid=$(uuidgen)
@@ -52,7 +54,9 @@ while [ "$*" != "" ] ; do
         filenameroot=$(basename "$file")
         parentdir=$(dirname "$file")
         fileoutput="$outputdir/$parentdir"
-        _run mkdir -p "$fileoutput"
+        if [ ! -d "$fileoutput" ] ; then
+            _run mkdir -p "$fileoutput"
+        fi
         ffprobe 2> /dev/null "$file" -show_format -show_streams -show_data -show_error -show_versions -show_chapters -noprivate -of xml="q=1:x=1" > "$fileoutput/${filenameroot%.*}_ffprobe.xml"
         ffprobe 2> /dev/null "$file" -show_format -show_streams -show_data -show_error -show_versions -show_chapters -of json > "$fileoutput/${filenameroot%.*}_ffprobe.json"
         mediainfo --language=raw -f --output=XML "$file" > "$fileoutput/${filenameroot%.*}_mediainfo.xml"
