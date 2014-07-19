@@ -34,17 +34,11 @@ if [ ! -d "$outputdir" ] ; then
 fi
 
 while [ "$*" != "" ] ; do
-    uuid=$(uuidgen)
     package_path="$1"
-    mediaid=$(basename "$package_path" | cut -d. -f1)
     pwd=$(pwd)
     cd "$package_path"
     FILELIST=$(maketemp)
     find "./objects" -type f ! -name ".*" > "$FILELIST"
-    if [ -d ./objects/service ] ; then
-        service_file=$(find "./objects/service" -maxdepth 1 -mindepth 1 -type f ! -name ".*")
-        servicebasename=$(basename "$service_file")
-    fi
     report -dt "Making metadata reports for ${package_path}."
     while read file ; do
         filenameroot=$(basename "$file")
