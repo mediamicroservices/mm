@@ -53,12 +53,12 @@ while [ "$*" != "" ] ; do
         parentdir=$(dirname "$file")
         fileoutput="$outputdir/$parentdir"
         _run mkdir -p "$fileoutput"
-        _run ffprobe 2> /dev/null "$file" -show_format -show_streams -show_data -show_error -show_versions -show_chapters -noprivate -of xml="q=1:x=1" > "$fileoutput/${filenameroot%.*}_ffprobe.xml"
-        _run ffprobe 2> /dev/null "$file" -show_format -show_streams -show_data -show_error -show_versions -show_chapters -of json > "$fileoutput/${filenameroot%.*}_ffprobe.json"
-        _run mediainfo --language=raw -f --output=XML "$file" > "$fileoutput/${filenameroot%.*}_mediainfo.xml"
-        _run mediainfo --inform="Details;1" "$file" > "$fileoutput/${filenameroot%.*}_mediainfo_trace.txt"
-        _run exiftool -X "$file" > "$fileoutput/${filenameroot%.*}_exiftool.xml"
-        _run exiftool "$file" > "$fileoutput/${filenameroot%.*}_exiftool.txt"
+        ffprobe 2> /dev/null "$file" -show_format -show_streams -show_data -show_error -show_versions -show_chapters -noprivate -of xml="q=1:x=1" > "$fileoutput/${filenameroot%.*}_ffprobe.xml"
+        ffprobe 2> /dev/null "$file" -show_format -show_streams -show_data -show_error -show_versions -show_chapters -of json > "$fileoutput/${filenameroot%.*}_ffprobe.json"
+        mediainfo --language=raw -f --output=XML "$file" > "$fileoutput/${filenameroot%.*}_mediainfo.xml"
+        mediainfo --inform="Details;1" "$file" > "$fileoutput/${filenameroot%.*}_mediainfo_trace.txt"
+        exiftool -X "$file" > "$fileoutput/${filenameroot%.*}_exiftool.xml"
+        exiftool "$file" > "$fileoutput/${filenameroot%.*}_exiftool.txt"
     done < "$FILELIST"
     
     cd "$pwd"
