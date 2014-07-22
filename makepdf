@@ -8,21 +8,25 @@ _initialize_make
 
 fix_tif_name(){
     local tif="${1}"
-    local basename=$(find "${tif}" | cut -d_ -f1 | cut -d. -f2)
-    local pageno=$(find "${tif}" | cut -d_ -f2 | cut -d. -f1)
-    local extension=$(find "${tif}" | cut -d_ -f2 | cut -d. -f2)
+    local tifname=$(basename "${tif}")
+    local tifdir=$(dirname "${tif}")
+    local basename=$(echo "${tifname}" | cut -d_ -f1 | cut -d. -f2)
+    local pageno=$(echo "${tifname}" | cut -d_ -f2 | cut -d. -f1)
+    local extension=$(echo "${tifname}" | cut -d_ -f2 | cut -d. -f2)
     local pageno=$(echo "0000${pageno}" | tail -c 4 | head -c 3)
     report -dt "Renaming to fit image sequence naming pattern."
     local old_tif_name="${tif}"
-    new_tif_name="${basename}_${pageno}.${extension}"
+    new_tif_name="${tifdir}/${basename}_${pageno}.${extension}"
     mv -v -n "${old_tif_name}" "${new_tif_name}"
 }
 
 check_tif_name(){
     local tif="${1}"
-    local basename=$(find "${tif}" | cut -d_ -f2 | cut -d. -f2)
-    local pageno=$(find "${tif}" | cut -d_ -f2 | cut -d. -f1)
-    local extension=$(find "${tif}" | cut -d_ -f2 | cut -d. -f1)
+    local tifname=$(basename "${tif}")
+    local tifdir=$(dirname "${tif}")
+    local basename=$(echo "${tifname}" | cut -d_ -f2 | cut -d. -f2)
+    local pageno=$(echo "${tifname}" | cut -d_ -f2 | cut -d. -f1)
+    local extension=$(echo "${tifname}" | cut -d_ -f2 | cut -d. -f1)
     local pageno=$(echo "0000${pageno}" | tail -c 4 | head -c 3)
     if [ "$extension" = "tif" ] && [ $(echo $pageno | awk '{print length()}') = "3" ] ; then
         continue
