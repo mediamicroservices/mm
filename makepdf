@@ -117,9 +117,9 @@ while [ "${*}" != "" ] ; do
     done
     pdfjoin $(find "${tmp_clean_dir}" -name "*.pdf" | sort | xargs) --outfile "${outputdir}/${mediaid}.pdf" 
     
-    if [ -d "${tmp_makepdf_dir}" ] ; then
-        _run rm -rvf "${tmp_makepdf_dir}"
-    fi
+    #if [ -d "${tmp_makepdf_dir}" ] ; then
+    #    _run rm -rvf "${tmp_makepdf_dir}"
+    #fi
     _summarize_make
     _deliver_output "${MAKEYOUTUBE_DELIVERY_EMAIL_TO}"
     shift
