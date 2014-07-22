@@ -115,7 +115,7 @@ while [ "${*}" != "" ] ; do
         convert "${tmp_png_dir}/$(basename "${tif%.*}").png" -level 10%,90%,1 -blur 2 +dither -resize 2550x3300 -monochrome -flatten +repage "${tmp_clean_dir}/$(basename "${tif%.*}").pdf"
         #tesseract /Users/drice/Desktop/scripts/HBS02396/pngs_cleaned/HBS02396_002.png out -l eng -psm 6 hocr ../../tesseract_config 2> "${logdir}/dvdauthor_$(get_iso8601_c)_$(basename $0)_${version}.txt"
     done
-    pdfjoin $(find "${tmp_clean_dir}" -name "*.pdf" | xargs) --outfile "${outputdir}/${mediaid}.pdf" 
+    pdfjoin $(find "${tmp_clean_dir}" -name "*.pdf" | sort | xargs) --outfile "${outputdir}/${mediaid}.pdf" 
     
     if [ -d "${tmp_makepdf_dir}" ] ; then
         _run rm -rvf "${tmp_makepdf_dir}"
