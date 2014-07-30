@@ -66,7 +66,11 @@ while [ "${*}" != "" ] ; do
     unset middleoptions
 
     # encoding options
+    get_codectagstring "${sourcefile}"
     inputoptions+=(-vsync 0)
+    if [[ "${codec_tag_string}" == "mjp2" ]] ; then
+         inputoptions+=(-vcodec libopenjpeg)
+    fi
     middleoptions+=(-map 0:v)
     middleoptions+=(-map 0:a)
     middleoptions+=(-c:v prores)
