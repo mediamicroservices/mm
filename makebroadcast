@@ -187,8 +187,8 @@ while [ "${*}" != "" ] ; do
         outtime=$(grep "^outtime:" "${ingestlog}" | cut -d: -f2 | sed 's/ //g')
         if [[ "${intime}" =~ "^[0-9.]+$" -a "${outtime}" =~ "^[0-9]+$" ]] ; then
             report -dt "ATTENTION: Transcoding will use intime (${intime}) and/or outtime (${outtime}) during transcoding."
-            middleoptions+=(-t "${intime}")
-            middleoptions+=(-t "${outtime}")
+            middleoptions+=(-ss "${intime}")
+            middleoptions+=(-to "${outtime}")
         else
             report -w "WARNING: intime (${intime}) and/or outtime (${outtime}) are not numbers, skipping."
         fi
