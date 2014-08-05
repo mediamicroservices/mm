@@ -1,6 +1,6 @@
 # assign variables
-SCRIPTNAME=$(basename "$0")
-SCRIPTDIR=$(dirname "$0")
+SCRIPTNAME=$(basename "${0}")
+SCRIPTDIR=$(dirname "${0}")
 CONFIG_FILE="${SCRIPTDIR}/mm.conf"
 WHAT_IS_THIS="mediamicroservices"
 # load configuration file
@@ -25,14 +25,14 @@ _log(){
     mmlogfile="${mmlogdir}/${mmlogname}"
     if [ ! -d "${mmlogdir}" ] ; then
         mkdir -p "${mmlogdir}"
-        if [ ${?} -ne 0 ]; then
+        if [ "${?}" -ne 0 ]; then
             echo "${0}: Can't create log directory at ${mmlogdir}, exiting... Use mmconfig to change logging directory."
             exit 1
         fi
     fi
     OPTIND=1
     while getopts ":beac" opt; do
-        case "$opt" in
+        case "${opt}" in
             b) status="start" ;;              # script is beginning
             e) status="end"   ;;              # script is ending
             a) status="abort" ;;              # script is aborted
@@ -41,8 +41,8 @@ _log(){
         esac
     done
     shift $(( ${OPTIND} - 1 ))
-    note="$1"
-    echo $(get_iso8601)", $(basename $0), $status, $op, $mediaid, $note" >> "$mmlogfile"
+    note="${1}"
+    echo $(get_iso8601)", $(basename "${0}"), ${status}, ${op}, ${mediaid}, ${note}" >> "${mmlogfile}"
 }
 
 report(){
@@ -56,30 +56,30 @@ report(){
         local echoopt=""
         OPTIND=1
         while getopts ":qdwstn" opt; do
-            case "$opt" in
-                q) color="$BLUE" ;;                         # question mode, use color blue
-                d) color="$GREEN" ;;                        # declaration mode, use color green
-                w) color="$RED" ; log="Y";;                 # warning mode, use color red
-                s) startmessage+=([$(basename $0)] ) ;;     # prepend scriptname to the message
+            case "${opt}" in
+                q) color="${BLUE}" ;;                         # question mode, use color blue
+                d) color="${GREEN}" ;;                        # declaration mode, use color green
+                w) color="${RED}" ; log="Y";;                 # warning mode, use color red
+                s) startmessage+=([$(basename "${0}")] ) ;;     # prepend scriptname to the message
                 t) startmessage+=($(get_iso8601) '- ' ) ;;     # prepend timestamp to the message
                 n) echoopt="-n" ;;                          # to avoid line breaks after echo
             esac
         done
         shift $(( ${OPTIND} - 1 ))
-        message="$1"
+        message="${1}"
         echo $echoopt "${color}${startmessage[@]}${message}${NC}"
-        [ "$log" = "Y" ] && _log -w "$message"
+        [ "$log" = "Y" ] && _log -w "${message}"
 }
 
 _run(){
     run_err=""
-    report -sdt "Running: $*"
-    if [[ ! $DRYRUN == true ]] ; then
-        "$@"
+    report -sdt "Running: ${*}"
+    if [[ ! "${DRYRUN}" == true ]] ; then
+        "${@}"
     fi
-    run_err="$?"
+    run_err="${?}"
     if [[ "${run_err}" != 0 ]] ; then
-    report -wts "Error: Running: \"$*\" gave an Error Code - $run_err"
+    report -wts "Error: Running: \"${*}\" gave an Error Code - ${run_err}"
     fi
 }
 
@@ -92,85 +92,85 @@ _run_critical(){
 }
 
 black_at_ends(){
-    input_movie="$1"
-    name=$(basename "$input_movie")
+    input_movie="${1}"
+    name=$(basename "${input_movie}")
     analysis_head_seconds=10
     analysis_tail_seconds=10
-    report -dt "Analyzing $name for excessive black at head or tail."
-    duration=$(ffprobe "$1"  -show_format 2> /dev/null | grep duration | cut -d= -f2 | cut -d. -f1)
-    tail_start=$(echo "$duration - $analysis_tail_seconds" | bc)
-    head_black=$(ffmpeg -t "$analysis_head_seconds" -i "$1" -an -vf blackdetect=pix_th=0.05 -loglevel debug -f null - 2>&1 | grep -c -o picture_black_ratio:1)
-    report -dt "Black frames in first $analysis_head_seconds seconds: $head_black."
-    tail_black=$(ffmpeg -ss "$tail_start" -i "$1" -an -vf blackdetect=pix_th=0.05 -loglevel debug -f null - 2>&1 | grep -c -o picture_black_ratio:1)
-    report -dt "Black frames in last  $analysis_head_seconds seconds: $tail_black."
+    report -dt "Analyzing ${name} for excessive black at head or tail."
+    duration=$(ffprobe "${1}"  -show_format 2> /dev/null | grep duration | cut -d= -f2 | cut -d. -f1)
+    tail_start=$(echo "${duration} - ${analysis_tail_seconds}" | bc)
+    head_black=$(ffmpeg -t "${analysis_head_seconds}" -i "${1}" -an -vf blackdetect=pix_th=0.05 -loglevel debug -f null - 2>&1 | grep -c -o picture_black_ratio:1)
+    report -dt "Black frames in first ${analysis_head_seconds} seconds: ${head_black}."
+    tail_black=$(ffmpeg -ss "${tail_start}" -i "${1}" -an -vf blackdetect=pix_th=0.05 -loglevel debug -f null - 2>&1 | grep -c -o picture_black_ratio:1)
+    report -dt "Black frames in last  ${analysis_head_seconds} seconds: ${tail_black}."
 }
 
 maketemp(){
-    mktemp -q "/tmp/$(basename $0).XXXXXX"
-    if [ ${?} -ne 0 ]; then
+    mktemp -q "/tmp/$(basename "${0}").XXXXXX"
+    if [ "${?}" -ne 0 ]; then
         echo "${0}: Can't create temp file, exiting..."
         exit 1
     fi
 }
 
 ask_operator(){
-    if [ -z "$op" ] ; then
+    if [ -z "${op}" ] ; then
         report -qn "Enter the name of the operator or 'q' to quit: "
         read op
-        [ -z "$op" ] && ask_operator || log+="operator: ${op}\n"
-        [ "$op" == "q" ] && exit 0
+        [ -z "${op}" ] && ask_operator || log+="operator: ${op}\n"
+        [ "${op}" == "q" ] && exit 0
     fi
 }
 
 ask_mediaid(){
-    if [ -z "$mediaid" ] ; then
+    if [ -z "${mediaid}" ] ; then
         report -qn "Enter a unique MEDIA ID: "
         read mediaid
-        [ -z "$mediaid" ] && ask_mediaid
+        [ -z "${mediaid}" ] && ask_mediaid
         # option to quit
-        [ "$mediaid" == "q" ] && exit 0
+        [ "${mediaid}" == "q" ] && exit 0
         # validate id and perhaps fail with exit
-        [ -z "$mediaid" ] && { report -wt "ERROR You must enter a valid MEDIA ID" ; exit ;};
-        [ ! -z $(echo "$mediaid" | grep -v "^[A-Z0-9_-]*$") ] && { report -wt "ERROR The MEDIA ID must only contain capital letters, letters, hyphen and underscore" ; exit 1 ;};
+        [ -z "${mediaid}" ] && { report -wt "ERROR You must enter a valid MEDIA ID" ; exit ;};
+        [ ! -z $(echo "${mediaid}" | grep -v "^[A-Z0-9_-]*$") ] && { report -wt "ERROR The MEDIA ID must only contain capital letters, letters, hyphen and underscore" ; exit 1 ;};
     fi
-    [ ! -z "$mediaid" ] && log+="mediaid: ${mediaid}\n"
+    [ ! -z "${mediaid}" ] && log+="mediaid: ${mediaid}\n"
 }
 
 ask_input(){
-    if [ -z "$input" ] ; then
+    if [ -z "${input}" ] ; then
         report -qn "Drag in the file: "
         read input
-        [ -z "$input" ] && ask_input
-        [ "$input" == "q" ] && exit 0
-        basename=$(basename "$input")
-        [ ! -z "$input" ] && log+="input: ${input}\n"
+        [ -z "${input}" ] && ask_input
+        [ "${input}" == "q" ] && exit 0
+        basename=$(basename "${input}")
+        [ ! -z "${input}" ] && log+="input: ${input}\n"
     fi
 }
 
 ask_trimmed_materials(){
-    if [ -z "$input" ] ; then
+    if [ -z "${input}" ] ; then
         report -qn "Drag in any trimmed materials: "
         read -a trimmed
         [ "$trimmed[0]" == "q" ] && exit 0
-        [ ! -z "$trimmed" ] && log+="trimmed_materials: ${trimmed}\n"
+        [ ! -z "${trimmed}" ] && log+="trimmed_materials: ${trimmed}\n"
     fi
 }
 
 check_dependencies(){
     deps_ok=YES
-    while [ "$*" != "" ] ; do
-        dependency="$1"
-        if [ ! $(which $dependency) ] ; then
-            report -wt "This script requires $dependency to run but it is not installed"
-            report -wt "If you are running ubuntu or debian you might be able to install $dependency with the following command"
+    while [ "${*}" != "" ] ; do
+        dependency="${1}"
+        if [ ! $(which "${dependency}") ] ; then
+            report -wt "This script requires ${dependency} to run but it is not installed"
+            report -wt "If you are running ubuntu or debian you might be able to install ${dependency} with the following command"
             report -wt "sudo apt-get install ${dependency}"
-            report -wt "If you are running mac you might be able to install $dependency with the following command"
+            report -wt "If you are running mac you might be able to install ${dependency} with the following command"
             report -wt "brew install ${dependency}"
             deps_ok=NO
         fi
         shift
     done
-    if [[ "$deps_ok" == "NO" ]]; then
+    if [[ "${deps_ok}" == "NO" ]]; then
         report -wt "Unmet dependencies"
         report -wt "Aborting!"
         exit 1
@@ -197,32 +197,32 @@ _initialize_make(){
 }
 
 check_deliverdir(){
-    if [ ! -d "$deliverdir" ] ; then
-        report -wt "The delivery directory, ${deliverdir}, does not exist. Can not deliver the output of $(basename "$0")."
+    if [ ! -d "${deliverdir}" ] ; then
+        report -wt "The delivery directory, ${deliverdir}, does not exist. Can not deliver the output of $(basename "${0}")."
     fi
 }
 
 _check_outputdir_forced(){
-    if [ ! -d "$1" ] ; then
-        report -wt "The directory, ${1}, does not exist. Can not write the output of $(basename "$0")."
+    if [ ! -d "${1}" ] ; then
+        report -wt "The directory, ${1}, does not exist. Can not write the output of $(basename "${0}")."
     fi
 }
 
 check_emailaddress(){
     emailregex="^((\w+([-+.']\w+)*@\w+([-.]\w+)*\.\w+([-.]\w+)*)*([,])*)*$"
-    if ! $(echo "$1" | grep -Eq "^((\w+([-+.']\w+)*@\w+([-.]\w+)*\.\w+([-.]\w+)*)*([,])*)*$") ; then
-        report -wt "$1 is not a valid email address."
+    if ! $(echo "${1}" | grep -Eq "^((\w+([-+.']\w+)*@\w+([-.]\w+)*\.\w+([-.]\w+)*)*([,])*)*$") ; then
+        report -wt "${1} is not a valid email address."
     fi
 }
 
 email_delivery(){
-    emailto="$1"
-    if [ "$emailto" ] ; then
-        echo -e "Subject: [delivery] $(basename ${output})\n
+    emailto="${1}"
+    if [ "${emailto}" ] ; then
+        echo -e "Subject: [delivery] $(basename "${output}")\n
         A file has been delivered to ${deliverdir}.\n
         \n
         Filename: ${output}\n
-        Process: $(basename $0)\n
+        Process: $(basename "${0}")\n
         MediaID: ${mediaid}\n
         Sourcefile: ${sourcefile}\n
         Decoding_options: ${inputoptions[@]}\n
@@ -251,8 +251,8 @@ ask(){
     # 1) A prompt
     # 2) The label for the metadata value
     read -p "${1}" response
-    if [ -z "$response" ] ; then
-        ask "$1" "$2"
+    if [ -z "${response}" ] ; then
+        ask "${1}" "${2}"
         else
         log+="${2}: ${response}\n"
     fi
@@ -266,8 +266,8 @@ offerChoice(){
     # 3) A vocabulary list
     PS3="${1}"
     label="${2}"
-    eval set "$3"
-    select option in "$@"
+    eval set "${3}"
+    select option in "${@}"
     do
         break
     done
@@ -276,18 +276,18 @@ offerChoice(){
 }
 
 make_mezz_for_xdcam(){
-    som="$1"
-    dur="$2"
+    som="${1}"
+    dur="${2}"
 
-    tmc_ms=$(mediainfo --inform="Video;%Delay%" "$3")
-    tmc_smp=$(mediainfo --inform="Video;%Delay/String3%" "$3")
-    tmc_sec=$(echo "$tmc_ms * 0.001" | bc)
+    tmc_ms=$(mediainfo --inform="Video;%Delay%" "${3}")
+    tmc_smp=$(mediainfo --inform="Video;%Delay/String3%" "${3}")
+    tmc_sec=$(echo "${tmc_ms} * 0.001" | bc)
 
-    som_h=$(echo "$som" | cut -c 1-2)
-    som_m=$(echo "$som" | cut -c 4-5)
-    som_s=$(echo "$som" | cut -c 7-8)
-    som_f=$(echo "$som" | cut -c 10-11)
-    som_fc=$(echo "scale=3; (((((3600 * $som_h)+(60 * $som_m)+ $som_s ) * 30)+ $som_f ) - ( 2 * (((60 * $som_h)+ $som_m ) - (((60 * $som_h)+ $som_m ) / 10 )))) / 29.97" | bc)
+    som_h=$(echo "${som}" | cut -c 1-2)
+    som_m=$(echo "${som}" | cut -c 4-5)
+    som_s=$(echo "${som}" | cut -c 7-8)
+    som_f=$(echo "${som}" | cut -c 10-11)
+    som_fc=$(echo "scale=3; (((((3600 * ${som_h})+(60 * ${som_m})+ ${som_s} ) * 30)+ ${som_f} ) - ( 2 * (((60 * ${som_h})+ ${som_m} ) - (((60 * ${som_h})+ ${som_m} ) / 10 )))) / 29.97" | bc)
 
     dur_h=$(echo "$dur" | cut -c 1-2)
     dur_m=$(echo "$dur" | cut -c 4-5)
@@ -419,7 +419,7 @@ is_video(){
 get_volume_adjustment(){
     reference=-23
     input_movie="$1"
-    report -dt "Getting volume data for $(basename "$input_movie") ..."
+    report -dt "Getting volume data for $(basename "${input_movie}") ..."
     volume_data=$(ffprobe -v error -of compact=p=0:nk=1:s=',' -show_entries frame=metadata:tags=lavfi.r128.I,lavfi.r128.LRA -f lavfi "amovie='${input_movie}',ebur128=metadata=1")
     [ $? -ne 0 ] && { report -wt "Volume analysis for $input_movie exited with $?." ; exit ;};
     for i in $(echo "$volume_data"); do
