@@ -192,12 +192,10 @@ if [ "${blackframetest}" = "Y" ] ; then
     fi
 fi
 if [ "${padded}" = "Y" ] ; then
-    report -qn "How many seconds should be trimmed from the beginning: "
+    report -qn "Enter point of time in seconds to start transcoding: "
     read intime
-    report -qn "How many seconds should be trimmed from the ending: "
+    report -qn "Enter point of time in seconds to stop transcoding: "
     read outtime
-    _writeingestlog "intime" "${intime}"
-    _writeingestlog "outtime" "${outtime}"
 fi
 
 objectsdir="${OUTDIR_INGESTFILE}/${mediaid}/objects"
@@ -228,6 +226,11 @@ _run mkdir -p "${logdir}"
 ingestlog="${logdir}/capture.log"
 echo -e "$log" >> "${ingestlog}"
 _writeingestlog "datetime_start" "$(get_iso8601)"
+
+if [ "${padded}" = "Y" ] ; then
+    _writeingestlog "intime" "${intime}"
+    _writeingestlog "outtime" "${outtime}"
+fi
 
 submissiondocdir="${OUTDIR_INGESTFILE}/${mediaid}/metadata/submissionDocumentation"
 _run mkdir -p "${submissiondocdir}"
