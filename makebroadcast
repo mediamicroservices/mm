@@ -180,6 +180,20 @@ while [ "${*}" != "" ] ; do
     inputoptions+=(-y)
     inputoptions+=(-loglevel verbose)
 
+    # set in and out times if used
+    ingestlog="${logdir}/capture.log"
+    if [[ -f "${ingestlog}" ]] ; then
+        intime=$(grep "^intime:" "${ingestlog}" | cut -d: -f2 | sed 's/ //g')
+        outtime=$(grep "^outtime:" "${ingestlog}" | cut -d: -f2 | sed 's/ //g')
+        if [[ "${intime}" =~ "^[0-9.]+$" -a "${outtime}" =~ "^[0-9]+$" ]] ; then
+            report -dt "ATTENTION: Transcoding will use intime (${intime}) and/or outtime (${outtime}) during transcoding."
+            middleoptions+=(-t "${intime}")
+            middleoptions+=(-t "${outtime}")
+        else
+            report -w "WARNING: intime (${intime}) and/or outtime (${outtime}) are not numbers, skipping."
+        fi
+    fi
+
     # log process
     if [ "${logdir}" != "" ] ; then
         _run mkdir -p "${logdir}"

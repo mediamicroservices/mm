@@ -4,6 +4,7 @@
 version="1.0"
 requireconfig="Y"
 dochecksums="Y"
+padded=""
 makeaccesscopies="Y"       # use 'Y' for yes or any other character for no
 blackframetest="Y"         # use 'Y' for yes or any other character for no
 deliverytoomneon="Y"       # use 'Y' for yes or any other character for no
@@ -177,16 +178,26 @@ if [ "${blackframetest}" = "Y" ] ; then
     black_at_ends "${input}"
     if [ "${head_black}" -gt "30" ] ; then
         report -wt "WARNING - There are at least ${head_black} frames of black at the beginning of ${input}"
+        padded="Y"
         report -qn "Enter q to quit, any other key to continue: "
         read a1
         [ "${a1}" == "q" ] && exit 0
     fi
     if [ "${tail_black}" -gt "30" ] ; then
         report -wt "WARNING - There are at least ${tail_black} frames of black at the end of ${input}"
+        padded="Y"
         report -qn "Enter q to quit, any other key to continue: "
         read a2
         [ "${a2}" == "q" ] && exit 0
     fi
+fi
+if [ "${padded}" = "Y" ] ; then
+    report -qn "How many seconds should be trimmed from the beginning: "
+    read intime
+    report -qn "How many seconds should be trimmed from the ending: "
+    read outtime
+    _writeingestlog "intime" "${intime}"
+    _writeingestlog "outtime" "${outtime}"
 fi
 
 objectsdir="${OUTDIR_INGESTFILE}/${mediaid}/objects"
