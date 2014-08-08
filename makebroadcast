@@ -73,7 +73,10 @@ while [ "${*}" != "" ] ; do
     # clear local arrays
     unset inputoptions
     unset middleoptions
+    unset middleoptionsxdcam
+    unset middleoptionsimx
     unset audiomapping_ffmpeg
+    unset filterchain_start
     filterchain_start=""
 
     # get information on the input
