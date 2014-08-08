@@ -115,6 +115,7 @@ while [ "${*}" != "" ] ; do
     middleoptions+=(-ps 1)
     middleoptions+=(-flags +ildct+ilme)
     middleoptions+=(-pix_fmt yuv422p)
+    middleoptions+=(-metadata:s:v:0 timecode=00:00:00.00)
 
     #xdcam options
     middleoptionsxdcam+=(-s 1920x1080)
