@@ -237,8 +237,10 @@ ingestlog="${logdir}/capture.log"
 echo -e "$log" >> "${ingestlog}"
 _writeingestlog "datetime_start" "$(get_iso8601)"
 
-if [ "${padded}" = "Y" ] ; then
+if [ "${intime}" ] ; then
     _writeingestlog "intime" "${intime}"
+fi
+if [ "${outtime}" ] ; then
     _writeingestlog "outtime" "${outtime}"
 fi
 
