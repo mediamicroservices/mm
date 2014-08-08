@@ -5,6 +5,8 @@ version="1.0"
 requireconfig="Y"
 dochecksums="Y"
 padded=""
+intime=""
+outtime=""
 makeaccesscopies="Y"       # use 'Y' for yes or any other character for no
 blackframetest="Y"         # use 'Y' for yes or any other character for no
 deliverytoomneon="Y"       # use 'Y' for yes or any other character for no
@@ -182,6 +184,13 @@ if [ "${blackframetest}" = "Y" ] ; then
         report -qn "Enter q to quit, any other key to continue: "
         read a1
         [ "${a1}" == "q" ] && exit 0
+        while [[ ! $(echo "$intime" | grep "^[0-9.]\+$") ]] ; do
+            report -qn "Enter point of time in seconds to start transcoding: "
+            read intime
+            if [[ ! $(echo "$intime" | grep "^[0-9.]\+$") ]] ; then
+                report -w "In time must be a decimal."
+            fi
+        done
     fi
     if [ "${tail_black}" -gt "30" ] ; then
         report -wt "WARNING - There are at least ${tail_black} frames of black at the end of ${input}"
@@ -189,13 +198,14 @@ if [ "${blackframetest}" = "Y" ] ; then
         report -qn "Enter q to quit, any other key to continue: "
         read a2
         [ "${a2}" == "q" ] && exit 0
+        while [[ ! $(echo "$outtime" | grep "^[0-9.]\+$") ]] ; do
+            report -qn "Enter point of time in seconds to stop transcoding: "
+            read outtime
+            if [[ ! $(echo "$outtime" | grep "^[0-9.]\+$") ]] ; then
+                report -w "Out time must be a decimal."
+            fi
+        done
     fi
-fi
-if [ "${padded}" = "Y" ] ; then
-    report -qn "Enter point of time in seconds to start transcoding: "
-    read intime
-    report -qn "Enter point of time in seconds to stop transcoding: "
-    read outtime
 fi
 
 objectsdir="${OUTDIR_INGESTFILE}/${mediaid}/objects"
