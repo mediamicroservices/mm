@@ -206,6 +206,9 @@ while [ "${*}" != "" ] ; do
         get_volume_adjustment "${sourcefile}"
         if [ "${VOLADJ}" ] ; then
             middleoptions+=(-af volume=${VOLADJ}dB)
+            if [ "${ingestlog}" ] ; then
+                _writeingestlog "audio_adjustment" "${VOLADJ}"
+            fi
         fi
     fi
     _run ffmpeg ${inputoptions[@]} -i "${sourcefile}" ${middleoptions[@]} "${output}"
