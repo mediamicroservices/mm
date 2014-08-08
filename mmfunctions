@@ -498,3 +498,13 @@ _writeingestlog(){
         report -wt "The _writeingestlog function was called but the ingestlog file (${ingestlog}) is not declared."
     fi
 }
+
+_readingestlog(){
+    if [ -f "${ingestlog}" ] ; then
+        key="$1"
+        # need to add yaml style escaping
+        grep "^${1}:" "${ingestlog}" | cut -d: -f2 | sed 's/ //g'
+    else
+        report -wt "The _readingestlog function was called but the ingestlog file (${ingestlog}) is not declared."
+    fi
+}
