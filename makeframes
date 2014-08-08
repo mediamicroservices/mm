@@ -53,7 +53,7 @@ while [ "$*" != "" ] ; do
     for (( IMAGENUMBER=1; IMAGENUMBER<=$IMAGECOUNT; IMAGENUMBER++)) ; do
         START=$(echo "( $DURATION / ( $IMAGECOUNT + 1 )) * $IMAGENUMBER" | bc)
         output="$outputdir/${mediaid}_${IMAGENUMBER}.tiff"
-        report -d "Making frame $IMAGENUMBER of $IMAGECOUNT - $output"
+        report -d "Making frame $IMAGENUMBER of $IMAGECOUNT  - dur:${DURATION} start:${START} - $output"
         [ -s "${output}" ] && { report -wt "WARNING ${output} already exists, skipping transcode" ; shift ; continue ;};
         _prep_ffmpeg_log
         _run ffmpeg -y -v warning -ss "$START" -i $sourcefile -vf yadif,thumbnail=100 -frames:v 1 "$output" 
