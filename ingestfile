@@ -232,6 +232,9 @@ logdir="${OUTDIR_INGESTFILE}/${mediaid}/metadata/submissionDocumentation/logs"
 _run mkdir -p "${logdir}"
 ingestlog="${logdir}/capture.log"
 echo -e "$log" >> "${ingestlog}"
+_writeingestlog "computer_name" "$(uname -n)"
+_writeingestlog "user_name" "$(whoami)"
+_writeingestlog "operating_system_version" "$(uname -v)"
 _writeingestlog "datetime_start" "$(get_iso8601)"
 
 if [ "${intime}" ] ; then
