@@ -129,7 +129,7 @@ while [ "${*}" != "" ] ; do
     middleoptionsxdcam+=(-minrate:v 50M)
     middleoptionsxdcam+=(-bufsize 17825792)
     middleoptionsxdcam+=(-rc_init_occupancy 17825792)
-    
+
     # imx options
     middleoptionsimx+=(-aspect 4:3)
     middleoptionsimx+=(-qmax 12)
@@ -188,8 +188,8 @@ while [ "${*}" != "" ] ; do
         if [[ -z $(echo "${intime}" | grep -v "^[0-9.]*$") && -z $(echo "${outtime}" | grep -v "^[0-9.]*$") ]] ; then
             report -dt "ATTENTION: Transcoding will use intime (${intime}) and/or outtime (${outtime}) during transcoding."
             start_time=$(ffprobe "${sourcefile}" -show_entries format=start_time -of compact | cut -d= -f2)
-			intime_adj=$(echo "$intime - $start_time" | bc)
-			middleoptions+=(-ss "${intime_adj}")
+            intime_adj=$(echo "$intime - $start_time" | bc)
+            middleoptions+=(-ss "${intime_adj}")
             middleoptions+=(-to "${outtime}")
         else
             report -w "WARNING: intime (${intime}) and/or outtime (${outtime}) are not numbers, skipping."
