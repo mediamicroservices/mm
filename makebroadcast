@@ -184,8 +184,12 @@ while [ "${*}" != "" ] ; do
     middleoptions+=(-ac 2)
 
     # set input options for ffmpeg
+    get_codectagstring "${sourcefile}"
     inputoptions+=(-y)
     inputoptions+=(-loglevel verbose)
+    if [[ "${codec_tag_string}" == "mjp2" ]] ; then
+         inputoptions+=(-vcodec libopenjpeg)
+    fi
 
     # set in and out times if used
     ingestlog="${logdir}/capture.log"

@@ -80,6 +80,10 @@ while [ "${*}" != "" ] ; do
     unset middleoptions
 
     # encoding options
+    get_codectagstring "${sourcefile}"
+    if [[ "${codec_tag_string}" == "mjp2" ]] ; then
+         inputoptions+=(-vcodec libopenjpeg)
+    fi
     middleoptions+=(-r:v ntsc)
     middleoptions+=(-c:v mpeg2video)
     middleoptions+=(-c:a ac3)
