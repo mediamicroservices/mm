@@ -88,6 +88,7 @@ while [ "${*}" != "" ] ; do
     middleoptions+=(-c:v mpeg2video)
     middleoptions+=(-c:a ac3)
     middleoptions+=(-f dvd)
+    middleoptions+=(-bf 2)
     middleoptions+=(-qscale:v 2)
     middleoptions+=(-mbd rd)
     middleoptions+=(-s 720x480)
