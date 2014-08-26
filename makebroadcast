@@ -226,7 +226,7 @@ while [ "${*}" != "" ] ; do
             get_volume_adjustment "${sourcefile}"
             if [ "${VOLADJ}" ] ; then
                 middleoptions+=(-af volume=${VOLADJ}dB)
-                if [ "${ingestlog}" ] ; then
+                if [[ -f "${ingestlog}" ]] ; then
                     _writeingestlog "audio_adjustment" "${VOLADJ}"
                 fi
             fi
