@@ -80,6 +80,7 @@ while [ "${*}" != "" ] ; do
     unset middleoptions
 
     # encoding options
+    inputoptions+=" -y"
     get_codectagstring "${sourcefile}"
     if [[ "${codec_tag_string}" == "mjp2" ]] ; then
          inputoptions+=(-vcodec libopenjpeg)
@@ -114,7 +115,6 @@ while [ "${*}" != "" ] ; do
     else
         middleoptions+=(-vf "fieldorder=bff,scale=720:480:interl=1,setdar=${aspect}" -aspect ${aspect})
     fi
-    inputoptions+=" -y"
     _prep_ffmpeg_log
     # making the initial mpeg2 for the dvd
     _run ffmpeg ${inputoptions[@]} -i "${sourcefile}" ${middleoptions[@]} "${outputdir}/${mediaid%.*}.mpeg"
