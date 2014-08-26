@@ -214,7 +214,9 @@ while [ "${*}" != "" ] ; do
     fi
     _prep_ffmpeg_log
     if [ "${voladjust}" = "Y" ] ; then
-        VOLADJ=$(_readingestlog "audio_adjustment")
+        if [[ -f "${ingestlog}" ]] ; then
+            VOLADJ=$(_readingestlog "audio_adjustment")
+        fi
         if [ "${VOLADJ}" ] ; then
             middleoptions+=(-af volume=${VOLADJ}dB)
         else
