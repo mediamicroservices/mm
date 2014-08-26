@@ -73,8 +73,8 @@ get_ftp_status "${filename}"
 if [[ ! $(echo "$status" | grep "${OMNEONPATH}") ]] ; then
 report "The file named $filename is not currently on the omneon, proceeding..."
 
-if echo "$sourcefile" | grep -q "/Volumes/[A-Z][0-9]\{5\}" ; then
-    report -dt "The file ${filename} is coming from an LTO tape. It will first move the file to ${TMPDIR} and then upload to the omneon."
+if echo "$sourcefile" | grep -q "/Volumes/" ; then
+    report -dt "The file ${filename} is coming from an external volume. It will first move the file to ${TMPDIR} and then upload to the omneon."
     rsync -rtv --progress "$sourcefile" "${TMPDIR}/"
     uploadfile="${TMPDIR}/${filename}"
     removetmp="y"
