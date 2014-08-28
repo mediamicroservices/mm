@@ -68,7 +68,7 @@ while [ "${*}" != "" ] ; do
     _log -b
     output="${outputdir}/${mediaid%.*}.mov"
     [ -s "${output}" ] && { report -wt "WARNING ${output} already exists, skipping transcode" ; shift ; continue ;};
-    _run mkdir -p "${outputdir}"
+    _mkdir2 "${outputdir}"
 
     # clear local arrays
     intime=""
@@ -212,9 +212,7 @@ while [ "${*}" != "" ] ; do
     fi
 
     # log process
-    if [ "${logdir}" != "" ] ; then
-        _run mkdir -p "${logdir}"
-    fi
+    _mkdir2 "${logdir}"
     _prep_ffmpeg_log
     if [ "${voladjust}" = "Y" ] ; then
         if [[ -f "${ingestlog}" ]] ; then

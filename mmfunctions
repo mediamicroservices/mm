@@ -19,12 +19,27 @@ get_iso8601_c(){
     date +%Y%m%d-%I%M%S
 }
 
+_mkdir2(){
+    local dir2make=""
+    while [ "${*}" != "" ] ; do
+        dir2make="${1}"
+        if [ ! -d "${dir2make}" ] ; then
+            mkdir -p "${dir2make}"
+            if [ "${?}" -ne 0 ]; then
+                report -wt "${0}: Can't create directory at ${dir2make}"
+                exit 1
+            fi
+        fi
+        shift
+    done
+}
+
 _log(){
     mmlogname="mm.log"
     mmlogdir="${CUSTOM_LOG_DIR:-/tmp}"
     mmlogfile="${mmlogdir}/${mmlogname}"
     if [ ! -d "${mmlogdir}" ] ; then
-        mkdir -p "${mmlogdir}"
+        _mkdir2 "${mmlogdir}"
         if [ "${?}" -ne 0 ]; then
             echo "${0}: Can't create log directory at ${mmlogdir}, exiting... Use mmconfig to change logging directory."
             exit 1
@@ -470,7 +485,7 @@ _summarize_make(){
 
 _prep_ffmpeg_log(){
     if [ "${logdir}" != "" ] ; then
-        _run mkdir -p "${logdir}"
+        _mkdir2 "${logdir}"
         export FFREPORT="file=${logdir}/%p_%t_$(basename "$0")_${version}.txt"
         inputoptions+=(-v warning -stats)
     else
