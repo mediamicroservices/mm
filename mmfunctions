@@ -432,10 +432,10 @@ get_volume_adjustment(){
     # test to see if adjustment is at least 1dB, else skip
     report -dt "Loudness range is ${loudness_range}dB."
     if [ $(echo "$VOLADJ < 1" |bc) -eq 1 -a $(echo "$VOLADJ > -1" |bc) -eq 1 ] ; then
-        report -dt "Integrated loudness for $name is ${integrated_loudness}dB. Reference is ${reference}dB. No adjustment is needed for ${name}, skipping."
+        report -dt "Integrated loudness for $(basename "${input_movie}") is ${integrated_loudness}dB. Reference is ${reference}dB. No adjustment is needed, skipping."
         VOLADJ=""
     else
-        report -dt "Integrated loudness for $name is ${integrated_loudness}dB. Reference is ${reference}dB. Will adjust by ${VOLADJ}dB."
+        report -dt "Integrated loudness for $(basename "${input_movie}") is ${integrated_loudness}dB. Reference is ${reference}dB. Will adjust by ${VOLADJ}dB."
     fi
 }
 
