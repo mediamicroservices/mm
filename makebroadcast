@@ -212,7 +212,6 @@ while [ "${*}" != "" ] ; do
     fi
 
     # log process
-    _mkdir2 "${logdir}"
     _prep_ffmpeg_log
     if [ "${voladjust}" = "Y" ] ; then
         if [[ -f "${ingestlog}" ]] ; then
