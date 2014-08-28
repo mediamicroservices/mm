@@ -487,7 +487,9 @@ _prep_ffmpeg_log(){
     if [ "${logdir}" != "" ] ; then
         _mkdir2 "${logdir}"
         export FFREPORT="file=${logdir}/%p_%t_$(basename "$0")_${version}.txt"
-        inputoptions+=(-v warning -stats)
+        inputoptions+=(-v info)
+        inputoptions+=(-hide_banner)
+        inputoptions+=(-stats)
     else
         export FFREPORT=""
     fi
