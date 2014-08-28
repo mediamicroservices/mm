@@ -216,9 +216,9 @@ fi
 _log -b
 
 # set up package directories
-_run_critical mkdir -p "${objectsdir}"
+_run_critical _mkdir2 "${objectsdir}"
 logdir="${OUTDIR_INGESTFILE}/${mediaid}/metadata/submissionDocumentation/logs"
-_run mkdir -p "${logdir}"
+_run _mkdir2 "${logdir}"
 ingestlog="${logdir}/capture.log"
 echo -e "$log" >> "${ingestlog}"
 _writeingestlog "audiodecision" "${audiodecision}"
@@ -239,7 +239,7 @@ if [ "${outtime}" ] ; then
 fi
 
 submissiondocdir="${OUTDIR_INGESTFILE}/${mediaid}/metadata/submissionDocumentation"
-_run mkdir -p "${submissiondocdir}"
+_run _mkdir2 "${submissiondocdir}"
 
 # rsync
 report -dt "STATUS Copying the original file to library storage at ${objectsdir}."
@@ -248,7 +248,7 @@ _run_critical rsync -rt --progress --log-file="${logdir}/rsync_$(get_iso8601_c)_
 if [ "${preservation_mode}" == "Y" ] ; then
     if [ ! -z "$trimmed[0]" ] ; then
         trimmed_materials_dir="${objectsdir}/trimmed_materials"
-        _run_critical mkdir -p "${trimmed_materials_dir}"
+        _run_critical _mkdir2 "${trimmed_materials_dir}"
         _run_critical rsync -rt --progress --log-file="${logdir}/rsync_$(get_iso8601_c)_$(basename $0)_${version}.txt" "$trimmed[@]" "${trimmed_materials_dir}/"
     fi
     makelossless "${objectsdir}/"
