@@ -62,12 +62,12 @@ _check_dfxml(){
     PACKAGE="${1}"
     # make temp file that lists filenames and filesizes from dfxml.xml
     DFXML_FILELIST="$(maketemp)"
-	if [ ! -z "$(xml sel -T -t -m "/_:dfxml/_:fileobject" -v "_:filename" -o " " -v "_:filesize" -n "${PACKAGE}/${OUTDIR}/${DFXMLNAME}" 2>/dev/null)" ] ; then
-	    xml sel -T -t -m "/_:dfxml/_:fileobject" -v "_:filename" -o " " -v "_:filesize" -n "${PACKAGE}/${OUTDIR}/${DFXMLNAME}" | sort > "${DFXML_FILELIST}"
-	else
-		xml sel -T -t -m "/dfxml/fileobject" -v "filename" -o " " -v "filesize" -n "${PACKAGE}/${OUTDIR}/${DFXMLNAME}" | sort > "${DFXML_FILELIST}"
-	fi
-	pwd=$(pwd)
+    if [ ! -z "$(xml sel -T -t -m "/_:dfxml/_:fileobject" -v "_:filename" -o " " -v "_:filesize" -n "${PACKAGE}/${OUTDIR}/${DFXMLNAME}" 2>/dev/null)" ] ; then
+        xml sel -T -t -m "/_:dfxml/_:fileobject" -v "_:filename" -o " " -v "_:filesize" -n "${PACKAGE}/${OUTDIR}/${DFXMLNAME}" | sort > "${DFXML_FILELIST}"
+    else
+        xml sel -T -t -m "/dfxml/fileobject" -v "filename" -o " " -v "filesize" -n "${PACKAGE}/${OUTDIR}/${DFXMLNAME}" | sort > "${DFXML_FILELIST}"
+    fi
+    pwd=$(pwd)
     # make temp file that lists filenames and filesizes from current objects directory
     NEW_FILELIST="$(maketemp)"
     cd "${PACKAGE}/${INDIR}"
