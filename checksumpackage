@@ -157,7 +157,11 @@ while [ "${*}" != "" ] ; do
         [ ! -d "${1}/${OUTDIR}" ] && mkdir -p "${1}/${OUTDIR}"
         echo "$(get_iso8601): $(basename ${0}):${version}: ${DFXMLNAME} is generated" >> "${1}/${OUTDIR}/${CHECKSUMPROCESSLOG}"
         mv "${DFXMLTMP}" "${1}/${OUTDIR}/${DFXMLNAME}"
-        xml sel -T -t -m "/_:dfxml/_:fileobject" -v "_:hashdigest" -o "  " -v "_:filename" -n "${1}/${OUTDIR}/${DFXMLNAME}" > "${1}/${OUTDIR}/${CHECKSUMNAME}"
+        if [ ! -z "$(xml sel -T -t -m "/_:dfxml/_:fileobject" -v "_:filename" -o " " -v "_:filesize" -n "${PACKAGE}/${OUTDIR}/${DFXMLNAME}" 2>/dev/null)" ] ; then
+            xml sel -T -t -m "/_:dfxml/_:fileobject" -v "_:hashdigest" -o "  " -v "_:filename" -n "${1}/${OUTDIR}/${DFXMLNAME}" > "${1}/${OUTDIR}/${CHECKSUMNAME}"
+        else
+            xml sel -T -t -m "/dfxml/fileobject" -v "hashdigest" -o "  " -v "filename" -n "${1}/${OUTDIR}/${DFXMLNAME}" > "${1}/${OUTDIR}/${CHECKSUMNAME}"
+        fi
         echo "$(get_iso8601): $(basename ${0}):${version}: ${CHECKSUMNAME} is generated" >> "${1}/${OUTDIR}/${CHECKSUMPROCESSLOG}"
         cd "${PWD}"
         if [ "${verify}" = "Y" ] ; then
