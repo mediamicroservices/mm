@@ -104,10 +104,11 @@ _version_dfxml(){
 
 while [ "${*}" != "" ] ; do
     _log -b
-    if [ -d "${1}" ] ; then
+    PACKAGE="${1}"
+    if [ -d "${PACKAGE}" ] ; then
         PWD=$(pwd)
-        "${scriptdir}/removeDSStore" "$1"
-        if [ -d "${1}/objects" ] ; then
+        "${scriptdir}/removeDSStore" "${PACKAGE}"
+        if [ -d "${PACKAGE}/objects" ] ; then
             INDIR="objects"
             OUTDIR="metadata"
         else
@@ -115,74 +116,74 @@ while [ "${*}" != "" ] ; do
             OUTDIR="."
         fi
         if [ "${check}" = "Y" ] ; then
-            if [ -s "${1}/${OUTDIR}/${CHECKSUMNAME}" ] ; then
-                _check_dfxml "${1}"
+            if [ -s "${PACKAGE}/${OUTDIR}/${DFXMLNAME}" ] ; then
+                _check_dfxml "${PACKAGE}"
                 if [ "${checkerr}" != "0" ] ; then
                     shift
                     continue
                 else
                     if [ "${update}" = "Y" ] ; then
-                        _version_dfxml "${1}"
+                        _version_dfxml "${PACKAGE}"
                     else
                         shift
                         continue
                     fi
                 fi
             else
-                report -dt "There is no dfxml.xml to check in ${1}, skipping."
+                report -dt "There is no dfxml.xml to check in ${PACKAGE}, skipping."
                 shift
                 continue
             fi
         elif [ "${verify}" = "Y" ] ; then
-                if [ -s "${1}/${OUTDIR}/${CHECKSUMNAME}" ] ; then
+                if [ -s "${PACKAGE}/${OUTDIR}/${CHECKSUMNAME}" ] ; then
                     report -dt "Prepping for dfxml.xml verification."
-                    _version_dfxml "${1}"
+                    _version_dfxml "${PACKAGE}"
                 else
-                    report -dt "There is no dfxml.xml to verify in ${1}, skipping."
+                    report -dt "There is no dfxml.xml to verify in ${PACKAGE}, skipping."
                     shift
                     continue
                 fi
         else
-            if [ -s "${1}/${OUTDIR}/${CHECKSUMNAME}" ] ; then
-                report -dt "${CHECKSUMNAME} already exists, skipping for ${1}"
+            if [ -s "${PACKAGE}/${OUTDIR}/${CHECKSUMNAME}" ] ; then
+                report -dt "${CHECKSUMNAME} already exists, skipping for ${PACKAGE}"
                 shift
                 continue
             fi
         fi
-        report -dt "making Digital Forensics XML (${DFXMLNAME}) and (${CHECKSUMNAME}) for ${1}"
-        cd "$1/$INDIR"
+        report -dt "making Digital Forensics XML (${DFXMLNAME}) and (${CHECKSUMNAME}) for ${PACKAGE}"
+        cd "${PACKAGE}/${INDIR}"
         DFXMLTMP=$(maketemp)
         md5deep -drl . > $DFXMLTMP
-        [ ! -d "${1}/${OUTDIR}" ] && mkdir -p "${1}/${OUTDIR}"
-        echo "$(get_iso8601): $(basename ${0}):${version}: ${DFXMLNAME} is generated" >> "${1}/${OUTDIR}/${CHECKSUMPROCESSLOG}"
-        mv "${DFXMLTMP}" "${1}/${OUTDIR}/${DFXMLNAME}"
+        [ ! -d "${PACKAGE}/${OUTDIR}" ] && mkdir -p "${PACKAGE}/${OUTDIR}"
+        echo "$(get_iso8601): $(basename ${0}):${version}: ${DFXMLNAME} is generated" >> "${PACKAGE}/${OUTDIR}/${CHECKSUMPROCESSLOG}"
+        mv "${DFXMLTMP}" "${PACKAGE}/${OUTDIR}/${DFXMLNAME}"
         if [ ! -z "$(xml sel -T -t -m "/_:dfxml/_:fileobject" -v "_:filename" -o " " -v "_:filesize" -n "${PACKAGE}/${OUTDIR}/${DFXMLNAME}" 2>/dev/null)" ] ; then
-            xml sel -T -t -m "/_:dfxml/_:fileobject" -v "_:hashdigest" -o "  " -v "_:filename" -n "${1}/${OUTDIR}/${DFXMLNAME}" > "${1}/${OUTDIR}/${CHECKSUMNAME}"
+            xml sel -T -t -m "/_:dfxml/_:fileobject" -v "_:hashdigest" -o "  " -v "_:filename" -n "${PACKAGE}/${OUTDIR}/${DFXMLNAME}" > "${PACKAGE}/${OUTDIR}/${CHECKSUMNAME}"
         else
-            xml sel -T -t -m "/dfxml/fileobject" -v "hashdigest" -o "  " -v "filename" -n "${1}/${OUTDIR}/${DFXMLNAME}" > "${1}/${OUTDIR}/${CHECKSUMNAME}"
+            xml sel -T -t -m "/dfxml/fileobject" -v "hashdigest" -o "  " -v "filename" -n "${PACKAGE}/${OUTDIR}/${DFXMLNAME}" > "${PACKAGE}/${OUTDIR}/${CHECKSUMNAME}"
         fi
-        echo "$(get_iso8601): $(basename ${0}):${version}: ${CHECKSUMNAME} is generated" >> "${1}/${OUTDIR}/${CHECKSUMPROCESSLOG}"
+        echo "$(get_iso8601): $(basename ${0}):${version}: ${CHECKSUMNAME} is generated" >> "${PACKAGE}/${OUTDIR}/${CHECKSUMPROCESSLOG}"
         cd "${PWD}"
         if [ "${verify}" = "Y" ] ; then
             CHECKSUMCMP1=$(maketemp)
-            sort "${1}/${OUTDIR}/${CHECKSUMNAME}" > "${CHECKSUMCMP1}"
+            sort "${PACKAGE}/${OUTDIR}/${CHECKSUMNAME}" > "${CHECKSUMCMP1}"
             CHECKSUMCMP2=$(maketemp)
             sort "${LASTMD5}" > "${CHECKSUMCMP2}"
             if [[ $(diff "${CHECKSUMCMP1}" "${CHECKSUMCMP2}") ]] ; then
-                report -wt "checksums are different for ${1}"
+                report -wt "checksums are different for ${PACKAGE}"
                 diff "${CHECKSUMCMP1}" "${CHECKSUMCMP2}"
                 echo "$(get_iso8601): $(basename ${0}):${version}: FAILED to VERIFY by checksums - compare ${CHECKSUMNAME} and $(basename "${LASTMD5}")" >> "${PACKAGE}/${OUTDIR}/${CHECKSUMPROCESSLOG}"
             else
-                report -dt "checksums are still valid for ${1}"
-                echo "$(get_iso8601): $(basename ${0}):${version}: verified by checksums" >> "${1}/${OUTDIR}/${CHECKSUMPROCESSLOG}"
+                report -dt "checksums are still valid for ${PACKAGE}"
+                echo "$(get_iso8601): $(basename ${0}):${version}: verified by checksums" >> "${PACKAGE}/${OUTDIR}/${CHECKSUMPROCESSLOG}"
             fi
             rm "${CHECKSUMCMP1}" "${CHECKSUMCMP2}"
         fi
         #if [ "$FILEMAKER_XML_URL" ] ; then
-            #"${scriptdir}/checksum2filemaker" "${1}"
+            #"${scriptdir}/checksum2filemaker" "${PACKAGE}"
             #fi
     else
-        report -dt "ERROR: ${0} requires directories as input and $1 is not a directory."
+        report -dt "ERROR: ${0} requires directories as input and ${PACKAGE} is not a directory."
     fi
     _log -e
     shift
