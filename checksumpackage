@@ -154,8 +154,8 @@ while [ "${*}" != "" ] ; do
         cd "$1/$INDIR"
         DFXMLTMP=$(maketemp)
         md5deep -drl . > $DFXMLTMP
-        echo "$(get_iso8601): $(basename ${0}):${version}: ${DFXMLNAME} is generated" >> "${1}/${OUTDIR}/${CHECKSUMPROCESSLOG}"
         [ ! -d "${1}/${OUTDIR}" ] && mkdir -p "${1}/${OUTDIR}"
+        echo "$(get_iso8601): $(basename ${0}):${version}: ${DFXMLNAME} is generated" >> "${1}/${OUTDIR}/${CHECKSUMPROCESSLOG}"
         mv "${DFXMLTMP}" "${1}/${OUTDIR}/${DFXMLNAME}"
         xml sel -T -t -m "/_:dfxml/_:fileobject" -v "_:hashdigest" -o "  " -v "_:filename" -n "${1}/${OUTDIR}/${DFXMLNAME}" > "${1}/${OUTDIR}/${CHECKSUMNAME}"
         echo "$(get_iso8601): $(basename ${0}):${version}: ${CHECKSUMNAME} is generated" >> "${1}/${OUTDIR}/${CHECKSUMPROCESSLOG}"
