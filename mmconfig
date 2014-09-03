@@ -66,7 +66,7 @@ while true ; do
     [ "$CONFIG_KEY" = "Quit" ] && { echo Goodbye. ; exit 1 ;};
     [ "$CONFIG_KEY" = "$EDITOPTION" ] && { nano "$CONFIG_FILE" ; exit 1 ;};
     echo -n "Enter the value for $CONFIG_KEY: "
-    read "CONFIG_VALUE"
+    read -e "CONFIG_VALUE"
     echo "$CONFIG_KEY is now set to $CONFIG_VALUE"
     config_edit "$CONFIG_KEY" "$CONFIG_VALUE"
 done

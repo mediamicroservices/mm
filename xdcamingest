@@ -48,7 +48,7 @@ while true ; do
             exit 3
         else
             report -qn "No XDCam disk found. Check deck connection. Click return to continue or 'q' to quit: "
-            read ok
+            read -e ok
             if [ "$ok" == "q" ]; then
                 exit 0
             fi
@@ -62,18 +62,18 @@ while true ; do
     report -dt "Found the XDCAM deck: ${deck1}"
 
     report -qn "Scan the barcode1, type 1st media_id, or 'q' to quit: "
-    read barcode1
+    read -e barcode1
     if [ "$barcode1" == "q" ]; then
         exit 0
     fi
     report -qn "Scan the barcode2, type 2nd media_id, or 'q' to quit or leave blank if there is no second barcode: "
-    read barcode2
+    read -e barcode2
     if [ "$barcode2" == "q" ]; then
         exit 0
     fi
 
     report -qn "Enter the name of the operator or 'q' to quit: "
-    read op
+    read -e op
     if [ "$op" == "q" ]; then
         exit 0
     fi
@@ -101,12 +101,12 @@ while true ; do
         materialid1="$barcode1"
         deviceid1="$barcode1"
         report -qn "BARCODE 1 - Enter start of media in HH:MM:SS:FF format or 'q' to quit: "
-        read som1
+        read -e som1
         if [ "$som1" == "q" ]; then
             exit 0
         fi
         report -qn "BARCODE 1 - Enter duration of media in HH:MM:SS:FF format or 'q' to quit: "
-        read duration1
+        read -e duration1
         if [ "$duration1" == "q" ]; then
             exit 0
         fi
@@ -114,12 +114,12 @@ while true ; do
             materialid2="$barcode2"
             deviceid2="$barcode2"
             report -qn "BARCODE 2 - Enter start of media in HH:MM:SS:FF format or 'q' to quit: "
-            read som2
+            read -e som2
             if [ "$som2" == "q" ]; then
                 exit 0
             fi
             report -qn "BARCODE 2 - Enter duration of media in HH:MM:SS:FF format or 'q' to quit: "
-            read duration2
+            read -e duration2
             if [ "$duration2" == "q" ]; then
                 exit 0
             fi

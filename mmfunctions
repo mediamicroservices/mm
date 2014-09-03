@@ -131,7 +131,7 @@ maketemp(){
 ask_operator(){
     if [ -z "${op}" ] ; then
         report -qn "Enter the name of the operator or 'q' to quit: "
-        read op
+        read -e op
         [ -z "${op}" ] && ask_operator || log+="operator: ${op}\n"
         [ "${op}" == "q" ] && exit 0
     fi
@@ -140,7 +140,7 @@ ask_operator(){
 ask_mediaid(){
     if [ -z "${mediaid}" ] ; then
         report -qn "Enter a unique MEDIA ID: "
-        read mediaid
+        read -e mediaid
         [ -z "${mediaid}" ] && ask_mediaid
         # option to quit
         [ "${mediaid}" == "q" ] && exit 0
@@ -154,7 +154,7 @@ ask_mediaid(){
 ask_input(){
     if [ -z "${input}" ] ; then
         report -qn "Drag in the file: "
-        read input
+        read -e input
         [ -z "${input}" ] && ask_input
         [ "${input}" == "q" ] && exit 0
         basename=$(basename "${input}")
@@ -165,7 +165,7 @@ ask_input(){
 ask_trimmed_materials(){
     if [ -z "${input}" ] ; then
         report -qn "Drag in any trimmed materials: "
-        read -a trimmed
+        read -e -a trimmed
         [ "$trimmed[0]" == "q" ] && exit 0
         [ ! -z "${trimmed}" ] && log+="trimmed_materials: ${trimmed}\n"
     fi
@@ -265,7 +265,7 @@ ask(){
     # This function requires 3 arguments
     # 1) A prompt
     # 2) The label for the metadata value
-    read -p "${1}" response
+    read -e -p "${1}" response
     if [ -z "${response}" ] ; then
         ask "${1}" "${2}"
         else
