@@ -251,7 +251,7 @@ if [ "${preservation_mode}" == "Y" ] ; then
         _run_critical _mkdir2 "${trimmed_materials_dir}"
         _run_critical rsync -rt --progress --log-file="${logdir}/rsync_$(get_iso8601_c)_$(basename $0)_${version}.txt" "$trimmed[@]" "${trimmed_materials_dir}/"
     fi
-    makelossless "${objectsdir}/"
+    makelossless "${OUTDIR_INGESTFILE}/${mediaid}"
 fi
 
 # make copy for broadcast
