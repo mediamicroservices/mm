@@ -32,7 +32,7 @@ usage(){
 OPTIND=1
 while getopts ":pnh" opt ; do
     case "${opt}" in
-        p) preservation_mode="Y" ; deliverytoomneon="N" ; deliveraccesscopies="Y" ;;
+        p) preservation_mode="Y" ; deliverytoomneon="N" ; deliveraccesscopies="Y" ; deliverytoaipstorage="N" ;;
         n) deliverytoomneon="N" ; deliveraccesscopies="N" ;;
         h) usage ;;
         *) echo "bad option -$OPTARG" ; usage ;;
