@@ -175,7 +175,7 @@ while [ "${*}" != "" ] ; do
         middleoptions+=(-vf "${filterchain_start}crop=720:480:0:32,pad=720:512:0:24,setsar=1/1,setdar=4/3")
         middleoptions+=(${middleoptionsimx[@]})
     else
-        middleoptions+=(-vf "${filterchain_start}scale=720:480,pad=720:512:0:24,setsar=1/1,setdar=4")
+        middleoptions+=(-vf "${filterchain_start}scale=720:480,pad=720:512:0:24,setsar=1/1,setdar=4/3")
         middleoptions+=(${middleoptionsimx[@]})
     fi
 
