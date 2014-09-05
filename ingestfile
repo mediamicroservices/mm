@@ -31,7 +31,7 @@ usage(){
 OPTIND=1
 while getopts ":pnh" opt ; do
     case "${opt}" in
-        p) preservation_mode="Y" ; deliverytoomneon="Y" ; deliveraccesscopies="Y" ;;
+        p) preservation_mode="Y" ; deliverytoomneon="N" ; deliveraccesscopies="Y" ;;
         n) deliverytoomneon="N" ; deliveraccesscopies="N" ;;
         h) usage ;;
         *) echo "bad option -$OPTARG" ; usage ;;
@@ -122,7 +122,6 @@ if [ ! $(is_video "${input}") ] ; then
     read notvidresponse
     [ "${notvidresponse}" == "q" ] && exit 0
 fi
-ask_trimmed_materials
 if [ "${audiodecision}" = "" ] ; then
     report -q "Select an audio strategy? "
     PS3="Selection? "
@@ -163,34 +162,52 @@ if [ "${priority}" = "" ] ; then
     done
 fi
 
-# blackframe analysis
-if [ "${blackframetest}" = "Y" ] ; then
-    black_at_ends "${input}"
-    if [ "${head_black}" -gt "30" ] ; then
-        report -wt "WARNING - There are at least ${head_black} frames of black at the beginning of ${input}"
-        report -qn "Enter q to quit, any other key to continue: "
-        read a1
-        [ "${a1}" == "q" ] && exit 0
-        while [[ ! $(echo "$intime" | grep "^[0-9.]\+$") ]] ; do
-            report -qn "Enter point of time in seconds to start transcoding: "
-            read intime
-            if [[ ! $(echo "$intime" | grep "^[0-9.]\+$") ]] ; then
-                report -w "In time must be a decimal."
-            fi
-        done
-    fi
-    if [ "${tail_black}" -gt "30" ] ; then
-        report -wt "WARNING - There are at least ${tail_black} frames of black at the end of ${input}"
-        report -qn "Enter q to quit, any other key to continue: "
-        read a2
-        [ "${a2}" == "q" ] && exit 0
-        while [[ ! $(echo "$outtime" | grep "^[0-9.]\+$") ]] ; do
-            report -qn "Enter point of time in seconds to stop transcoding: "
-            read outtime
-            if [[ ! $(echo "$outtime" | grep "^[0-9.]\+$") ]] ; then
-                report -w "Out time must be a decimal."
-            fi
-        done
+# blackframe analysis or in/out requests
+if [ "${preservation_mode}" == "Y" ] ; then
+    while [[ ! $(echo "$intime" | grep "^[0-9.]\+$") ]] ; do
+        report -qn "Enter point of time in seconds to start transcoding: "
+        read intime
+        if [[ ! $(echo "$intime" | grep "^[0-9.]\+$") ]] ; then
+            report -w "In time must be a decimal."
+        fi
+    done
+    while [[ ! $(echo "$outtime" | grep "^[0-9.]\+$") ]] ; do
+        report -qn "Enter point of time in seconds to stop transcoding: "
+        read outtime
+        if [[ ! $(echo "$outtime" | grep "^[0-9.]\+$") ]] ; then
+            report -w "Out time must be a decimal."
+        fi
+    done
+    ask_trimmed_materials
+else
+    if [ "${blackframetest}" = "Y" ] ; then
+        black_at_ends "${input}"
+        if [ "${head_black}" -gt "30" ] ; then
+            report -wt "WARNING - There are at least ${head_black} frames of black at the beginning of ${input}"
+            report -qn "Enter q to quit, any other key to continue: "
+            read a1
+            [ "${a1}" == "q" ] && exit 0
+            while [[ ! $(echo "$intime" | grep "^[0-9.]\+$") ]] ; do
+                report -qn "Enter point of time in seconds to start transcoding: "
+                read intime
+                if [[ ! $(echo "$intime" | grep "^[0-9.]\+$") ]] ; then
+                    report -w "In time must be a decimal."
+                fi
+            done
+        fi
+        if [ "${tail_black}" -gt "30" ] ; then
+            report -wt "WARNING - There are at least ${tail_black} frames of black at the end of ${input}"
+            report -qn "Enter q to quit, any other key to continue: "
+            read a2
+            [ "${a2}" == "q" ] && exit 0
+            while [[ ! $(echo "$outtime" | grep "^[0-9.]\+$") ]] ; do
+                report -qn "Enter point of time in seconds to stop transcoding: "
+                read outtime
+                if [[ ! $(echo "$outtime" | grep "^[0-9.]\+$") ]] ; then
+                    report -w "Out time must be a decimal."
+                fi
+            done
+        fi
     fi
 fi
 
@@ -246,10 +263,10 @@ report -dt "STATUS Copying the original file to library storage at ${objectsdir}
 _run_critical rsync -rt --progress --log-file="${logdir}/rsync_$(get_iso8601_c)_$(basename $0)_${version}.txt" "${input}" "${objectsdir}/"
 
 if [ "${preservation_mode}" == "Y" ] ; then
-    if [ ! -z "$trimmed[0]" ] ; then
+    if [ ! "${#trimmed[@]}" = 0 ] ; then
         trimmed_materials_dir="${objectsdir}/trimmed_materials"
-        _run_critical _mkdir2 "${trimmed_materials_dir}"
-        _run_critical rsync -rt --progress --log-file="${logdir}/rsync_$(get_iso8601_c)_$(basename $0)_${version}.txt" "$trimmed[@]" "${trimmed_materials_dir}/"
+        _mkdir2 "${trimmed_materials_dir}"
+        _run_critical rsync -rt --progress --log-file="${logdir}/rsync_$(get_iso8601_c)_$(basename $0)_${version}.txt" "${trimmed[@]}" "${trimmed_materials_dir}/"
     fi
     makelossless "${OUTDIR_INGESTFILE}/${mediaid}"
 fi
