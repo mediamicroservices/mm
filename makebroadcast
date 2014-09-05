@@ -141,6 +141,7 @@ while [ "${*}" != "" ] ; do
     middleoptionsimx+=(-aspect 4:3)
     middleoptionsimx+=(-qmax 12)
     middleoptionsimx+=(-g 1)
+    middleoptionsimx+=(-top 1)
     middleoptionsimx+=(-intra)
     middleoptionsimx+=(-b:v 30M)
     middleoptionsimx+=(-maxrate:v 30M)
