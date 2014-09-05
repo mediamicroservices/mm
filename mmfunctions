@@ -523,3 +523,12 @@ _readingestlog(){
         report -wt "The _readingestlog function was called but the ingestlog file (${ingestlog}) is not declared."
     fi
 }
+
+_get_filesystem(){
+    file="${1}"
+    if [ -f "${file}" ] ; then
+        df "${file}" | tail -n1 | cut -d " " -f1
+    else
+        report -wt "_get_filesystem was expecting a file but got a ${file}"
+    fi
+}
