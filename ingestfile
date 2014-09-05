@@ -6,6 +6,7 @@ requireconfig="Y"
 dochecksums="Y"
 intime=""
 outtime=""
+cleanup="N"
 makeaccesscopies="Y"       # use 'Y' for yes or any other character for no
 blackframetest="Y"         # use 'Y' for yes or any other character for no
 deliverytoomneon="Y"       # use 'Y' for yes or any other character for no
@@ -93,7 +94,7 @@ while getopts ":hm:f:p:a:w:y:xlcro:q" opt; do
         y) YOUTUBEDELIVER="${OPTARG}" ;;
         x) REGEX4PODCAST="${OPTARG}" ;;
         l) audiodecision="left" ;;
-        c) cleanupdecision="Y" ;;
+        c) cleanup="Y" ; cleanupdecision="Remove source file after successful ingest" ;;
         r) cropdetection="Y" ;;
         o) op="${OPTARG}" ;;
         q) priority="put in queue" ;;
@@ -150,6 +151,8 @@ if [ "${cleanupdecision}" = "" ] ; then
 
     if [ "${cleanupdecision}" = "Remove source file after successful ingest" ] ; then
         cleanup="Y"
+    else
+        cleanup="N"
     fi
 fi
 
