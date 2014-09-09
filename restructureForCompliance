@@ -36,6 +36,8 @@ elif [ -f "${target}" -a ! -d "$(dirname "${target}")/$(basename "${target%.*}")
     mv "$target" "$(dirname "${target}")/$(basename "${target%.*}")/objects/"
     mkdir -p "$(dirname "${target}")/$(basename "${target%.*}")/logs/fileMeta"
     mkdir -p "$(dirname "${target}")/$(basename "${target%.*}")/metadata/submissionDocumentation"
+    logdir="$(dirname "${target}")/$(basename "${target%.*}")/metadata/submissionDocumentation/logs"
+    mkdir -p "${logdir}"
 else
     echo Error: Needs SIP directory or file as argument 1>&2
     exit 1
