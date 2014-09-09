@@ -76,6 +76,26 @@ while [ "${*}" != "" ] ; do
     middleoptions+=(-c:v prores)
     middleoptions+=(-c:a pcm_s16le)
 
+    # set in and out times if used
+    ingestlog="${logdir}/capture.log"
+    if [[ -f "${ingestlog}" -a "${isobject}" = "Y" ]] ; then
+       intime=$(_readingestlog "intime")
+       outtime=$(_readingestlog "outtime")
+       if [[ "${intime}" ]] ; then
+           report -dt "ATTENTION: Transcoding will use intime (${intime}) during transcoding."
+           start_time=$(ffprobe "${sourcefile}" -show_entries format=start_time -of compact | cut -d= -f2)
+           intime_adj=$(echo "$intime - $start_time" | bc)
+           if [[ "${intime_adj:0:1}" = "." ]] ; then
+               intime_adj="0${intime_adj}"
+           fi
+           middleoptions+=(-ss "${intime_adj}")
+       fi
+       if [[ "${outtime}" ]] ; then
+           report -dt "ATTENTION: Transcoding will use outtime (${outtime}) during transcoding."
+           middleoptions+=(-to "${outtime}")
+       fi
+    fi
+
     _prep_ffmpeg_log
     _run ffmpeg ${inputoptions[@]} -i "${sourcefile}" ${middleoptions[@]} "${output}"
     echo
