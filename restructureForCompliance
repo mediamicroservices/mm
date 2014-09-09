@@ -29,13 +29,15 @@ target="${1}"
 if [ -d "${target}" ]; then
     mkdir "${target}/objects"
     mv $(find "${target}" -mindepth 1 -maxdepth 1 ! -name "objects") "${target}objects/"
-    mkdir -p "${target}/logs/fileMeta"
+    mkdir -p "${target}/logs"
     mkdir -p "${target}/metadata/submissionDocumentation"
+    mkdir -p "${target}/metadata/submissionDocumentation/fileMeta"
+    mkdir -p "${target}/metadata/submissionDocumentation/logs"
 elif [ -f "${target}" -a ! -d "$(dirname "${target}")/$(basename "${target%.*}")" ]; then
     mkdir -p "$(dirname "${target}")/$(basename "${target%.*}")/objects"
     mv "$target" "$(dirname "${target}")/$(basename "${target%.*}")/objects/"
-    mkdir -p "$(dirname "${target}")/$(basename "${target%.*}")/logs/fileMeta"
-    mkdir -p "$(dirname "${target}")/$(basename "${target%.*}")/metadata/submissionDocumentation"
+    mkdir -p "$(dirname "${target}")/$(basename "${target%.*}")/logs"
+    mkdir -p "$(dirname "${target}")/$(basename "${target%.*}")/metadata/submissionDocumentation/fileMeta"
     logdir="$(dirname "${target}")/$(basename "${target%.*}")/metadata/submissionDocumentation/logs"
     mkdir -p "${logdir}"
     while [[ ! $(echo "$intime" | grep "^[0-9.]\+$") ]] ; do
