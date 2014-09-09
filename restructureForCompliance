@@ -21,6 +21,9 @@
 # @author Joseph Perry <joseph@artefactual.com>
 # @version svn: $Id: 9e1ecac84215aaafd740d15eb0cbdc4c17b7fa1e $
 
+scriptdir=$(dirname $(which "$0"))
+. "$scriptdir/mmfunctions" || { echo "Missing '$scriptdir/mmfunctions'. Exiting." ; exit 1 ;};
+
 target="${1}"
 
 if [ -d "${target}" ]; then
