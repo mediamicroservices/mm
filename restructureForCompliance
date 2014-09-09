@@ -21,18 +21,18 @@
 # @author Joseph Perry <joseph@artefactual.com>
 # @version svn: $Id: 9e1ecac84215aaafd740d15eb0cbdc4c17b7fa1e $
 
-target=$1
+target="${1}"
 
-if [ -d "$target" ]; then
+if [ -d "${target}" ]; then
     mkdir "${target}/objects"
-    mv $(find "$target" -mindepth 1 -maxdepth 1 ! -name "objects") "${target}objects/"
+    mv $(find "${target}" -mindepth 1 -maxdepth 1 ! -name "objects") "${target}objects/"
     mkdir -p "${target}/logs/fileMeta"
     mkdir -p "${target}/metadata/submissionDocumentation"
-elif [ -f "$target" -a ! -d "$(dirname $target)/$(basename ${target%.*})" ]; then
-    mkdir -p "$(dirname $target)/$(basename ${target%.*})/objects"
-    mv "$target" "$(dirname $target)/$(basename ${target%.*})/objects/"
-    mkdir -p "$(dirname $target)/$(basename ${target%.*})/logs/fileMeta"
-    mkdir -p "$(dirname $target)/$(basename ${target%.*})/metadata/submissionDocumentation"
+elif [ -f "${target}" -a ! -d "$(dirname "${target}")/$(basename "${target%.*}")" ]; then
+    mkdir -p "$(dirname "${target}")/$(basename "${target%.*}")/objects"
+    mv "$target" "$(dirname "${target}")/$(basename "${target%.*}")/objects/"
+    mkdir -p "$(dirname "${target}")/$(basename "${target%.*}")/logs/fileMeta"
+    mkdir -p "$(dirname "${target}")/$(basename "${target%.*}")/metadata/submissionDocumentation"
 else
     echo Error: Needs SIP directory or file as argument 1>&2
     exit 1
