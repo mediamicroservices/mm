@@ -264,7 +264,7 @@ _run _mkdir2 "${submissiondocdir}"
 # rsync
 from=$(_get_filesystem "${input}")
 to=$(_get_filesystem "${objectsdir}/")
-if [[ "${from}" == "${to}" -a cleanup == "Y" ]] ; then
+if [ "${from}" == "${to}" -a "${cleanup}" == "Y" ] ; then
     report -dt "Because ${input} and ${objectsdir} are on the same filesystem and preservation mode is enabled we will mv rather than rsync."
     _run_critical mv -v -n "${input}" "${objectsdir}/"
 else
@@ -272,7 +272,7 @@ else
     _run_critical rsync -rt --progress --log-file="${logdir}/rsync_$(get_iso8601_c)_$(basename $0)_${version}.txt" "${input}" "${objectsdir}/"
 fi
 
-if [ "${preservation_mode}" == "Y" ] ; then
+if [ "${preservation_mode}" = "Y" ] ; then
     if [ ! "${#trimmed[@]}" = 0 ] ; then
         trimmed_materials_dir="${objectsdir}/trimmed_materials"
         _mkdir2 "${trimmed_materials_dir}"
@@ -327,6 +327,7 @@ _writeingestlog "datetime_end" "$(get_iso8601)"
 # move and cleanup
 if [ "${deliverytoaipstorage}" == "Y" ] ; then
     rsync -rt --progress --remove-source-files "${OUTDIR_INGESTFILE}/${mediaid}" "${AIP_STORAGE}/"
+    rsync_err="$?"
     [ $(du -s "${OUTDIR_INGESTFILE}/${mediaid}" | awk '{print $1}') = "0" ] && rm -r "${OUTDIR_INGESTFILE}/${mediaid}"
     report -dt "STATUS Done. Final package has been delivered to ${AIP_STORAGE}/${mediaid}"
 fi
