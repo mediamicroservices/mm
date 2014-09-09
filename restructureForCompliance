@@ -38,6 +38,27 @@ elif [ -f "${target}" -a ! -d "$(dirname "${target}")/$(basename "${target%.*}")
     mkdir -p "$(dirname "${target}")/$(basename "${target%.*}")/metadata/submissionDocumentation"
     logdir="$(dirname "${target}")/$(basename "${target%.*}")/metadata/submissionDocumentation/logs"
     mkdir -p "${logdir}"
+    while [[ ! $(echo "$intime" | grep "^[0-9.]\+$") ]] ; do
+        report -qn "Enter point of time in seconds to start transcoding: "
+        read intime
+        if [[ ! $(echo "$intime" | grep "^[0-9.]\+$") ]] ; then
+            report -w "In time must be a decimal."
+        fi
+    done
+    ingestlog="${logdir}/capture.log"
+    if [ "${intime}" ] ; then
+        _writeingestlog "intime" "${intime}"
+    fi
+    while [[ ! $(echo "$outtime" | grep "^[0-9.]\+$") ]] ; do
+        report -qn "Enter point of time in seconds to stop transcoding: "
+        read outtime
+        if [[ ! $(echo "$outtime" | grep "^[0-9.]\+$") ]] ; then
+            report -w "Out time must be a decimal."
+        fi
+    done
+    if [ "${outtime}" ] ; then
+        _writeingestlog "outtime" "${outtime}"
+    fi
 else
     echo Error: Needs SIP directory or file as argument 1>&2
     exit 1
