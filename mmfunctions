@@ -505,7 +505,7 @@ emailoutcome(){
 }
 
 _writeingestlog(){
-    if [ -f "${ingestlog}" ] ; then
+    if [ "${ingestlog}" ] ; then
         key="$1"
         value="$2"
         # need to add yaml style escaping
