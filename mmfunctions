@@ -257,19 +257,32 @@ _get_duration(){
 email_delivery(){
     emailto="${1}"
     if [ "${emailto}" ] ; then
+        [ -d "${input}" ] && logdir="${input}/metadata/submissionDocumentation/logs"
+        [ -f "${input}" ] && logdir="$(dirname "${input}")/service/logs"
+        ingestlog="${logdir}/capture.log"
+        _get_duration "${output}"
+        echo OUTPUT "${output}"
+        if [[ -f "${ingestlog}" ]] ; then
+            FROMLOG="Operator: $(_readingestlog "operator")\n
+Processing Computer: $(_readingestlog "computer_name")
+Audio Peak (dB): $(_readingestlog "voldet_max_volume")
+Integrated Loudness: $(_readingestlog "r128_integrated_loudness")
+Audio Adjustment: $(_readingestlog "audio_adjustment")
+Loudness Range: $(_readingestlog "r128_loudness_range")"
+        fi
         echo -e "Subject: [delivery] $(basename "${output}")\n
-        A file has been delivered to ${deliverdir}.\n
-        \n
-        Filename: ${output}\n
-        Process: $(basename "${0}")\n
-        MediaID: ${mediaid}\n
-        Sourcefile: ${sourcefile}\n
-        Decoding_options: ${inputoptions[@]}\n
-        Encoding_options: ${middleoptions[@]}\n
-        Operator: ${op}\n
-        Delivery Exit Status: ${DELIVER_EXIT_STATUS}\n
-        \n
-        Enjoy!" | sendmail -f "${EMAIL_FROM}" -F "${emailto}" "${emailto}"
+A file has been delivered to ${deliverdir}.\n
+Process: $(basename "${0}")
+MediaID: ${mediaid}\n
+Filename: ${output}
+Sourcefile: ${sourcefile}
+Duration: ${ffduration}\n
+Decoding_options: ${inputoptions[@]}
+Encoding_options: ${middleoptions[@]}\n
+Delivery Exit Status: ${DELIVER_EXIT_STATUS}\n
+${FROMLOG}
+\n
+Enjoy!" | sendmail -f "${EMAIL_FROM}" -F "${emailto}" "${emailto}"
     fi
 }
 
