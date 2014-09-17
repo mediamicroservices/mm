@@ -38,7 +38,7 @@ while [ "${*}" != "" ] ; do
     pwd=$(pwd)
     cd "${package_path}"
     FILELIST=$(maketemp)
-    find "./objects" -type f ! -name ".*" > "${FILELIST}"
+    find "./objects" -type f ! -name ".*" ! -path "*/access/images/*" > "${FILELIST}"
     report -dt "Making metadata reports for ${package_path}."
     while read file ; do
         filenameroot=$(basename "${file}")
