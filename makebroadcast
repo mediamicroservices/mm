@@ -222,9 +222,11 @@ while [ "${*}" != "" ] ; do
         else
             get_volume_adjustment "${sourcefile}"
             if [ "${VOLADJ}" ] ; then
-                middleoptions+=(-af volume=${VOLADJ}dB)
-                if [[ -f "${ingestlog}" ]] ; then
-                    _writeingestlog "audio_adjustment" "${VOLADJ}"
+                if [ $(echo "$VOLADJ < 2" |bc) -eq 1 -a $(echo "$VOLADJ > -2" |bc) -eq 1 ] ; then
+                    report -dt "Integrated loudness for $(basename "${input_movie}") is ${integrated_loudness}dB. Reference is ${reference}dB. No adjustment is needed, skipping."
+                else
+                    report -dt "Integrated loudness for $(basename "${input_movie}") is ${integrated_loudness}dB. Reference is ${reference}dB. Will adjust by ${VOLADJ}dB."
+                    middleoptions+=(-af volume=${VOLADJ}dB)
                 fi
             fi
         fi
