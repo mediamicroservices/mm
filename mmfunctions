@@ -86,6 +86,27 @@ report(){
         [ "$log" = "Y" ] && _log -w "${message}"
 }
 
+_writeingestlog(){
+    if [ "${ingestlog}" ] ; then
+        key="$1"
+        value="$2"
+        # need to add yaml style escaping
+        echo "$key: ${value}" >> "${ingestlog}"
+    else
+        report -wt "The _writeingestlog function was called but the ingestlog file (${ingestlog}) is not declared."
+    fi
+}
+
+_readingestlog(){
+    if [ -f "${ingestlog}" ] ; then
+        key="$1"
+        # need to add yaml style escaping
+        grep "^${1}:" "${ingestlog}" | cut -d: -f2 | sed 's/ //g'
+    else
+        report -wt "The _readingestlog function was called but the ingestlog file (${ingestlog}) is not declared."
+    fi
+}
+
 _run(){
     run_err=""
     report -sdt "Running: ${*}"
@@ -507,27 +528,6 @@ emailoutcome(){
     echo -e ":(" >> $MESSAGETEMPFILE
     sendmail -t < $MESSAGETEMPFILE
     rm -f $MESSAGETEMPFILE
-}
-
-_writeingestlog(){
-    if [ "${ingestlog}" ] ; then
-        key="$1"
-        value="$2"
-        # need to add yaml style escaping
-        echo "$key: ${value}" >> "${ingestlog}"
-    else
-        report -wt "The _writeingestlog function was called but the ingestlog file (${ingestlog}) is not declared."
-    fi
-}
-
-_readingestlog(){
-    if [ -f "${ingestlog}" ] ; then
-        key="$1"
-        # need to add yaml style escaping
-        grep "^${1}:" "${ingestlog}" | cut -d: -f2 | sed 's/ //g'
-    else
-        report -wt "The _readingestlog function was called but the ingestlog file (${ingestlog}) is not declared."
-    fi
 }
 
 _get_filesystem(){
