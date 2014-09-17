@@ -431,7 +431,7 @@ is_video(){
 }
 
 get_volume_adjustment(){
-    reference=-23
+    reference=-24
     input_movie="$1"
     report -dt "Getting volume data for $(basename "${input_movie}") ..."
     volume_data=$(ffprobe -v error -of compact=p=0:nk=1:s=',' -show_entries frame=metadata:tags=lavfi.r128.I,lavfi.r128.LRA -f lavfi "amovie='${input_movie}',ebur128=metadata=1")
@@ -443,9 +443,9 @@ get_volume_adjustment(){
         [ "$audioframe_LRA" != "" ] && loudness_range="${audioframe_LRA}"
     done
     VOLADJ=$(echo "$reference - $integrated_loudness" | bc)
-    # test to see if adjustment is at least 1dB, else skip
+    # test to see if adjustment is at least 2dB, else skip
     report -dt "Loudness range is ${loudness_range}dB."
-    if [ $(echo "$VOLADJ < 1" |bc) -eq 1 -a $(echo "$VOLADJ > -1" |bc) -eq 1 ] ; then
+    if [ $(echo "$VOLADJ < 2" |bc) -eq 1 -a $(echo "$VOLADJ > -2" |bc) -eq 1 ] ; then
         report -dt "Integrated loudness for $(basename "${input_movie}") is ${integrated_loudness}dB. Reference is ${reference}dB. No adjustment is needed, skipping."
         VOLADJ=""
     else
