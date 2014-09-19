@@ -1,5 +1,5 @@
 #!/bin/bash
-# This script presumes that you've setup a filemaker database with Filemaker Server using two tables called "lto_tapes" and "lto_files" with fields according to the LTFS XML format.
+# This script presumes that you've setup a filemaker database with Filemaker Server using a table called 'checksums' with fields according to the DFXML format.
 version=1.0
 
 SCRIPTDIR=$(dirname "${0}")
