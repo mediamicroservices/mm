@@ -251,7 +251,6 @@ check_emailaddress(){
 
 _get_duration(){
     ffduration=$(ffprobe "$1" -show_format -pretty 2> /dev/null | grep duration= | cut -d= -f2)
-    echo DURATION $duration YAYAYA
 }
 
 email_delivery(){
