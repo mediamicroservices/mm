@@ -260,7 +260,6 @@ email_delivery(){
         [ -f "${input}" ] && logdir="$(dirname "${input}")/service/logs"
         ingestlog="${logdir}/capture.log"
         _get_duration "${output}"
-        echo OUTPUT "${output}"
         if [[ -f "${ingestlog}" ]] ; then
             FROMLOG="Operator: $(_readingestlog "operator")\n
 Processing Computer: $(_readingestlog "computer_name")
