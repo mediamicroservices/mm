@@ -45,7 +45,7 @@ while [ "$*" != "" ] ; do
     input_movie="${1}"
     name=$(basename "${1}")
     extension="${name#*.}"
-    
+
     get_codectagstring
     unset ffmbc_opts
     unset audio_pipe_opts

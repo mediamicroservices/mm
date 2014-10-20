@@ -43,7 +43,7 @@ while [ "$*" != "" ] ; do
     [ -d "$input" ] && { outputdir="$input/objects/access/images" && logdir="$input/metadata/submissionDocumentation/logs" ;};
     [ -f "$input" ] && { outputdir=$(dirname "$input")"/access/images" && logdir="$(dirname "$input")/access/logs" ;};
     [ ! "$outputdir" ] && { outputdir="$input/objects/access/images" && logdir="$input/metadata/submissionDocumentation/logs" ;};
-    _find_input "$input" 
+    _find_input "$input"
 
     mediaid=$(basename "$1" | cut -d. -f1)
 
@@ -66,7 +66,7 @@ while [ "$*" != "" ] ; do
         report -d "Making frame $IMAGENUMBER of $IMAGECOUNT  - dur:${DURATION} start:${START} - $output"
         [ -s "${output}" ] && { report -wt "WARNING ${output} already exists, skipping transcode" ; shift ; continue ;};
         _prep_ffmpeg_log
-        _run ffmpeg -y -v warning -ss "$START" -i $sourcefile -vf yadif,thumbnail=100 -frames:v 1 "$output" 
+        _run ffmpeg -y -v warning -ss "$START" -i $sourcefile -vf yadif,thumbnail=100 -frames:v 1 "$output"
     done
     echo
     if [ -d "${deliverdir}" ] ; then

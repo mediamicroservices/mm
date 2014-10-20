@@ -85,7 +85,7 @@ while [ "${*}" != "" ] ; do
     _run mkdir -p "${logdir}"
     exec > >(tee "${logdir}/pdfjoin_$(get_iso8601_c)_$(basename $0)_${version}.txt")
     exec 2>&1
-    
+
     #_find_input "${input}"
     if [ -d "${input}/objects" ] ; then
         sourcedir="${input}/objects"
@@ -100,12 +100,12 @@ while [ "${*}" != "" ] ; do
     output="${outputdir}/${mediaid%.*}.pdf"
     [ -s "${output}" ] && { report -wt "WARNING ${output} already exists, skipping process" ; shift ; continue ;};
     _run mkdir -p "${outputdir}"
-    
+
     tmp_makepdf_dir="${input}/tmp"
     tmp_png_dir="${tmp_makepdf_dir}/pngs"
     tmp_clean_dir="${tmp_makepdf_dir}/pngs_cleaned"
     _run mkdir -p "${tmp_makepdf_dir}" "${tmp_png_dir}" "${tmp_clean_dir}"
-    
+
     for tif in `find "$sourcedir" -maxdepth 1 -mindepth 1 -iname "*.tif" -type f` ; do
         check_tif_name "${tif}"
         if [ "${new_tif_name}" ] ; then
@@ -115,8 +115,8 @@ while [ "${*}" != "" ] ; do
         convert "${tmp_png_dir}/$(basename "${tif%.*}").png" -level 10%,90%,1 -blur 2 +dither -resize 2550x3300 -monochrome -flatten +repage "${tmp_clean_dir}/$(basename "${tif%.*}").pdf"
         #tesseract /Users/drice/Desktop/scripts/HBS02396/pngs_cleaned/HBS02396_002.png out -l eng -psm 6 hocr ../../tesseract_config 2> "${logdir}/dvdauthor_$(get_iso8601_c)_$(basename $0)_${version}.txt"
     done
-    pdfjoin $(find "${tmp_clean_dir}" -name "*.pdf" | sort | xargs) --outfile "${outputdir}/${mediaid}.pdf" 
-    
+    pdfjoin $(find "${tmp_clean_dir}" -name "*.pdf" | sort | xargs) --outfile "${outputdir}/${mediaid}.pdf"
+
     #if [ -d "${tmp_makepdf_dir}" ] ; then
     #    _run rm -rvf "${tmp_makepdf_dir}"
     #fi

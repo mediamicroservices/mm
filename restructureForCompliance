@@ -76,7 +76,4 @@ elif [ -f "${target}" -a ! -d "$(dirname "${target}")/$(basename "${target%.*}")
 else
     echo Error: Needs SIP directory or file as argument 1>&2
     exit 1
-fi 
-
-
-
+fi

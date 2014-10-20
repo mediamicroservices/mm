@@ -14,6 +14,6 @@ for script in barcodeinterpret blackatends checksumpackage fix_left2stereo fix_r
     cp -v -f -p "${LOCAL_MM_DIR}/${script}" /usr/local/bin/
 done
 if [ -d "${LOCAL_MM_DIR}/extra_installs/" ] ; then
-	cp -v -f -p "${LOCAL_MM_DIR}/extra_installs/"* /usr/local/bin/
+    cp -v -f -p "${LOCAL_MM_DIR}/extra_installs/"* /usr/local/bin/
 fi
 echo "Microservices have been updated."

@@ -44,7 +44,6 @@ while [ "$*" != "" ] ; do
 
     log -b
 
-
     # get lists of files and directories anywhere in the package
     filelist=$(find "${package}" -type f -exec basename "{}" \;)
     dirlist=$(find "${package}" -type d -exec basename "{}" \;)

@@ -43,9 +43,9 @@ while [ "${*}" != "" ] ; do
     find "${input}" -type f \( -iname "*.mov" -o -iname "*.avi" -o -iname "*.mxf" \) -print0 | while read -d $'\0' sourcefile ; do
         outputdir=$(dirname "${sourcefile}")
         sourcefilename=$(basename "${sourcefile}")
-        
-        _log -b 
-        
+
+        _log -b
+
         # clear local arrays
         unset inputoptions
         unset inputoptionsframemd5
@@ -70,7 +70,7 @@ while [ "${*}" != "" ] ; do
         fi
         middleoptions+=(-vf setfield=bff) # this is a presumption but much of the uncompressed input is bff but not probably labelled
         middleoptions+=(-c:a copy)
-        
+
         get_codectagstring "${sourcefile}"
         _run mkdir -p "${outputdir}" "${logdir}"
         if [ "${codec_tag_string}" == "2vuy" -o "${codec_tag_string}" == "v210" ] ; then
@@ -81,7 +81,7 @@ while [ "${*}" != "" ] ; do
                 _run_critical ffmpeg ${inputoptions[@]} -i "${outputdir}/${sourcefilename%.*}${suffix}.mov" -f framemd5 -pix_fmt uyvy422 -an "${logdir}/${sourcefilename%.*}${suffix}.framemd5"
             else
                 _run_critical ffmpeg ${inputoptions[@]} ${inputoptionsframemd5[@]} -i "${outputdir}/${sourcefilename%.*}${suffix}.mov" -f framemd5 -an "${logdir}/${sourcefilename%.*}${suffix}.framemd5"
-            fi 
+            fi
             if [ $(grep -v "^#" "${logdir}/${sourcefilename%.*}.framemd5" | md5 -q) = $(grep -v "^#" "${logdir}/${sourcefilename%.*}${suffix}.framemd5" | md5 -q) ] ; then
                 report -dt "Everything looks safe. Going to delete the original."
                 _run_critical mediainfo -f --language=raw --output=XML "${sourcefile}" > "${logdir}/${sourcefilename%.*}_mediainfo.xml"

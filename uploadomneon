@@ -92,7 +92,7 @@ exit
 END_SCRIPT
 upload_err="${?}"
 get_ftp_status "${filename}"
-if [ "$upload_err" = "0" ] ; then 
+if [ "$upload_err" = "0" ] ; then
     report -dt "${filename} is uploaded to the omneon"
     localsize=$(ls -l "${sourcefile}" | awk '{print $5}')
     if [[ "${localsize}" = "${size}" ]] ; then

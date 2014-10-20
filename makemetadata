@@ -60,7 +60,7 @@ while [ "${*}" != "" ] ; do
         exiftool -X "${file}" > "${EXIFTOOLXML}"
         exiftool "${file}" > "${EXIFTOOLTXT}"
     done < "${FILELIST}"
-    
+
     cd "${pwd}"
     _run rm -r -f "${FILELIST}"
     shift
