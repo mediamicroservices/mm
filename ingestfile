@@ -167,20 +167,8 @@ fi
 
 # blackframe analysis or in/out requests
 if [ "${preservation_mode}" == "Y" ] ; then
-    while [[ ! $(echo "$intime" | grep "^[0-9.]\+$") ]] ; do
-        report -qn "Enter point of time in seconds to start transcoding: "
-        read intime
-        if [[ ! $(echo "$intime" | grep "^[0-9.]\+$") ]] ; then
-            report -w "In time must be a decimal."
-        fi
-    done
-    while [[ ! $(echo "$outtime" | grep "^[0-9.]\+$") ]] ; do
-        report -qn "Enter point of time in seconds to stop transcoding: "
-        read outtime
-        if [[ ! $(echo "$outtime" | grep "^[0-9.]\+$") ]] ; then
-            report -w "Out time must be a decimal."
-        fi
-    done
+    _ask_intime
+    _ask_outtime
     ask_trimmed_materials
 else
     if [ "${blackframetest}" = "Y" ] ; then
@@ -190,26 +178,14 @@ else
             report -qn "Enter q to quit, any other key to continue: "
             read a1
             [ "${a1}" == "q" ] && exit 0
-            while [[ ! $(echo "$intime" | grep "^[0-9.]\+$") ]] ; do
-                report -qn "Enter point of time in seconds to start transcoding: "
-                read intime
-                if [[ ! $(echo "$intime" | grep "^[0-9.]\+$") ]] ; then
-                    report -w "In time must be a decimal."
-                fi
-            done
+            _ask_intime
         fi
         if [ "${tail_black}" -gt "30" ] ; then
             report -wt "WARNING - There are at least ${tail_black} frames of black at the end of ${input}"
             report -qn "Enter q to quit, any other key to continue: "
             read a2
             [ "${a2}" == "q" ] && exit 0
-            while [[ ! $(echo "$outtime" | grep "^[0-9.]\+$") ]] ; do
-                report -qn "Enter point of time in seconds to stop transcoding: "
-                read outtime
-                if [[ ! $(echo "$outtime" | grep "^[0-9.]\+$") ]] ; then
-                    report -w "Out time must be a decimal."
-                fi
-            done
+            _ask_outtime
         fi
     fi
 fi
