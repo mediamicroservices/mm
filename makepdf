@@ -3,7 +3,7 @@
 version="1.0"
 scriptdir=$(dirname $(which "$0"))
 . "$scriptdir/mmfunctions" || { echo "Missing '$scriptdir/mmfunctions'. Exiting." ; exit 1 ;};
-dependencies=(ffmpeg convert pdfjoin)
+dependencies=(ffmpeg convert pdfjoin tesseract)
 _initialize_make
 
 fix_tif_name(){
@@ -83,7 +83,7 @@ while [ "${*}" != "" ] ; do
         logdir="${outputdir}/logs"
     fi
     _run mkdir -p "${logdir}"
-    exec > >(tee "${logdir}/pdfjoin_$(get_iso8601_c)_$(basename $0)_${version}.txt")
+    exec > >(tee "${logdir}/$(basename "${0}")_$(get_iso8601_c)_$(basename $0)_${version}.txt")
     exec 2>&1
 
     #_find_input "${input}"
