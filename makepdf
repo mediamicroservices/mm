@@ -112,8 +112,8 @@ while [ "${*}" != "" ] ; do
             tif="${new_tif_name}"
         fi
         ffmpeg -i "${tif}" -pix_fmt gray "${tmp_png_dir}/$(basename "${tif%.*}").png"
-        convert "${tmp_png_dir}/$(basename "${tif%.*}").png" -level 10%,90%,1 -blur 2 +dither -resize 2550x3300 -monochrome -flatten +repage "${tmp_clean_dir}/$(basename "${tif%.*}").pdf"
-        #tesseract /Users/drice/Desktop/scripts/HBS02396/pngs_cleaned/HBS02396_002.png out -l eng -psm 6 hocr ../../tesseract_config 2> "${logdir}/dvdauthor_$(get_iso8601_c)_$(basename $0)_${version}.txt"
+        convert "${tmp_png_dir}/$(basename "${tif%.*}").png" -level 10%,90%,1 -blur 2 +dither -resize 2550x3300 -monochrome -flatten +repage -define png:bit-depth=8 -define png:color-type=0 "${tmp_clean_dir}/$(basename "${tif%.*}").png"
+        tesseract "${tmp_clean_dir}/$(basename "${tif%.*}").png" "${tmp_clean_dir}/$(basename "${tif%.*}")" -l eng -psm 4 pdf "${scriptdir}/tesseract.conf"
     done
     pdfjoin $(find "${tmp_clean_dir}" -name "*.pdf" | sort | xargs) --outfile "${outputdir}/${mediaid}.pdf"
 
