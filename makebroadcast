@@ -187,6 +187,7 @@ while [ "${*}" != "" ] ; do
     # set input options for ffmpeg
     get_codectagstring "${sourcefile}"
     inputoptions+=(-y)
+	inputoptions+=(-nostdin)
     if [[ "${codec_tag_string}" == "mjp2" ]] ; then
          inputoptions+=(-vcodec libopenjpeg)
     fi

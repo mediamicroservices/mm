@@ -70,6 +70,7 @@ while [ "$*" != "" ] ; do
 
     unset inputoptions
     unset middleoptions
+	inputoptions+=(-nostdin)
     middleoptions+=(-map 0:a:0)
 	middleoptions+=(-ac 2)
     middleoptions+=(-r:a 44100)

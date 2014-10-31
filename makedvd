@@ -82,6 +82,7 @@ while [ "${*}" != "" ] ; do
 
     # encoding options
     inputoptions+=" -y"
+	inputoptions+=(-nostdin)
     get_codectagstring "${sourcefile}"
 	TIMECODEOVERLAY=""
 	if [ "${TCBURN}" = "Y" ] ; then
