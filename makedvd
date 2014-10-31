@@ -26,13 +26,14 @@ usage(){
 
 # command-line options to set mediaid and original variables
 OPTIND=1
-while getopts ":v:o:d:e:E:nh" opt ; do
+while getopts ":v:o:d:e:E:nth" opt ; do
     case "${opt}" in
         v) DVDLABELPREFIX="$OPTARG";;
         o) outputdir_forced="$OPTARG" && _check_outputdir_forced ;;
         d) deliverdir="$OPTARG" && check_deliverdir ;;
         e) emailaddress_delivery="$OPTARG" && check_emailaddress "${emailaddress_delivery}" ;;
         E) emailaddress_outcome="$OPTARG" && check_emailaddress "${emailaddress_outcome}" ;;
+		t) TCBURN=Y;;
         n) DRYRUN=true;;
         h) usage ;;
         *) echo "bad option -$OPTARG" ; usage ;;
@@ -82,6 +83,10 @@ while [ "${*}" != "" ] ; do
     # encoding options
     inputoptions+=" -y"
     get_codectagstring "${sourcefile}"
+	TIMECODEOVERLAY=""
+	if [ "${TCBURN}" = "Y" ] ; then
+		_get_timecode_overlay "${sourcefile}"
+	fi
     if [[ "${codec_tag_string}" == "mjp2" ]] ; then
          inputoptions+=(-vcodec libopenjpeg)
     fi
@@ -107,13 +112,13 @@ while [ "${*}" != "" ] ; do
     middleoptions+=(-b:a 448000)
     middleoptions+=(-ar 48000)
     if  [[ "${height}" == 486 && "${width}" == 720 ]] ; then
-        middleoptions+=(-vf "fieldorder=bff,crop=720:480:0:4,setdar=${aspect}" -aspect ${aspect})
+        middleoptions+=(-vf "fieldorder=bff,crop=720:480:0:4,setdar=${aspect}${TIMECODEOVERLAY}" -aspect ${aspect})
     elif  [[ "{$height}" == 480 && "${width}" == 720 ]] ; then
-        middleoptions+=(-vf "fieldorder=bff,setdar=${aspect}" -aspect ${aspect})
+        middleoptions+=(-vf "fieldorder=bff,setdar=${aspect}${TIMECODEOVERLAY}" -aspect ${aspect})
     elif  [[ "${height}" == 512 && "${width}" == 720 ]] ; then
-        middleoptions+=(-vf "fieldorder=bff,crop=720:480:0:32,setdar=${aspect}" -aspect ${aspect})
+        middleoptions+=(-vf "fieldorder=bff,crop=720:480:0:32,setdar=${aspect}${TIMECODEOVERLAY}" -aspect ${aspect})
     else
-        middleoptions+=(-vf "fieldorder=bff,scale=720:480:interl=1,setdar=${aspect}" -aspect ${aspect})
+        middleoptions+=(-vf "fieldorder=bff,scale=720:480:interl=1,setdar=${aspect}${TIMECODEOVERLAY}" -aspect ${aspect})
     fi
     _prep_ffmpeg_log
     # making the initial mpeg2 for the dvd
