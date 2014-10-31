@@ -277,6 +277,8 @@ if [ "${makeaccesscopies}" == "Y" ] ; then
     unset makeyoutubeopts
     unset makepodcastopts
     report -dt "STATUS Making access copies."
+    # makemp3
+    "$scriptdir/makemp3" "${OUTDIR_INGESTFILE}/${mediaid}"
     # makeframes
     [ "$deliveraccesscopies" = "Y" ] && makeframesopts=(-d "$YOUTUBEDELIVER")
     "$scriptdir/makeframes" "${makeframesopts[@]}" "$OUTDIR_INGESTFILE/$mediaid"
