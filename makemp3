@@ -1,0 +1,93 @@
+#!/bin/bash
+# makemp3
+version="1.0"
+unset dependencies
+dependencies=(ffmpeg normalize)
+
+scriptdir=$(dirname "${0}")
+. "${scriptdir}/mmfunctions" || { echo "Missing '${scriptdir}/mmfunctions'. Exiting." ; exit 1 ;};
+
+usage(){
+    echo
+    echo "$(basename "${0}") ${version}"
+    echo "This application will create an mp3 file from a video file or package input with the following options. By default the output will be written to ${outputdir}. You can override this with the -o option."
+    echo "Dependencies: ${dependencies[@]}"
+    echo "Usage: $(basename "${0}") [ -o /directory/to/write/to/ ] fileorpackage1 [ fileorpackage2 ...]"
+    echo "  -o directory ( directory to write the resulting file to )"
+    echo "  -h ( display this help )"
+    echo
+    exit
+}
+[ "${#}" = 0 ] && usage
+check_dependencies "${dependencies[@]}"
+
+cleanup(){
+    _log -a "Process aborted"
+    exit 1
+}
+
+trap cleanup SIGHUP SIGINT SIGTERM
+
+OPTIND=1
+while getopts ":ho:" opt; do
+    case "${opt}" in
+        h) usage ;;
+        o) 
+            outputdir="${OPTARG}"
+            if [ ! -d "${outputdir}" ] ; then
+                report -wt "The output directory option, ${outputdir}, does not refer to an actual directory. Quitting."
+                exit 1
+            fi
+            ;;
+        *) echo "bad option -${OPTARG}" ; usage ;;
+        :) echo "Option -${OPTARG} requires an argument" ; exit 1 ;;
+    esac
+done
+shift $(( ${OPTIND} - 1 ))
+
+while [ "$*" != "" ] ; do
+    input="$1"
+    if [ -z "${outputdir}" ] ; then
+        [ -d "${input}" ] && { outputdir="${input}/objects/access/mp3" && logdir="${input}/metadata/submissionDocumentation/logs" ;};
+        [ -f "${input}" ] && { outputdir=$(dirname "${input}")"/access/mp3" && logdir="$(dirname "${input}")/access/logs" ;};
+        [ ! "${outputdir}" ] && { outputdir="${input}/objects/access/mp3" && logdir="${input}/metadata/submissionDocumentation/logs" ;};
+    else
+        logdir="${outputdir}/logs"
+    fi
+    
+    _find_input "${input}"
+
+    filename=$(basename "${sourcefile}")
+    mediaid=$(basename "${input}" | cut -d. -f1)
+
+    _log -b
+
+    outputfile="${outputdir}/${mediaid%.*}.mp3"
+    [ -s "${outputfile}" ] && { report -wt "WARNING ${outputfile} already exists, skipping transcode" ; [ "$#" = 1 ] && exit 1 || { shift ; continue ;} ;};
+    mkdir -p "${outputdir}"
+    get_height "${sourcefile}"
+    get_width "${sourcefile}"
+
+    unset inputoptions
+    unset middleoptions
+    middleoptions+=(-map 0:a:0)
+	middleoptions+=(-ac 2)
+    middleoptions+=(-r:a 44100)
+    get_audio_mapping "${sourcefile}"
+	middleoptions+=(${audiomapping_ffmpeg[@]})
+
+    if [ "${logdir}" != "" ] ; then
+        mkdir -p "${logdir}"
+        export FFREPORT="file=${logdir}/%p_%t_$(basename "${0}")_${version}.txt"
+        inputoptions+=(-v warning -stats)
+    fi
+    report -dt "Working on $(basename "${outputfile}")."
+    report -dt "Running: ffmpeg ${inputoptions[@]} -i \"${sourcefile}\" ${middleoptions[@]} \"${outputfile}\""
+    ffmpeg ${inputoptions[@]} -i "${sourcefile}" ${middleoptions[@]} "${outputfile}"
+    report -dt "Adjusting highest audio peak to full scale..."
+    normalize --peak -v "${outputfile}"
+    echo
+    report -dt "$(basename ${outputfile}) is done."
+    shift
+    _log -e
+done
