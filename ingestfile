@@ -277,8 +277,6 @@ if [ "${makeaccesscopies}" == "Y" ] ; then
     unset makeyoutubeopts
     unset makepodcastopts
     report -dt "STATUS Making access copies."
-    # makedvd
-    "$scriptdir/makedvd" "${OUTDIR_INGESTFILE}/${mediaid}"
     # makeframes
     [ "$deliveraccesscopies" = "Y" ] && makeframesopts=(-d "$YOUTUBEDELIVER")
     "$scriptdir/makeframes" "${makeframesopts[@]}" "$OUTDIR_INGESTFILE/$mediaid"
@@ -293,6 +291,9 @@ if [ "${makeaccesscopies}" == "Y" ] ; then
     else
         report -dt "${mediaid} does NOT qualify for podcast creation, skipping."
     fi
+    # makedvd
+    "$scriptdir/makedvd" "${OUTDIR_INGESTFILE}/${mediaid}"
+	# makemetadata
     "$scriptdir/makemetadata" "$OUTDIR_INGESTFILE/$mediaid"
     if [ "$dochecksums" = "Y" ] ; then
         "$scriptdir/checksumpackage" "$OUTDIR_INGESTFILE/$mediaid"
