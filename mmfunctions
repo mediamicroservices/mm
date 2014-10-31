@@ -133,7 +133,7 @@ black_at_ends(){
     analysis_head_seconds=10
     analysis_tail_seconds=10
     report -dt "Analyzing ${name} for excessive black at head or tail."
-    duration=$(ffprobe "${1}"  -show_format 2> /dev/null | grep duration | cut -d= -f2 | cut -d. -f1)
+    duration=$(ffprobe "${1}"  -show_format 2> /dev/null | grep duration= | cut -d= -f2 | cut -d. -f1)
     tail_start=$(echo "${duration} - ${analysis_tail_seconds}" | bc)
     head_black=$(ffmpeg -t "${analysis_head_seconds}" -i "${1}" -an -vf blackdetect=pix_th=0.05 -loglevel debug -f null - 2>&1 | grep -c -o picture_black_ratio:1)
     report -dt "Black frames in first ${analysis_head_seconds} seconds: ${head_black}."
