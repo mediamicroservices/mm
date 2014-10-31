@@ -103,6 +103,7 @@ while [ "${*}" != "" ] ; do
     middleoptions+=(-g 18)
     middleoptions+=(-b:v $MAXDVDBITRATE)
     middleoptions+=(-bt 400k)
+	middleoptions+=(-top 0)
     middleoptions+=(-maxrate $MAXDVDBITRATE)
     middleoptions+=(-minrate 0)
     middleoptions+=(-bufsize 3600k)
