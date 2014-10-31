@@ -481,6 +481,20 @@ get_audiostreamcount(){
     AUDIOSTREAMCOUNT=$(ffprobe "$1" -select_streams a -show_entries stream=index -of flat 2>/dev/null | awk 'END { print NR }')
 }
 
+_get_timecode(){
+    TIMECODE=$(ffprobe "$1" -select_streams v -show_streams -of flat 2>/dev/null | grep timecode=\"[0-9] | cut -d = -f 2 | sed 's/"//g')
+}
+
+_get_timecode_overlay(){
+	_get_timecode "${1}"
+	if [[ "${TIMECODE}" ]] ; then
+		TIMECODEESACPE=$(echo "${TIMECODE}" | sed 's|:|\\:|g')
+	else
+		TIMECODEESACPE="01\\:00\\:00;00"
+	fi
+	TIMECODEOVERLAY=",drawtext=fontfile=/System/Library/Fonts/Monaco.dfont:timecode='${TIMECODEESACPE}':r=30000/1001:fontcolor=white:fontsize=24:shadowx=2:shadowy=2:box=1:boxcolor=gray@0.8:x=w/2-tw/2:y=h*0.8"
+}
+
 get_maxdvdbitrate(){
     get_duration "$1"
     local DVDCAPACITY=33840000000  # in bits, minus 10%
