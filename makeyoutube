@@ -12,6 +12,8 @@ usage(){
     echo "This application will create a high quality h264 file (suitable for uploading to YouTube) from a video file or package input with the following options."
     echo "Dependencies: ${dependencies[@]}"
     echo "Usage: $(basename $0) [ -d /path/to/deliver/to/ ] fileorpackage1 [ fileorpackage2 ...]"
+    echo "  -l (only use the left channel of the first audio track)"
+    echo "  -r (only use the right channel of the first audio track)"
     echo "  -d directory ( directory to deliver the resulting file to )"
     echo "  -o directory ( directory to write the resulting file to )"
     echo "  -n (dry-run mode, show the commands that would be run but don't do anything)"
@@ -25,8 +27,10 @@ usage(){
 
 # command-line options to set mediaid and original variables
 OPTIND=1
-while getopts ":o:d:e:E:nh" opt ; do
+while getopts ":lro:d:e:E:nh" opt ; do
     case "${opt}" in
+        l) audiomap="L";;
+        r) audiomap="R";;
         o) outputdir_forced="$OPTARG" && _check_outputdir_forced ;;
         d) deliverdir="$OPTARG" && check_deliverdir ;;
         e) emailaddress_delivery="$OPTARG" ;;
@@ -69,6 +73,7 @@ while [ "${*}" != "" ] ; do
     # clear local arrays
     unset inputoptions
     unset middleoptions
+	unset audiomapping_ffmpeg
 
     # encoding options
     get_codectagstring "${sourcefile}"
@@ -92,6 +97,16 @@ while [ "${*}" != "" ] ; do
     middleoptions+=(-ac 2)
     middleoptions+=(-b:a 128k)
     middleoptions+=(-f mp4)
+	
+	get_audio_index "${sourcefile}"
+    if [ "${audiomap}" = "L" ] ; then
+        audiomapping_ffmpeg=(-map_channel 0.${audio_index_1}.0)
+    elif [ "${audiomap}" = "R" ] ; then
+        audiomapping_ffmpeg=(-map_channel 0.${audio_index_1}.1)
+    else
+        get_audio_mapping "${sourcefile}"
+    fi
+    middleoptions+=(${audiomapping_ffmpeg[@]})
 
     get_audio_mapping "${sourcefile}"
     middleoptions+=(${audiomapping_ffmpeg[@]})

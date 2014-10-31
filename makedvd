@@ -12,6 +12,8 @@ usage(){
     echo "This application will create a DVD .iso file from a video file or package input with the following options."
     echo "Dependencies: ${dependencies[@]}"
     echo "Usage: $(basename $0) [ -v dvd_label_prefix ] fileorpackage1 [ fileorpackage2 ...]"
+    echo "  -l (only use the left channel of the first audio track)"
+    echo "  -r (only use the right channel of the first audio track)"
     echo "  -v dvdlabelprefix (optional)"
     echo "  -d directory ( directory to deliver the resulting file to )"
     echo "  -o directory ( directory to write the resulting file to )"
@@ -26,8 +28,10 @@ usage(){
 
 # command-line options to set mediaid and original variables
 OPTIND=1
-while getopts ":v:o:d:e:E:nth" opt ; do
+while getopts ":lrv:o:d:e:E:nth" opt ; do
     case "${opt}" in
+        l) audiomap="L";;
+        r) audiomap="R";;
         v) DVDLABELPREFIX="$OPTARG";;
         o) outputdir_forced="$OPTARG" && _check_outputdir_forced ;;
         d) deliverdir="$OPTARG" && check_deliverdir ;;
@@ -79,6 +83,7 @@ while [ "${*}" != "" ] ; do
     # clear local arrays
     unset inputoptions
     unset middleoptions
+	unset audiomapping_ffmpeg
 
     # encoding options
     inputoptions+=" -y"
@@ -123,6 +128,17 @@ while [ "${*}" != "" ] ; do
     else
         middleoptions+=(-vf "fieldorder=bff,scale=720:480:interl=1,setdar=${aspect}${TIMECODEOVERLAY}" -aspect ${aspect})
     fi
+	
+	get_audio_index "${sourcefile}"
+    if [ "${audiomap}" = "L" ] ; then
+        audiomapping_ffmpeg=(-map_channel 0.${audio_index_1}.0)
+    elif [ "${audiomap}" = "R" ] ; then
+        audiomapping_ffmpeg=(-map_channel 0.${audio_index_1}.1)
+    else
+        get_audio_mapping "${sourcefile}"
+    fi
+    middleoptions+=(${audiomapping_ffmpeg[@]})
+	
     _prep_ffmpeg_log
     # making the initial mpeg2 for the dvd
     _run ffmpeg ${inputoptions[@]} -i "${sourcefile}" ${middleoptions[@]} "${outputdir}/${mediaid%.*}.mpeg"
