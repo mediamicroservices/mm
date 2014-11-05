@@ -408,8 +408,8 @@ _find_input (){
             fuseiso "${sourcefile}" ~/dvd
         fi
         oldsourcefile="${sourcefile}"
-        concatsource="concat:$(find "${mountpath}" -name "*.VOB" | sed -e :a -e '$!N;s/\n/|/;ta')"
-        sourcefile=$(find "${mountpath}" -name "VTS_*_1.VOB" | head -1)
+        concatsource="concat:$(find "${mountpath}" -iname "*.VOB" | sed -e :a -e '$!N;s/\n/|/;ta')"
+        sourcefile=$(find "${mountpath}" -iname "VTS_*_1.VOB" | head -1)
         report -dt "Using ${concatsource} for transcoding."
         report -dt "Using ${sourcefile} for assessment."
         if [ "${concatsource}" == "" ] ; then
