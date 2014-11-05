@@ -227,7 +227,12 @@ while [ "${*}" != "" ] ; do
             fi
         fi
     fi
-    _run ffmpeg ${inputoptions[@]} -i "${sourcefile}" ${middleoptions[@]} "${output}"
+    if [ "${concatsource}" != "" ] ; then
+        ffmpeginput="${concatsource}"
+    else
+        ffmpeginput="${sourcefile}"
+    fi
+    _run_critical ffmpeg ${inputoptions[@]} -i "${ffmpeginput}" ${middleoptions[@]} "${output}"
     echo
     _summarize_make
     _deliver_output "${MAKEBROADCAST_DELIVERY_EMAIL_TO}"
