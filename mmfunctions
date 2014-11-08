@@ -401,17 +401,19 @@ _find_input (){
             mountpath=$(hdiutil mount "${sourcefile}" | awk ' {print $2} ')
             report -dt "Mounting iso at $mountpath"
         else
-            mountpath="~/dvd"
+            mountpath="/tmp/temporary_dvd_path"
+            rm -rfv "${mountpath}"
             if [ ! -d "${mountpath}" ] ; then
                 mkdir -p "${mountpath}"
             fi
-            fuseiso "${sourcefile}" ~/dvd
+            7z e -r -o"${mountpath}" "${sourcefile}"
         fi
         oldsourcefile="${sourcefile}"
-        concatsource="concat:$(find "${mountpath}" -iname "*.VOB" | sed -e :a -e '$!N;s/\n/|/;ta')"
+        concatsource="concat:$(find "${mountpath}" -iname "VTS*[1-9].VOB" | sort | sed -e :a -e '$!N;s/\n/|/;ta')"
         sourcefile=$(find "${mountpath}" -iname "VTS_*_1.VOB" | head -1)
         report -dt "Using ${concatsource} for transcoding."
         report -dt "Using ${sourcefile} for assessment."
+        report -wt "Extracting to ${mountpath}. Please delete ${mountpath} later"
         if [ "${concatsource}" == "" ] ; then
             report -wt "ERROR: Can not mount iso or find vob files to concatenate within ${oldsourcefile}. Exiting."
             exit
