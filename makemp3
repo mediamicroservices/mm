@@ -32,8 +32,7 @@ OPTIND=1
 while getopts ":ho:" opt; do
     case "${opt}" in
         h) usage ;;
-        o)
-            outputdir="${OPTARG}"
+        o)             outputdir="${OPTARG}"
             if [ ! -d "${outputdir}" ] ; then
                 report -wt "The output directory option, ${outputdir}, does not refer to an actual directory. Quitting."
                 exit 1
