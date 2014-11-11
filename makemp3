@@ -32,7 +32,7 @@ OPTIND=1
 while getopts ":ho:" opt; do
     case "${opt}" in
         h) usage ;;
-        o) 
+        o)
             outputdir="${OPTARG}"
             if [ ! -d "${outputdir}" ] ; then
                 report -wt "The output directory option, ${outputdir}, does not refer to an actual directory. Quitting."
@@ -54,7 +54,7 @@ while [ "$*" != "" ] ; do
     else
         logdir="${outputdir}/logs"
     fi
-    
+
     _find_input "${input}"
 
     filename=$(basename "${sourcefile}")
@@ -70,12 +70,12 @@ while [ "$*" != "" ] ; do
 
     unset inputoptions
     unset middleoptions
-	inputoptions+=(-nostdin)
+    inputoptions+=(-nostdin)
     middleoptions+=(-map 0:a:0)
-	middleoptions+=(-ac 2)
+    middleoptions+=(-ac 2)
     middleoptions+=(-r:a 44100)
     get_audio_mapping "${sourcefile}"
-	middleoptions+=(${audiomapping_ffmpeg[@]})
+    middleoptions+=(${audiomapping_ffmpeg[@]})
 
     if [ "${logdir}" != "" ] ; then
         mkdir -p "${logdir}"

@@ -53,24 +53,29 @@ while [ "${*}" != "" ] ; do
 
         # encoding options
         get_codectagstring "${sourcefile}"
+        get_videostreamcount "${input}"
+        get_audiostreamcount "${input}"
         inputoptions+=(-nostdin)
         inputoptions+=(-vsync 0)
-        if [[ "${codec_tag_string}" == "mjp2" ]] ; then
-             inputoptions+=(-vcodec libopenjpeg)
+        if [[ "${VIDEOSTREAMCOUNT}" > 0 ]] ; then
+            if [[ "${codec_tag_string}" == "mjp2" ]] ; then
+                 inputoptions+=(-vcodec libopenjpeg)
+            fi
+            middleoptions+=(-map 0:v)
+            middleoptions+=(-map 0:a)
+            if [[ "${jpeg2000mode}" == "Y" ]] ; then
+                middleoptions+=(-c:v libopenjpeg)
+                inputoptionsframemd5+=(-vcodec libopenjpeg)
+                suffix="_j2k"
+            else
+                middleoptions+=(-c:v ffv1 -level 3 -g 1)
+                suffix="_ffv1"
+            fi
+            middleoptions+=(-vf setfield=bff) # this is a presumption but much of the uncompressed input is bff but not probably labelled
         fi
-        middleoptions+=(-map 0:v)
-        middleoptions+=(-map 0:a)
-        if [[ "${jpeg2000mode}" == "Y" ]] ; then
-            middleoptions+=(-c:v libopenjpeg)
-            inputoptionsframemd5+=(-vcodec libopenjpeg)
-            suffix="_j2k"
-        else
-            middleoptions+=(-c:v ffv1 -level 3 -g 1)
-            suffix="_ffv1"
+        if [[ "${AUDIOSTREAMCOUNT}" > 0 ]] ; then
+            middleoptions+=(-c:a copy)
         fi
-        middleoptions+=(-vf setfield=bff) # this is a presumption but much of the uncompressed input is bff but not probably labelled
-        middleoptions+=(-c:a copy)
-
         get_codectagstring "${sourcefile}"
         _run mkdir -p "${outputdir}" "${logdir}"
         if [ "${codec_tag_string}" == "2vuy" -o "${codec_tag_string}" == "v210" ] ; then

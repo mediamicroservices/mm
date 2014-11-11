@@ -37,7 +37,7 @@ while getopts ":lrv:o:d:e:E:nth" opt ; do
         d) deliverdir="$OPTARG" && check_deliverdir ;;
         e) emailaddress_delivery="$OPTARG" && check_emailaddress "${emailaddress_delivery}" ;;
         E) emailaddress_outcome="$OPTARG" && check_emailaddress "${emailaddress_outcome}" ;;
-		t) TCBURN=Y;;
+        t) TCBURN=Y;;
         n) DRYRUN=true;;
         h) usage ;;
         *) echo "bad option -$OPTARG" ; usage ;;
@@ -83,62 +83,66 @@ while [ "${*}" != "" ] ; do
     # clear local arrays
     unset inputoptions
     unset middleoptions
-	unset audiomapping_ffmpeg
+    unset audiomapping_ffmpeg
+    get_videostreamcount "${input}"
+    get_audiostreamcount "${input}"
 
     # encoding options
     inputoptions+=" -y"
-	inputoptions+=(-nostdin)
-    get_codectagstring "${sourcefile}"
-	TIMECODEOVERLAY=""
-	if [ "${TCBURN}" = "Y" ] ; then
-		_get_timecode_overlay "${sourcefile}"
-	fi
-    if [[ "${codec_tag_string}" == "mjp2" ]] ; then
-         inputoptions+=(-vcodec libopenjpeg)
+    inputoptions+=(-nostdin)
+    if [[ "${VIDEOSTREAMCOUNT}" > 0 ]] ; then
+        get_codectagstring "${sourcefile}"
+        TIMECODEOVERLAY=""
+        if [ "${TCBURN}" = "Y" ] ; then
+            _get_timecode_overlay "${sourcefile}"
+        fi
+        if [[ "${codec_tag_string}" == "mjp2" ]] ; then
+             inputoptions+=(-vcodec libopenjpeg)
+        fi
+        middleoptions+=(-r:v ntsc)
+        middleoptions+=(-c:v mpeg2video)
+        middleoptions+=(-c:a ac3)
+        middleoptions+=(-f dvd)
+        middleoptions+=(-bf 2)
+        middleoptions+=(-qscale:v 2)
+        middleoptions+=(-mbd rd)
+        middleoptions+=(-s 720x480)
+        middleoptions+=(-pix_fmt yuv420p)
+        middleoptions+=(-g 18)
+        middleoptions+=(-b:v $MAXDVDBITRATE)
+        middleoptions+=(-bt 400k)
+        middleoptions+=(-top 0)
+        middleoptions+=(-flags +ildct+ilme)
+        middleoptions+=(-maxrate $MAXDVDBITRATE)
+        middleoptions+=(-minrate 0)
+        middleoptions+=(-bufsize 3600k)
+        middleoptions+=(-packetsize 2048)
+        middleoptions+=(-muxrate 10080000)
+        middleoptions+=(-lmin 1)
+        middleoptions+=(-lmax 200000)
+        if  [[ "${height}" == 486 && "${width}" == 720 ]] ; then
+            middleoptions+=(-vf "fieldorder=bff,crop=720:480:0:4,setdar=${aspect}${TIMECODEOVERLAY}" -aspect ${aspect})
+        elif  [[ "{$height}" == 480 && "${width}" == 720 ]] ; then
+            middleoptions+=(-vf "fieldorder=bff,setdar=${aspect}${TIMECODEOVERLAY}" -aspect ${aspect})
+        elif  [[ "${height}" == 512 && "${width}" == 720 ]] ; then
+            middleoptions+=(-vf "fieldorder=bff,crop=720:480:0:32,setdar=${aspect}${TIMECODEOVERLAY}" -aspect ${aspect})
+        else
+            middleoptions+=(-vf "fieldorder=bff,scale=720:480:interl=1,setdar=${aspect}${TIMECODEOVERLAY}" -aspect ${aspect})
+        fi
     fi
-    middleoptions+=(-r:v ntsc)
-    middleoptions+=(-c:v mpeg2video)
-    middleoptions+=(-c:a ac3)
-    middleoptions+=(-f dvd)
-    middleoptions+=(-bf 2)
-    middleoptions+=(-qscale:v 2)
-    middleoptions+=(-mbd rd)
-    middleoptions+=(-s 720x480)
-    middleoptions+=(-pix_fmt yuv420p)
-    middleoptions+=(-g 18)
-    middleoptions+=(-b:v $MAXDVDBITRATE)
-    middleoptions+=(-bt 400k)
-	middleoptions+=(-top 0)
-	middleoptions+=(-flags +ildct+ilme)
-    middleoptions+=(-maxrate $MAXDVDBITRATE)
-    middleoptions+=(-minrate 0)
-    middleoptions+=(-bufsize 3600k)
-    middleoptions+=(-packetsize 2048)
-    middleoptions+=(-muxrate 10080000)
-    middleoptions+=(-lmin 1)
-    middleoptions+=(-lmax 200000)
-    middleoptions+=(-b:a 448000)
-    middleoptions+=(-ar 48000)
-    if  [[ "${height}" == 486 && "${width}" == 720 ]] ; then
-        middleoptions+=(-vf "fieldorder=bff,crop=720:480:0:4,setdar=${aspect}${TIMECODEOVERLAY}" -aspect ${aspect})
-    elif  [[ "{$height}" == 480 && "${width}" == 720 ]] ; then
-        middleoptions+=(-vf "fieldorder=bff,setdar=${aspect}${TIMECODEOVERLAY}" -aspect ${aspect})
-    elif  [[ "${height}" == 512 && "${width}" == 720 ]] ; then
-        middleoptions+=(-vf "fieldorder=bff,crop=720:480:0:32,setdar=${aspect}${TIMECODEOVERLAY}" -aspect ${aspect})
-    else
-        middleoptions+=(-vf "fieldorder=bff,scale=720:480:interl=1,setdar=${aspect}${TIMECODEOVERLAY}" -aspect ${aspect})
+    if [[ "${AUDIOSTREAMCOUNT}" > 0 ]] ; then
+        middleoptions+=(-b:a 448000)
+        middleoptions+=(-ar 48000)
+        get_audio_index "${sourcefile}"
+        if [ "${audiomap}" = "L" ] ; then
+            audiomapping_ffmpeg=(-map_channel 0.${audio_index_1}.0)
+        elif [ "${audiomap}" = "R" ] ; then
+            audiomapping_ffmpeg=(-map_channel 0.${audio_index_1}.1)
+        else
+            get_audio_mapping "${sourcefile}"
+        fi
+        middleoptions+=(${audiomapping_ffmpeg[@]})
     fi
-	
-	get_audio_index "${sourcefile}"
-    if [ "${audiomap}" = "L" ] ; then
-        audiomapping_ffmpeg=(-map_channel 0.${audio_index_1}.0)
-    elif [ "${audiomap}" = "R" ] ; then
-        audiomapping_ffmpeg=(-map_channel 0.${audio_index_1}.1)
-    else
-        get_audio_mapping "${sourcefile}"
-    fi
-    middleoptions+=(${audiomapping_ffmpeg[@]})
-	
     _prep_ffmpeg_log
     # making the initial mpeg2 for the dvd
     if [ "${concatsource}" != "" ] ; then

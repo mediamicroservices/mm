@@ -53,7 +53,7 @@ while [ "$*" != "" ] ; do
     # encoding options
     get_codectagstring "${sourcefile}"
     inputoptions+=(-vsync 0)
-	inputoptions+=(-nostdin)
+    inputoptions+=(-nostdin)
     if [[ "${codec_tag_string}" == "mjp2" ]] ; then
          inputoptions+=(-vcodec libopenjpeg)
     fi

@@ -67,15 +67,21 @@ while [ "${*}" != "" ] ; do
 
     # encoding options
     get_codectagstring "${sourcefile}"
+    get_videostreamcount "${input}"
+    get_audiostreamcount "${input}"
     inputoptions+=(-vsync 0)
-	inputoptions+=(-nostdin)
-    if [[ "${codec_tag_string}" == "mjp2" ]] ; then
-         inputoptions+=(-vcodec libopenjpeg)
+    inputoptions+=(-nostdin)
+    if [[ "${VIDEOSTREAMCOUNT}" > 0 ]] ; then
+        if [[ "${codec_tag_string}" == "mjp2" ]] ; then
+             inputoptions+=(-vcodec libopenjpeg)
+        fi
+        middleoptions+=(-map 0:v)
+        middleoptions+=(-c:v prores)
     fi
-    middleoptions+=(-map 0:v)
-    middleoptions+=(-map 0:a)
-    middleoptions+=(-c:v prores)
-    middleoptions+=(-c:a pcm_s16le)
+    if [[ "${AUDIOSTREAMCOUNT}" > 0 ]] ; then
+        middleoptions+=(-map 0:a)
+        middleoptions+=(-c:a pcm_s16le)
+    fi
 
     # set in and out times if used
     ingestlog="${logdir}/capture.log"

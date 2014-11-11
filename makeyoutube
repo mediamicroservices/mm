@@ -73,43 +73,45 @@ while [ "${*}" != "" ] ; do
     # clear local arrays
     unset inputoptions
     unset middleoptions
-	unset audiomapping_ffmpeg
+    unset audiomapping_ffmpeg
 
     # encoding options
     get_codectagstring "${sourcefile}"
+    get_videostreamcount "${input}"
+    get_audiostreamcount "${input}"
     inputoptions+=(-vsync 0)
-	inputoptions+=(-nostdin)
-    if [[ "${codec_tag_string}" == "mjp2" ]] ; then
-         inputoptions+=(-vcodec libopenjpeg)
+    inputoptions+=(-nostdin)
+    if [[ "${VIDEOSTREAMCOUNT}" > 0 ]] ; then
+        if [[ "${codec_tag_string}" == "mjp2" ]] ; then
+             inputoptions+=(-vcodec libopenjpeg)
+        fi
+        middleoptions+=(-movflags faststart)
+        middleoptions+=(-pix_fmt yuv420p)
+        middleoptions+=(-c:v libx264)
+        middleoptions+=(-crf 18)
+        if  [ "${height}" -eq "486" -a "${width}" -eq "720" ] ; then
+            middleoptions+=(-vf "crop=720:480:0:4,yadif")
+        elif  [ "${height}" -eq "512" -a "${width}" -eq "720" ] ;then
+            middleoptions+=(-vf "crop=720:480:0:32,yadif")
+        else
+            middleoptions+=(-vf yadif)
+        fi
     fi
-    middleoptions+=(-movflags faststart)
-    middleoptions+=(-pix_fmt yuv420p)
-    middleoptions+=(-c:v libx264)
-    middleoptions+=(-crf 18)
-    if  [ "${height}" -eq "486" -a "${width}" -eq "720" ] ; then
-        middleoptions+=(-vf "crop=720:480:0:4,yadif")
-    elif  [ "${height}" -eq "512" -a "${width}" -eq "720" ] ;then
-        middleoptions+=(-vf "crop=720:480:0:32,yadif")
-    else
-        middleoptions+=(-vf yadif)
+    if [[ "${AUDIOSTREAMCOUNT}" > 0 ]] ; then
+        middleoptions+=(-c:a libfaac)
+        middleoptions+=(-ac 2)
+        middleoptions+=(-b:a 128k)
+        get_audio_index "${sourcefile}"
+        if [ "${audiomap}" = "L" ] ; then
+            audiomapping_ffmpeg=(-map_channel 0.${audio_index_1}.0)
+        elif [ "${audiomap}" = "R" ] ; then
+            audiomapping_ffmpeg=(-map_channel 0.${audio_index_1}.1)
+        else
+            get_audio_mapping "${sourcefile}"
+        fi
+        middleoptions+=(${audiomapping_ffmpeg[@]})
     fi
-    middleoptions+=(-c:a libfaac)
-    middleoptions+=(-ac 2)
-    middleoptions+=(-b:a 128k)
     middleoptions+=(-f mp4)
-	
-	get_audio_index "${sourcefile}"
-    if [ "${audiomap}" = "L" ] ; then
-        audiomapping_ffmpeg=(-map_channel 0.${audio_index_1}.0)
-    elif [ "${audiomap}" = "R" ] ; then
-        audiomapping_ffmpeg=(-map_channel 0.${audio_index_1}.1)
-    else
-        get_audio_mapping "${sourcefile}"
-    fi
-    middleoptions+=(${audiomapping_ffmpeg[@]})
-
-    get_audio_mapping "${sourcefile}"
-    middleoptions+=(${audiomapping_ffmpeg[@]})
 
     _prep_ffmpeg_log
     if [ "${concatsource}" != "" ] ; then

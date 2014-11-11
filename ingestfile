@@ -295,7 +295,7 @@ if [ "${makeaccesscopies}" == "Y" ] ; then
     fi
     # makedvd
     "$scriptdir/makedvd" "${OUTDIR_INGESTFILE}/${mediaid}"
-	# makemetadata
+    # makemetadata
     "$scriptdir/makemetadata" "$OUTDIR_INGESTFILE/$mediaid"
     if [ "$dochecksums" = "Y" ] ; then
         "$scriptdir/checksumpackage" "$OUTDIR_INGESTFILE/$mediaid"
