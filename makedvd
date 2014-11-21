@@ -84,8 +84,8 @@ while [ "${*}" != "" ] ; do
     unset inputoptions
     unset middleoptions
     unset audiomapping_ffmpeg
-    get_videostreamcount "${input}"
-    get_audiostreamcount "${input}"
+    get_videostreamcount "${sourcefile}"
+    get_audiostreamcount "${sourcefile}"
 
     # encoding options
     inputoptions+=" -y"

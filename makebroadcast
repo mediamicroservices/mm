@@ -81,8 +81,8 @@ while [ "${*}" != "" ] ; do
     unset audiomapping_ffmpeg
     unset filterchain_start
     filterchain_start=""
-    get_videostreamcount "${input}"
-    get_audiostreamcount "${input}"
+    get_videostreamcount "${sourcefile}"
+    get_audiostreamcount "${sourcefile}"
 
 
     if [[ "${VIDEOSTREAMCOUNT}" > 0 ]] ; then

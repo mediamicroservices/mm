@@ -67,8 +67,8 @@ while [ "${*}" != "" ] ; do
 
     # encoding options
     get_codectagstring "${sourcefile}"
-    get_videostreamcount "${input}"
-    get_audiostreamcount "${input}"
+    get_videostreamcount "${sourcefile}"
+    get_audiostreamcount "${sourcefile}"
     inputoptions+=(-vsync 0)
     inputoptions+=(-nostdin)
     if [[ "${VIDEOSTREAMCOUNT}" > 0 ]] ; then
