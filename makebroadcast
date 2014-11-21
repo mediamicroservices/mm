@@ -200,7 +200,7 @@ while [ "${*}" != "" ] ; do
 
     # set in and out times if used
     ingestlog="${logdir}/capture.log"
-    if [[ -f "${ingestlog}" -a "${isobject}" = "Y" ]] ; then
+    if [[ -f "${ingestlog}" && "${isobject}" = "Y" ]] ; then
         intime=$(_readingestlog "intime")
         outtime=$(_readingestlog "outtime")
         if [[ "${intime}" ]] ; then
