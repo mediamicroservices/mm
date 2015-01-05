@@ -98,7 +98,7 @@ while [ "${*}" != "" ] ; do
         fi
     fi
     if [[ "${AUDIOSTREAMCOUNT}" > 0 ]] ; then
-        middleoptions+=(-c:a libfaac)
+        middleoptions+=(-c:a aac -strict -2)
         middleoptions+=(-ac 2)
         middleoptions+=(-b:a 128k)
         get_audio_index "${sourcefile}"
