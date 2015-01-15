@@ -73,6 +73,7 @@ while [ "$*" != "" ] ; do
     middleoptions+=(-map 0:a:0)
     middleoptions+=(-ac 2)
     middleoptions+=(-r:a 44100)
+    middleoptions+=(-sample_fmt s16p)
     get_audio_mapping "${sourcefile}"
     middleoptions+=(${audiomapping_ffmpeg[@]})
 
