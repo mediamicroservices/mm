@@ -398,7 +398,7 @@ _find_input (){
     if [ "${sourcefile#*.}" == "iso" ] ; then
         report -dt "Detecting iso input and hoping its a dvd image"
         if [[ $(uname -s) == "Darwin" ]] ; then
-            mountpath=$(hdiutil mount "${sourcefile}" | awk ' {print $2} ')
+            mountpath=$(hdiutil mount "${sourcefile}" | cut -d " " -f 2- | sed 's/^[ \t]*//' )
             report -dt "Mounting iso at $mountpath"
         else
             mountpath="/tmp/temporary_dvd_path"
