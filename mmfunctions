@@ -550,7 +550,7 @@ get_volume_adjustment(){
     input_movie="$1"
     report -dt "Getting volume data for $(basename "${input_movie}") ..."
     VOLDETTEMP=$(maketemp)
-    volume_data=$(ffprobe -of compact=p=0:nk=1:s=',' -show_entries frame=metadata:tags=lavfi.r128.I,lavfi.r128.LRA -f lavfi "amovie='${input_movie}',ebur128=metadata=1,volumedetect" 2>"${VOLDETTEMP}")
+    volume_data=$(ffprobe -of compact=p=0:nk=1:s=',' -show_entries frame_tags=lavfi.r128.I,lavfi.r128.LRA -f lavfi "amovie='${input_movie}',ebur128=metadata=1,volumedetect" 2>"${VOLDETTEMP}")
     [ $? -ne 0 ] && { report -wt "Volume analysis for $input_movie exited with $?." ; exit ;};
     for i in $(echo "$volume_data"); do
         audioframe_I=$(echo "${i}" | cut -d, -f1)
