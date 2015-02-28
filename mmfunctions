@@ -547,29 +547,39 @@ is_video(){
 
 get_volume_adjustment(){
     reference=-24
+    integrated_loudness=""
+    loudness_range=""
+    voldet_mean_volume=""
+    voldet_max_volume=""
+    VOLADJ=""
     input_movie="$1"
     report -dt "Getting volume data for $(basename "${input_movie}") ..."
     VOLDETTEMP=$(maketemp)
     volume_data=$(ffprobe -of compact=p=0:nk=1:s=',' -show_entries frame_tags=lavfi.r128.I,lavfi.r128.LRA -f lavfi "amovie='${input_movie}',ebur128=metadata=1,volumedetect" 2>"${VOLDETTEMP}")
-    [ $? -ne 0 ] && { report -wt "Volume analysis for $input_movie exited with $?." ; exit ;};
-    for i in $(echo "$volume_data"); do
-        audioframe_I=$(echo "${i}" | cut -d, -f1)
-        audioframe_LRA=$(echo "${i}" | cut -d, -f2)
-        [ "$audioframe_I"   != "" ] && integrated_loudness="${audioframe_I}"
-        [ "$audioframe_LRA" != "" ] && loudness_range="${audioframe_LRA}"
-    done
-    voldet_mean_volume=$(grep "mean_volume" "${VOLDETTEMP}" | cut -d: -f 2 | awk '{print $1}')
-    voldet_max_volume=$(grep "max_volume" "${VOLDETTEMP}" | cut -d: -f 2 | awk '{print $1}')
-    VOLADJ=$(echo "$reference - $integrated_loudness" | bc)
-    # test to see if adjustment is at least 2dB, else skip
-    report -dt "Loudness range is ${loudness_range}dB."
-    if [[ -f "${ingestlog}" ]] ; then
-        _writeingestlog "audio_adjustment" "${VOLADJ}"
-        _writeingestlog "r128_loudness_reference" "${reference}"
-        _writeingestlog "r128_loudness_range" "${loudness_range}"
-        _writeingestlog "r128_integrated_loudness" "${integrated_loudness}"
-        _writeingestlog "voldet_mean_volume" "${voldet_mean_volume}"
-        _writeingestlog "voldet_max_volume" "${voldet_max_volume}"
+    volume_exit_code="$?"
+    if [ "${volume_exit_code}" -ne 0 ] ; then
+        report -wt "Volume analysis for $input_movie exited with ${volume_exit_code}."
+        exit
+    else
+        for i in $(echo "$volume_data"); do
+            audioframe_I=$(echo "${i}" | cut -d, -f1)
+            audioframe_LRA=$(echo "${i}" | cut -d, -f2)
+            [ "$audioframe_I"   != "" ] && integrated_loudness="${audioframe_I}"
+            [ "$audioframe_LRA" != "" ] && loudness_range="${audioframe_LRA}"
+        done
+        voldet_mean_volume=$(grep "mean_volume" "${VOLDETTEMP}" | cut -d: -f 2 | awk '{print $1}')
+        voldet_max_volume=$(grep "max_volume" "${VOLDETTEMP}" | cut -d: -f 2 | awk '{print $1}')
+        VOLADJ=$(echo "$reference - $integrated_loudness" | bc)
+        # test to see if adjustment is at least 2dB, else skip
+        report -dt "Loudness range is ${loudness_range}dB."
+        if [[ -f "${ingestlog}" ]] ; then
+            _writeingestlog "audio_adjustment" "${VOLADJ}"
+            _writeingestlog "r128_loudness_reference" "${reference}"
+            _writeingestlog "r128_loudness_range" "${loudness_range}"
+            _writeingestlog "r128_integrated_loudness" "${integrated_loudness}"
+            _writeingestlog "voldet_mean_volume" "${voldet_mean_volume}"
+            _writeingestlog "voldet_max_volume" "${voldet_max_volume}"
+        fi
     fi
 }
 
