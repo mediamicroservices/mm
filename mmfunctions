@@ -559,7 +559,6 @@ get_volume_adjustment(){
     volume_exit_code="$?"
     if [ "${volume_exit_code}" -ne 0 ] ; then
         report -wt "Volume analysis for $input_movie exited with ${volume_exit_code}."
-        exit
     else
         for i in $(echo "$volume_data"); do
             audioframe_I=$(echo "${i}" | cut -d, -f1)
