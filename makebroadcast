@@ -15,6 +15,7 @@ usage(){
     echo "This application will create a file suitable for broadcast or editing from a video file or package input with the following options."
     echo "Dependencies: ${dependencies[@]}"
     echo "Usage: $(basename ${0}) [ -l ] [ -r ] [ -c ] fileorpackage1 [ fileorpackage2 ...]"
+    echo "  -F (apply a formula, override default settings)"
     echo "  -l (only use the left channel of the first audio track)"
     echo "  -r (only use the right channel of the first audio track)"
     echo "  -c (run the video through a crop detection filter, then crop the video accordingly during transcoding, slower)"
@@ -32,8 +33,9 @@ usage(){
 voladjust="Y"
 # command-line options to set mediaid and original variables
 OPTIND=1
-while getopts ":lrcvo:d:e:E:nh" opt ; do
+while getopts ":F:lrcvo:d:e:E:nh" opt ; do
     case "${opt}" in
+        F) formula="${OPTARG}";;
         l) audiomap="L";;
         r) audiomap="R";;
         c) cropdetect="Y" ;;
@@ -150,7 +152,13 @@ while [ "${*}" != "" ] ; do
 
         # decide on an output codec, aspect ratio, and padding strategy
         darratio=$(echo "scale=3 ; ${dar}" | bc)
-        if [ "${darratio}" = "1.777" -a ! "${cropdetect}" = "Y" ] ; then
+        if [ "${formula}" = "tff" ] ; then
+            filterchain_start+=(setfield=tff,)
+        fi
+        if [ "${formula}" = "hds" ] ; then
+            middleoptions+=(-vf "${filterchain_start}scale=size=hd1080:interl=1,format=yuv422p,setsar=1/1,setdar=16/9,fps=fps=ntsc")
+            middleoptions+=(${middleoptionsxdcam[@]})
+        elif [ "${darratio}" = "1.777" -a ! "${cropdetect}" = "Y" ] ; then
             middleoptions+=(-vf "${filterchain_start}scale=size=hd1080:interl=1,format=yuv422p,setsar=1/1,setdar=16/9,fps=fps=ntsc")
             middleoptions+=(${middleoptionsxdcam[@]})
         elif [ $(echo "scale=3 ; ${darratio} > (16/9)" | bc -l) = 1 ] ; then
