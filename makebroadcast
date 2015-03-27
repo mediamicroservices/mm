@@ -81,7 +81,6 @@ while [ "${*}" != "" ] ; do
     unset middleoptionsxdcam
     unset middleoptionsimx
     unset audiomapping_ffmpeg
-    unset filterchain_start
     filterchain_start=""
     get_videostreamcount "${sourcefile}"
     get_audiostreamcount "${sourcefile}"
@@ -92,7 +91,7 @@ while [ "${*}" != "" ] ; do
         get_sar "${sourcefile}"
         if [ "${cropdetect}" = "Y" ] ; then
             get_cropdetection "${sourcefile}"
-            filterchain_start="${CROPADJ},"
+            filterchain_start="${filterchain_start}${CROPADJ},"
             width=$(echo "${CROPADJ}" | cut -d= -f2 | cut -d: -f1)
             height=$(echo "${CROPADJ}" | cut -d= -f2 | cut -d: -f2)
             dar="(${width}/${height})*${sar}"
@@ -167,11 +166,11 @@ while [ "${*}" != "" ] ; do
         # decide on an output codec, aspect ratio, and padding strategy
         darratio=$(echo "scale=3 ; ${dar}" | bc)
         if [ "${formula}" = "tff" ] ; then
-            filterchain_start+=(setfield=tff,)
+            filterchain_start="${filterchain_start}setfield=tff,"
         fi
         get_fieldorder "${sourcefile}"
         if [ "${fieldorder}" != "tff" ] ; then
-            filterchain_start+="fieldorder=tff,"
+            filterchain_start="${filterchain_start}fieldorder=tff,"
         fi
         if [ "${formula}" = "hds" ] ; then
             middleoptions+=(-vf "${filterchain_start}scale=size=hd1080:interl=1,format=yuv422p,setsar=1/1,setdar=16/9,fps=fps=ntsc")
