@@ -30,8 +30,9 @@ usage(){
 }
 
 OPTIND=1
-while getopts ":pnh" opt ; do
+while getopts ":F:pnh" opt ; do
     case "${opt}" in
+        F) formula="${OPTARG}";;
         p) preservation_mode="Y" ; deliverytoomneon="N" ; deliveraccesscopies="Y" ; deliverytoaipstorage="N" ;;
         n) deliverytoomneon="N" ; deliveraccesscopies="N" ;;
         h) usage ;;
@@ -83,9 +84,8 @@ usage(){
 }
 
 # command-line options to set mediaid and original variables
-while getopts ":F:hm:f:p:a:w:y:xlcro:q" opt; do
+while getopts ":hm:f:p:a:w:y:xlcro:q" opt; do
     case "${opt}" in
-        F) formula="${OPTARG}";;
         h) usage ;;
         m) mediaid="${OPTARG}";;
         f) input="${OPTARG}";;
