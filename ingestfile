@@ -83,8 +83,9 @@ usage(){
 }
 
 # command-line options to set mediaid and original variables
-while getopts ":hm:f:p:a:w:y:xlcro:q" opt; do
+while getopts ":F:hm:f:p:a:w:y:xlcro:q" opt; do
     case "${opt}" in
+        F) formula="${OPTARG}";;
         h) usage ;;
         m) mediaid="${OPTARG}";;
         f) input="${OPTARG}";;
@@ -220,6 +221,7 @@ echo -e "$log" >> "${ingestlog}"
 _writeingestlog "audiodecision" "${audiodecision}"
 _writeingestlog "cropdecision" "${cropdecision}"
 _writeingestlog "cleanupdecision" "${cleanupdecision}"
+_writeingestlog "forumla" "${forumla}"
 _writeingestlog "ingest_process_dir" "${OUTDIR_INGESTFILE}"
 _writeingestlog "ingest_process_dir_freespace" "$(df -h "${OUTDIR_INGESTFILE}" | tail -n1 | awk '{print $4}')"
 _writeingestlog "computer_name" "$(uname -n)"
