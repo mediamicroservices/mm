@@ -65,45 +65,6 @@ cleanup(){
 
 trap cleanup SIGHUP SIGINT SIGTERM
 
-usage(){
-    echo
-    echo "$(basename ${0}) ${version}"
-    echo "This script may be run interactively by running it with no arguments or may be used with the following options."
-    echo "Usage: $(basename ${0}) [ -m mediaid ] [ -f input] [ -p processing_directory ] [-a AIP_storage_directory ] [-w podcast_delivery ] [-y youtube_delivery ] [-x Regex ] [ -l audiodecision ] [ -c cleanupdecision ] [ -o operator ] [ -q priority ]"
-    echo "  -m mediaid"
-    echo "  -f input"
-    echo "  -p processing directory. Transcoding will happen here."
-    echo "  -a Archive Information Package storage directory. Final package delivery location."
-    echo "  -w podcast delivery"
-    echo "  -y youtube delivery"
-    echo "  -x Regex will identify applicability of various services."
-    echo "  -l Use only left channel of source video in transcoding."
-    echo "  -c Remove source file after successful ingest."
-    echo "  -q Put in queue."
-    exit
-}
-
-# command-line options to set mediaid and original variables
-while getopts ":hm:f:p:a:w:y:xlcro:q" opt; do
-    case "${opt}" in
-        h) usage ;;
-        m) mediaid="${OPTARG}";;
-        f) input="${OPTARG}";;
-        p) OUTDIR_INGESTFILE="${OPTARG}" ;;
-        a) AIP_STORAGE="${OPTARG}" ;;
-        w) PODCASTDELIVER="${OPTARG}" ;;
-        y) YOUTUBEDELIVER="${OPTARG}" ;;
-        x) REGEX4PODCAST="${OPTARG}" ;;
-        l) audiodecision="left" ;;
-        c) cleanup="Y" ; cleanupdecision="Remove source file after successful ingest" ;;
-        r) cropdetection="Y" ;;
-        o) op="${OPTARG}" ;;
-        q) priority="put in queue" ;;
-        \?) echo "Invalid option: -${OPTARG}" ; exit 1 ;;
-        :) echo "Option -${OPTARG} requires an argument" ; exit 1 ;;
-    esac
-done
-
 # check environment
 [ -z "${OUTDIR_INGESTFILE}" ] && { echo "The processing directory must be set. Use [ -p /path/to/processing/directory ] or run mmconfig to set OUTDIR_INGESTFILE." ; exit 1 ;};
 [ -z "${AIP_STORAGE}" ] && { echo "The AIP Storage directory must be set. Use [ -a /path/to/AIP/storage/directory ] or run mmconfig to set AIP_STORAGE." ; exit 1 ;};
