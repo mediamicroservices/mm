@@ -101,9 +101,23 @@ while [ "${*}" != "" ] ; do
             get_height "${sourcefile}"
             get_dar "${sourcefile}"
         fi
-        get_fieldorder "${sourcefile}"
-        if [ "${fieldorder}" != "tff" ] ; then
-            filterchain_start+="fieldorder=tff,"
+
+        # set in and out times if used
+        ingestlog="${logdir}/capture.log"
+        if [[ -f "${ingestlog}" && "${isobject}" = "Y" ]] ; then
+            if [ ! ${formula} ] ; then
+                formula=$(_readingestlog "formula")
+            fi
+            intime=$(_readingestlog "intime")
+            outtime=$(_readingestlog "outtime")
+            if [[ "${intime}" ]] ; then
+                report -dt "ATTENTION: Transcoding will use intime (${intime}) during transcoding."
+                middleoptions+=(-ss "${intime}")
+            fi
+            if [[ "${outtime}" ]] ; then
+                report -dt "ATTENTION: Transcoding will use outtime (${outtime}) during transcoding."
+                middleoptions+=(-to "${outtime}")
+            fi
         fi
 
         #options for either xdcam or imx
@@ -155,6 +169,10 @@ while [ "${*}" != "" ] ; do
         if [ "${formula}" = "tff" ] ; then
             filterchain_start+=(setfield=tff,)
         fi
+        get_fieldorder "${sourcefile}"
+        if [ "${fieldorder}" != "tff" ] ; then
+            filterchain_start+="fieldorder=tff,"
+        fi
         if [ "${formula}" = "hds" ] ; then
             middleoptions+=(-vf "${filterchain_start}scale=size=hd1080:interl=1,format=yuv422p,setsar=1/1,setdar=16/9,fps=fps=ntsc")
             middleoptions+=(${middleoptionsxdcam[@]})
@@ -204,21 +222,6 @@ while [ "${*}" != "" ] ; do
     inputoptions+=(-nostdin)
     if [[ "${codec_tag_string}" == "mjp2" ]] ; then
          inputoptions+=(-vcodec libopenjpeg)
-    fi
-
-    # set in and out times if used
-    ingestlog="${logdir}/capture.log"
-    if [[ -f "${ingestlog}" && "${isobject}" = "Y" ]] ; then
-        intime=$(_readingestlog "intime")
-        outtime=$(_readingestlog "outtime")
-        if [[ "${intime}" ]] ; then
-            report -dt "ATTENTION: Transcoding will use intime (${intime}) during transcoding."
-            middleoptions+=(-ss "${intime}")
-        fi
-        if [[ "${outtime}" ]] ; then
-            report -dt "ATTENTION: Transcoding will use outtime (${outtime}) during transcoding."
-            middleoptions+=(-to "${outtime}")
-        fi
     fi
 
     # log process
