@@ -640,3 +640,20 @@ _get_filesystem(){
         report -wt "_get_filesystem was expecting a file or directory but got a ${1}"
     fi
 }
+
+set_accesstimes(){
+    # set in and out times if used
+    ingestlog="${logdir}/capture.log"
+    if [[ -f "${ingestlog}" && "${isobject}" = "Y" ]] ; then
+        intime=$(_readingestlog "intime")
+        outtime=$(_readingestlog "outtime")
+        if [[ "${intime}" ]] ; then
+            report -dt "ATTENTION: Transcoding will use intime (${intime}) during transcoding."
+            middleoptions+=(-ss "${intime}")
+        fi
+        if [[ "${outtime}" ]] ; then
+            report -dt "ATTENTION: Transcoding will use outtime (${outtime}) during transcoding."
+            middleoptions+=(-to "${outtime}")
+        fi
+    fi
+}
