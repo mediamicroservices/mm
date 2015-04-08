@@ -251,7 +251,6 @@ check_dependencies(){
 _initialize_make(){
     check_dependencies "${dependencies[@]}"
     unset dependencies
-    unset audiomapping_ffmbc
     deliverdir=""
     DRYRUN=false
     emailaddress=""
@@ -454,7 +453,7 @@ has_first_two_tracks_mono(){
 }
 
 get_audio_index(){
-    # get ffmpeg's index value of the first audio stream. Useful for do custom channel mappings through ffmbc.
+    # get ffmpeg's index value of the first audio stream. Useful for do custom channel mappings.
     audio_index_1=$(ffprobe "$1" -show_streams -select_streams a:0 2> /dev/null | grep index= | cut -d = -f 2)
     audio_index_2=$(ffprobe "$1" -show_streams -select_streams a:1 2> /dev/null | grep index= | cut -d = -f 2)
 }
@@ -471,14 +470,11 @@ get_audio_mapping(){
     if [[ "${MULTIMONO}" == true ]] ; then
         report -wt "The first two audio tracks are both mono. Considering track 1 for left and track 2 for right."
         audiomapping_ffmpeg=(-map_channel "0.${audio_index_1}.0" -map_channel "0.${audio_index_2}.0")
-        audiomapping_ffmbc=(-map_audio_channel 0:${audio_index_1}:0:0:1:0 -map_audio_channel 0:${audio_index_2}:0:0:1:1)
     elif [[ "$audio_channels" -gt 2 ]] ;then
         report -wt "The first audio track has more than 2 channels. Considering channel 1 for left and channel 2 for right and ignoring the rest."
         audiomapping_ffmpeg=(-map_channel "0.${audio_index_1}.0" -map_channel "0.${audio_index_1}.1")
-        audiomapping_ffmbc=(-map_audio_channel "0:${audio_index_1}:0:0:1:0" -map_audio_channel "0:${audio_index_1}:1:0:1:1")
     else
         audiomapping_ffmpeg=()
-        audiomapping_ffmbc=()
     fi
 }
 
