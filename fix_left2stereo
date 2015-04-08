@@ -33,14 +33,17 @@ _log -b
 while [ "${*}" != "" ] ; do
 
     input_movie="$1"
-    extension="${name#*.}"
     name=$(basename "${1}")
 
     get_codectagstring
     unset ffmbc_opts
     ffmbc_opts+=(-vcodec copy -acodec pcm_s24be -ar 48000 -ac 2)
     ffmbc_opts+=(-map_audio_channel 0:1:0:0:1:0 -map_audio_channel 0:1:0:0:1:1)
-    [ "${codec_tag_string}" = "mpeg" ] && extension="mxf"
+    if [ "${codec_tag_string}" = "mpeg" ] ; then
+        extension="mxf"
+    else
+        extension="mov"
+    fi
 
     output_movie="${input_movie%.*}${suffix}.${extension}"
     if [ -f "${output_movie}" ] ; then
