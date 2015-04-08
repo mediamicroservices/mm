@@ -34,12 +34,15 @@ while [ "${*}" != "" ] ; do
 
     sourcefile="${1}"
     name=$(basename "${sourcefile}")
-    extension="${name#*.}"
 
     get_codectagstring
     unset ffmbc_opts
     ffmbc_opts+=(-vcodec copy -acodec copy)
-    [ "${codec_tag_string}" = "mpeg" ] && extension="mxf"
+    if [ "${codec_tag_string}" = "mpeg" ] ; then
+        extension="mxf"
+    else
+        extension="mov"
+    fi
 
     output_movie="${sourcefile%.*}${suffix}.${extension}"
     if [ -f "${output_movie}" ] ; then
