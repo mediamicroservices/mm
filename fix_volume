@@ -7,14 +7,14 @@ dependencies=(ffmbc ffmbc)
 suffix="_voladj"
 
 scriptdir=$(dirname "${0}")
-. "$scriptdir/mmfunctions" || { echo "Missing '${scriptdir}/mmfunctions'. Exiting." ; exit 1 ;};
+. "${scriptdir}/mmfunctions" || { echo "Missing '${scriptdir}/mmfunctions'. Exiting." ; exit 1 ;};
 
 usage(){
     echo
-    echo "$(basename ${0}) ${version}"
+    echo "$(basename "${0}") ${version}"
     echo "This application will use an input video file to produce an output video file where the audio is adjusted to meet an integrated loudness of -23dB. If the integrated loudness of the input is already within 1dB of the target then no change will occur. The output file will be produced in the same directory as the input but be distinguished by a suffix in the filename: ${suffix}."
     echo "Dependencies: ${dependencies[@]}"
-    echo "Usage: $(basename ${0}) file1 [ file2 ...]"
+    echo "Usage: $(basename "${0}") file1 [ file2 ...]"
     echo "  -h display this help"
     echo
     exit
@@ -41,7 +41,7 @@ cleanup(){
 trap cleanup SIGHUP SIGINT SIGTERM
 _log -b
 
-while [ "$*" != "" ] ; do
+while [ "${*}" != "" ] ; do
     input_movie="${1}"
     name=$(basename "${1}")
     extension="${name#*.}"
@@ -55,7 +55,7 @@ while [ "$*" != "" ] ; do
 
     output_movie="${input_movie%.*}${suffix}.${extension}"
     if [ -f "${output_movie}" ] ; then
-        report -wt "The intended output of $(basename ${0}) already exists. Skipping for now. Please delete ${output_movie} and rerun or figure out why you are trying to do this."
+        report -wt "The intended output of $(basename "${0}") already exists. Skipping for now. Please delete ${output_movie} and rerun or figure out why you are trying to do this."
     else
         get_volume_adjustment "${input_movie}"
         if [ -n "${VOLADJ}" ] ; then
