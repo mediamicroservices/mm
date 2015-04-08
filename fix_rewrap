@@ -38,7 +38,7 @@ while [ "${*}" != "" ] ; do
 
     get_codectagstring
     unset ffmpeg_opts
-    ffmpeg_opts+=(-c:v copy -c:a copy)
+    ffmpeg_opts+=(-map 0:v -map 0:a -c:v copy -c:a copy)
     if [ "${codec_tag_string}" = "mpeg" ] ; then
         extension="mxf"
     else
