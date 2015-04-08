@@ -32,8 +32,8 @@ _log -b
 
 while [ "${*}" != "" ] ; do
 
-    input_movie="${1}"
-    name=$(basename "${1}")
+    sourcefile="${1}"
+    name=$(basename "${sourcefile}")
     extension="${name#*.}"
 
     get_codectagstring
@@ -41,12 +41,12 @@ while [ "${*}" != "" ] ; do
     ffmbc_opts+=(-vcodec copy -acodec copy)
     [ "${codec_tag_string}" = "mpeg" ] && extension="mxf"
 
-    output_movie="${input_movie%.*}${suffix}.${extension}"
+    output_movie="${sourcefile%.*}${suffix}.${extension}"
     if [ -f "${output_movie}" ] ; then
         report -wt "The intended output of $(basename "${0}") already exists. Skipping for now. Please delete ${output_movie} and rerun or figure out why you are trying to do this."
     else
         report -dt "Generating ${outputmovie} ..."
-        ffmbc -i ${input_movie} ${ffmbc_opts[@]} ${output_movie}
+        ffmbc -i ${sourcefile} ${ffmbc_opts[@]} ${output_movie}
         report -dt "$(basename "${0}") is done with ${name}."
     fi
     shift
