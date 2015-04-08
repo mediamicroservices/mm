@@ -4,19 +4,19 @@ version=1.1
 unset dependencies
 dependencies=(ffmbc)
 
-scriptdir=$(dirname "$0")
-. "$scriptdir/mmfunctions" || { echo "Missing '$scriptdir/mmfunctions'. Exiting." ; exit 1 ;};
+scriptdir=$(dirname "${0}")
+. "${scriptdir}/mmfunctions" || { echo "Missing '${scriptdir}/mmfunctions'. Exiting." ; exit 1 ;};
 
 usage(){
     echo
-    echo "$(basename ${0}) ${version}"
+    echo "$(basename "${0}") ${version}"
     echo "This application takes an input video file(s) and produces outputs that are map the left channel of the input to a stereo mix in the output."
     echo "Dependencies: ${dependencies[@]}"
-    echo "Usage: $(basename $0) file1 [ file2 ...]"
+    echo "Usage: $(basename "${0}") file1 [ file2 ...]"
     echo
     exit
 }
-[ "$#" = 0 ] && usage
+[ "${#}" = 0 ] && usage
 check_dependencies "${dependencies[@]}"
 
 cleanup(){
@@ -30,11 +30,11 @@ suffix="_left2stereo"
 trap cleanup SIGHUP SIGINT SIGTERM
 _log -b
 
-while [ "$*" != "" ] ; do
+while [ "${*}" != "" ] ; do
 
     input_movie="$1"
-    name=$(basename "$1")
     extension="${name#*.}"
+    name=$(basename "${1}")
 
     get_codectagstring
     unset ffmbc_opts
@@ -44,7 +44,7 @@ while [ "$*" != "" ] ; do
 
     output_movie="${input_movie%.*}${suffix}.${extension}"
     if [ -f "${output_movie}" ] ; then
-        report -wt "The intended output of $(basename $0) already exists. Skipping for now. Please delete ${output_movie} and rerun or figure out why you are trying to do this."
+        report -wt "The intended output of $(basename "${0}") already exists. Skipping for now. Please delete ${output_movie} and rerun or figure out why you are trying to do this."
     else
         report -dt "Generating ${outputmovie} ..."
         ffmbc -i ${input_movie} ${ffmbc_opts[@]} ${output_movie}
