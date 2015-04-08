@@ -50,7 +50,7 @@ while [ "${*}" != "" ] ; do
         report -wt "The intended output of $(basename "${0}") already exists. Skipping for now. Please delete ${output_movie} and rerun or figure out why you are trying to do this."
     else
         report -dt "Generating ${outputmovie} ..."
-        ffmpeg -i ${sourcefile} ${ffmepg_opts[@]} ${output_movie}
+        ffmpeg -i "${sourcefile}" "${ffmepg_opts[@]}" "${output_movie}"
         report -dt "$(basename "${0}") is done with ${name}."
     fi
     shift
