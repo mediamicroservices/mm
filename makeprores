@@ -1,8 +1,8 @@
 #!/bin/bash
 # makeprores, makes a file appropriate for keeping editors happy
 version="1.0"
-scriptdir=$(dirname $(which "$0"))
-. "$scriptdir/mmfunctions" || { echo "Missing '$scriptdir/mmfunctions'. Exiting." ; exit 1 ;};
+scriptdir=$(dirname $(which "${0}"))
+. "${scriptdir}/mmfunctions" || { echo "Missing '${scriptdir}/mmfunctions'. Exiting." ; exit 1 ;};
 dependencies=(ffmpeg)
 _initialize_make
 
@@ -10,7 +10,7 @@ outputdir="$HOME/Desktop/$(basename $0)" # default output directory, override wi
 
 usage(){
     echo
-    echo "$(basename ${0}) ${version}"
+    echo "$(basename "${0}") ${version}"
     echo "This application will create a prores/quicktime file (suitable for editing) from a video file or package input with the following options. By default the output will be written to ${outputdir}. You can override this with the -o option."
     echo "Dependencies: ${dependencies[@]}"
     echo "Usage: $(basename $0) [ -o /directory/to/write/to/ ] fileorpackage1 [ fileorpackage2 ...]"
@@ -43,7 +43,7 @@ shift $(( ${OPTIND} - 1 ))
 
 while [ "${*}" != "" ] ; do
     # get context about the input
-    input="$1"
+    input="${1}"
     if [ -z "${outputdir_forced}" ] ; then
         [ -d "${input}" ] && { outputdir="${input}/objects/access/prores" && logdir="${input}/metadata/submissionDocumentation/logs" ;};
         [ -f "${input}" ] && { outputdir=$(dirname "${input}")"/access/prores" && logdir="$(dirname "${input}")/access/logs" ;};

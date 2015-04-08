@@ -44,8 +44,8 @@ while getopts ":ho:" opt; do
 done
 shift $(( ${OPTIND} - 1 ))
 
-while [ "$*" != "" ] ; do
-    input="$1"
+while [ "${*}" != "" ] ; do
+    input="${1}"
     if [ -z "${outputdir}" ] ; then
         [ -d "${input}" ] && { outputdir="${input}/objects/access/mp3" && logdir="${input}/metadata/submissionDocumentation/logs" ;};
         [ -f "${input}" ] && { outputdir=$(dirname "${input}")"/access/mp3" && logdir="$(dirname "${input}")/access/logs" ;};

@@ -1,8 +1,8 @@
 #!/bin/bash
 # makepdf, makes a pdf from an image series
 version="1.0"
-scriptdir=$(dirname $(which "$0"))
-. "$scriptdir/mmfunctions" || { echo "Missing '$scriptdir/mmfunctions'. Exiting." ; exit 1 ;};
+scriptdir=$(dirname $(which "${0}"))
+. "${scriptdir}/mmfunctions" || { echo "Missing '${scriptdir}/mmfunctions'. Exiting." ; exit 1 ;};
 dependencies=(ffmpeg convert pdfjoin tesseract)
 _initialize_make
 
@@ -37,7 +37,7 @@ check_tif_name(){
 
 usage(){
     echo
-    echo "$(basename ${0}) ${version}"
+    echo "$(basename "${0}") ${version}"
     echo "This application will create a small pdf file (suitable for sharing online) from a collection of image file or package input with the following options."
     echo "Dependencies: ${dependencies[@]}"
     echo "Usage: $(basename $0) [ -d /path/to/deliver/to/ ] fileorpackage1 [ fileorpackage2 ...]"
@@ -73,7 +73,7 @@ shift $(( ${OPTIND} - 1 ))
 
 while [ "${*}" != "" ] ; do
     # get context about the input
-    input="$1"
+    input="${1}"
     if [ -z "${outputdir_forced}" ] ; then
         [ -d "${input}" ] && { outputdir="${input}/objects/access/pdf_1" && logdir="${input}/metadata/submissionDocumentation/logs" ;};
         [ -f "${input}" ] && { outputdir=$(dirname "${input}")"/access/pdf_1" && logdir="$(dirname "${input}")/access/logs" ;};

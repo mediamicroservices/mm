@@ -1,8 +1,8 @@
 #!/bin/bash
 requireconfig="Y"
 
-scriptdir=$(dirname "$0")
-. "$scriptdir/mmfunctions" || { echo "Missing '$scriptdir/mmfunctions'. Exiting." ; exit 1 ;};
+scriptdir=$(dirname "${0}")
+. "${scriptdir}/mmfunctions" || { echo "Missing '${scriptdir}/mmfunctions'. Exiting." ; exit 1 ;};
 
 cleanup(){
     _log -a "Process aborted"

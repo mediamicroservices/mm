@@ -1,8 +1,8 @@
 #!/bin/bash
 # interpret Interleaved 2/5 barcode 58 byte barcode values used by the ProBell tape management system
 
-scriptdir=$(dirname "$0")
-. "$scriptdir/mmfunctions" || { echo "Missing '$scriptdir/mmfunctions'. Exiting." ; exit 1 ;};
+scriptdir=$(dirname "${0}")
+. "${scriptdir}/mmfunctions" || { echo "Missing '${scriptdir}/mmfunctions'. Exiting." ; exit 1 ;};
 
 cleanup(){
     _log -a "Process aborted"
@@ -16,7 +16,7 @@ if test $# != 1 ; then
     echo "You must supply one argument, a scanned interleaved 2/5 barcode value"; exit
 fi
 
-barcode="$1"
+barcode="${1}"
 
 translatebyte()
 {

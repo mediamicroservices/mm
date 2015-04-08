@@ -3,14 +3,14 @@
 # set up variables for microservices
 CONFIG="Y"
 CONFIG_VERSION="1.0"
-scriptdir=$(dirname "$0")
-. "$scriptdir/mmfunctions" || { echo "Missing '$scriptdir/mmfunctions'. Exiting." ; exit 1 ;};
+scriptdir=$(dirname "${0}")
+. "${scriptdir}/mmfunctions" || { echo "Missing '${scriptdir}/mmfunctions'. Exiting." ; exit 1 ;};
 
 # local variables
 REQUIRED_VARIABLES=("OUTDIR_INGESTFILE" "OUTDIR_INGESTXDCAM" "OUTDIR_PAPER" "AIP_STORAGE" "PODCASTDELIVER" "YOUTUBEDELIVER" "TMPDIR" "REGEX4PODCAST" "DVDLABELPREFIX" "OMNEONIP" "OMNEONPATH" "CUSTOM_LOG_DIR" "LTO_INDEX_DIR" "LOCAL_MM_DIR" "EMAIL_FROM" "MAKEYOUTUBE_DELIVERY_EMAIL_TO" "MAKEBROADCAST_DELIVERY_EMAIL_TO" "FILEMAKER_DB" "FILEMAKER_XML_URL")
 
 config_edit(){
-    [ -z "$1" -o -z "$2" ] && { report -w "The config_edit function requires two arguments. Error." ; exit ;};
+    [ -z "${1}" -o -z "$2" ] && { report -w "The config_edit function requires two arguments. Error." ; exit ;};
     sedtemp=$(maketemp)
     sed "s:^$1=[^ ]*:$1=$2:" "$CONFIG_FILE" > "$sedtemp"
     cp "$sedtemp" "$CONFIG_FILE"
@@ -27,7 +27,7 @@ test_config(){
 }
 
 add_key(){
-    key_to_add="$1"
+    key_to_add="${1}"
     grep -q "^$key_to_add=" "$CONFIG_FILE" ; grep_code="$?"
     if [[ ! "${grep_code}" -eq "0" ]] ; then
         report -td "Adding NEW variable $key_to_add to $CONFIG_FILE"

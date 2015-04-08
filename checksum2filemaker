@@ -10,7 +10,7 @@ SCRIPTDIR=$(dirname "${0}")
 [ -z "${FILEMAKER_XML_URL}" ] && { echo "The filemaker xml path must be set. Run mmconfig to set FILEMAKER_XML_URL." ; exit 1 ;};
 
 while [ "${*}" != "" ] ; do
-    input="$1"
+    input="${1}"
     if [[ ! -f "${input}/metadata/checksum.md5" ]] ; then
         report -dt "${input} does not have a checksum.md5 file, skipping for $(basename "$input")"
         shift
@@ -27,6 +27,6 @@ while [ "${*}" != "" ] ; do
         fi
     done
     IFS=$OLDIFS
-    echo "Done uploading metadata for $(basename "$1")."
+    echo "Done uploading metadata for $(basename "${1}")."
     shift
 done

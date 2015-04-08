@@ -19,7 +19,7 @@ scriptdir=$(dirname "${0}")
 
 usage(){
     echo
-    echo "$(basename ${0}) ${version}"
+    echo "$(basename "${0}") ${version}"
     echo "This script will run an interactive interview and then process an input file accordingly."
     echo "Dependencies: ${dependencies[@]}"
     echo "Usage: $(basename $0) [ -options ]"
@@ -241,27 +241,27 @@ if [ "${makeaccesscopies}" == "Y" ] ; then
     unset makepodcastopts
     report -dt "STATUS Making access copies."
     # makemp3
-    "$scriptdir/makemp3" "${OUTDIR_INGESTFILE}/${mediaid}"
+    "${scriptdir}/makemp3" "${OUTDIR_INGESTFILE}/${mediaid}"
     # makeframes
     [ "$deliveraccesscopies" = "Y" ] && makeframesopts=(-d "$YOUTUBEDELIVER")
-    "$scriptdir/makeframes" "${makeframesopts[@]}" "$OUTDIR_INGESTFILE/$mediaid"
+    "${scriptdir}/makeframes" "${makeframesopts[@]}" "$OUTDIR_INGESTFILE/$mediaid"
     # makeyoutube
     [ "$deliveraccesscopies" = "Y" ] && makeyoutubeopts=(-d "$YOUTUBEDELIVER")
-    "$scriptdir/makeyoutube" "${makeyoutubeopts[@]}" "$OUTDIR_INGESTFILE/$mediaid"
+    "${scriptdir}/makeyoutube" "${makeyoutubeopts[@]}" "$OUTDIR_INGESTFILE/$mediaid"
     # makepodcast
     if [ $(echo "$mediaid" | grep -E "${REGEX4PODCAST}") ] ; then
         report -dt "${mediaid} qualifies for podcast creation."
         [ "$deliveraccesscopies" == "Y" ] && makepodcastopts=(-d "$PODCASTDELIVER")
-        "$scriptdir/makepodcast" "${makepodcastopts[@]}" "$OUTDIR_INGESTFILE/$mediaid"
+        "${scriptdir}/makepodcast" "${makepodcastopts[@]}" "$OUTDIR_INGESTFILE/$mediaid"
     else
         report -dt "${mediaid} does NOT qualify for podcast creation, skipping."
     fi
     # makedvd
-    "$scriptdir/makedvd" "${OUTDIR_INGESTFILE}/${mediaid}"
+    "${scriptdir}/makedvd" "${OUTDIR_INGESTFILE}/${mediaid}"
     # makemetadata
-    "$scriptdir/makemetadata" "$OUTDIR_INGESTFILE/$mediaid"
+    "${scriptdir}/makemetadata" "$OUTDIR_INGESTFILE/$mediaid"
     if [ "$dochecksums" = "Y" ] ; then
-        "$scriptdir/checksumpackage" "$OUTDIR_INGESTFILE/$mediaid"
+        "${scriptdir}/checksumpackage" "$OUTDIR_INGESTFILE/$mediaid"
     fi
 fi
 _writeingestlog "datetime_end" "$(get_iso8601)"

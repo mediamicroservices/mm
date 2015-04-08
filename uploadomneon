@@ -5,12 +5,12 @@ requireconfig="Y"
 
 version="1.0"
 
-scriptdir=$(dirname "$0")
-. "$scriptdir/mmfunctions" || { echo "Missing '$scriptdir/mmfunctions'. Exiting." ; exit 1 ;};
+scriptdir=$(dirname "${0}")
+. "${scriptdir}/mmfunctions" || { echo "Missing '${scriptdir}/mmfunctions'. Exiting." ; exit 1 ;};
 
 usage(){
     echo
-    echo "$(basename ${0}) ${version}"
+    echo "$(basename "${0}") ${version}"
     echo "This application will upload file(s) to a server via rsync in sequential order. Options are specified via 'mmconfig'."
     echo
     echo "Settings:"
@@ -30,7 +30,7 @@ cleanup(){
 }
 
 get_ftp_status(){
-local filename="$1"
+local filename="${1}"
 status=$(ftp -a "$OMNEONIP" <<END_SCRIPT
 binary
 ls "${OMNEONPATH}/${filename}"
@@ -58,9 +58,9 @@ shift $(( ${OPTIND} - 1 ))
 [ ! -n "$OMNEONIP" ] && { report -wt "The Omneon IP must be set. Run 'mmconfig'." ; exit 1 ;};
 [ ! -n "$OMNEONPATH" ] && { report -wt "The Omneon Path must be set. Run 'mmconfig'." ; exit 1 ;};
 
-while [ "$*" != "" ] ; do
+while [ "${*}" != "" ] ; do
 
-sourcefile="$1"
+sourcefile="${1}"
 extension=$(echo "$sourcefile" |awk -F . '{print $NF}')
 if [ "$extension" == "mov" -o "$extension" == "mxf" ] ; then
 

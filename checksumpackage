@@ -17,10 +17,10 @@ CHECKSUMPROCESSLOG="checksumchecks.log"
 
 usage(){
     echo
-    echo "$(basename ${0}) ${version}"
+    echo "$(basename "${0}") ${version}"
     echo "This application will create a checksum from a directory or package input with the following options. Actions and results will be logged to ${CHECKSUMPROCESSLOG}."
     echo "Dependencies: ${dependencies[@]}"
-    echo "Usage: $(basename ${0}) directoryorpackage1 [ directoryorpackage2 ...]"
+    echo "Usage: $(basename "${0}") directoryorpackage1 [ directoryorpackage2 ...]"
     echo "  -c ( check filenames and filesizes in objects directory are the same as in existing checksum files, if none exists it will make the initial ones )"
     echo "  -u ( valid only if -c is used. If the check is unsuccessful then make new checksums and version the previous ones. )"
     echo "  -v ( fully verify checksum files against checksum files, if none exists it will make the initial ones. Note verification will version existing checksums and make new ones and log the difference to ${CHECKSUMPROCESSLOG})"
@@ -80,12 +80,12 @@ _check_dfxml(){
     if [[ $(diff "${DFXML_FILELIST}" "${NEW_FILELIST}") ]] ; then
         report -wt "filepaths and sizes are different for ${1}"
         diff "${DFXML_FILELIST}" "${NEW_FILELIST}"
-        echo "$(get_iso8601): $(basename ${0}):${version}: failed to verify by filepath and size" >> "${PACKAGE}/${OUTDIR}/${CHECKSUMPROCESSLOG}"
+        echo "$(get_iso8601): $(basename "${0}"):${version}: failed to verify by filepath and size" >> "${PACKAGE}/${OUTDIR}/${CHECKSUMPROCESSLOG}"
         rm "${DFXML_FILELIST}" "${NEW_FILELIST}"
         checkerr=0
     else
         report -dt "filepaths and sizes are still valid for ${1}"
-        echo "$(get_iso8601): $(basename ${0}):${version}: verified by filepath and size" >> "${PACKAGE}/${OUTDIR}/${CHECKSUMPROCESSLOG}"
+        echo "$(get_iso8601): $(basename "${0}"):${version}: verified by filepath and size" >> "${PACKAGE}/${OUTDIR}/${CHECKSUMPROCESSLOG}"
         rm "${DFXML_FILELIST}" "${NEW_FILELIST}"
         checkerr=1
     fi
@@ -98,8 +98,8 @@ _version_dfxml(){
     LASTDFXML="${PACKAGE}/${OUTDIR}/${DFXMLNAME%.*}_$(stat -t '%Y%m%d-%H%M%S' -l "${PACKAGE}/${OUTDIR}/${DFXMLNAME}" | awk '{print $6}').xml"
     mv -v "${PACKAGE}/${OUTDIR}/${CHECKSUMNAME}" "${LASTMD5}"
     mv -v "${PACKAGE}/${OUTDIR}/${DFXMLNAME}" "${LASTDFXML}"
-    echo "$(get_iso8601): $(basename ${0}):${version}: checksums are versioned - ${DFXMLNAME} -> ${LASTDFXML}" >> "${PACKAGE}/${OUTDIR}/${CHECKSUMPROCESSLOG}"
-    echo "$(get_iso8601): $(basename ${0}):${version}: checksums are versioned - ${CHECKSUMNAME} -> ${LASTMD5}" >> "${PACKAGE}/${OUTDIR}/${CHECKSUMPROCESSLOG}"
+    echo "$(get_iso8601): $(basename "${0}"):${version}: checksums are versioned - ${DFXMLNAME} -> ${LASTDFXML}" >> "${PACKAGE}/${OUTDIR}/${CHECKSUMPROCESSLOG}"
+    echo "$(get_iso8601): $(basename "${0}"):${version}: checksums are versioned - ${CHECKSUMNAME} -> ${LASTMD5}" >> "${PACKAGE}/${OUTDIR}/${CHECKSUMPROCESSLOG}"
 }
 
 while [ "${*}" != "" ] ; do
@@ -155,14 +155,14 @@ while [ "${*}" != "" ] ; do
         DFXMLTMP=$(maketemp)
         md5deep -drl . > $DFXMLTMP
         [ ! -d "${PACKAGE}/${OUTDIR}" ] && mkdir -p "${PACKAGE}/${OUTDIR}"
-        echo "$(get_iso8601): $(basename ${0}):${version}: ${DFXMLNAME} is generated" >> "${PACKAGE}/${OUTDIR}/${CHECKSUMPROCESSLOG}"
+        echo "$(get_iso8601): $(basename "${0}"):${version}: ${DFXMLNAME} is generated" >> "${PACKAGE}/${OUTDIR}/${CHECKSUMPROCESSLOG}"
         mv "${DFXMLTMP}" "${PACKAGE}/${OUTDIR}/${DFXMLNAME}"
         if [ ! -z "$(xml sel -T -t -m "/_:dfxml/_:fileobject" -v "_:filename" -o " " -v "_:filesize" -n "${PACKAGE}/${OUTDIR}/${DFXMLNAME}" 2>/dev/null)" ] ; then
             xml sel -T -t -m "/_:dfxml/_:fileobject" -v "_:hashdigest" -o "  " -v "_:filename" -n "${PACKAGE}/${OUTDIR}/${DFXMLNAME}" > "${PACKAGE}/${OUTDIR}/${CHECKSUMNAME}"
         else
             xml sel -T -t -m "/dfxml/fileobject" -v "hashdigest" -o "  " -v "filename" -n "${PACKAGE}/${OUTDIR}/${DFXMLNAME}" > "${PACKAGE}/${OUTDIR}/${CHECKSUMNAME}"
         fi
-        echo "$(get_iso8601): $(basename ${0}):${version}: ${CHECKSUMNAME} is generated" >> "${PACKAGE}/${OUTDIR}/${CHECKSUMPROCESSLOG}"
+        echo "$(get_iso8601): $(basename "${0}"):${version}: ${CHECKSUMNAME} is generated" >> "${PACKAGE}/${OUTDIR}/${CHECKSUMPROCESSLOG}"
         cd "${PWD}"
         if [ "${verify}" = "Y" ] ; then
             CHECKSUMCMP1=$(maketemp)
@@ -172,10 +172,10 @@ while [ "${*}" != "" ] ; do
             if [[ $(diff "${CHECKSUMCMP1}" "${CHECKSUMCMP2}") ]] ; then
                 report -wt "checksums are different for ${PACKAGE}"
                 diff "${CHECKSUMCMP1}" "${CHECKSUMCMP2}"
-                echo "$(get_iso8601): $(basename ${0}):${version}: FAILED to VERIFY by checksums - compare ${CHECKSUMNAME} and $(basename "${LASTMD5}")" >> "${PACKAGE}/${OUTDIR}/${CHECKSUMPROCESSLOG}"
+                echo "$(get_iso8601): $(basename "${0}"):${version}: FAILED to VERIFY by checksums - compare ${CHECKSUMNAME} and $(basename "${LASTMD5}")" >> "${PACKAGE}/${OUTDIR}/${CHECKSUMPROCESSLOG}"
             else
                 report -dt "checksums are still valid for ${PACKAGE}"
-                echo "$(get_iso8601): $(basename ${0}):${version}: verified by checksums" >> "${PACKAGE}/${OUTDIR}/${CHECKSUMPROCESSLOG}"
+                echo "$(get_iso8601): $(basename "${0}"):${version}: verified by checksums" >> "${PACKAGE}/${OUTDIR}/${CHECKSUMPROCESSLOG}"
             fi
             rm "${CHECKSUMCMP1}" "${CHECKSUMCMP2}"
         fi

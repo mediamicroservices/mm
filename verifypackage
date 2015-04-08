@@ -4,8 +4,8 @@ version="1.0"
 unset dependencies
 dependencies=(ffmpeg mediainfo)
 
-scriptdir=$(dirname "$0")
-. "$scriptdir/mmfunctions" || { echo "Missing '$scriptdir/mmfunctions'. Exiting." ; exit 1 ;};
+scriptdir=$(dirname "${0}")
+. "${scriptdir}/mmfunctions" || { echo "Missing '${scriptdir}/mmfunctions'. Exiting." ; exit 1 ;};
 
 usage(){
     echo
@@ -37,10 +37,10 @@ while getopts ":ho:n" opt; do
 done
 shift $(( ${OPTIND} - 1 ))
 
-while [ "$*" != "" ] ; do
-    package="$1"
+while [ "${*}" != "" ] ; do
+    package="${1}"
     find_input "$input"
-    mediaid=$(basename "$1" | cut -d. -f1)
+    mediaid=$(basename "${1}" | cut -d. -f1)
 
     log -b
 

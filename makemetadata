@@ -8,9 +8,9 @@ _initialize_make
 
 usage(){
     echo
-    echo "$(basename ${0}) ${version}"
+    echo "$(basename "${0}") ${version}"
     echo "Produces a set of metadata reports for an archival information package on all files in the objects subdirectory."
-    echo "Usage: $(basename ${0}) [ -h ] package1 [ package2 ... ]"
+    echo "Usage: $(basename "${0}") [ -h ] package1 [ package2 ... ]"
     echo "  -h (show usage)"
     exit
 }

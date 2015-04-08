@@ -89,7 +89,7 @@ report(){
 
 _writeingestlog(){
     if [ "${ingestlog}" ] ; then
-        key="$1"
+        key="${1}"
         value="$2"
         # need to add yaml style escaping
         echo "$key: ${value}" >> "${ingestlog}"
@@ -100,7 +100,7 @@ _writeingestlog(){
 
 _readingestlog(){
     if [ -f "${ingestlog}" ] ; then
-        key="$1"
+        key="${1}"
         # need to add yaml style escaping
         grep "^${1}:" "${ingestlog}" | cut -d: -f2- | sed 's/ //g'
     else
@@ -284,7 +284,7 @@ check_emailaddress(){
 }
 
 _get_duration(){
-    ffduration=$(ffprobe "$1" -show_format -pretty 2> /dev/null | grep duration= | cut -d= -f2)
+    ffduration=$(ffprobe "${1}" -show_format -pretty 2> /dev/null | grep duration= | cut -d= -f2)
 }
 
 email_delivery(){
@@ -320,7 +320,7 @@ Enjoy!" | sendmail -f "${EMAIL_FROM}" -F "${emailto}" "${emailto}"
 
 _deliver_output(){
     # argument 1 if used should be the email to report delivery to
-    emailto="$1"
+    emailto="${1}"
     if [ "${deliverdir}" ] ; then
         echo DELIVERING OUTPUT ACTIVITED with "${deliverdir}"
         report -dt "Delivering ${output} to ${deliverdir}"
@@ -390,8 +390,8 @@ _find_input (){
     concatsource=""
     sourcefile=""
     isobject=""
-    [ -d "$1" ] && [ -d "$1/objects/service" ] && isobject="N" && sourcefile=$(find "$1/objects/service" -maxdepth 1 -mindepth 1 -type f \( -iname "*.mov" -o -iname "*.mxf" -o -iname "*.mp4" -o -iname "*.dv" -o -iname "*.mpeg" -o -iname "*.iso" \) ! -name ".*" | head -n 1)
-    [ -f "$1" ] && sourcefile="$1"
+    [ -d "${1}" ] && [ -d "$1/objects/service" ] && isobject="N" && sourcefile=$(find "$1/objects/service" -maxdepth 1 -mindepth 1 -type f \( -iname "*.mov" -o -iname "*.mxf" -o -iname "*.mp4" -o -iname "*.dv" -o -iname "*.mpeg" -o -iname "*.iso" \) ! -name ".*" | head -n 1)
+    [ -f "${1}" ] && sourcefile="${1}"
     [ ! "$sourcefile" ] && [ -d "$1/objects" ] && isobject="Y" && sourcefile=$(find "$1/objects" -maxdepth 1 -mindepth 1 -type f \( -iname "*.mov" -o -iname "*.mxf" -o -iname "*.mp4" -o -iname "*.dv" -o -iname "*.mpeg" -o -iname "*.iso" \) ! -name ".*" | head -n 1)
     [ ! "$sourcefile" ] && { report -wt "A valid source file isn't found." ; exit 1 ;};
     log+="sourcefile: ${sourcefile}\n"
@@ -422,51 +422,51 @@ _find_input (){
 }
 
 get_width(){
-    width=$(ffprobe "$1" -show_streams -select_streams v:0 2> /dev/null | grep width= | cut -d = -f 2)
+    width=$(ffprobe "${1}" -show_streams -select_streams v:0 2> /dev/null | grep width= | cut -d = -f 2)
 }
 
 get_height(){
-    height=$(ffprobe "$1" -show_streams -select_streams v:0 2> /dev/null | grep height= | cut -d = -f 2)
+    height=$(ffprobe "${1}" -show_streams -select_streams v:0 2> /dev/null | grep height= | cut -d = -f 2)
 }
 
 get_dar(){
-    dar=$(ffprobe "$1" -show_streams -select_streams v:0 2> /dev/null | grep display_aspect_ratio= | cut -d = -f 2 | sed 's|:|/|g')
+    dar=$(ffprobe "${1}" -show_streams -select_streams v:0 2> /dev/null | grep display_aspect_ratio= | cut -d = -f 2 | sed 's|:|/|g')
     if [ "$dar" = "0/1" ] ; then
-        get_width "$1"
-        get_height "$1"
+        get_width "${1}"
+        get_height "${1}"
         dar="${width}/${height}"
     fi
 }
 
 get_sar(){
-    sar=$(ffprobe "$1" -show_streams -select_streams v:0 2> /dev/null | grep sample_aspect_ratio= | cut -d = -f 2 | sed 's|:|/|g')
+    sar=$(ffprobe "${1}" -show_streams -select_streams v:0 2> /dev/null | grep sample_aspect_ratio= | cut -d = -f 2 | sed 's|:|/|g')
     if [ "$sar" = "0/1" ] ; then
         sar="1/1"
     fi
 }
 
 has_first_two_tracks_mono(){
-    [ $(ffprobe 2>/dev/null "$1" -show_streams | grep -c "codec_type=audio") -ge 2 ] && \
-    [ $(ffprobe 2>/dev/null "$1" -show_streams -select_streams a:0 | grep channels= | cut -d= -f2) = "1" ] && \
-    [ $(ffprobe 2>/dev/null "$1" -show_streams -select_streams a:1 | grep channels= | cut -d= -f2) = "1" ] && \
+    [ $(ffprobe 2>/dev/null "${1}" -show_streams | grep -c "codec_type=audio") -ge 2 ] && \
+    [ $(ffprobe 2>/dev/null "${1}" -show_streams -select_streams a:0 | grep channels= | cut -d= -f2) = "1" ] && \
+    [ $(ffprobe 2>/dev/null "${1}" -show_streams -select_streams a:1 | grep channels= | cut -d= -f2) = "1" ] && \
     MULTIMONO=true
 }
 
 get_audio_index(){
     # get ffmpeg's index value of the first audio stream. Useful for do custom channel mappings.
-    audio_index_1=$(ffprobe "$1" -show_streams -select_streams a:0 2> /dev/null | grep index= | cut -d = -f 2)
-    audio_index_2=$(ffprobe "$1" -show_streams -select_streams a:1 2> /dev/null | grep index= | cut -d = -f 2)
+    audio_index_1=$(ffprobe "${1}" -show_streams -select_streams a:0 2> /dev/null | grep index= | cut -d = -f 2)
+    audio_index_2=$(ffprobe "${1}" -show_streams -select_streams a:1 2> /dev/null | grep index= | cut -d = -f 2)
 }
 
 get_audio_channels(){
     # get ffmpeg's channel count of the first audio stream.
-    audio_channels=$(ffprobe "$1" -show_streams -select_streams a 2> /dev/null | grep channels= | cut -d = -f 2 | head -n 1)
+    audio_channels=$(ffprobe "${1}" -show_streams -select_streams a 2> /dev/null | grep channels= | cut -d = -f 2 | head -n 1)
 }
 
 get_audio_mapping(){
-    get_audio_index "$1"
-    get_audio_channels "$1"
-    has_first_two_tracks_mono "$1"
+    get_audio_index "${1}"
+    get_audio_channels "${1}"
+    has_first_two_tracks_mono "${1}"
     if [[ "${MULTIMONO}" == true ]] ; then
         report -wt "The first two audio tracks are both mono. Considering track 1 for left and track 2 for right."
         audiomapping_ffmpeg=(-map_channel "0.${audio_index_1}.0" -map_channel "0.${audio_index_2}.0")
@@ -479,36 +479,36 @@ get_audio_mapping(){
 }
 
 get_codectagstring(){
-    codec_tag_string=$(ffprobe "$1" -show_streams -select_streams v:0 2> /dev/null | grep codec_tag_string= | cut -d = -f 2)
+    codec_tag_string=$(ffprobe "${1}" -show_streams -select_streams v:0 2> /dev/null | grep codec_tag_string= | cut -d = -f 2)
     if [ "$codec_tag_string" = "FFV1" ] ; then
-        ffv1_version=$(ffmpeg -debug 1 -i "$1" -t 0.1 -f null - </dev/null 2>&1 | grep -o "ver:[0-9]*" | tail -n1 | cut -d: -f2)
+        ffv1_version=$(ffmpeg -debug 1 -i "${1}" -t 0.1 -f null - </dev/null 2>&1 | grep -o "ver:[0-9]*" | tail -n1 | cut -d: -f2)
     else
         ffv1_version=""
     fi
 }
 
 get_fieldorder(){
-    fieldorder=$(ffprobe-bc "$1" -show_streams 2> /dev/null | grep "\(progressive\|interlaced=\)" | cut -d = -f 2)
+    fieldorder=$(ffprobe-bc "${1}" -show_streams 2> /dev/null | grep "\(progressive\|interlaced=\)" | cut -d = -f 2)
 }
 
 get_pix_fmt(){
-    pixfmt=$(ffprobe "$1" -show_streams -select_streams v:0 2> /dev/null | grep pix_fmt= | cut -d = -f 2)
+    pixfmt=$(ffprobe "${1}" -show_streams -select_streams v:0 2> /dev/null | grep pix_fmt= | cut -d = -f 2)
 }
 
 get_duration(){
-    DURATION=$(ffprobe "$1" -show_format 2> /dev/null | grep duration= | cut -d = -f 2)
+    DURATION=$(ffprobe "${1}" -show_format 2> /dev/null | grep duration= | cut -d = -f 2)
 }
 
 get_videostreamcount(){
-    VIDEOSTREAMCOUNT=$(ffprobe "$1" -select_streams v -show_entries stream=index -of flat 2>/dev/null | awk 'END { print NR }')
+    VIDEOSTREAMCOUNT=$(ffprobe "${1}" -select_streams v -show_entries stream=index -of flat 2>/dev/null | awk 'END { print NR }')
 }
 
 get_audiostreamcount(){
-    AUDIOSTREAMCOUNT=$(ffprobe "$1" -select_streams a -show_entries stream=index -of flat 2>/dev/null | awk 'END { print NR }')
+    AUDIOSTREAMCOUNT=$(ffprobe "${1}" -select_streams a -show_entries stream=index -of flat 2>/dev/null | awk 'END { print NR }')
 }
 
 _get_timecode(){
-    TIMECODE=$(ffprobe "$1" -select_streams v -show_streams -of flat 2>/dev/null | grep timecode=\"[0-9] | cut -d = -f 2 | sed 's/"//g')
+    TIMECODE=$(ffprobe "${1}" -select_streams v -show_streams -of flat 2>/dev/null | grep timecode=\"[0-9] | cut -d = -f 2 | sed 's/"//g')
 }
 
 _get_timecode_overlay(){
@@ -522,7 +522,7 @@ _get_timecode_overlay(){
 }
 
 get_maxdvdbitrate(){
-    get_duration "$1"
+    get_duration "${1}"
     local DVDCAPACITY=33840000000  # in bits, minus 10%
     local CAPDVDBITRATE=6000000    # in bits/second
     MAXDVDBITRATE=$(echo "($DVDCAPACITY - ( $DURATION * 224000 )) / $DURATION" | bc)
@@ -538,7 +538,7 @@ get_maxdvdbitrate(){
 
 is_video(){
     # use ffmpeg's index value and stream specifier to determine if the input is a recognized as a video file by ffmpeg
-    ffprobe "$1" -show_streams -select_streams v:0 2> /dev/null | grep "index="
+    ffprobe "${1}" -show_streams -select_streams v:0 2> /dev/null | grep "index="
 }
 
 get_volume_adjustment(){
@@ -548,7 +548,7 @@ get_volume_adjustment(){
     voldet_mean_volume=""
     voldet_max_volume=""
     VOLADJ=""
-    input_movie="$1"
+    input_movie="${1}"
     report -dt "Getting volume data for $(basename "${input_movie}") ..."
     VOLDETTEMP=$(maketemp)
     volume_data=$(ffprobe -of compact=p=0:nk=1:s=',' -show_entries frame_tags=lavfi.r128.I,lavfi.r128.LRA -f lavfi "amovie='${input_movie}',ebur128=metadata=1,volumedetect" 2>"${VOLDETTEMP}")
@@ -579,7 +579,7 @@ get_volume_adjustment(){
 }
 
 get_cropdetection(){
-    input_movie="$1"
+    input_movie="${1}"
     report -dt "Getting cropping data for $(basename "$input_movie") ..."
     crop_data=$(ffmpeg -i "${input_movie}" -an -vf cropdetect -f null - 2>&1 | grep -o "crop=[0-9:]*")
     crop_err="$?"
@@ -592,7 +592,7 @@ get_cropdetection(){
 
 free_space(){
     #this should give the free space in gigabytes
-    local space="$1"  #This value represents the space in gigabytes required for the script to run
+    local space="${1}"  #This value represents the space in gigabytes required for the script to run
     local outputdir="$2"
     [ ! -d "$outputdir" ] && { report -wt "The output directory [$outputdir] that free-space function is seeking does not exist." ; exit 1 ;};
     [[ ! $space =~ ^-?[0-9]+$ ]] && { report -wt "Number is not an integer." ; exit 1 ;};
@@ -610,7 +610,7 @@ _summarize_make(){
 _prep_ffmpeg_log(){
     if [ "${logdir}" != "" ] ; then
         _mkdir2 "${logdir}"
-        export FFREPORT="file=${logdir}/%p_%t_$(basename "$0")_${version}.txt"
+        export FFREPORT="file=${logdir}/%p_%t_$(basename "${0}")_${version}.txt"
         inputoptions+=(-v info)
         inputoptions+=(-hide_banner)
         inputoptions+=(-stats)

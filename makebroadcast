@@ -4,17 +4,17 @@
 # v 1.2 revert to mov and ffmbc
 # v 1.3 revert back to ffmpeg
 version="1.3"
-scriptdir=$(dirname $(which "$0"))
-. "$scriptdir/mmfunctions" || { echo "Missing '$scriptdir/mmfunctions'. Exiting." ; exit 1 ;};
+scriptdir=$(dirname $(which "${0}"))
+. "${scriptdir}/mmfunctions" || { echo "Missing '${scriptdir}/mmfunctions'. Exiting." ; exit 1 ;};
 dependencies=(ffmpeg ffprobe)
 _initialize_make
 
 usage(){
     echo
-    echo "$(basename ${0}) ${version}"
+    echo "$(basename "${0}") ${version}"
     echo "This application will create a file suitable for broadcast or editing from a video file or package input with the following options."
     echo "Dependencies: ${dependencies[@]}"
-    echo "Usage: $(basename ${0}) [ -l ] [ -r ] [ -c ] fileorpackage1 [ fileorpackage2 ...]"
+    echo "Usage: $(basename "${0}") [ -l ] [ -r ] [ -c ] fileorpackage1 [ fileorpackage2 ...]"
     echo "  -F (apply a formula, override default settings)"
     echo "  -l (only use the left channel of the first audio track)"
     echo "  -r (only use the right channel of the first audio track)"
@@ -54,7 +54,7 @@ shift $(( ${OPTIND} - 1 ))
 
 while [ "${*}" != "" ] ; do
     # get context about the input
-    input="$1"
+    input="${1}"
     if [ -z "${outputdir_forced}" ] ; then
         [ -d "${input}" ] && { outputdir="${input}/objects/service" && logdir="${input}/metadata/submissionDocumentation/logs" ;};
         [ -f "${input}" ] && { outputdir=$(dirname "${input}")"/service" && logdir="$(dirname "${input}")/service/logs" ;};

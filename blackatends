@@ -1,8 +1,8 @@
 #!/bin/bash
 # blackatends
 # Accepts one or many video files as an input and determines how many frames of black are at the beginning and at the end
-scriptdir=$(dirname "$0")
-. "$scriptdir/mmfunctions" || { echo "Missing '$scriptdir/mmfunctions'. Exiting." ; exit 1 ;};
+scriptdir=$(dirname "${0}")
+. "${scriptdir}/mmfunctions" || { echo "Missing '${scriptdir}/mmfunctions'. Exiting." ; exit 1 ;};
 version=1.0
 
 cleanup(){
@@ -14,7 +14,7 @@ trap cleanup SIGHUP SIGINT SIGTERM
 
 usage(){
     echo
-    echo "$(basename "$0") ${version}"
+    echo "$(basename "${0}") ${version}"
     echo "This program will report on the number of black frames at the beginning and end of a video file."
     echo
     echo "Usage: $(basename $0) file1 [ file2 ... ]"
@@ -37,9 +37,9 @@ while getopts ":h" opt; do
 done
 shift $(( ${OPTIND} - 1 ))
 
-while [ "$*" != "" ] ; do
+while [ "${*}" != "" ] ; do
     _log -b
-    [ "$#" != 0 ] && sourcefile="$1"
+    [ "$#" != 0 ] && sourcefile="${1}"
     black_at_ends "$sourcefile"
     _log -e
     shift

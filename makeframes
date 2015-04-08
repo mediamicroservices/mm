@@ -1,8 +1,8 @@
 #!/bin/bash
 # makeframes
 version="1.0"
-scriptdir=$(dirname $(which "$0"))
-. "$scriptdir/mmfunctions" || { echo "Missing '$scriptdir/mmfunctions'. Exiting." ; exit 1 ;};
+scriptdir=$(dirname $(which "${0}"))
+. "${scriptdir}/mmfunctions" || { echo "Missing '${scriptdir}/mmfunctions'. Exiting." ; exit 1 ;};
 dependencies=(ffmpeg)
 _initialize_make
 
@@ -11,7 +11,7 @@ IMAGECOUNT=10
 
 usage(){
     echo
-    echo "$(basename ${0}) ${version}"
+    echo "$(basename "${0}") ${version}"
     echo "This application will create a series of still images from a video file or package input with the following options."
     echo "Dependencies: ${dependencies[@]}"
     echo "Usage: $(basename $0) [ -d /path/to/deliver/to/ ] fileorpackage1 [ fileorpackage2 ...]"
@@ -38,14 +38,14 @@ while getopts ":d:e:E:nh" opt ; do
 done
 shift $(( ${OPTIND} - 1 ))
 
-while [ "$*" != "" ] ; do
-    input="$1"
+while [ "${*}" != "" ] ; do
+    input="${1}"
     [ -d "$input" ] && { outputdir="$input/objects/access/images" && logdir="$input/metadata/submissionDocumentation/logs" ;};
     [ -f "$input" ] && { outputdir=$(dirname "$input")"/access/images" && logdir="$(dirname "$input")/access/logs" ;};
     [ ! "$outputdir" ] && { outputdir="$input/objects/access/images" && logdir="$input/metadata/submissionDocumentation/logs" ;};
     _find_input "$input"
 
-    mediaid=$(basename "$1" | cut -d. -f1)
+    mediaid=$(basename "${1}" | cut -d. -f1)
 
     # clear local arrays
     unset inputoptions
