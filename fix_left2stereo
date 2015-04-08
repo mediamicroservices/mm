@@ -2,7 +2,7 @@
 # left 2 stereo mix
 version=1.1
 unset dependencies
-dependencies=(ffmbc)
+dependencies=(ffmpeg)
 
 scriptdir=$(dirname "${0}")
 . "${scriptdir}/mmfunctions" || { echo "Missing '${scriptdir}/mmfunctions'. Exiting." ; exit 1 ;};
@@ -32,25 +32,26 @@ _log -b
 
 while [ "${*}" != "" ] ; do
 
-    input_movie="$1"
+    sourcefile="${1}"
     name=$(basename "${1}")
 
     get_codectagstring
-    unset ffmbc_opts
-    ffmbc_opts+=(-vcodec copy -acodec pcm_s24be -ar 48000 -ac 2)
-    ffmbc_opts+=(-map_audio_channel 0:1:0:0:1:0 -map_audio_channel 0:1:0:0:1:1)
+    unset ffmpeg_opts
+    ffmpeg_opts+=(-c:v copy -c:a pcm_s24be -ar 48000 -ac 2)
+    get_audio_index "${sourcefile}"
+    ffmpeg_opts+=(-map_channel 0.${audio_index_1}.0)
     if [ "${codec_tag_string}" = "mpeg" ] ; then
         extension="mxf"
     else
         extension="mov"
     fi
 
-    output_movie="${input_movie%.*}${suffix}.${extension}"
+    output_movie="${sourcefile%.*}${suffix}.${extension}"
     if [ -f "${output_movie}" ] ; then
         report -wt "The intended output of $(basename "${0}") already exists. Skipping for now. Please delete ${output_movie} and rerun or figure out why you are trying to do this."
     else
-        report -dt "Generating ${outputmovie} ..."
-        ffmbc -i ${input_movie} ${ffmbc_opts[@]} ${output_movie}
+        report -dt "Generating ${output_movie} ... with these options ${ffmpeg_opts[@]}"
+        ffmpeg -i "${sourcefile}" "${ffmpeg_opts[@]}" "${output_movie}"
         report -dt "$(basename "${0}") is done with ${name}."
     fi
     shift
