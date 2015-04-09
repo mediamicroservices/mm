@@ -60,6 +60,7 @@ while [ "${*}" != "" ] ; do
     fi
     _find_input "${input}"
     mediaid=$(basename "${input}" | cut -d. -f1)
+    ingestlog="${logdir}/capture.log"
 
     # set up output
     _log -b
