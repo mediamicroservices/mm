@@ -30,7 +30,7 @@ usage(){
     exit
 }
 [ "${#}" = 0 ] && usage
-voladjust="Y"
+VOLADJUST="Y"
 # command-line options to set mediaid and original variables
 OPTIND=1
 while getopts ":F:lrcvo:d:e:E:nh" opt ; do
@@ -39,7 +39,7 @@ while getopts ":F:lrcvo:d:e:E:nh" opt ; do
         l) audiomap="L";;
         r) audiomap="R";;
         c) cropdetect="Y" ;;
-        v) voladjust="Y" ;;
+        v) VOLADJUST="Y" ;;
         o) outputdir_forced="$OPTARG" && _check_outputdir_forced ;;
         d) deliverdir="$OPTARG" && check_deliverdir ;;
         e) emailaddress_delivery="$OPTARG" && check_emailaddress "${emailaddress_delivery}" ;;
@@ -225,7 +225,7 @@ while [ "${*}" != "" ] ; do
 
     # log process
     _prep_ffmpeg_log
-    if [ "${voladjust}" = "Y" ] ; then
+    if [ "${VOLADJUST}" = "Y" ] ; then
         if [[ -f "${ingestlog}" ]] ; then
             VOLADJ=$(_readingestlog "audio_adjustment")
         fi
