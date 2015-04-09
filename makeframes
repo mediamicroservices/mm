@@ -5,6 +5,7 @@ scriptdir=$(dirname $(which "${0}"))
 . "${scriptdir}/mmfunctions" || { echo "Missing '${scriptdir}/mmfunctions'. Exiting." ; exit 1 ;};
 dependencies=(ffmpeg ffprobe)
 _initialize_make
+extension="tiff"
 
 # local variables
 IMAGECOUNT=10
@@ -63,9 +64,9 @@ while [ "${*}" != "" ] ; do
     _run_critical mkdir -p "$outputdir"
     for (( IMAGENUMBER=1; IMAGENUMBER<=$IMAGECOUNT; IMAGENUMBER++)) ; do
         START=$(echo "( $DURATION / ( $IMAGECOUNT + 1 )) * $IMAGENUMBER" | bc)
-        output="$outputdir/${mediaid}_${IMAGENUMBER}.tiff"
+        suffix="_${IMAGENUMBER}"
+        _set_up_output
         report -d "Making frame $IMAGENUMBER of $IMAGECOUNT  - dur:${DURATION} start:${START} - $output"
-        [ -s "${output}" ] && { report -wt "WARNING ${output} already exists, skipping transcode" ; shift ; continue ;};
         _prep_ffmpeg_log -q
         if [ "${concatsource}" != "" ] ; then
             ffmpeginput="${concatsource}"

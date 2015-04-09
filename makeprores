@@ -5,6 +5,8 @@ scriptdir=$(dirname $(which "${0}"))
 . "${scriptdir}/mmfunctions" || { echo "Missing '${scriptdir}/mmfunctions'. Exiting." ; exit 1 ;};
 dependencies=(ffmpeg)
 _initialize_make
+suffix=""
+extension="mov"
 
 outputdir="$HOME/Desktop/$(basename $0)" # default output directory, override with -o
 
@@ -55,11 +57,7 @@ while [ "${*}" != "" ] ; do
     _find_input "${input}"
     mediaid=$(basename "${input}" | cut -d. -f1)
 
-    # set up output
-    _log -b
-    output="${outputdir}/${mediaid%.*}_prores.mov"
-    [ -s "${output}" ] && { report -wt "WARNING ${output} already exists, skipping transcode" ; shift ; continue ;};
-    _run mkdir -p "${outputdir}"
+    _set_up_output
 
     # clear local arrays
     unset inputoptions

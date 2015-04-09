@@ -5,6 +5,8 @@ scriptdir=$(dirname $(which "${0}"))
 . "${scriptdir}/mmfunctions" || { echo "Missing '${scriptdir}/mmfunctions'. Exiting." ; exit 1 ;};
 dependencies=(ffmpeg ffprobe)
 _initialize_make
+suffix=""
+extension="mp4"
 
 usage(){
     echo
@@ -62,11 +64,7 @@ while [ "${*}" != "" ] ; do
     mediaid=$(basename "${input}" | cut -d. -f1)
     ingestlog="${logdir}/capture.log"
 
-    # set up output
-    _log -b
-    output="${outputdir}/${mediaid%.*}.mp4"
-    [ -s "${output}" ] && { report -wt "WARNING ${output} already exists, skipping transcode" ; shift ; continue ;};
-    _run mkdir -p "${outputdir}"
+    _set_up_output
 
     # get information on the input
     get_height "${sourcefile}"

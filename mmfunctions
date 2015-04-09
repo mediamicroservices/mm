@@ -674,6 +674,18 @@ set_accesstimes(){
     fi
 }
 
+_set_up_output(){
+    # set up output
+    _log -b
+    output="${outputdir}/${mediaid%.*}${suffix}.${extension}"
+    if [ -s "${output}" ] ; then
+        report -wt "WARNING ${output} already exists, skipping transcode"
+        shift
+        continue
+    fi
+    _mkdir2 "${outputdir}"
+}
+
 _prep_volume_adjustment(){
     unset VOLADJ
     if [ "${VOLADJUST}" = "Y" ] ; then

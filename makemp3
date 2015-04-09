@@ -3,6 +3,8 @@
 version="1.0"
 unset dependencies
 dependencies=(ffmpeg normalize)
+suffix=""
+extension="mp3"
 
 scriptdir=$(dirname "${0}")
 . "${scriptdir}/mmfunctions" || { echo "Missing '${scriptdir}/mmfunctions'. Exiting." ; exit 1 ;};
@@ -61,10 +63,8 @@ while [ "${*}" != "" ] ; do
 
     _log -b
 
-    output="${outputdir}/${mediaid%.*}.mp3"
-    [ -s "${output}" ] && { report -wt "WARNING ${output} already exists, skipping transcode" ; [ "$#" = 1 ] && exit 1 || { shift ; continue ;} ;};
-    mkdir -p "${outputdir}"
-
+    _set_up_output
+    
     unset inputoptions
     unset middleoptions
     inputoptions+=(-nostdin)
