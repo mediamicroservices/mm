@@ -61,8 +61,8 @@ while [ "${*}" != "" ] ; do
 
     _log -b
 
-    outputfile="${outputdir}/${mediaid%.*}.mp3"
-    [ -s "${outputfile}" ] && { report -wt "WARNING ${outputfile} already exists, skipping transcode" ; [ "$#" = 1 ] && exit 1 || { shift ; continue ;} ;};
+    output="${outputdir}/${mediaid%.*}.mp3"
+    [ -s "${output}" ] && { report -wt "WARNING ${output} already exists, skipping transcode" ; [ "$#" = 1 ] && exit 1 || { shift ; continue ;} ;};
     mkdir -p "${outputdir}"
     get_height "${sourcefile}"
     get_width "${sourcefile}"
@@ -82,13 +82,13 @@ while [ "${*}" != "" ] ; do
         export FFREPORT="file=${logdir}/%p_%t_$(basename "${0}")_${version}.txt"
         inputoptions+=(-v warning -stats)
     fi
-    report -dt "Working on $(basename "${outputfile}")."
-    report -dt "Running: ffmpeg ${inputoptions[@]} -i \"${sourcefile}\" ${middleoptions[@]} \"${outputfile}\""
-    ffmpeg ${inputoptions[@]} -i "${sourcefile}" ${middleoptions[@]} "${outputfile}"
+    report -dt "Working on $(basename "${output}")."
+    report -dt "Running: ffmpeg ${inputoptions[@]} -i \"${sourcefile}\" ${middleoptions[@]} \"${output}\""
+    ffmpeg ${inputoptions[@]} -i "${sourcefile}" ${middleoptions[@]} "${output}"
     report -dt "Adjusting highest audio peak to full scale..."
-    normalize --peak -v "${outputfile}"
+    normalize --peak -v "${output}"
     echo
-    report -dt "$(basename ${outputfile}) is done."
+    report -dt "$(basename ${output}) is done."
     shift
     _log -e
 done
