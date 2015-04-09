@@ -59,7 +59,7 @@ while [ "${*}" != "" ] ; do
     fi
 
     _log -b
-    DURATION=$(ffprobe 2>/dev/null $sourcefile -show_format | grep duration | cut -d= -f2)
+    DURATION=$(ffprobe 2>/dev/null "${sourcefile}" -show_format | grep duration | cut -d= -f2)
     _run_critical mkdir -p "$outputdir"
     for (( IMAGENUMBER=1; IMAGENUMBER<=$IMAGECOUNT; IMAGENUMBER++)) ; do
         START=$(echo "( $DURATION / ( $IMAGECOUNT + 1 )) * $IMAGENUMBER" | bc)
