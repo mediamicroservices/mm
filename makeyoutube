@@ -33,8 +33,8 @@ while getopts ":lro:d:e:E:nh" opt ; do
         r) audiomap="R";;
         o) outputdir_forced="$OPTARG" && _check_outputdir_forced ;;
         d) deliverdir="$OPTARG" && check_deliverdir ;;
-        e) emailaddress_delivery="$OPTARG" ;;
-        E) emailaddress_outcome="$OPTARG" ;;
+        e) emailaddress_delivery="$OPTARG" && check_emailaddress "${emailaddress_delivery}" ;;
+        E) emailaddress_outcome="$OPTARG" && check_emailaddress "${emailaddress_outcome}" ;;
         n) DRYRUN=true;;
         h) usage ;;
         *) echo "bad option -$OPTARG" ; usage ;;
