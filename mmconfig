@@ -46,6 +46,9 @@ for KEY in "${REQUIRED_VARIABLES[@]}" ; do
     add_key "$KEY"
 done
 
+report -d "(basename "${0}")"
+report -d "Set system variables for ${WHAT_IS_THIS}"
+echo
 report -d "Testing $CONFIG_FILE validity"
 test_config
 echo
