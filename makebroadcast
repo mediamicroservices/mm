@@ -9,6 +9,8 @@ scriptdir=$(dirname $(which "${0}"))
 . "${scriptdir}/mmfunctions" || { echo "Missing '${scriptdir}/mmfunctions'. Exiting." ; exit 1 ;};
 dependencies=(ffmpeg ffprobe)
 _initialize_make
+suffix=""
+extension="mov"
 
 usage(){
     echo
@@ -68,11 +70,7 @@ while [ "${*}" != "" ] ; do
     mediaid=$(basename "${input}" | cut -d. -f1)
     ingestlog="${logdir}/capture.log"
 
-    # set up output
-    _log -b
-    output="${outputdir}/${mediaid%.*}.mov"
-    [ -s "${output}" ] && { report -wt "WARNING ${output} already exists, skipping transcode" ; shift ; continue ;};
-    _mkdir2 "${outputdir}"
+    _set_up_output
 
     # clear local arrays
     intime=""
@@ -226,24 +224,7 @@ while [ "${*}" != "" ] ; do
 
     # log process
     _prep_ffmpeg_log
-    if [ "${VOLADJUST}" = "Y" ] ; then
-        if [[ -f "${ingestlog}" ]] ; then
-            VOLADJ=$(_readingestlog "audio_adjustment")
-        fi
-        if [ "${VOLADJ}" ] ; then
-            middleoptions+=(-af volume=${VOLADJ}dB)
-        else
-            get_volume_adjustment "${sourcefile}"
-            if [ "${VOLADJ}" ] ; then
-                if [ $(echo "$VOLADJ < 2" |bc) -eq 1 -a $(echo "$VOLADJ > -2" |bc) -eq 1 ] ; then
-                    report -dt "Integrated loudness for $(basename "${input_movie}") is ${integrated_loudness}dB. Reference is ${reference}dB. No adjustment is needed, skipping."
-                else
-                    report -dt "Integrated loudness for $(basename "${input_movie}") is ${integrated_loudness}dB. Reference is ${reference}dB. Will adjust by ${VOLADJ}dB."
-                    middleoptions+=(-af volume=${VOLADJ}dB)
-                fi
-            fi
-        fi
-    fi
+    _prep_volume_adjustment
     if [ "${concatsource}" != "" ] ; then
         ffmpeginput="${concatsource}"
     else

@@ -19,6 +19,12 @@ get_iso8601_c(){
     date +%Y%m%d-%I%M%S
 }
 
+_unset_ffreport(){
+    if [ "${FFREPORT}" ] ; then
+        unset FFREPORT
+    fi
+}
+
 _mkdir2(){
     local dir2make=""
     while [ "${*}" != "" ] ; do
@@ -621,9 +627,7 @@ _prep_ffmpeg_log(){
     if [ "${logdir}" != "" ] ; then
         _mkdir2 "${logdir}"
         if [ "${nolog}" = "Y" ] ; then
-            if [ "${FFREPORT}" ] ; then
-                unset FFREPORT=""
-            fi
+            _unset_ffreport
         else
             export FFREPORT="file=${logdir}/%p_%t_$(basename "${0}")_${version}.txt"
         fi
@@ -631,9 +635,7 @@ _prep_ffmpeg_log(){
         inputoptions+=(-hide_banner)
         inputoptions+=(-stats)
     else
-        if [ "${FFREPORT}" ] ; then
-            unset FFREPORT=""
-        fi
+        _unset_ffreport
     fi
 }
 
