@@ -3,7 +3,7 @@
 version="1.0"
 scriptdir=$(dirname $(which "${0}"))
 . "${scriptdir}/mmfunctions" || { echo "Missing '${scriptdir}/mmfunctions'. Exiting." ; exit 1 ;};
-dependencies=(ffmpeg)
+dependencies=(ffmpeg ffprobe)
 _initialize_make
 
 # local variables

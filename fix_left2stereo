@@ -2,7 +2,7 @@
 # left 2 stereo mix
 version=1.1
 unset dependencies
-dependencies=(ffmpeg)
+dependencies=(ffmpeg ffprobe)
 
 scriptdir=$(dirname "${0}")
 . "${scriptdir}/mmfunctions" || { echo "Missing '${scriptdir}/mmfunctions'. Exiting." ; exit 1 ;};

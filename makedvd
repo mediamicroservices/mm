@@ -3,7 +3,7 @@
 version="1.0"
 scriptdir=$(dirname $(which "${0}"))
 . "${scriptdir}/mmfunctions" || { echo "Missing '${scriptdir}/mmfunctions'. Exiting." ; exit 1 ;};
-dependencies=(ffmpeg dvdauthor mkisofs)
+dependencies=(ffmpeg ffprobe dvdauthor mkisofs)
 _initialize_make
 
 usage(){
