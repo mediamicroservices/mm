@@ -3,7 +3,8 @@
 # v 1.1 change from mov output to mxf output, force all output to hd
 # v 1.2 revert to mov and ffmbc
 # v 1.3 revert back to ffmpeg
-version="1.3"
+# v 1.4 adjust handling volume adjustment argument
+version="1.4"
 scriptdir=$(dirname $(which "${0}"))
 . "${scriptdir}/mmfunctions" || { echo "Missing '${scriptdir}/mmfunctions'. Exiting." ; exit 1 ;};
 dependencies=(ffmpeg ffprobe)
@@ -19,7 +20,7 @@ usage(){
     echo "  -l (only use the left channel of the first audio track)"
     echo "  -r (only use the right channel of the first audio track)"
     echo "  -c (run the video through a crop detection filter, then crop the video accordingly during transcoding, slower)"
-    echo "  -v (run the video through a volume adjustment filter, then adjust the volume accordingly during transcoding, slower)"
+    echo "  -v Y|N (run the video through a volume adjustment filter, then adjust the volume accordingly during transcoding, slower). Defaults to ${VOLADJUST}."
     echo "  -d directory ( directory to deliver the resulting file to )"
     echo "  -o directory ( directory to write the resulting file to )"
     echo "  -n (dry-run mode, show the commands that would be run but don't do anything)"
@@ -30,16 +31,16 @@ usage(){
     exit
 }
 [ "${#}" = 0 ] && usage
-VOLADJUST="Y"
+
 # command-line options to set mediaid and original variables
 OPTIND=1
-while getopts ":F:lrcvo:d:e:E:nh" opt ; do
+while getopts ":F:lrcv:o:d:e:E:nh" opt ; do
     case "${opt}" in
         F) formula="${OPTARG}";;
         l) audiomap="L";;
         r) audiomap="R";;
         c) cropdetect="Y" ;;
-        v) VOLADJUST="Y" ;;
+        v) VOLADJUST="${OPTARG}";;
         o) outputdir_forced="$OPTARG" && _check_outputdir_forced ;;
         d) deliverdir="$OPTARG" && check_deliverdir ;;
         e) emailaddress_delivery="$OPTARG" && check_emailaddress "${emailaddress_delivery}" ;;
