@@ -27,10 +27,11 @@ usage(){
 
 # command-line options to set mediaid and original variables
 OPTIND=1
-while getopts ":lro:d:e:E:nh" opt ; do
+while getopts ":lrv:o:d:e:E:nh" opt ; do
     case "${opt}" in
         l) audiomap="L";;
         r) audiomap="R";;
+        v) VOLADJUST="${OPTARG}";;
         o) outputdir_forced="$OPTARG" && _check_outputdir_forced ;;
         d) deliverdir="$OPTARG" && check_deliverdir ;;
         e) emailaddress_delivery="$OPTARG" && check_emailaddress "${emailaddress_delivery}" ;;
@@ -116,6 +117,7 @@ while [ "${*}" != "" ] ; do
     middleoptions+=(-f mp4)
 
     _prep_ffmpeg_log
+    _prep_volume_adjustment
     if [ "${concatsource}" != "" ] ; then
         ffmpeginput="${concatsource}"
     else
