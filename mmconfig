@@ -23,7 +23,7 @@ test_config(){
         fi
     done
     for booleanvariable in VOLADJUST ; do
-        if [[ ! "${!booleanvariable}" = "Y" && ! "${!booleanvariable}" = "N" ]]
+        if [[ ! "${!booleanvariable}" = "Y" && ! "${!booleanvariable}" = "N" ]] ; then
             report -w "${booleanvariable} is NOT set to Y or N"
         fi
     done
