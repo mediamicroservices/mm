@@ -64,8 +64,6 @@ while [ "${*}" != "" ] ; do
     output="${outputdir}/${mediaid%.*}.mp3"
     [ -s "${output}" ] && { report -wt "WARNING ${output} already exists, skipping transcode" ; [ "$#" = 1 ] && exit 1 || { shift ; continue ;} ;};
     mkdir -p "${outputdir}"
-    get_height "${sourcefile}"
-    get_width "${sourcefile}"
 
     unset inputoptions
     unset middleoptions
