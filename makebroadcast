@@ -66,6 +66,7 @@ while [ "${*}" != "" ] ; do
     fi
     _find_input "${input}"
     mediaid=$(basename "${input}" | cut -d. -f1)
+    ingestlog="${logdir}/capture.log"
 
     # set up output
     _log -b
@@ -103,7 +104,6 @@ while [ "${*}" != "" ] ; do
         fi
 
         # set in and out times if used
-        ingestlog="${logdir}/capture.log"
         if [[ -f "${ingestlog}" && "${isobject}" = "Y" ]] ; then
             if [ ! ${formula} ] ; then
                 formula=$(_readingestlog "formula")
