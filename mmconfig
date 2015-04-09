@@ -59,15 +59,17 @@ for KEY in "${REQUIRED_VARIABLES[@]}" ; do
     printf '\t%-40s %-40s\n' "$KEY" "$VALUE"
 done
 while true ; do
-    EDITOPTION="Edit config file in nano"
+    EDITOPTION1="Edit config file in nano"
+    EDITOPTION2="Edit config file in TextMate"
     report -q "Edit a variable? "
     PS3="Selection (enter by number)? "
-    select CONFIG_KEY in "$EDITOPTION" "${REQUIRED_VARIABLES[@]}" "Quit"
+    select CONFIG_KEY in "$EDITOPTION1" "$EDITOPTION2" "${REQUIRED_VARIABLES[@]}" "Quit"
     do
         break
     done
     [ "$CONFIG_KEY" = "Quit" ] && { echo Goodbye. ; exit 1 ;};
-    [ "$CONFIG_KEY" = "$EDITOPTION" ] && { nano "$CONFIG_FILE" ; exit 1 ;};
+    [ "$CONFIG_KEY" = "$EDITOPTION1" ] && { nano "$CONFIG_FILE" ; exit 1 ;};
+    [ "$CONFIG_KEY" = "$EDITOPTION2" ] && { mate "$CONFIG_FILE" ; exit 1 ;};
     echo -n "Enter the value for $CONFIG_KEY: "
     read -e "CONFIG_VALUE"
     echo "$CONFIG_KEY is now set to $CONFIG_VALUE"
