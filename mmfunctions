@@ -608,14 +608,32 @@ _summarize_make(){
 }
 
 _prep_ffmpeg_log(){
+    OPTIND=1
+    while getopts ":q" opt ; do
+        case "${opt}" in
+            q) nolog="Y";;
+            *) echo "bad option -$OPTARG" ; usage ;;
+            :) echo "Option -$OPTARG requires an argument" ; exit 1 ;;
+        esac
+    done
+    shift $(( ${OPTIND} - 1 ))
+    unset inputoptions
     if [ "${logdir}" != "" ] ; then
         _mkdir2 "${logdir}"
-        export FFREPORT="file=${logdir}/%p_%t_$(basename "${0}")_${version}.txt"
+        if [ "${nolog}" = "Y" ] ; then
+            if [ "${FFREPORT}" ] ; then
+                unset FFREPORT=""
+            fi
+        else
+            export FFREPORT="file=${logdir}/%p_%t_$(basename "${0}")_${version}.txt"
+        fi
         inputoptions+=(-v info)
         inputoptions+=(-hide_banner)
         inputoptions+=(-stats)
     else
-        export FFREPORT=""
+        if [ "${FFREPORT}" ] ; then
+            unset FFREPORT=""
+        fi
     fi
 }
 
