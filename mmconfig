@@ -7,7 +7,7 @@ scriptdir=$(dirname "${0}")
 . "${scriptdir}/mmfunctions" || { echo "Missing '${scriptdir}/mmfunctions'. Exiting." ; exit 1 ;};
 
 # local variables
-REQUIRED_VARIABLES=("OUTDIR_INGESTFILE" "OUTDIR_INGESTXDCAM" "OUTDIR_PAPER" "AIP_STORAGE" "PODCASTDELIVER" "YOUTUBEDELIVER" "TMPDIR" "REGEX4PODCAST" "DVDLABELPREFIX" "OMNEONIP" "OMNEONPATH" "CUSTOM_LOG_DIR" "LTO_INDEX_DIR" "LOCAL_MM_DIR" "EMAIL_FROM" "MAKEYOUTUBE_DELIVERY_EMAIL_TO" "MAKEBROADCAST_DELIVERY_EMAIL_TO" "FILEMAKER_DB" "FILEMAKER_XML_URL")
+REQUIRED_VARIABLES=("OUTDIR_INGESTFILE" "OUTDIR_INGESTXDCAM" "OUTDIR_PAPER" "AIP_STORAGE" "PODCASTDELIVER" "YOUTUBEDELIVER" "TMPDIR" "REGEX4PODCAST" "DVDLABELPREFIX" "OMNEONIP" "OMNEONPATH" "CUSTOM_LOG_DIR" "LTO_INDEX_DIR" "LOCAL_MM_DIR" "EMAIL_FROM" "MAKEYOUTUBE_DELIVERY_EMAIL_TO" "MAKEBROADCAST_DELIVERY_EMAIL_TO" "FILEMAKER_DB" "FILEMAKER_XML_URL" "VOLADJUST")
 
 config_edit(){
     [ -z "${1}" -o -z "$2" ] && { report -w "The config_edit function requires two arguments. Error." ; exit ;};
@@ -20,6 +20,11 @@ test_config(){
     for directoryvariable in OUTDIR_INGESTFILE OUTDIR_INGESTXDCAM OUTDIR_PAPER AIP_STORAGE PODCASTDELIVER YOUTUBEDELIVER TMPDIR CUSTOM_LOG_DIR LTO_INDEX_DIR ; do
         if [ ! -d "${!directoryvariable}" ] ; then
             report -w "${directoryvariable} is NOT a valid directory"
+        fi
+    done
+    for booleanvariable in VOLADJUST ; do
+        if [[ ! "${!booleanvariable}" = "Y" && ! "${!booleanvariable}" = "N" ]]
+            report -w "${booleanvariable} is NOT set to Y or N"
         fi
     done
 }
@@ -46,6 +51,9 @@ done
 
 report -d "(basename "${0}")"
 report -d "Set system variables for ${WHAT_IS_THIS}"
+echo
+report -d "Notes:"
+report -d "VOLADJUST must be set to 'Y' or 'N'"
 echo
 report -d "Testing $CONFIG_FILE validity"
 test_config
