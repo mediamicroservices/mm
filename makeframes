@@ -66,13 +66,13 @@ while [ "${*}" != "" ] ; do
         output="$outputdir/${mediaid}_${IMAGENUMBER}.tiff"
         report -d "Making frame $IMAGENUMBER of $IMAGECOUNT  - dur:${DURATION} start:${START} - $output"
         [ -s "${output}" ] && { report -wt "WARNING ${output} already exists, skipping transcode" ; shift ; continue ;};
-        _prep_ffmpeg_log
+        _prep_ffmpeg_log -q
         if [ "${concatsource}" != "" ] ; then
             ffmpeginput="${concatsource}"
         else
             ffmpeginput="${sourcefile}"
         fi
-        _run_critical ffmpeg -y -v warning -ss "$START" -i "${ffmpeginput}" -vf yadif,thumbnail=100 -frames:v 1 "$output"
+        _run_critical ffmpeg -y ${inputoptions[@]} -v warning -ss "$START" -i "${ffmpeginput}" -vf yadif,thumbnail=100 -frames:v 1 "$output"
     done
     echo
     if [ -d "${deliverdir}" ] ; then
