@@ -46,9 +46,6 @@ while getopts ":lrv:o:d:e:E:nh" opt ; do
 done
 shift $(( ${OPTIND} - 1 ))
 
-[ "${emailaddress_outcome}" ] && check_emailaddress "${emailaddress_outcome}"
-[ "${emailaddress_delivery}" ] &&  check_emailaddress "${emailaddress_delivery}"
-
 while [ "${*}" != "" ] ; do
     # get context about the input
     input="${1}"
