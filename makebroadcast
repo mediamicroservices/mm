@@ -11,6 +11,7 @@ dependencies=(ffmpeg ffprobe)
 _initialize_make
 suffix=""
 extension="mov"
+relativepath="service"
 
 usage(){
     echo
@@ -59,9 +60,9 @@ while [ "${*}" != "" ] ; do
     # get context about the input
     input="${1}"
     if [ -z "${outputdir_forced}" ] ; then
-        [ -d "${input}" ] && { outputdir="${input}/objects/service" && logdir="${input}/metadata/submissionDocumentation/logs" ;};
-        [ -f "${input}" ] && { outputdir=$(dirname "${input}")"/service" && logdir="$(dirname "${input}")/service/logs" ;};
-        [ ! "${outputdir}" ] && { outputdir="${input}/objects/service" && logdir="${input}/metadata/submissionDocumentation/logs" ;};
+        [ -d "${input}" ] && { outputdir="${input}/objects/${relativepath}" && logdir="${input}/metadata/submissionDocumentation/logs" ;};
+        [ -f "${input}" ] && { outputdir=$(dirname "${input}")"/${relativepath}" && logdir="$(dirname "${input}")/${relativepath}/logs" ;};
+        [ ! "${outputdir}" ] && { outputdir="${input}/objects/${relativepath}" && logdir="${input}/metadata/submissionDocumentation/logs" ;};
     else
         outputdir="${outputdir_forced}"
         logdir="${outputdir}/logs"

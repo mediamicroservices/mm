@@ -5,6 +5,7 @@ unset dependencies
 dependencies=(ffmpeg normalize)
 suffix=""
 extension="mp3"
+relativepath="access/mp3"
 
 scriptdir=$(dirname "${0}")
 . "${scriptdir}/mmfunctions" || { echo "Missing '${scriptdir}/mmfunctions'. Exiting." ; exit 1 ;};
@@ -49,9 +50,9 @@ shift $(( ${OPTIND} - 1 ))
 while [ "${*}" != "" ] ; do
     input="${1}"
     if [ -z "${outputdir}" ] ; then
-        [ -d "${input}" ] && { outputdir="${input}/objects/access/mp3" && logdir="${input}/metadata/submissionDocumentation/logs" ;};
-        [ -f "${input}" ] && { outputdir=$(dirname "${input}")"/access/mp3" && logdir="$(dirname "${input}")/access/logs" ;};
-        [ ! "${outputdir}" ] && { outputdir="${input}/objects/access/mp3" && logdir="${input}/metadata/submissionDocumentation/logs" ;};
+        [ -d "${input}" ] && { outputdir="${input}/objects/${relativepath}" && logdir="${input}/metadata/submissionDocumentation/logs" ;};
+        [ -f "${input}" ] && { outputdir=$(dirname "${input}")"/${relativepath}" && logdir="$(dirname "${input}")/${relativepath}/logs" ;};
+        [ ! "${outputdir}" ] && { outputdir="${input}/objects/${relativepath}" && logdir="${input}/metadata/submissionDocumentation/logs" ;};
     else
         logdir="${outputdir}/logs"
     fi
