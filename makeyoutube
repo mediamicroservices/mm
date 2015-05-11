@@ -8,6 +8,7 @@ _initialize_make
 suffix=""
 extension="mp4"
 relativepath="access/youtube_up"
+unset YOUTUBEUPLOAD
 
 usage(){
     echo
@@ -22,6 +23,7 @@ usage(){
     echo "  -n (dry-run mode, show the commands that would be run but don't do anything)"
     echo "  -e emailaddress ( send an email about the delivery, only valid if -d is used )"
     echo "  -E emailaddress ( send an email about process outcome )"
+    echo "  -Y ( attempt to use uploadyoutube on the resulting file )"
     echo "  -h ( display this help )"
     echo
     exit
@@ -30,7 +32,7 @@ usage(){
 
 # command-line options to set mediaid and original variables
 OPTIND=1
-while getopts ":lrv:o:d:e:E:nh" opt ; do
+while getopts ":lrv:o:d:e:E:nhY" opt ; do
     case "${opt}" in
         l) audiomap="L";;
         r) audiomap="R";;
@@ -40,6 +42,7 @@ while getopts ":lrv:o:d:e:E:nh" opt ; do
         e) emailaddress_delivery="$OPTARG" && check_emailaddress "${emailaddress_delivery}" ;;
         E) emailaddress_outcome="$OPTARG" && check_emailaddress "${emailaddress_outcome}" ;;
         n) DRYRUN=true;;
+        Y) YOUTUBEUPLOAD="Y";;
         h) usage ;;
         *) echo "bad option -$OPTARG" ; usage ;;
         :) echo "Option -$OPTARG requires an argument" ; exit 1 ;;
@@ -124,6 +127,14 @@ while [ "${*}" != "" ] ; do
     echo
     _summarize_make
     _deliver_output "${MAKEYOUTUBE_DELIVERY_EMAIL_TO}"
+    if [ ${YOUTUBEUPLOAD} ] ; then
+        report -dt "Attempting to run uploadyoutube on ${output}"
+        if [ $(which uploadyoutube) ] ; then
+            uploadyoutube "${output}"
+        else
+            report -wt "uploadyoutube is not installed."
+        fi
+    fi
     shift
     _log -e
 done
