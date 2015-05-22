@@ -59,6 +59,7 @@ shift $(( ${OPTIND} - 1 ))
 while [ "${*}" != "" ] ; do
     # get context about the input
     input="${1}"
+    shift
     if [ -z "${outputdir_forced}" ] ; then
         [ -d "${input}" ] && { outputdir="${input}/objects/${relativepath}" && logdir="${input}/metadata/submissionDocumentation/logs" ;};
         [ -f "${input}" ] && { outputdir=$(dirname "${input}")"/${relativepath}" && logdir="$(dirname "${input}")/${relativepath}/logs" ;};
@@ -235,6 +236,5 @@ while [ "${*}" != "" ] ; do
     echo
     _summarize_make
     _deliver_output "${MAKEBROADCAST_DELIVERY_EMAIL_TO}"
-    shift
     _log -e
 done
