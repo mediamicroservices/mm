@@ -1,0 +1,56 @@
+#/bin/bash
+# qctools reporter
+# this bash script accepts one or many video file inputs and produces
+# sidecar QCTools xml.gz report file for each input
+
+get_videostreamcount(){
+    VIDEOSTREAMCOUNT=$(ffprobe "${1}" -select_streams v -show_entries stream=index -of flat 2>/dev/null | awk 'END { print NR }')
+}
+get_audiostreamcount(){
+    AUDIOSTREAMCOUNT=$(ffprobe "${1}" -select_streams a -show_entries stream=index -of flat 2>/dev/null | awk 'END { print NR }')
+}
+
+while [ "${*}" != "" ] ; do
+    unset audiofilterseperator
+    unset moviefiltermap
+    unset moviefilteroutput
+    unset ebur128filters
+    file="${1}"
+    get_videostreamcount "${file}"
+    get_audiostreamcount "${file}"
+    if [[ "${VIDEOSTREAMCOUNT}" > 0 ]] ; then
+        moviefiltermap=":s=v"
+        moviefilteroutput="[v0]"
+        if [[ "${AUDIOSTREAMCOUNT}" > 0 ]] ; then
+            for (( c=1; c<=${AUDIOSTREAMCOUNT}; c++ )) ; do
+                moviefiltermap+="+a"
+                moviefilteroutput+="[ai${c}]"
+                ebur128filters+=";[ai${c}]ebur128=metadata=1[out${c}]"
+            done
+        fi
+        ffprobe -f lavfi \
+        -i "movie=${file}${moviefiltermap}${moviefilteroutput},\
+        [v0]signalstats=stat=tout+vrep+brng,\
+        cropdetect=reset=1,split[a][b];\
+        [a]field=top[a1];\
+        [b]field=bottom[b1],[a1][b1]psnr[out0]\
+        ${ebur128filters}" \
+        -show_frames \
+        -show_versions \
+        -of xml=x=1:q=1 \
+        -noprivate | gzip > "${file}.qctools.xml.gz"
+    
+        echo
+        echo "movie=${file}${moviefiltermap}${moviefilteroutput},\
+        [v0]signalstats=stat=tout+vrep+brng,\
+        cropdetect=reset=1,split[a][b];\
+        [a]field=top[a1];\
+        [b]field=bottom[b1],[a1][b1]psnr[out0]\
+        ${ebur128filters}"
+        echo
+    
+    else
+        echo "Error: $(basename '"${file}"' does not appear to have a video track, skipping.)"
+    fi
+    shift
+done
