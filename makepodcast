@@ -42,6 +42,7 @@ shift $(( ${OPTIND} - 1 ))
 while [ "${*}" != "" ] ; do
     # get context about the input
     input="$1"
+    shift
     if [ -z "${outputdir_forced}" ] ; then
         [ -d "${input}" ] && { outputdir="$input/objects/access/podcast" && logdir="${input}/metadata/submissionDocumentation/logs" ;};
         [ -f "${input}" ] && { outputdir=$(dirname "${input}")"/access/podcast" && logdir="$(dirname "${input}")/access/logs" ;};
@@ -97,6 +98,5 @@ while [ "${*}" != "" ] ; do
     echo
     _summarize_make
     _deliver_output "${MAKEYOUTUBE_DELIVERY_EMAIL_TO}"
-    shift
     _log -e
 done
