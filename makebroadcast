@@ -65,11 +65,7 @@ while [ "${*}" != "" ] ; do
     _find_input "${input}"
     mediaid=$(basename "${input}" | cut -d. -f1)
 
-    # set up output
-    _log -b
-    output="${outputdir}/${mediaid%.*}.mov"
-    [ -s "${output}" ] && { report -wt "WARNING ${output} already exists, skipping transcode" ; shift ; continue ;};
-    _mkdir2 "${outputdir}"
+    _set_up_output
 
     # clear local arrays
     intime=""
