@@ -90,12 +90,7 @@ while [ "${*}" != "" ] ; do
        outtime=$(_readingestlog "outtime")
        if [[ "${intime}" ]] ; then
            report -dt "ATTENTION: Transcoding will use intime (${intime}) during transcoding."
-           start_time=$(ffprobe "${sourcefile}" -show_entries format=start_time -of compact | cut -d= -f2)
-           intime_adj=$(echo "$intime - $start_time" | bc)
-           if [[ "${intime_adj:0:1}" = "." ]] ; then
-               intime_adj="0${intime_adj}"
-           fi
-           middleoptions+=(-ss "${intime_adj}")
+           middleoptions+=(-ss "${intime}")
        fi
        if [[ "${outtime}" ]] ; then
            report -dt "ATTENTION: Transcoding will use outtime (${outtime}) during transcoding."
