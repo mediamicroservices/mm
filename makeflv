@@ -85,7 +85,6 @@ while [ "${*}" != "" ] ; do
     if [[ "${AUDIOSTREAMCOUNT}" > 0 ]] ; then
         middleoptions+=(-map 0:a)
         middleoptions+=(-sample_fmt s16p)
-        middleoptions+=(-r:a 44100)
         middleoptions+=(-b:a 320k)
         middleoptions+=(-ac 2)
     fi
