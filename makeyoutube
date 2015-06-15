@@ -71,6 +71,7 @@ while [ "${*}" != "" ] ; do
     # get information on the input
     get_height "${sourcefile}"
     get_width "${sourcefile}"
+    _get_seconds "${sourcefile}"
 
     # clear local arrays
     unset inputoptions
@@ -91,7 +92,13 @@ while [ "${*}" != "" ] ; do
         middleoptions+=(-pix_fmt yuv420p)
         middleoptions+=(-c:v libx264)
         middleoptions+=(-crf 18)
-        middleoptions+=(-maxrate 8760k)
+        if [ "${seconds%.*}" -gt "7200" ] ; then
+            middleoptions+=(-maxrate 2190k)
+        elif [ "${seconds%.*}" -gt "3600" ] ; then
+            middleoptions+=(-maxrate 4380k)
+        else
+            middleoptions+=(-maxrate 8760k)
+        fi
         middleoptions+=(-bufsize 1835k)
         if  [ "${height}" -eq "486" -a "${width}" -eq "720" ] ; then
             middleoptions+=(-vf "crop=720:480:0:4,yadif")

@@ -293,6 +293,10 @@ _get_duration(){
     ffduration=$(ffprobe "${1}" -show_format -pretty 2> /dev/null | grep duration= | cut -d= -f2)
 }
 
+_get_seconds(){
+    seconds=$(ffprobe "${1}" -show_format 2> /dev/null | grep duration= | cut -d= -f2)
+}
+
 email_delivery(){
     emailto="${1}"
     if [ "${emailto}" ] ; then
