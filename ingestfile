@@ -275,6 +275,7 @@ if [ "${makeaccesscopies}" == "Y" ] ; then
         "${scriptdir}/checksumpackage" "$OUTDIR_INGESTFILE/$mediaid"
     fi
 fi
+logdir="${OUTDIR_INGESTFILE}/${mediaid}/metadata/submissionDocumentation/logs"
 _writeingestlog "datetime_end" "$(get_iso8601)"
 
 # move and cleanup
