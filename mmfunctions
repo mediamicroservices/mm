@@ -140,7 +140,7 @@ black_at_ends(){
     analysis_head_seconds=10
     analysis_tail_seconds=10
     report -dt "Analyzing ${name} for excessive black at head or tail."
-    duration=$(ffprobe "${1}"  -show_format 2> /dev/null | grep duration= | cut -d= -f2 | cut -d. -f1)
+    duration=$(ffprobe "${1}"  -show_format 2> /dev/null | grep "^duration=" | cut -d= -f2 | cut -d. -f1)
     tail_start=$(echo "${duration} - ${analysis_tail_seconds}" | bc)
     head_black=$(ffmpeg -t "${analysis_head_seconds}" -i "${1}" -an -vf blackdetect=pix_th=0.05 -loglevel debug -f null - 2>&1 | grep -c -o picture_black_ratio:1)
     report -dt "Black frames in first ${analysis_head_seconds} seconds: ${head_black}."
@@ -290,11 +290,11 @@ check_emailaddress(){
 }
 
 _get_duration(){
-    ffduration=$(ffprobe "${1}" -show_format -pretty 2> /dev/null | grep duration= | cut -d= -f2)
+    ffduration=$(ffprobe "${1}" -show_format -pretty 2> /dev/null | grep "^duration=" | cut -d= -f2)
 }
 
 _get_seconds(){
-    seconds=$(ffprobe "${1}" -show_format 2> /dev/null | grep duration= | cut -d= -f2)
+    seconds=$(ffprobe "${1}" -show_format 2> /dev/null | grep "^duration=" | cut -d= -f2)
 }
 
 email_delivery(){
@@ -432,15 +432,15 @@ _find_input (){
 }
 
 get_width(){
-    width=$(ffprobe "${1}" -show_streams -select_streams v:0 2> /dev/null | grep width= | cut -d = -f 2)
+    width=$(ffprobe "${1}" -show_streams -select_streams v:0 2> /dev/null | grep "^width=" | cut -d = -f 2)
 }
 
 get_height(){
-    height=$(ffprobe "${1}" -show_streams -select_streams v:0 2> /dev/null | grep height= | cut -d = -f 2)
+    height=$(ffprobe "${1}" -show_streams -select_streams v:0 2> /dev/null | grep "^height=" | cut -d = -f 2)
 }
 
 get_dar(){
-    dar=$(ffprobe "${1}" -show_streams -select_streams v:0 2> /dev/null | grep display_aspect_ratio= | cut -d = -f 2 | sed 's|:|/|g')
+    dar=$(ffprobe "${1}" -show_streams -select_streams v:0 2> /dev/null | grep "^display_aspect_ratio=" | cut -d = -f 2 | sed 's|:|/|g')
     if [ "$dar" = "0/1" ] ; then
         get_width "${1}"
         get_height "${1}"
@@ -449,7 +449,7 @@ get_dar(){
 }
 
 get_sar(){
-    sar=$(ffprobe "${1}" -show_streams -select_streams v:0 2> /dev/null | grep sample_aspect_ratio= | cut -d = -f 2 | sed 's|:|/|g')
+    sar=$(ffprobe "${1}" -show_streams -select_streams v:0 2> /dev/null | grep "^sample_aspect_ratio=" | cut -d = -f 2 | sed 's|:|/|g')
     if [ "$sar" = "0/1" ] ; then
         sar="1/1"
     fi
@@ -457,20 +457,20 @@ get_sar(){
 
 has_first_two_tracks_mono(){
     [ $(ffprobe 2>/dev/null "${1}" -show_streams | grep -c "codec_type=audio") -ge 2 ] && \
-    [ $(ffprobe 2>/dev/null "${1}" -show_streams -select_streams a:0 | grep channels= | cut -d= -f2) = "1" ] && \
-    [ $(ffprobe 2>/dev/null "${1}" -show_streams -select_streams a:1 | grep channels= | cut -d= -f2) = "1" ] && \
+    [ $(ffprobe 2>/dev/null "${1}" -show_streams -select_streams a:0 | grep "^channels=" | cut -d= -f2) = "1" ] && \
+    [ $(ffprobe 2>/dev/null "${1}" -show_streams -select_streams a:1 | grep "^channels=" | cut -d= -f2) = "1" ] && \
     MULTIMONO=true
 }
 
 get_audio_index(){
     # get ffmpeg's index value of the first audio stream. Useful for do custom channel mappings.
-    audio_index_1=$(ffprobe "${1}" -show_streams -select_streams a:0 2> /dev/null | grep index= | cut -d = -f 2)
-    audio_index_2=$(ffprobe "${1}" -show_streams -select_streams a:1 2> /dev/null | grep index= | cut -d = -f 2)
+    audio_index_1=$(ffprobe "${1}" -show_streams -select_streams a:0 2> /dev/null | grep "^index=" | cut -d = -f 2)
+    audio_index_2=$(ffprobe "${1}" -show_streams -select_streams a:1 2> /dev/null | grep "^index=" | cut -d = -f 2)
 }
 
 get_audio_channels(){
     # get ffmpeg's channel count of the first audio stream.
-    audio_channels=$(ffprobe "${1}" -show_streams -select_streams a 2> /dev/null | grep channels= | cut -d = -f 2 | head -n 1)
+    audio_channels=$(ffprobe "${1}" -show_streams -select_streams a 2> /dev/null | grep "^channels=" | cut -d = -f 2 | head -n 1)
 }
 
 get_audio_mapping(){
@@ -489,7 +489,7 @@ get_audio_mapping(){
 }
 
 get_codectagstring(){
-    codec_tag_string=$(ffprobe "${1}" -show_streams -select_streams v:0 2> /dev/null | grep codec_tag_string= | cut -d = -f 2)
+    codec_tag_string=$(ffprobe "${1}" -show_streams -select_streams v:0 2> /dev/null | grep "^codec_tag_string=" | cut -d = -f 2)
     if [ "$codec_tag_string" = "FFV1" ] ; then
         ffv1_version=$(ffmpeg -debug 1 -i "${1}" -t 0.1 -f null - </dev/null 2>&1 | grep -o "ver:[0-9]*" | tail -n1 | cut -d: -f2)
     else
@@ -502,11 +502,11 @@ get_fieldorder(){
 }
 
 get_pix_fmt(){
-    pixfmt=$(ffprobe "${1}" -show_streams -select_streams v:0 2> /dev/null | grep pix_fmt= | cut -d = -f 2)
+    pixfmt=$(ffprobe "${1}" -show_streams -select_streams v:0 2> /dev/null | grep "^pix_fmt=" | cut -d = -f 2)
 }
 
 get_duration(){
-    DURATION=$(ffprobe "${1}" -show_format 2> /dev/null | grep duration= | cut -d = -f 2)
+    DURATION=$(ffprobe "${1}" -show_format 2> /dev/null | grep "^duration=" | cut -d = -f 2)
 }
 
 get_videostreamcount(){
@@ -518,7 +518,7 @@ get_audiostreamcount(){
 }
 
 _get_timecode(){
-    TIMECODE=$(ffprobe "${1}" -select_streams v -show_streams -of flat 2>/dev/null | grep timecode=\"[0-9] | cut -d = -f 2 | sed 's/"//g')
+    TIMECODE=$(ffprobe "${1}" -select_streams v -show_streams -of flat 2>/dev/null | grep "timecode=[0-9]" | head -n 1 | cut -d = -f 2 | sed 's/"//g')
 }
 
 _get_timecode_overlay(){
@@ -548,7 +548,7 @@ get_maxdvdbitrate(){
 
 is_video(){
     # use ffmpeg's index value and stream specifier to determine if the input is a recognized as a video file by ffmpeg
-    ffprobe "${1}" -show_streams -select_streams v:0 2> /dev/null | grep "index="
+    ffprobe "${1}" -show_streams -select_streams v:0 2> /dev/null | grep "^index="
 }
 
 get_volume_adjustment(){
