@@ -104,7 +104,7 @@ fi
 
 if [ "${formula}" = "" ] ; then
     report -q "Select an optional formula for unusual cases? "
-    report -d "In most cases, select 'none'. To force the input file to be interpretted as top-field first interlacement, select 'tff'. To stretch the input video to 1920x1080 HD frame size, select 'hds'."
+    report -d "In most cases, select 'none'. To force the input file to be interpreted as top-field first interlacement, select 'tff'. To stretch the input video to 1920x1080 HD frame size, select 'hds'."
     PS3="Selection? "
     select formula in "none" "tff" "hds"
     do
