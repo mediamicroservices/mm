@@ -214,6 +214,13 @@ _run _mkdir2 "${submissiondocdir}"
 # rsync
 from=$(_get_filesystem "${input}")
 to=$(_get_filesystem "${objectsdir}/")
+# make sure the input is still there
+if [ ! -f "${input}" ] ; then
+    report -wt "The input file is no longer available! Where did $(basename "${input}") go? Please redo."
+    # clean up queue
+    [ "${priority}" == "put in queue" ] && remove_mediaid_from_queue
+    exit 1
+fi
 if [ "${from}" == "${to}" -a "${cleanup}" == "Y" ] ; then
     report -dt "Because ${input} and ${objectsdir} are on the same filesystem and preservation mode is enabled we will mv rather than rsync."
     _run_critical mv -v -n "${input}" "${objectsdir}/"
