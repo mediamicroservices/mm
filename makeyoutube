@@ -135,12 +135,13 @@ while [ "${*}" != "" ] ; do
     echo
     _summarize_make
     _deliver_output "${MAKEYOUTUBE_DELIVERY_EMAIL_TO}"
-    if [ ${YOUTUBEUPLOAD} ] ; then
-        report -dt "Attempting to run uploadyoutube on ${output}"
+    if [[ "${YOUTUBEUPLOAD}" == "Y" ]] ; then
         if [ $(which uploadyoutube) ] ; then
+            report -dt "Attempting to run uploadyoutube on ${output}"
             uploadyoutube "${output}"
+            echo "$(get_iso8601),${output},attempted upload,$?" >> "$HOME/Desktop/upload.log"
         else
-            report -wt "uploadyoutube is not installed."
+            report -wt "$(basename "${output}") qualified for uploadyoutube but it is not installed."
         fi
     fi
     _log -e
