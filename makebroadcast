@@ -5,6 +5,7 @@
 # v 1.3 revert back to ffmpeg
 # v 1.4 adjust handling volume adjustment argument
 version="1.4"
+VOLADJUST="Y"
 scriptdir=$(dirname $(which "${0}"))
 . "${scriptdir}/mmfunctions" || { echo "Missing '${scriptdir}/mmfunctions'. Exiting." ; exit 1 ;};
 dependencies=(ffmpeg ffprobe)
@@ -12,7 +13,6 @@ _initialize_make
 suffix=""
 extension="mov"
 relativepath="service"
-VOLADJUST="Y"
 
 _usage(){
     echo
