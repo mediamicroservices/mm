@@ -12,6 +12,7 @@ _initialize_make
 suffix=""
 extension="mov"
 relativepath="service"
+VOLADJUST="Y"
 
 usage(){
     echo
