@@ -265,7 +265,7 @@ if [ "${makeaccesscopies}" == "Y" ] ; then
     "${scriptdir}/makeframes" "${makeframesopts[@]}" "$OUTDIR_INGESTFILE/$mediaid"
     # makeyoutube
     unset makeyoutubeopts
-    [ "$deliveraccesscopies" = "Y" ] && makeyoutubeopts=(-d "$YOUTUBEDELIVER")
+    [ "$deliveraccesscopies" = "Y" ] && makeyoutubeopts=(-Y -d "$YOUTUBEDELIVER")
     "${scriptdir}/makeyoutube" "${makeyoutubeopts[@]}" "$OUTDIR_INGESTFILE/$mediaid"
     # makepodcast
     if [ $(echo "$mediaid" | grep -E "${REGEX4PODCAST}") ] ; then
