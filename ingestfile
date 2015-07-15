@@ -72,8 +72,6 @@ trap cleanup SIGHUP SIGINT SIGTERM
 [ -z "${PODCASTDELIVER}" ] && { echo "A directory for podcast delivery must be set. Use [ -w /path/to/deliver/podcastfiles] or run mmconfig to set PODCASTDELIVER." ; exit 1 ;};
 [ -z "${YOUTUBEDELIVER}" ] && { echo "A directory for youtube delivery must be set. Use [ -y /path/to/deliver/youtubefiles] or run mmconfig to set YOUTUBEDELIVER." ; exit 1 ;};
 
-[ -n "${mediaid}" ] && op="batch process"
-
 # interview the operator
 ask_operator
 ask_mediaid
@@ -163,8 +161,6 @@ else
     fi
 fi
 
-objectsdir="${OUTDIR_INGESTFILE}/${mediaid}/objects"
-
 # queue handling
 if [ "${priority}" = "put in queue" ] ; then
     add_mediaid_to_queue
@@ -185,9 +181,15 @@ fi
 _log -b
 
 # set up package directories
+objectsdir="${OUTDIR_INGESTFILE}/${mediaid}/objects"
 _run_critical _mkdir2 "${objectsdir}"
+
+submissiondocdir="${OUTDIR_INGESTFILE}/${mediaid}/metadata/submissionDocumentation"
+_run _mkdir2 "${submissiondocdir}"
+
 logdir="${OUTDIR_INGESTFILE}/${mediaid}/metadata/submissionDocumentation/logs"
 _run _mkdir2 "${logdir}"
+
 ingestlog="${logdir}/capture.log"
 echo -e "$log" >> "${ingestlog}"
 _writeingestlog "audiodecision" "${audiodecision}"
@@ -207,9 +209,6 @@ fi
 if [ "${outtime}" ] ; then
     _writeingestlog "outtime" "${outtime}"
 fi
-
-submissiondocdir="${OUTDIR_INGESTFILE}/${mediaid}/metadata/submissionDocumentation"
-_run _mkdir2 "${submissiondocdir}"
 
 # rsync
 from=$(_get_filesystem "${input}")
@@ -257,21 +256,21 @@ fi
 
 # make access copies
 if [ "${makeaccesscopies}" == "Y" ] ; then
-    unset makeframesopts
-    unset makeyoutubeopts
-    unset makepodcastopts
     report -dt "STATUS Making access copies."
     # makemp3
     "${scriptdir}/makemp3" "${OUTDIR_INGESTFILE}/${mediaid}"
     # makeframes
+    unset makeframesopts
     [ "$deliveraccesscopies" = "Y" ] && makeframesopts=(-d "$YOUTUBEDELIVER")
     "${scriptdir}/makeframes" "${makeframesopts[@]}" "$OUTDIR_INGESTFILE/$mediaid"
     # makeyoutube
+    unset makeyoutubeopts
     [ "$deliveraccesscopies" = "Y" ] && makeyoutubeopts=(-d "$YOUTUBEDELIVER")
     "${scriptdir}/makeyoutube" "${makeyoutubeopts[@]}" "$OUTDIR_INGESTFILE/$mediaid"
     # makepodcast
     if [ $(echo "$mediaid" | grep -E "${REGEX4PODCAST}") ] ; then
         report -dt "${mediaid} qualifies for podcast creation."
+        unset makepodcastopts
         [ "$deliveraccesscopies" == "Y" ] && makepodcastopts=(-d "$PODCASTDELIVER")
         "${scriptdir}/makepodcast" "${makepodcastopts[@]}" "$OUTDIR_INGESTFILE/$mediaid"
     else
@@ -279,11 +278,12 @@ if [ "${makeaccesscopies}" == "Y" ] ; then
     fi
     # makedvd
     "${scriptdir}/makedvd" "${OUTDIR_INGESTFILE}/${mediaid}"
-    # makemetadata
-    "${scriptdir}/makemetadata" "$OUTDIR_INGESTFILE/$mediaid"
-    if [ "$dochecksums" = "Y" ] ; then
-        "${scriptdir}/checksumpackage" "$OUTDIR_INGESTFILE/$mediaid"
-    fi
+fi
+# makemetadata
+"${scriptdir}/makemetadata" "$OUTDIR_INGESTFILE/$mediaid"
+# checksums
+if [ "$dochecksums" = "Y" ] ; then
+    "${scriptdir}/checksumpackage" "$OUTDIR_INGESTFILE/$mediaid"
 fi
 
 # more logging
