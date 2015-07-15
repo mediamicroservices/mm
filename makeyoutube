@@ -100,9 +100,9 @@ while [ "${*}" != "" ] ; do
             middleoptions+=(-maxrate 8760k)
         fi
         middleoptions+=(-bufsize 1835k)
-        if  [ "${height}" -eq "486" -a "${width}" -eq "720" ] ; then
+        if  [[ "${width}" == 720 && "${height}" == 486 ]] ; then
             middleoptions+=(-vf "crop=720:480:0:4,yadif")
-        elif  [ "${height}" -eq "512" -a "${width}" -eq "720" ] ;then
+        elif  [[ "${width}" == 720 && "${height}" == 512 ]] ; then
             middleoptions+=(-vf "crop=720:480:0:32,yadif")
         else
             middleoptions+=(-vf yadif)

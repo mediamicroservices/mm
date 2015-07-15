@@ -119,11 +119,11 @@ while [ "${*}" != "" ] ; do
         middleoptions+=(-muxrate 10080000)
         middleoptions+=(-lmin 1)
         middleoptions+=(-lmax 200000)
-        if  [[ "${height}" == 486 && "${width}" == 720 ]] ; then
+        if  [[ "${width}" == 720 && "${height}" == 486 ]] ; then
             middleoptions+=(-vf "fieldorder=bff,crop=720:480:0:4,setdar=${aspect}${TIMECODEOVERLAY}" -aspect ${aspect})
-        elif  [[ "{$height}" == 480 && "${width}" == 720 ]] ; then
+        elif  [[ "${width}" == 720 && "${height}" == 480 ]] ; then
             middleoptions+=(-vf "fieldorder=bff,setdar=${aspect}${TIMECODEOVERLAY}" -aspect ${aspect})
-        elif  [[ "${height}" == 512 && "${width}" == 720 ]] ; then
+        elif  [[ "${width}" == 720 && "${height}" == 512 ]] ; then
             middleoptions+=(-vf "fieldorder=bff,crop=720:480:0:32,setdar=${aspect}${TIMECODEOVERLAY}" -aspect ${aspect})
         else
             middleoptions+=(-vf "fieldorder=bff,scale=720:480:interl=1,setdar=${aspect}${TIMECODEOVERLAY}" -aspect ${aspect})
