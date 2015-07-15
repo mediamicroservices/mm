@@ -18,7 +18,7 @@ queuefile="${HOME}/Desktop/queue.txt"
 scriptdir=$(dirname "${0}")
 . "${scriptdir}/mmfunctions" || { echo "Missing '${scriptdir}/mmfunctions'. Exiting." ; exit 1 ;};
 
-usage(){
+_usage(){
     echo
     echo "$(basename "${0}") ${version}"
     echo "This script will run an interactive interview and then process an input file accordingly."
@@ -36,20 +36,20 @@ while getopts ":F:pnh" opt ; do
         F) formula="${OPTARG}";;
         p) preservation_mode="Y" ; deliverytoomneon="N" ; deliveraccesscopies="Y" ; deliverytoaipstorage="N" ;;
         n) deliverytoomneon="N" ; deliveraccesscopies="N" ;;
-        h) usage ;;
-        *) echo "bad option -$OPTARG" ; usage ;;
+        h) _usage ;;
+        *) echo "bad option -$OPTARG" ; _usage ;;
         :) echo "Option -$OPTARG requires an argument" ; exit 1 ;;
     esac
 done
 shift $(( ${OPTIND} - 1 ))
 
-add_mediaid_to_queue(){
+_add_mediaid_to_queue(){
     [ -n "${mediaid}" ] || { report -wt "Error: mediaid is undefined in add_media_to_queue function" ; exit 1 ;};
     [ -n "${queuefile}" ] || { report -wt "Error: queuefile is undefined in add_media_to_queue function" ; exit 1 ;};
     echo "${mediaid}" >> "${queuefile}"
 }
 
-remove_mediaid_from_queue(){
+_remove_mediaid_from_queue(){
     [ -n "${mediaid}" ] || { report -wt "Error: mediaid is undefined in remove_media_from_queue function" ; exit 1 ;};
     [ -f "${queuefile}" ] || { report -wt "Error: queuefile is undefined in remove_media_from_queue function" ; exit 1 ;};
     grep -v "^${mediaid}$" "${queuefile}" | grep "^[A-Z0-9_-]\+$" > "${queuefile}_tmp"
@@ -57,14 +57,14 @@ remove_mediaid_from_queue(){
     mv "${queuefile}_tmp" "${queuefile}"
 }
 
-cleanup(){
+_cleanup(){
     _log -a "Process aborted"
-    remove_mediaid_from_queue
+    _remove_mediaid_from_queue
     [ -d "${OUTDIR_INGESTFILE}/${mediaid}" ] && mv "${OUTDIR_INGESTFILE}/${mediaid}" "${OUTDIR_INGESTFILE}/${mediaid}_aborted_ingest_$(get_iso8601_c)"
     exit 1
 }
 
-trap cleanup SIGHUP SIGINT SIGTERM
+trap _cleanup SIGHUP SIGINT SIGTERM
 
 # check environment
 [ -z "${OUTDIR_INGESTFILE}" ] && { echo "The processing directory must be set. Use [ -p /path/to/processing/directory ] or run mmconfig to set OUTDIR_INGESTFILE." ; exit 1 ;};
@@ -163,7 +163,7 @@ fi
 
 # queue handling
 if [ "${priority}" = "put in queue" ] ; then
-    add_mediaid_to_queue
+    _add_mediaid_to_queue
     next=$(head -n 1 "${queuefile}")
     while [ "${mediaid}" != "${next}" ] ; do
         newnext=$(head -n 1 "${queuefile}")
@@ -217,7 +217,7 @@ to=$(_get_filesystem "${objectsdir}/")
 if [ ! -f "${input}" ] ; then
     report -wt "The input file is no longer available! Where did $(basename "${input}") go? Please redo."
     # clean up queue
-    [ "${priority}" == "put in queue" ] && cleanup
+    [ "${priority}" == "put in queue" ] && _cleanup
     exit 1
 fi
 
@@ -307,6 +307,6 @@ if [ "${cleanup}" == "Y" ] ; then
 fi
 
 # clean up queue
-[ "${priority}" == "put in queue" ] && remove_mediaid_from_queue
+[ "${priority}" == "put in queue" ] && _remove_mediaid_from_queue
 
 _log -e
