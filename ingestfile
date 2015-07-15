@@ -217,7 +217,7 @@ to=$(_get_filesystem "${objectsdir}/")
 if [ ! -f "${input}" ] ; then
     report -wt "The input file is no longer available! Where did $(basename "${input}") go? Please redo."
     # clean up queue
-    [ "${priority}" == "put in queue" ] && remove_mediaid_from_queue
+    [ "${priority}" == "put in queue" ] && cleanup
     exit 1
 fi
 
