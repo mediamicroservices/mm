@@ -221,6 +221,8 @@ if [ ! -f "${input}" ] ; then
     [ "${priority}" == "put in queue" ] && remove_mediaid_from_queue
     exit 1
 fi
+
+# either rsync or mv the input into the package
 if [ "${from}" == "${to}" -a "${cleanup}" == "Y" ] ; then
     report -dt "Because ${input} and ${objectsdir} are on the same filesystem and preservation mode is enabled we will mv rather than rsync."
     _run_critical mv -v -n "${input}" "${objectsdir}/"
@@ -229,6 +231,7 @@ else
     _run_critical rsync -rt --progress --log-file="${logdir}/rsync_$(get_iso8601_c)_$(basename $0)_${version}.txt" "${input}" "${objectsdir}/"
 fi
 
+# if in preservation mode then handle trimmed materials
 if [ "${preservation_mode}" = "Y" ] ; then
     if [ ! "${#trimmed[@]}" = 0 ] ; then
         trimmed_materials_dir="${objectsdir}/trimmed_materials"
@@ -252,8 +255,8 @@ if [ "${deliverytoomneon}" == "Y" ] ; then
     email_delivery "${MAKEBROADCAST_DELIVERY_EMAIL_TO}"
 fi
 
+# make access copies
 if [ "${makeaccesscopies}" == "Y" ] ; then
-    # make access copies
     unset makeframesopts
     unset makeyoutubeopts
     unset makepodcastopts
@@ -282,6 +285,8 @@ if [ "${makeaccesscopies}" == "Y" ] ; then
         "${scriptdir}/checksumpackage" "$OUTDIR_INGESTFILE/$mediaid"
     fi
 fi
+
+# more logging
 logdir="${OUTDIR_INGESTFILE}/${mediaid}/metadata/submissionDocumentation/logs"
 _writeingestlog "datetime_end" "$(get_iso8601)"
 
