@@ -14,7 +14,7 @@ extension="mov"
 relativepath="service"
 VOLADJUST="Y"
 
-usage(){
+_usage(){
     echo
     echo "$(basename "${0}") ${version}"
     echo "This application will create a file suitable for broadcast or editing from a video file or package input with the following options."
@@ -34,7 +34,7 @@ usage(){
     echo
     exit
 }
-[ "${#}" = 0 ] && usage
+[ "${#}" = 0 ] && _usage
 
 # command-line options to set mediaid and original variables
 OPTIND=1
@@ -50,8 +50,8 @@ while getopts ":F:lrcv:o:d:e:E:nh" opt ; do
         e) emailaddress_delivery="$OPTARG" && check_emailaddress "${emailaddress_delivery}" ;;
         E) emailaddress_outcome="$OPTARG" && check_emailaddress "${emailaddress_outcome}" ;;
         n) DRYRUN=true;;
-        h) usage ;;
-        *) echo "bad option -$OPTARG" ; usage ;;
+        h) _usage ;;
+        *) echo "bad option -$OPTARG" ; _usage ;;
         :) echo "Option -$OPTARG requires an argument" ; exit 1 ;;
     esac
 done
