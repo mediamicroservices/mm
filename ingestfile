@@ -31,9 +31,10 @@ _usage(){
 }
 
 OPTIND=1
-while getopts ":F:pnh" opt ; do
+while getopts ":F:pnhe" opt ; do
     case "${opt}" in
         F) formula="${OPTARG}";;
+        e) edit_mode="Y" ;;
         p) preservation_mode="Y" ; deliverytoomneon="N" ; deliveraccesscopies="Y" ; deliverytoaipstorage="N" ;;
         n) deliverytoomneon="N" ; deliveraccesscopies="N" ;;
         h) _usage ;;
@@ -71,6 +72,121 @@ trap _cleanup SIGHUP SIGINT SIGTERM
 [ -z "${AIP_STORAGE}" ] && { echo "The AIP Storage directory must be set. Use [ -a /path/to/AIP/storage/directory ] or run mmconfig to set AIP_STORAGE." ; exit 1 ;};
 [ -z "${PODCASTDELIVER}" ] && { echo "A directory for podcast delivery must be set. Use [ -w /path/to/deliver/podcastfiles] or run mmconfig to set PODCASTDELIVER." ; exit 1 ;};
 [ -z "${YOUTUBEDELIVER}" ] && { echo "A directory for youtube delivery must be set. Use [ -y /path/to/deliver/youtubefiles] or run mmconfig to set YOUTUBEDELIVER." ; exit 1 ;};
+
+conf="
+# Set transparency: 0 is transparent, 1 is opaque
+*.transparency=1.00
+
+# Set window title
+*.title = Ingest File
+
+# intro text
+intro.x = 20
+intro.y = 500
+intro.width = 500
+intro.type = text
+intro.text = Ingest file options. Leave the option blank to be prompted.
+
+# ask operator
+op.x = 20
+op.y = 440
+op.type = textfield
+op.label = Please enter your name:  
+op.width = 270
+
+# Media ID
+mediaid.x = 20
+mediaid.y = 390
+mediaid.type = textfield
+mediaid.label = Please enter a unique MEDIA ID:
+mediaid.width = 270
+
+# Input file
+input.x = 20
+input.y = 340
+input.type = openbrowser
+input.label = Select your file:
+input.width=400
+
+# Audio Strategy
+audiodecision.x = 20
+audiodecision.y = 280
+audiodecision.type = combobox
+audiodecision.label = Select an audio strategy:
+audiodecision.default = Default audio mapping [first audio track used for stereo output]
+audiodecision.option = 
+audiodecision.option = Default audio mapping [first audio track used for stereo output]
+audiodecision.option = Only use left of the first audio track [for 21st Century]
+audiodecision.option = Only use right of the first audio track
+audiodecision.width = 400
+
+# Cropping Strategy
+cropdetection.x = 20
+cropdetection.y = 220
+cropdetection.type = combobox
+cropdetection.label = Select a cropping strategy:
+cropdetection.default = Do not crop
+cropdetection.option = 
+cropdetection.option = Do not crop
+cropdetection.option = Examine the video and auto-crop out black borders (slower)
+cropdetection.width = 400
+
+# Optional Formula 
+formula.x = 20
+formula.y = 160
+formula.type = combobox
+formula.label = Select an optional formula for unusual cases. In most cases select none. 
+formula.tooltip = To force the input file to be interpreted as top-field first interlacement, select 'TFF.' To stretch the input video to 1920x1080 HD frame size, select 'HDS.' 
+formula.default = none
+formula.option = 
+formula.option = none
+formula.option = tt
+formula.option = hds
+formula.width = 100
+
+# Cleanup Strategy
+cleanupdecision.x = 20
+cleanupdecision.y = 100
+cleanupdecision.type = combobox
+cleanupdecision.label = Select a cleanup strategy
+cleanupdecision.default = Leave source file where it is
+cleanupdecision.option = 
+cleanupdecision.option = Leave source file where it is
+cleanupdecision.option = Remove source file after successful ingest
+cleanupdecision.width = 300
+
+# multitasking strategy 
+priority.x = 20
+priority.y = 40
+priority.type = combobox
+priority.label = Would you like to put it in the queue or start now?
+priority.default = put in queue 
+priority.option = 
+priority.option = put in queue
+priority.option = start now
+priority.width = 125
+
+# Add a cancel button with default label
+cb.type=cancelbutton
+
+";
+
+# edit mode
+if [ "${edit_mode}" == "Y" ] ; then
+    pashua_configfile=`/usr/bin/mktemp /tmp/pashua_XXXXXXXXX`
+    echo "$conf" > $pashua_configfile
+    pashua_run
+    rm $pashua_configfile
+    echo "  operator = ${op}"
+    echo "  input = ${input}"
+    echo "  mediaid = ${mediaid}"
+    echo "  audiodecision = ${audiodecision}"
+    echo "  cropdetection = ${cropdetection}"
+    echo "  formula = ${formula}"
+    echo "  cleanupdecision = ${cleanupdecision}"
+    echo "  priority = ${priority}"
+    echo ""
+fi
 
 # interview the operator
 ask_operator
