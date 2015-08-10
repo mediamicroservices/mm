@@ -711,3 +711,54 @@ _prep_volume_adjustment(){
         fi
     fi
 }
+
+pashua_run() {
+    # Wrapper function for interfacing to Pashua. Written by Carsten
+    # Bluem <carsten@bluem.net> in 10/2003, modified in 12/2003 (including
+    # a code snippet contributed by Tor Sigurdsson), 08/2004 and 12/2004.
+    # Write config file
+
+    # Find Pashua binary. We do search both . and dirname "$0"
+    # , as in a doubleclickable application, cwd is /
+    # BTW, all these quotes below are necessary to handle paths
+    # containing spaces.
+    bundlepath="Pashua.app/Contents/MacOS/Pashua"
+    mypath=`dirname "$0"`
+    for searchpath in "$mypath/Pashua" "$mypath/$bundlepath" "./$bundlepath" \
+                      "/Applications/$bundlepath" "$HOME/Applications/$bundlepath"
+    do
+        if [ -f "$searchpath" -a -x "$searchpath" ]
+        then
+            pashuapath=$searchpath
+            break
+        fi
+    done
+    if [ ! "$pashuapath" ] ; then
+        echo "Error: Pashua is used to edit but is not found."
+        if [[ "${pashuainstall}" == "" ]] ; then
+            echo "Attempting to run: brew cask install pashua"
+            if [[ "${pashuainstall}" != "Y" ]] ; then
+                brew cask install pashua
+                pashuainstall="Y"
+                pashua_run
+            else
+                break 2
+            fi
+        fi
+    else
+        encoding=""
+        
+        # Get result
+        result=`"$pashuapath" $encoding $pashua_configfile | sed 's/ /;;;/g'`
+
+        # Parse result
+        for line in $result
+        do
+            key=`echo $line | sed 's/^\([^=]*\)=.*$/\1/'`
+            value=`echo $line | sed 's/^[^=]*=\(.*\)$/\1/' | sed 's/;;;/ /g'`        
+            varname=$key
+            varvalue="$value"
+            eval $varname='$varvalue'
+        done
+    fi
+} # pashua_run()
