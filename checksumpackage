@@ -166,9 +166,9 @@ while [ "${*}" != "" ] ; do
         echo "$(get_iso8601): $(basename "${0}"):${version}: ${CHECKSUMNAME} is generated" >> "${PACKAGE}/${OUTDIR}/${CHECKSUMPROCESSLOG}"
         if [ "${verify}" = "Y" ] ; then
             CHECKSUMCMP1=$(maketemp)
-            sort "${PACKAGE}/${OUTDIR}/${CHECKSUMNAME}" > "${CHECKSUMCMP1}"
+            sort -k2 "${PACKAGE}/${OUTDIR}/${CHECKSUMNAME}" > "${CHECKSUMCMP1}"
             CHECKSUMCMP2=$(maketemp)
-            sort "${LASTMD5}" > "${CHECKSUMCMP2}"
+            sort -k2 "${LASTMD5}" > "${CHECKSUMCMP2}"
             if [[ $(diff "${CHECKSUMCMP1}" "${CHECKSUMCMP2}") ]] ; then
                 report -wt "checksums are different for ${PACKAGE}"
                 diff "${CHECKSUMCMP1}" "${CHECKSUMCMP2}"
