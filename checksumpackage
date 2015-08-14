@@ -153,6 +153,7 @@ while [ "${*}" != "" ] ; do
         cd "${PACKAGE}/${INDIR}"
         DFXMLTMP=$(maketemp)
         md5deep -drl . > $DFXMLTMP
+        cd "${PWD}"
         [ ! -d "${PACKAGE}/${OUTDIR}" ] && mkdir -p "${PACKAGE}/${OUTDIR}"
         echo "$(get_iso8601): $(basename "${0}"):${version}: ${DFXMLNAME} is generated" >> "${PACKAGE}/${OUTDIR}/${CHECKSUMPROCESSLOG}"
         cat "${DFXMLTMP}" > "${PACKAGE}/${OUTDIR}/${DFXMLNAME}"
@@ -162,7 +163,6 @@ while [ "${*}" != "" ] ; do
             xml sel -T -t -m "/dfxml/fileobject" -v "hashdigest" -o "  " -v "filename" -n "${PACKAGE}/${OUTDIR}/${DFXMLNAME}" > "${PACKAGE}/${OUTDIR}/${CHECKSUMNAME}"
         fi
         echo "$(get_iso8601): $(basename "${0}"):${version}: ${CHECKSUMNAME} is generated" >> "${PACKAGE}/${OUTDIR}/${CHECKSUMPROCESSLOG}"
-        cd "${PWD}"
         if [ "${verify}" = "Y" ] ; then
             _version_dfxml "${PACKAGE}"
             CHECKSUMCMP1=$(maketemp)
