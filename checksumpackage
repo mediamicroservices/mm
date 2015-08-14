@@ -137,7 +137,6 @@ while [ "${*}" != "" ] ; do
         elif [ "${verify}" = "Y" ] ; then
                 if [ -s "${PACKAGE}/${OUTDIR}/${CHECKSUMNAME}" ] ; then
                     report -dt "Prepping for dfxml.xml verification."
-                    _version_dfxml "${PACKAGE}"
                 else
                     report -dt "There is no dfxml.xml to verify in ${PACKAGE}, skipping."
                     shift
@@ -165,6 +164,7 @@ while [ "${*}" != "" ] ; do
         echo "$(get_iso8601): $(basename "${0}"):${version}: ${CHECKSUMNAME} is generated" >> "${PACKAGE}/${OUTDIR}/${CHECKSUMPROCESSLOG}"
         cd "${PWD}"
         if [ "${verify}" = "Y" ] ; then
+            _version_dfxml "${PACKAGE}"
             CHECKSUMCMP1=$(maketemp)
             sort "${PACKAGE}/${OUTDIR}/${CHECKSUMNAME}" > "${CHECKSUMCMP1}"
             CHECKSUMCMP2=$(maketemp)
