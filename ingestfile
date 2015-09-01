@@ -91,7 +91,7 @@ intro.text = Ingest file options. Leave the option blank to be prompted.
 op.x = 20
 op.y = 440
 op.type = textfield
-op.label = Please enter your name:  
+op.label = Please enter your name:
 op.width = 270
 
 # Media ID
@@ -114,7 +114,7 @@ audiodecision.y = 280
 audiodecision.type = combobox
 audiodecision.label = Select an audio strategy:
 audiodecision.default = Default audio mapping [first audio track used for stereo output]
-audiodecision.option = 
+audiodecision.option =
 audiodecision.option = Default audio mapping [first audio track used for stereo output]
 audiodecision.option = Only use left of the first audio track [for 21st Century]
 audiodecision.option = Only use right of the first audio track
@@ -126,19 +126,19 @@ cropdetection.y = 220
 cropdetection.type = combobox
 cropdetection.label = Select a cropping strategy:
 cropdetection.default = Do not crop
-cropdetection.option = 
+cropdetection.option =
 cropdetection.option = Do not crop
 cropdetection.option = Examine the video and auto-crop out black borders (slower)
 cropdetection.width = 400
 
-# Optional Formula 
+# Optional Formula
 formula.x = 20
 formula.y = 160
 formula.type = combobox
-formula.label = Select an optional formula for unusual cases. In most cases select none. 
 formula.tooltip = To force the input file to be interpreted as top-field first interlacement, select 'TFF.' To stretch the input video to 1920x1080 HD frame size, select 'HDS.' 
+formula.label = Select an optional formula for unusual cases. In most cases select none.
 formula.default = none
-formula.option = 
+formula.option =
 formula.option = none
 formula.option = tt
 formula.option = hds
@@ -150,18 +150,18 @@ cleanupdecision.y = 100
 cleanupdecision.type = combobox
 cleanupdecision.label = Select a cleanup strategy
 cleanupdecision.default = Leave source file where it is
-cleanupdecision.option = 
+cleanupdecision.option =
 cleanupdecision.option = Leave source file where it is
 cleanupdecision.option = Remove source file after successful ingest
 cleanupdecision.width = 300
 
-# multitasking strategy 
+# multitasking strategy
 priority.x = 20
 priority.y = 40
 priority.type = combobox
 priority.label = Would you like to put it in the queue or start now?
-priority.default = put in queue 
-priority.option = 
+priority.default = put in queue
+priority.option =
 priority.option = put in queue
 priority.option = start now
 priority.width = 125
