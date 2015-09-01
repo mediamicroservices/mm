@@ -169,6 +169,8 @@ while [ "${*}" != "" ] ; do
         darratio=$(echo "scale=3 ; ${dar}" | bc)
         if [ "${formula}" = "tff" ] ; then
             filterchain_start="${filterchain_start}setfield=tff,"
+        elif [ "${formula}" = "bff" ] ; then
+            filterchain_start="${filterchain_start}setfield=bff,"
         fi
         get_fieldorder "${sourcefile}"
         if [ "${fieldorder}" != "tff" ] ; then

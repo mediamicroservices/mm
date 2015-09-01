@@ -135,12 +135,13 @@ cropdetection.width = 400
 formula.x = 20
 formula.y = 160
 formula.type = combobox
-formula.tooltip = To force the input file to be interpreted as top-field first interlacement, select 'TFF.' To stretch the input video to 1920x1080 HD frame size, select 'HDS.' 
 formula.label = Select an optional formula for unusual cases. In most cases select none.
+formula.tooltip = To force the input file to be interpreted as top or bottom field first interlacement, select tff or bff. To stretch the input video to 1920x1080 HD frame size, select 'HDS'.
 formula.default = none
 formula.option =
 formula.option = none
 formula.option = tff
+formula.option = bff
 formula.option = hds
 formula.width = 100
 
@@ -220,9 +221,9 @@ fi
 
 if [ "${formula}" = "" ] ; then
     report -q "Select an optional formula for unusual cases? "
-    report -d "In most cases, select 'none'. To force the input file to be interpreted as top-field first interlacement, select 'tff'. To stretch the input video to 1920x1080 HD frame size, select 'hds'."
+    report -d "In most cases, select 'none'. To force the input file to be interpreted as top or bottom field first interlacement, select tff or bff. To stretch the input video to 1920x1080 HD frame size, select 'hds'."
     PS3="Selection? "
-    select formula in "none" "tff" "hds"
+    select formula in "none" "tff" "bff" "hds"
     do
         break
     done
