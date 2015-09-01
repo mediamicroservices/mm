@@ -140,7 +140,7 @@ formula.label = Select an optional formula for unusual cases. In most cases sele
 formula.default = none
 formula.option =
 formula.option = none
-formula.option = tt
+formula.option = tff
 formula.option = hds
 formula.width = 100
 
