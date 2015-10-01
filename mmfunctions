@@ -481,11 +481,12 @@ get_channel_layout(){
 get_audio_mapping(){
     get_audio_index "${1}"
     get_audio_channels "${1}"
+	get_channel_layout "${1}"
     has_first_two_tracks_mono "${1}"
     if [[ "${MULTIMONO}" == true ]] ; then
         report -wt "The first two audio tracks are both mono. Considering track 1 for left and track 2 for right."
         audiomapping_ffmpeg=(-map_channel "0.${audio_index_1}.0" -map_channel "0.${audio_index_2}.0")
-    elif [[ "$audio_channels" -gt 2 ]] ;then
+    elif [[ "$audio_channels" -gt 2 && "$channel_layout" == "unknown" ]] ; then
         report -wt "The first audio track has more than 2 channels. Considering channel 1 for left and channel 2 for right and ignoring the rest."
         audiomapping_ffmpeg=(-map_channel "0.${audio_index_1}.0" -map_channel "0.${audio_index_1}.1")
     else
