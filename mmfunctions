@@ -473,6 +473,11 @@ get_audio_channels(){
     audio_channels=$(ffprobe "${1}" -show_streams -select_streams a 2> /dev/null | grep "^channels=" | cut -d = -f 2 | head -n 1)
 }
 
+get_channel_layout(){
+    # get ffmpeg's channel count of the first audio stream.
+    channel_layout=$(ffprobe "${1}" -show_streams -select_streams a 2> /dev/null | grep "^channel_layout=" | cut -d = -f 2 | head -n 1)
+}
+
 get_audio_mapping(){
     get_audio_index "${1}"
     get_audio_channels "${1}"
