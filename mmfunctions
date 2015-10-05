@@ -675,6 +675,7 @@ set_accesstimes(){
         outtime=$(_readingestlog "outtime")
         if [[ "${intime}" ]] ; then
             report -dt "ATTENTION: Transcoding will use intime (${intime}) during transcoding."
+            inputoptions+=(-seek_timestamp 1)
             middleoptions+=(-ss "${intime}")
         fi
         if [[ "${outtime}" ]] ; then
