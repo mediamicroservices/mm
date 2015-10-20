@@ -25,7 +25,7 @@ _usage(){
     echo "Dependencies: ${dependencies[@]}"
     echo "Usage: $(basename $0) [ -options ]"
     echo "  -n (do not make any deliveries except for sending the final package to ${AIP_STORAGE}.)"
-	echo " -i (do not make any deliveries except for sending the final package to ${deliverytoomneon}.)"
+    echo " -i (do not make any deliveries except for sending the final package to ${deliverytoomneon}.)"
     echo "  -h display this help"
     echo
     exit
@@ -38,7 +38,7 @@ while getopts ":F:pnhei" opt ; do
         e) edit_mode="Y" ;;
         p) preservation_mode="Y" ; deliverytoomneon="N" ; deliveraccesscopies="Y" ; deliverytoaipstorage="N" ;;
         n) deliverytoomneon="N" ; deliveraccesscopies="N" ;;
-		i) deliverytoomneon="Y" ; deliveraccesscopies="N" ; deliverytoaipstorage="Y" ;;
+        i) deliverytoomneon="Y" ; deliveraccesscopies="N" ; deliverytoaipstorage="Y" ;;
         h) _usage ;;
         *) echo "bad option -$OPTARG" ; _usage ;;
         :) echo "Option -$OPTARG requires an argument" ; exit 1 ;;
