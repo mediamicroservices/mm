@@ -3,10 +3,10 @@
 # this bash script accepts one or many video file inputs and produces
 # sidecar QCTools xml.gz report file for each input
 
-get_videostreamcount(){
+_get_videostreamcount(){
     VIDEOSTREAMCOUNT=$(ffprobe "${1}" -select_streams v -show_entries stream=index -of flat 2>/dev/null | awk 'END { print NR }')
 }
-get_audiostreamcount(){
+_get_audiostreamcount(){
     AUDIOSTREAMCOUNT=$(ffprobe "${1}" -select_streams a -show_entries stream=index -of flat 2>/dev/null | awk 'END { print NR }')
 }
 
@@ -16,8 +16,8 @@ while [ "${*}" != "" ] ; do
     unset moviefilteroutput
     unset ebur128filters
     file="${1}"
-    get_videostreamcount "${file}"
-    get_audiostreamcount "${file}"
+    _get_videostreamcount "${file}"
+    _get_audiostreamcount "${file}"
     if [[ "${VIDEOSTREAMCOUNT}" > 0 ]] ; then
         moviefiltermap=":s=v"
         moviefilteroutput="[v0]"

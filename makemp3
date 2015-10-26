@@ -1,93 +1,93 @@
 #!/bin/bash
 # makemp3
-version="1.0"
-unset dependencies
-dependencies=(ffmpeg normalize)
-suffix=""
-extension="mp3"
-relativepath="access/mp3"
+VERSION="1.0"
+unset DEPENDENCIES
+DEPENDENCIES=(ffmpeg normalize)
+SUFFIX=""
+EXTENSION="mp3"
+RELATIVEPATH="access/mp3"
 
-scriptdir=$(dirname "${0}")
-. "${scriptdir}/mmfunctions" || { echo "Missing '${scriptdir}/mmfunctions'. Exiting." ; exit 1 ;};
+SCRIPTDIR=$(dirname "${0}")
+. "${SCRIPTDIR}/mmfunctions" || { echo "Missing '${SCRIPTDIR}/mmfunctions'. Exiting." ; exit 1 ;};
 
-usage(){
+_usage(){
     echo
-    echo "$(basename "${0}") ${version}"
-    echo "This application will create an mp3 file from a video file or package input with the following options. By default the output will be written to ${outputdir}. You can override this with the -o option."
-    echo "Dependencies: ${dependencies[@]}"
+    echo "$(basename "${0}") ${VERSION}"
+    echo "This application will create an mp3 file from a video file or package input with the following options. By default the output will be written to ${OUTPUTDIR}. You can override this with the -o option."
+    echo "Dependencies: ${DEPENDENCIES[@]}"
     echo "Usage: $(basename "${0}") [ -o /directory/to/write/to/ ] fileorpackage1 [ fileorpackage2 ...]"
     echo "  -o directory ( directory to write the resulting file to )"
     echo "  -h ( display this help )"
     echo
     exit
 }
-[ "${#}" = 0 ] && usage
-check_dependencies "${dependencies[@]}"
+[ "${#}" = 0 ] && _usage
+_check_dependencies "${DEPENDENCIES[@]}"
 
-cleanup(){
+_cleanup(){
     _log -a "Process aborted"
     exit 1
 }
 
-trap cleanup SIGHUP SIGINT SIGTERM
+trap _cleanup SIGHUP SIGINT SIGTERM
 
 OPTIND=1
-while getopts ":ho:" opt; do
-    case "${opt}" in
-        h) usage ;;
-        o)             outputdir="${OPTARG}"
-            if [ ! -d "${outputdir}" ] ; then
-                report -wt "The output directory option, ${outputdir}, does not refer to an actual directory. Quitting."
+while getopts ":ho:" OPT; do
+    case "${OPT}" in
+        h) _usage ;;
+        o)             OUTPUTDIR="${OPTARG}"
+            if [ ! -d "${OUTPUTDIR}" ] ; then
+                _report -wt "The output directory option, ${OUTPUTDIR}, does not refer to an actual directory. Quitting."
                 exit 1
             fi
             ;;
-        *) echo "bad option -${OPTARG}" ; usage ;;
+        *) echo "bad option -${OPTARG}" ; _usage ;;
         :) echo "Option -${OPTARG} requires an argument" ; exit 1 ;;
     esac
 done
 shift $(( ${OPTIND} - 1 ))
 
 while [ "${*}" != "" ] ; do
-    input="${1}"
-    if [ -z "${outputdir}" ] ; then
-        [ -d "${input}" ] && { outputdir="${input}/objects/${relativepath}" && logdir="${input}/metadata/submissionDocumentation/logs" ;};
-        [ -f "${input}" ] && { outputdir=$(dirname "${input}")"/${relativepath}" && logdir="$(dirname "${input}")/${relativepath}/logs" ;};
-        [ ! "${outputdir}" ] && { outputdir="${input}/objects/${relativepath}" && logdir="${input}/metadata/submissionDocumentation/logs" ;};
+    INPUT="${1}"
+    if [ -z "${OUTPUTDIR}" ] ; then
+        [ -d "${INPUT}" ] && { OUTPUTDIR="${INPUT}/objects/${RELATIVEPATH}" && LOGDIR="${INPUT}/metadata/submissionDocumentation/logs" ;};
+        [ -f "${INPUT}" ] && { OUTPUTDIR=$(dirname "${INPUT}")"/${RELATIVEPATH}" && LOGDIR="$(dirname "${INPUT}")/${RELATIVEPATH}/logs" ;};
+        [ ! "${OUTPUTDIR}" ] && { OUTPUTDIR="${INPUT}/objects/${RELATIVEPATH}" && LOGDIR="${INPUT}/metadata/submissionDocumentation/logs" ;};
     else
-        logdir="${outputdir}/logs"
+        LOGDIR="${OUTPUTDIR}/logs"
     fi
 
-    _find_input "${input}"
+    _find_input "${INPUT}"
 
-    filename=$(basename "${sourcefile}")
-    mediaid=$(basename "${input}" | cut -d. -f1)
+    FILENAME=$(basename "${SOURCEFILE}")
+    MEDIAID=$(basename "${INPUT}" | cut -d. -f1)
 
     _log -b
 
     _set_up_output
     
-    unset inputoptions
-    unset middleoptions
-    inputoptions+=(-nostdin)
-    middleoptions+=(-map 0:a:0)
-    middleoptions+=(-ac 2)
-    middleoptions+=(-r:a 44100)
-    middleoptions+=(-sample_fmt s16p)
-    get_audio_mapping "${sourcefile}"
-    middleoptions+=(${audiomapping_ffmpeg[@]})
+    unset INPUTOPTIONS
+    unset MIDDLEOPTIONS
+    INPUTOPTIONS+=(-nostdin)
+    MIDDLEOPTIONS+=(-map 0:a:0)
+    MIDDLEOPTIONS+=(-ac 2)
+    MIDDLEOPTIONS+=(-r:a 44100)
+    MIDDLEOPTIONS+=(-sample_fmt s16p)
+    _get_audio_mapping "${SOURCEFILE}"
+    MIDDLEOPTIONS+=("${AUDIOMAPPING_FFMPEG[@]}")
 
-    if [ "${logdir}" != "" ] ; then
-        mkdir -p "${logdir}"
-        export FFREPORT="file=${logdir}/%p_%t_$(basename "${0}")_${version}.txt"
-        inputoptions+=(-v warning -stats)
+    if [ "${LOGDIR}" != "" ] ; then
+        mkdir -p "${LOGDIR}"
+        export FFREPORT="file=${LOGDIR}/%p_%t_$(basename "${0}")_${VERSION}.txt"
+        INPUTOPTIONS+=(-v warning -stats)
     fi
-    report -dt "Working on $(basename "${output}")."
-    report -dt "Running: ffmpeg ${inputoptions[@]} -i \"${sourcefile}\" ${middleoptions[@]} \"${output}\""
-    ffmpeg ${inputoptions[@]} -i "${sourcefile}" ${middleoptions[@]} "${output}"
-    report -dt "Adjusting highest audio peak to full scale..."
-    normalize --peak -v "${output}"
+    _report -dt "Working on $(basename "${OUTPUT}")."
+    _report -dt "Running: ffmpeg ${INPUTOPTIONS[@]} -i \"${SOURCEFILE}\" ${MIDDLEOPTIONS[@]} \"${OUTPUT}\""
+    ffmpeg "${INPUTOPTIONS[@]}" -i "${SOURCEFILE}" "${MIDDLEOPTIONS[@]}" "${OUTPUT}"
+    _report -dt "Adjusting highest audio peak to full scale..."
+    normalize --peak -v "${OUTPUT}"
     echo
-    report -dt "$(basename ${output}) is done."
+    _report -dt "$(basename ${OUTPUT}) is done."
     shift
     _log -e
 done

@@ -4,21 +4,21 @@
 # v 1.2 revert to mov and ffmbc
 # v 1.3 revert back to ffmpeg
 # v 1.4 adjust handling volume adjustment argument
-version="1.4"
+VERSION="1.4"
 VOLADJUST="Y"
-scriptdir=$(dirname $(which "${0}"))
-. "${scriptdir}/mmfunctions" || { echo "Missing '${scriptdir}/mmfunctions'. Exiting." ; exit 1 ;};
-dependencies=(ffmpeg ffprobe)
+SCRIPTDIR=$(dirname $(which "${0}"))
+. "${SCRIPTDIR}/mmfunctions" || { echo "Missing '${SCRIPTDIR}/mmfunctions'. Exiting." ; exit 1 ;};
+DEPENDENCIES=(ffmpeg ffprobe)
 _initialize_make
-suffix=""
-extension="mov"
-relativepath="service"
+SUFFIX=""
+EXTENSION="mov"
+RELATIVEPATH="service"
 
 _usage(){
     echo
-    echo "$(basename "${0}") ${version}"
+    echo "$(basename "${0}") ${VERSION}"
     echo "This application will create a file suitable for broadcast or editing from a video file or package input with the following options."
-    echo "Dependencies: ${dependencies[@]}"
+    echo "Dependencies: ${DEPENDENCIES[@]}"
     echo "Usage: $(basename "${0}") [ -l ] [ -r ] [ -c ] fileorpackage1 [ fileorpackage2 ...]"
     echo "  -F (apply a formula, override default settings)"
     echo "  -l (only use the left channel of the first audio track)"
@@ -38,205 +38,205 @@ _usage(){
 
 # command-line options to set mediaid and original variables
 OPTIND=1
-while getopts ":F:lrcv:o:d:e:E:nh" opt ; do
-    case "${opt}" in
-        F) formula="${OPTARG}";;
-        l) audiomap="L";;
-        r) audiomap="R";;
-        c) cropdetect="Y" ;;
+while getopts ":F:lrcv:o:d:e:E:nh" OPT ; do
+    case "${OPT}" in
+        F) FORMULA="${OPTARG}";;
+        l) AUDIOMAP="L";;
+        r) AUDIOMAP="R";;
+        c) CROPDETECT="Y" ;;
         v) VOLADJUST="${OPTARG}";;
-        o) outputdir_forced="$OPTARG" && _check_outputdir_forced ;;
-        d) deliverdir="$OPTARG" && check_deliverdir ;;
-        e) emailaddress_delivery="$OPTARG" && check_emailaddress "${emailaddress_delivery}" ;;
-        E) emailaddress_outcome="$OPTARG" && check_emailaddress "${emailaddress_outcome}" ;;
+        o) OUTPUTDIR_FORCED="${OPTARG}" && _check_outputdir_forced ;;
+        d) DELIVERDIR="${OPTARG}" && _check_deliverdir ;;
+        e) EMAILADDRESS_DELIVERY="${OPTARG}" && check_emailaddress "${EMAILADDRESS_DELIVERY}" ;;
+        E) EMAILADDRESS_OUTCOME="${OPTARG}" && check_emailaddress "${EMAILADDRESS_OUTCOME}" ;;
         n) DRYRUN=true;;
         h) _usage ;;
-        *) echo "bad option -$OPTARG" ; _usage ;;
-        :) echo "Option -$OPTARG requires an argument" ; exit 1 ;;
+        *) echo "bad option -${OPTARG}" ; _usage ;;
+        :) echo "Option -${OPTARG} requires an argument" ; exit 1 ;;
     esac
 done
 shift $(( ${OPTIND} - 1 ))
 
 while [ "${*}" != "" ] ; do
     # get context about the input
-    input="${1}"
+    INPUT="${1}"
     shift
-    if [ -z "${outputdir_forced}" ] ; then
-        [ -d "${input}" ] && { outputdir="${input}/objects/${relativepath}" && logdir="${input}/metadata/submissionDocumentation/logs" ;};
-        [ -f "${input}" ] && { outputdir=$(dirname "${input}")"/${relativepath}" && logdir="$(dirname "${input}")/${relativepath}/logs" ;};
-        [ ! "${outputdir}" ] && { outputdir="${input}/objects/${relativepath}" && logdir="${input}/metadata/submissionDocumentation/logs" ;};
+    if [ -z "${OUTPUTDIR_FORCED}" ] ; then
+        [ -d "${INPUT}" ] && { OUTPUTDIR="${INPUT}/objects/${RELATIVEPATH}" && LOGDIR="${INPUT}/metadata/submissionDocumentation/logs" ;};
+        [ -f "${INPUT}" ] && { OUTPUTDIR=$(dirname "${INPUT}")"/${RELATIVEPATH}" && LOGDIR="$(dirname "${INPUT}")/${RELATIVEPATH}/logs" ;};
+        [ ! "${OUTPUTDIR}" ] && { OUTPUTDIR="${INPUT}/objects/${RELATIVEPATH}" && LOGDIR="${INPUT}/metadata/submissionDocumentation/logs" ;};
     else
-        outputdir="${outputdir_forced}"
-        logdir="${outputdir}/logs"
+        OUTPUTDIR="${OUTPUTDIR_FORCED}"
+        LOGDIR="${OUTPUTDIR}/logs"
     fi
-    _find_input "${input}"
-    mediaid=$(basename "${input}" | cut -d. -f1)
-    ingestlog="${logdir}/capture.log"
+    _find_input "${INPUT}"
+    MEDIAID=$(basename "${INPUT}" | cut -d. -f1)
+    INGESTLOG="${LOGDIR}/capture.log"
 
     _set_up_output
 
     # clear local arrays
-    intime=""
-    outtime=""
+    INTIME=""
+    OUTTIME=""
     audio_adjustment=""
-    unset inputoptions
-    unset middleoptions
-    unset middleoptionsxdcam
-    unset middleoptionsimx
-    unset audiomapping_ffmpeg
-    filterchain_start=""
-    get_videostreamcount "${sourcefile}"
-    get_audiostreamcount "${sourcefile}"
+    unset INPUTOPTIONS
+    unset MIDDLEOPTIONS
+    unset MIDDLEOPTIONSXDCAM
+    unset MIDDLEOPTIONSIMX
+    unset AUDIOMAPPING_FFMPEG
+    FILTERCHAIN_START=""
+    _get_videostreamcount "${SOURCEFILE}"
+    _get_audiostreamcount "${SOURCEFILE}"
 
 
     if [[ "${VIDEOSTREAMCOUNT}" > 0 ]] ; then
         # get information on the input
-        get_sar "${sourcefile}"
-        if [ "${cropdetect}" = "Y" ] ; then
-            get_cropdetection "${sourcefile}"
-            filterchain_start="${filterchain_start}${CROPADJ},"
-            width=$(echo "${CROPADJ}" | cut -d= -f2 | cut -d: -f1)
-            height=$(echo "${CROPADJ}" | cut -d= -f2 | cut -d: -f2)
-            dar="(${width}/${height})*${sar}"
+        _get_sar "${SOURCEFILE}"
+        if [ "${CROPDETECT}" = "Y" ] ; then
+            _get_cropdetection "${SOURCEFILE}"
+            FILTERCHAIN_START="${FILTERCHAIN_START}${CROPADJ},"
+            WIDTH=$(echo "${CROPADJ}" | cut -d= -f2 | cut -d: -f1)
+            HEIGHT=$(echo "${CROPADJ}" | cut -d= -f2 | cut -d: -f2)
+            DAR="(${WIDTH}/${HEIGHT})*${SAR}"
         else
-            get_width "${sourcefile}"
-            get_height "${sourcefile}"
-            get_dar "${sourcefile}"
+            _get_width "${SOURCEFILE}"
+            _get_height "${SOURCEFILE}"
+            _get_dar "${SOURCEFILE}"
         fi
 
         # set in and out times if used
-        if [[ -f "${ingestlog}" && "${isobject}" = "Y" ]] ; then
-            if [ ! ${formula} ] ; then
-                formula=$(_readingestlog "formula")
+        if [[ -f "${INGESTLOG}" && "${ISOBJECT}" = "Y" ]] ; then
+            if [ ! "${FORMULA}" ] ; then
+                FORMULA=$(_readingestlog "FORMULA")
             fi
-            intime=$(_readingestlog "intime")
-            outtime=$(_readingestlog "outtime")
-            if [[ "${intime}" ]] ; then
-                report -dt "ATTENTION: Transcoding will use intime (${intime}) during transcoding."
-                inputoptions+=(-seek_timestamp 1)
-                middleoptions+=(-ss "${intime}")
+            INTIME=$(_readingestlog "intime")
+            OUTTIME=$(_readingestlog "outtime")
+            if [[ "${INTIME}" ]] ; then
+                _report -dt "ATTENTION: Transcoding will use intime (${INTIME}) during transcoding."
+                INPUTOPTIONS+=(-seek_timestamp 1)
+                MIDDLEOPTIONS+=(-ss "${INTIME}")
             fi
-            if [[ "${outtime}" ]] ; then
-                report -dt "ATTENTION: Transcoding will use outtime (${outtime}) during transcoding."
-                middleoptions+=(-to "${outtime}")
+            if [[ "${OUTTIME}" ]] ; then
+                _report -dt "ATTENTION: Transcoding will use outtime (${OUTTIME}) during transcoding."
+                MIDDLEOPTIONS+=(-to "${OUTTIME}")
             fi
         fi
 
         #options for either xdcam or imx
-        middleoptions+=(-r ntsc)
-        middleoptions+=(-c:v mpeg2video)
-        middleoptions+=(-intra_vlc 1)
-        middleoptions+=(-non_linear_quant 1)
-        middleoptions+=(-qmin 1)
-        middleoptions+=(-dc 10)
-        middleoptions+=(-lmin QP2LAMBDA)
-        middleoptions+=(-ps 1)
-        middleoptions+=(-flags +ildct+ilme)
-        middleoptions+=(-pix_fmt yuv422p)
-        middleoptions+=(-metadata:s:v:0 timecode=00:00:00.00)
+        MIDDLEOPTIONS+=(-r ntsc)
+        MIDDLEOPTIONS+=(-c:v mpeg2video)
+        MIDDLEOPTIONS+=(-intra_vlc 1)
+        MIDDLEOPTIONS+=(-non_linear_quant 1)
+        MIDDLEOPTIONS+=(-qmin 1)
+        MIDDLEOPTIONS+=(-dc 10)
+        MIDDLEOPTIONS+=(-lmin QP2LAMBDA)
+        MIDDLEOPTIONS+=(-ps 1)
+        MIDDLEOPTIONS+=(-flags +ildct+ilme)
+        MIDDLEOPTIONS+=(-pix_fmt yuv422p)
+        MIDDLEOPTIONS+=(-metadata:s:v:0 timecode=00:00:00.00)
 
         #xdcam options
-        middleoptionsxdcam+=(-s 1920x1080)
-        middleoptionsxdcam+=(-vtag xd5b)
-        middleoptionsxdcam+=(-aspect 16:9)
-        middleoptionsxdcam+=(-q:v 1)
-        middleoptionsxdcam+=(-qmax 8)
-        middleoptionsxdcam+=(-g 15)
-        middleoptionsxdcam+=(-bf 2)
-        middleoptionsxdcam+=(-b:v 50M)
-        middleoptionsxdcam+=(-maxrate:v 50M)
-        middleoptionsxdcam+=(-minrate:v 50M)
-        middleoptionsxdcam+=(-bufsize 17825792)
-        middleoptionsxdcam+=(-rc_init_occupancy 17825792)
+        MIDDLEOPTIONSXDCAM+=(-s 1920x1080)
+        MIDDLEOPTIONSXDCAM+=(-vtag xd5b)
+        MIDDLEOPTIONSXDCAM+=(-aspect 16:9)
+        MIDDLEOPTIONSXDCAM+=(-q:v 1)
+        MIDDLEOPTIONSXDCAM+=(-qmax 8)
+        MIDDLEOPTIONSXDCAM+=(-g 15)
+        MIDDLEOPTIONSXDCAM+=(-bf 2)
+        MIDDLEOPTIONSXDCAM+=(-b:v 50M)
+        MIDDLEOPTIONSXDCAM+=(-maxrate:v 50M)
+        MIDDLEOPTIONSXDCAM+=(-minrate:v 50M)
+        MIDDLEOPTIONSXDCAM+=(-bufsize 17825792)
+        MIDDLEOPTIONSXDCAM+=(-rc_init_occupancy 17825792)
 
         # imx options
-        middleoptionsimx+=(-aspect 4:3)
-        middleoptionsimx+=(-qmax 12)
-        middleoptionsimx+=(-g 1)
-        middleoptionsimx+=(-top 1)
-        middleoptionsimx+=(-intra)
-        middleoptionsimx+=(-b:v 30M)
-        middleoptionsimx+=(-maxrate:v 30M)
-        middleoptionsimx+=(-minrate:v 30M)
-        middleoptionsimx+=(-bufsize 1001000)
-        middleoptionsimx+=(-rc_init_occupancy 1001000)
-        middleoptionsimx+=(-rc_max_vbv_use 1)
-        middleoptionsimx+=(-rc_min_vbv_use 1)
-        middleoptionsimx+=(-rc_buf_aggressivity 0.25)
-        middleoptionsimx+=(-vbsf imxdump)
-        middleoptionsimx+=(-tag:v mx3n)
+        MIDDLEOPTIONSIMX+=(-aspect 4:3)
+        MIDDLEOPTIONSIMX+=(-qmax 12)
+        MIDDLEOPTIONSIMX+=(-g 1)
+        MIDDLEOPTIONSIMX+=(-top 1)
+        MIDDLEOPTIONSIMX+=(-intra)
+        MIDDLEOPTIONSIMX+=(-b:v 30M)
+        MIDDLEOPTIONSIMX+=(-maxrate:v 30M)
+        MIDDLEOPTIONSIMX+=(-minrate:v 30M)
+        MIDDLEOPTIONSIMX+=(-bufsize 1001000)
+        MIDDLEOPTIONSIMX+=(-rc_init_occupancy 1001000)
+        MIDDLEOPTIONSIMX+=(-rc_max_vbv_use 1)
+        MIDDLEOPTIONSIMX+=(-rc_min_vbv_use 1)
+        MIDDLEOPTIONSIMX+=(-rc_buf_aggressivity 0.25)
+        MIDDLEOPTIONSIMX+=(-vbsf imxdump)
+        MIDDLEOPTIONSIMX+=(-tag:v mx3n)
 
         # decide on an output codec, aspect ratio, and padding strategy
-        darratio=$(echo "scale=3 ; ${dar}" | bc)
-        if [ "${formula}" = "tff" ] ; then
-            filterchain_start="${filterchain_start}setfield=tff,"
-        elif [ "${formula}" = "bff" ] ; then
-            filterchain_start="${filterchain_start}setfield=bff,"
+        DARRATIO=$(echo "scale=3 ; ${DAR}" | bc)
+        if [ "${FORMULA}" = "tff" ] ; then
+            FILTERCHAIN_START="${FILTERCHAIN_START}setfield=tff,"
+        elif [ "${FORMULA}" = "bff" ] ; then
+            FILTERCHAIN_START="${FILTERCHAIN_START}setfield=bff,"
         fi
-        get_fieldorder "${sourcefile}"
-        if [ "${fieldorder}" != "tff" ] ; then
-            filterchain_start="${filterchain_start}fieldorder=tff,"
+        _get_fieldorder "${SOURCEFILE}"
+        if [ "${FIELDORDER}" != "tff" ] ; then
+            FILTERCHAIN_START="${FILTERCHAIN_START}FIELDORDER=tff,"
         fi
-        if [ "${formula}" = "hds" ] ; then
-            middleoptions+=(-vf "${filterchain_start}scale=size=hd1080:interl=1,format=yuv422p,setsar=1/1,setdar=16/9,fps=fps=ntsc")
-            middleoptions+=(${middleoptionsxdcam[@]})
-        elif [ "${darratio}" = "1.777" -a ! "${cropdetect}" = "Y" ] ; then
-            middleoptions+=(-vf "${filterchain_start}scale=size=hd1080:interl=1,format=yuv422p,setsar=1/1,setdar=16/9,fps=fps=ntsc")
-            middleoptions+=(${middleoptionsxdcam[@]})
-        elif [ $(echo "scale=3 ; ${darratio} > (16/9)" | bc -l) = 1 ] ; then
-            middleoptions+=(-vf "${filterchain_start}pad=${width}:${width}*(9/16)*(${sar}):(ow-${width})/2:(oh-${height})/2,scale=size=hd1080:interl=1")
-            middleoptions+=(${middleoptionsxdcam[@]})
-        elif [ $(echo "scale=3 ; $darratio > (3/2)" | bc -l) = 1 ] ; then
-            middleoptions+=(-vf "${filterchain_start}pad=${height}*(16/9)/(${sar}):${height}:(ow-${width})/2:(oh-${height})/2,scale=size=hd1080:interl=1")
-            middleoptions+=(${middleoptionsxdcam[@]})
-        elif [ "$width" = "720" -a "$height" = "480" -a $(echo "scale=3 ; $darratio < (3/2)" | bc -l) = 1 -a ! "$cropdetect" = "Y" ] ; then
-            middleoptions+=(-vf ${filterchain_start}pad=720:512:0:24,setsar=1/1,setdar=4/3)
-            middleoptions+=(${middleoptionsimx[@]})
-        elif [ "${height}" -eq "486" -a "${width}" -eq "720" ] ; then
-            middleoptions+=(-vf "${filterchain_start}crop=720:480:0:4,pad=720:512:0:24,setsar=1/1,setdar=4/3")
-            middleoptions+=(${middleoptionsimx[@]})
-        elif  [ "${height}" -eq "512" -a "${width}" -eq "720" ] ;then
-            middleoptions+=(-vf "${filterchain_start}crop=720:480:0:32,pad=720:512:0:24,setsar=1/1,setdar=4/3")
-            middleoptions+=(${middleoptionsimx[@]})
+        if [ "${FORMULA}" = "hds" ] ; then
+            MIDDLEOPTIONS+=(-vf "${FILTERCHAIN_START}scale=size=hd1080:interl=1,format=yuv422p,setsar=1/1,setdar=16/9,fps=fps=ntsc")
+            MIDDLEOPTIONS+=("${MIDDLEOPTIONSXDCAM[@]}")
+        elif [ "${DARRATIO}" = "1.777" -a ! "${CROPDETECT}" = "Y" ] ; then
+            MIDDLEOPTIONS+=(-vf "${FILTERCHAIN_START}scale=size=hd1080:interl=1,format=yuv422p,setsar=1/1,setdar=16/9,fps=fps=ntsc")
+            MIDDLEOPTIONS+=("${MIDDLEOPTIONSXDCAM[@]}")
+        elif [ $(echo "scale=3 ; ${DARRATIO} > (16/9)" | bc -l) = 1 ] ; then
+            MIDDLEOPTIONS+=(-vf "${FILTERCHAIN_START}pad=${WIDTH}:${WIDTH}*(9/16)*(${SAR}):(ow-${WIDTH})/2:(oh-${HEIGHT})/2,scale=size=hd1080:interl=1")
+            MIDDLEOPTIONS+=("${MIDDLEOPTIONSXDCAM[@]}")
+        elif [ $(echo "scale=3 ; $DARRATIO > (3/2)" | bc -l) = 1 ] ; then
+            MIDDLEOPTIONS+=(-vf "${FILTERCHAIN_START}pad=${HEIGHT}*(16/9)/(${SAR}):${HEIGHT}:(ow-${WIDTH})/2:(oh-${HEIGHT})/2,scale=size=hd1080:interl=1")
+            MIDDLEOPTIONS+=("${MIDDLEOPTIONSXDCAM[@]}")
+        elif [ "${WIDTH}" = "720" -a "${HEIGHT}" = "480" -a $(echo "scale=3 ; ${DARRATIO} < (3/2)" | bc -l) = 1 -a ! "${CROPDETECT}" = "Y" ] ; then
+            MIDDLEOPTIONS+=(-vf "${FILTERCHAIN_START}"pad=720:512:0:24,setsar=1/1,setdar=4/3)
+            MIDDLEOPTIONS+=("${MIDDLEOPTIONSIMX[@]}")
+        elif [ "${HEIGHT}" -eq "486" -a "${WIDTH}" -eq "720" ] ; then
+            MIDDLEOPTIONS+=(-vf "${FILTERCHAIN_START}crop=720:480:0:4,pad=720:512:0:24,setsar=1/1,setdar=4/3")
+            MIDDLEOPTIONS+=("${MIDDLEOPTIONSIMX[@]}")
+        elif  [ "${HEIGHT}" -eq "512" -a "${WIDTH}" -eq "720" ] ;then
+            MIDDLEOPTIONS+=(-vf "${FILTERCHAIN_START}crop=720:480:0:32,pad=720:512:0:24,setsar=1/1,setdar=4/3")
+            MIDDLEOPTIONS+=("${MIDDLEOPTIONSIMX[@]}")
         else
-            middleoptions+=(-vf "${filterchain_start}scale=720:480,pad=720:512:0:24,setsar=1/1,setdar=4/3")
-            middleoptions+=(${middleoptionsimx[@]})
+            MIDDLEOPTIONS+=(-vf "${FILTERCHAIN_START}scale=720:480,pad=720:512:0:24,setsar=1/1,setdar=4/3")
+            MIDDLEOPTIONS+=("${MIDDLEOPTIONSIMX[@]}")
         fi
     fi
 
     if [[ "${AUDIOSTREAMCOUNT}" > 0 ]] ; then
-        get_audio_index "${sourcefile}"
-        if [ "${audiomap}" = "L" ] ; then
-            audiomapping_ffmpeg=(-map_channel 0.${audio_index_1}.0)
-        elif [ "${audiomap}" = "R" ] ; then
-            audiomapping_ffmpeg=(-map_channel 0.${audio_index_1}.1)
+        _get_audio_index "${SOURCEFILE}"
+        if [ "${AUDIOMAP}" = "L" ] ; then
+            AUDIOMAPPING_FFMPEG=(-map_channel 0.${AUDIO_INDEX_1}.0)
+        elif [ "${AUDIOMAP}" = "R" ] ; then
+            AUDIOMAPPING_FFMPEG=(-map_channel 0.${AUDIO_INDEX_1}.1)
         else
-            get_audio_mapping "${sourcefile}"
+            _get_audio_mapping "${SOURCEFILE}"
         fi
-        middleoptions+=(${audiomapping_ffmpeg[@]})
+        MIDDLEOPTIONS+=("${AUDIOMAPPING_FFMPEG[@]}")
         # add audio options
-        middleoptions+=(-acodec pcm_s24be)
-        middleoptions+=(-ar 48k)
-        middleoptions+=(-ac 2)
+        MIDDLEOPTIONS+=(-acodec pcm_s24be)
+        MIDDLEOPTIONS+=(-ar 48k)
+        MIDDLEOPTIONS+=(-ac 2)
     fi
 
     # set input options for ffmpeg
-    get_codectagstring "${sourcefile}"
-    inputoptions+=(-y)
-    inputoptions+=(-nostdin)
-    if [[ "${codec_tag_string}" == "mjp2" ]] ; then
-         inputoptions+=(-vcodec libopenjpeg)
+    _get_codectagstring "${SOURCEFILE}"
+    INPUTOPTIONS+=(-y)
+    INPUTOPTIONS+=(-nostdin)
+    if [[ "${CODEC_TAG_STRING}" == "mjp2" ]] ; then
+         INPUTOPTIONS+=(-vcodec libopenjpeg)
     fi
 
     # log process
     _prep_ffmpeg_log
     _prep_volume_adjustment
-    if [ "${concatsource}" != "" ] ; then
-        ffmpeginput="${concatsource}"
+    if [ "${CONCATSOURCE}" != "" ] ; then
+        FFMPEGINPUT="${CONCATSOURCE}"
     else
-        ffmpeginput="${sourcefile}"
+        FFMPEGINPUT="${SOURCEFILE}"
     fi
-    _run_critical ffmpeg ${inputoptions[@]} -i "${ffmpeginput}" ${middleoptions[@]} "${output}"
+    _run_critical ffmpeg "${INPUTOPTIONS[@]}" -i "${FFMPEGINPUT}" "${MIDDLEOPTIONS[@]}" "${OUTPUT}"
     echo
     _summarize_make
     _deliver_output "${MAKEBROADCAST_DELIVERY_EMAIL_TO}"

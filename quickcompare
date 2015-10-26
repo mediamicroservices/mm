@@ -2,20 +2,20 @@
 checksize=512000
 # quick file compare, not completely authoritative but decent in a short amount of time
 
-scriptdir=$(dirname "${0}")
-. "${scriptdir}/mmfunctions" || { echo "Missing '${scriptdir}/mmfunctions'. Exiting." ; exit 1 ;};
+SCRIPTDIR=$(dirname "${0}")
+. "${SCRIPTDIR}/mmfunctions" || { echo "Missing '${SCRIPTDIR}/mmfunctions'. Exiting." ; exit 1 ;};
 
-cleanup(){
+_cleanup(){
     _log -a "Process aborted"
     exit 1
 }
 
-trap cleanup SIGHUP SIGINT SIGTERM
+trap _cleanup SIGHUP SIGINT SIGTERM
 _log -b
 
-[ ! "$#" = "2" ] && { echo Use two possibly similar files are arguments. ; exit 1 ;};
+[ ! "${#}" = "2" ] && { echo Use two possibly similar files are arguments. ; exit 1 ;};
 #[ ! $(du "${1}" | cut -f1) = $(du "$2" | cut -f1) ] && echo The files are different sizes
-[ ! $(head -c "$checksize" "${1}" | md5) = $(head -c "$checksize" "$2" | md5) ] && echo The first "$checksize" bytes have different md5s.
-[ ! $(tail -c "$checksize" "${1}" | md5) = $(tail -c "$checksize" "$2" | md5) ] && echo The last "$checksize" bytes have different md5s.
+[ ! $(head -c "${CHECKSIZE}" "${1}" | md5) = $(head -c "${CHECKSIZE}" "${2}" | md5) ] && echo The first "${CHECKSIZE}" bytes have different md5s.
+[ ! $(tail -c "${CHECKSIZE}" "${1}" | md5) = $(tail -c "${CHECKSIZE}" "${2}" | md5) ] && echo The last "${CHECKSIZE}" bytes have different md5s.
 
 _log -e

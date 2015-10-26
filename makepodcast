@@ -1,20 +1,20 @@
 #!/bin/bash
 # makepodcast, makes a file appropriate for podcasting
-version="1.0"
-scriptdir=$(dirname $(which "${0}"))
-. "${scriptdir}/mmfunctions" || { echo "Missing '${scriptdir}/mmfunctions'. Exiting." ; exit 1 ;};
-dependencies=(ffmpeg ffprobe)
+VERSION="1.0"
+SCRIPTDIR=$(dirname $(which "${0}"))
+. "${SCRIPTDIR}/mmfunctions" || { echo "Missing '${SCRIPTDIR}/mmfunctions'. Exiting." ; exit 1 ;};
+DEPENDENCIES=(ffmpeg ffprobe)
 _initialize_make
-suffix="_podcast"
-extension="mov"
-relativepath="access/podcast"
+SUFFIX="_podcast"
+EXTENSION="mov"
+RELATIVEPATH="access/podcast"
 
-usage(){
+_usage(){
     echo
-    echo "$(basename "${0}") ${version}"
+    echo "$(basename "${0}") ${VERSION}"
     echo "This application will create a QuickTime file suitable for podcasting from a video file or package input with the following options."
-    echo "Dependencies: ${dependencies[@]}"
-    echo "Usage: $(basename $0) [ -d /path/to/deliver/to/ ] fileorpackage1 [ fileorpackage2 ...]"
+    echo "Dependencies: ${DEPENDENCIES[@]}"
+    echo "Usage: $(basename ${0}) [ -d /path/to/deliver/to/ ] fileorpackage1 [ fileorpackage2 ...]"
     echo "  -d directory ( directory to deliver the resulting file to )"
     echo "  -o directory ( directory to write the resulting file to )"
     echo "  -n (dry-run mode, show the commands that would be run but don't do anything)"
@@ -24,76 +24,76 @@ usage(){
     echo
     exit
 }
-[ "${#}" = 0 ] && usage
+[ "${#}" = 0 ] && _usage
 
 # command-line options to set mediaid and original variables
 OPTIND=1
-while getopts ":o:d:e:E:nh" opt ; do
-    case "${opt}" in
-        o) outputdir_forced="$OPTARG" && _check_outputdir_forced ;;
-        d) deliverdir="$OPTARG" && check_deliverdir ;;
-        e) emailaddress_delivery="$OPTARG" && check_emailaddress "${emailaddress_delivery}" ;;
-        E) emailaddress_outcome="$OPTARG" && check_emailaddress "${emailaddress_outcome}" ;;
+while getopts ":o:d:e:E:nh" OPT ; do
+    case "${OPT}" in
+        o) OUTPUTDIR_FORCED="${OPTARG}" && _check_outputdir_forced ;;
+        d) DELIVERDIR="${OPTARG}" && _check_deliverdir ;;
+        e) EMAILADDRESS_DELIVERY="${OPTARG}" && check_emailaddress "${EMAILADDRESS_DELIVERY}" ;;
+        E) EMAILADDRESS_OUTCOME="${OPTARG}" && check_emailaddress "${EMAILADDRESS_OUTCOME}" ;;
         n) DRYRUN=true;;
-        h) usage ;;
-        *) echo "bad option -$OPTARG" ; usage ;;
-        :) echo "Option -$OPTARG requires an argument" ; exit 1 ;;
+        h) _usage ;;
+        *) echo "bad option -${OPTARG}" ; _usage ;;
+        :) echo "Option -${OPTARG} requires an argument" ; exit 1 ;;
     esac
 done
 shift $(( ${OPTIND} - 1 ))
 
 while [ "${*}" != "" ] ; do
     # get context about the input
-    input="${1}"
+    INPUT="${1}"
     shift
-    if [ -z "${outputdir_forced}" ] ; then
-        [ -d "${input}" ] && { outputdir="$input/objects/${relativepath}" && logdir="${input}/metadata/submissionDocumentation/logs" ;};
-        [ -f "${input}" ] && { outputdir=$(dirname "${input}")"/${relativepath}" && logdir="$(dirname "${input}")/${relativepath}/logs" ;};
-        [ ! "${outputdir}" ] && { outputdir="${input}/objects/${relativepath}" && logdir="${input}/metadata/submissionDocumentation/logs" ;};
+    if [ -z "${OUTPUTDIR_FORCED}" ] ; then
+        [ -d "${INPUT}" ] && { OUTPUTDIR="$INPUT/objects/${RELATIVEPATH}" && LOGDIR="${INPUT}/metadata/submissionDocumentation/logs" ;};
+        [ -f "${INPUT}" ] && { OUTPUTDIR=$(dirname "${INPUT}")"/${RELATIVEPATH}" && LOGDIR="$(dirname "${INPUT}")/${RELATIVEPATH}/logs" ;};
+        [ ! "${OUTPUTDIR}" ] && { OUTPUTDIR="${INPUT}/objects/${RELATIVEPATH}" && LOGDIR="${INPUT}/metadata/submissionDocumentation/logs" ;};
     else
-        outputdir="${outputdir_forced}"
-        logdir="${outputdir}/logs"
+        OUTPUTDIR="${OUTPUTDIR_FORCED}"
+        LOGDIR="${OUTPUTDIR}/logs"
     fi
-    _find_input "${input}"
-    mediaid=$(basename "${input}" | cut -d. -f1)
+    _find_input "${INPUT}"
+    MEDIAID=$(basename "${INPUT}" | cut -d. -f1)
 
     _set_up_output
 
     # clear local arrays
-    unset inputoptions
-    unset middleoptions
+    unset INPUTOPTIONS
+    unset MIDDLEOPTIONS
 
     # encoding options
-    get_codectagstring "${sourcefile}"
-    get_videostreamcount "${sourcefile}"
-    get_audiostreamcount "${sourcefile}"
-    inputoptions+=(-nostdin)
+    _get_codectagstring "${SOURCEFILE}"
+    _get_videostreamcount "${SOURCEFILE}"
+    _get_audiostreamcount "${SOURCEFILE}"
+    INPUTOPTIONS+=(-nostdin)
     if [[ "${VIDEOSTREAMCOUNT}" > 0 ]] ; then
-        if [[ "${codec_tag_string}" == "mjp2" ]] ; then
-             inputoptions+=(-vcodec libopenjpeg)
+        if [[ "${CODEC_TAG_STRING}" == "mjp2" ]] ; then
+             INPUTOPTIONS+=(-vcodec libopenjpeg)
         fi
-        middleoptions+=(-movflags faststart)
-        middleoptions+=(-pix_fmt yuv420p)
-        middleoptions+=(-c:v libx264)
-        middleoptions+=(-b:v 1500k)
-        middleoptions+=(-maxrate:v 3000k)
-        middleoptions+=(-minrate:v 375k)
-        middleoptions+=(-bufsize:v 6000k)
-        middleoptions+=(-vf "yadif,scale=640:trunc(ow/dar/2)*2:interl=1")
+        MIDDLEOPTIONS+=(-movflags faststart)
+        MIDDLEOPTIONS+=(-pix_fmt yuv420p)
+        MIDDLEOPTIONS+=(-c:v libx264)
+        MIDDLEOPTIONS+=(-b:v 1500k)
+        MIDDLEOPTIONS+=(-maxrate:v 3000k)
+        MIDDLEOPTIONS+=(-minrate:v 375k)
+        MIDDLEOPTIONS+=(-bufsize:v 6000k)
+        MIDDLEOPTIONS+=(-vf "yadif,scale=640:trunc(ow/dar/2)*2:interl=1")
     fi
     if [[ "${AUDIOSTREAMCOUNT}" > 0 ]] ; then
-        middleoptions+=(-c:a aac -strict -2)
-        middleoptions+=(-b:a 96k)
-        get_audio_mapping "${sourcefile}"
-        middleoptions+=(${audiomapping_ffmpeg[@]})
+        MIDDLEOPTIONS+=(-c:a aac -strict -2)
+        MIDDLEOPTIONS+=(-b:a 96k)
+        _get_audio_mapping "${SOURCEFILE}"
+        MIDDLEOPTIONS+=("${AUDIOMAPPING_FFMPEG[@]}")
     fi
     _prep_ffmpeg_log
-    if [ "${concatsource}" != "" ] ; then
-        ffmpeginput="${concatsource}"
+    if [ "${CONCATSOURCE}" != "" ] ; then
+        FFMPEGINPUT="${CONCATSOURCE}"
     else
-        ffmpeginput="${sourcefile}"
+        FFMPEGINPUT="${SOURCEFILE}"
     fi
-    _run_critical ffmpeg ${inputoptions[@]} -i "${ffmpeginput}" ${middleoptions[@]} "${output}"
+    _run_critical ffmpeg "${INPUTOPTIONS[@]}" -i "${FFMPEGINPUT}" "${MIDDLEOPTIONS[@]}" "${OUTPUT}"
     echo
     _summarize_make
     _deliver_output "${MAKEYOUTUBE_DELIVERY_EMAIL_TO}"
