@@ -136,15 +136,12 @@ _run_critical(){
 
 black_at_ends(){
     input_movie="${1}"
-    name=$(basename "${input_movie}")
     analysis_head_seconds=10
-    analysis_tail_seconds=10
-    report -dt "Analyzing ${name} for excessive black at head or tail."
-    duration=$(ffprobe "${1}"  -show_format 2> /dev/null | grep "^duration=" | cut -d= -f2 | cut -d. -f1)
-    tail_start=$(echo "${duration} - ${analysis_tail_seconds}" | bc)
+    analysis_tail_seconds=-10
+    report -dt "Analyzing $(basename "${input_movie}") for excessive black at head or tail."
     head_black=$(ffmpeg -t "${analysis_head_seconds}" -i "${1}" -an -vf blackdetect=pix_th=0.05 -loglevel debug -f null - 2>&1 | grep -c -o picture_black_ratio:1)
     report -dt "Black frames in first ${analysis_head_seconds} seconds: ${head_black}."
-    tail_black=$(ffmpeg -ss "${tail_start}" -i "${1}" -an -vf blackdetect=pix_th=0.05 -loglevel debug -f null - 2>&1 | grep -c -o picture_black_ratio:1)
+    tail_black=$(ffmpeg -sseof "${analysis_tail_seconds}" -i "${1}" -an -vf blackdetect=pix_th=0.05 -loglevel debug -f null - 2>&1 | grep -c -o picture_black_ratio:1)
     report -dt "Black frames in last  ${analysis_head_seconds} seconds: ${tail_black}."
 }
 
@@ -190,11 +187,22 @@ ask_input(){
     fi
 }
 
-ask_trimmed_materials(){
-        report -qn "Drag in any trimmed materials: "
-        read -e -a trimmed
-        [ "$trimmed[0]" == "q" ] && exit 0
-        [ ! -z "${trimmed}" ] && log+="trimmed_materials: ${trimmed}\n"
+_ask_digitization_logs(){
+        report -qn "Drag in any logs from digitization: "
+        read -e -a FILES
+        [ "$FILES[0]" == "q" ] && exit 0
+        [ ! -z "${FILES}" ] && log+="digitization_logs: ${FILES}\n"
+}
+
+_reset_directory(){
+    if [ "${preservation_mode}" == "Y" ] ; then
+        report -qn "Drag in the directory you want you AIP to be delivered to: "
+        read OUTDIR_INGESTFILE
+        if [ ! -d "${OUTDIR_INGESTFILE}" ] ; then
+            report -wt "ERROR You must choose a directory for delivery"
+            _reset_directory            
+        fi
+    fi
 }
 
 _ask_intime(){

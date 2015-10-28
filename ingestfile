@@ -35,7 +35,7 @@ while getopts ":F:pnhe" opt ; do
     case "${opt}" in
         F) formula="${OPTARG}";;
         e) edit_mode="Y" ;;
-        p) preservation_mode="Y" ; deliverytoomneon="N" ; deliveraccesscopies="Y" ; deliverytoaipstorage="N" ;;
+        p) preservation_mode="Y" ; deliverytoomneon="N" ; deliveraccesscopies="N" ; deliverytoaipstorage="N" ;;
         n) deliverytoomneon="N" ; deliveraccesscopies="N" ;;
         h) _usage ;;
         *) echo "bad option -$OPTARG" ; _usage ;;
@@ -192,6 +192,7 @@ fi
 # interview the operator
 ask_operator
 ask_mediaid
+
 ## check for existing output
 [ -d "${OUTDIR_INGESTFILE}/${mediaid}" ] && { report -wt "It looks like ${mediaid} was already ingested. If you want to overwrite the existing one please delete $OUTDIR_INGESTFILE/$mediaid first and then try again." ; exit 1 ;};
 [ -d "${AIP_STORAGE}/${mediaid}" ] && { report -wt "It looks like ${mediaid} was already ingested. If you want to overwrite the existing one please delete $AIP_STORAGE/$mediaid first and then try again." ; exit 1 ;};
@@ -255,9 +256,11 @@ fi
 
 # blackframe analysis or in/out requests
 if [ "${preservation_mode}" == "Y" ] ; then
+    _reset_directory
     _ask_intime
     _ask_outtime
-    ask_trimmed_materials
+    _ask_digitization_logs
+    
 else
     if [ "${blackframetest}" = "Y" ] ; then
         black_at_ends "${input}"
@@ -309,6 +312,7 @@ _run _mkdir2 "${logdir}"
 
 ingestlog="${logdir}/capture.log"
 echo -e "$log" >> "${ingestlog}"
+_writeingestlog "processing_directory" "${OUTDIR_INGESTFILE}"
 _writeingestlog "audiodecision" "${audiodecision}"
 _writeingestlog "cropdecision" "${cropdecision}"
 _writeingestlog "cleanupdecision" "${cleanupdecision}"
@@ -347,12 +351,10 @@ else
     _run_critical rsync -rt --progress --log-file="${logdir}/rsync_$(get_iso8601_c)_$(basename $0)_${version}.txt" "${input}" "${objectsdir}/"
 fi
 
-# if in preservation mode then handle trimmed materials
+# if in preservation mode then handle DIGITIZATION LOGS
 if [ "${preservation_mode}" = "Y" ] ; then
-    if [ ! "${#trimmed[@]}" = 0 ] ; then
-        trimmed_materials_dir="${objectsdir}/trimmed_materials"
-        _mkdir2 "${trimmed_materials_dir}"
-        _run_critical rsync -rt --progress --log-file="${logdir}/rsync_$(get_iso8601_c)_$(basename $0)_${version}.txt" "${trimmed[@]}" "${trimmed_materials_dir}/"
+    if [ ! "${#FILES[@]}" = 0 ] ; then
+        _run_critical rsync -rt --progress --log-file="${logdir}/rsync_$(get_iso8601_c)_$(basename $0)_${version}.txt" "${FILES[@]}" "${logdir}/"
     fi
     makelossless "${OUTDIR_INGESTFILE}/${mediaid}"
 fi
@@ -404,7 +406,6 @@ if [ "$dochecksums" = "Y" ] ; then
 fi
 
 # more logging
-logdir="${OUTDIR_INGESTFILE}/${mediaid}/metadata/submissionDocumentation/logs"
 _writeingestlog "datetime_end" "$(get_iso8601)"
 
 # move and cleanup
