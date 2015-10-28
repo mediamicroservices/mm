@@ -3,23 +3,23 @@
 # make checksum.md5 via md5deep for package
 # version 1.1 adds use of dfxml
 # version 1.2 fixes + add options to check and verify existing checksums
-version=1.2
+VERSION=1.2
 
-scriptdir=$(dirname "${0}")
-. "${scriptdir}/mmfunctions" || { echo "Missing '${scriptdir}/mmfunctions'. Exiting." ; exit 1 ;};
-unset dependencies
-dependencies=(md5deep xml "${scriptdir}/removeDSStore")
+SCRIPTDIR=$(dirname "${0}")
+. "${SCRIPTDIR}/mmfunctions" || { echo "Missing '${SCRIPTDIR}/mmfunctions'. Exiting." ; exit 1 ;};
+unset DEPENDENCIES
+DEPENDENCIES=(md5deep xml "${SCRIPTDIR}/removeDSStore")
 
 # local variables
 CHECKSUMNAME="checksum.md5"
 DFXMLNAME="dfxml.xml"
 CHECKSUMPROCESSLOG="checksumchecks.log"
 
-usage(){
+_usage(){
     echo
-    echo "$(basename "${0}") ${version}"
+    echo "$(basename "${0}") ${VERSION}"
     echo "This application will create a checksum from a directory or package input with the following options. Actions and results will be logged to ${CHECKSUMPROCESSLOG}."
-    echo "Dependencies: ${dependencies[@]}"
+    echo "Dependencies: ${DEPENDENCIES[@]}"
     echo "Usage: $(basename "${0}") directoryorpackage1 [ directoryorpackage2 ...]"
     echo "  -c ( check filenames and filesizes in objects directory are the same as in existing checksum files, if none exists it will make the initial ones )"
     echo "  -u ( valid only if -c is used. If the check is unsuccessful then make new checksums and version the previous ones. )"
@@ -28,78 +28,78 @@ usage(){
     echo
     exit
 }
-[ "${#}" = 0 ] && usage
-check_dependencies "${dependencies[@]}"
+[ "${#}" = 0 ] && _usage
+_check_dependencies "${DEPENDENCIES[@]}"
 if [[ $(echo "$(md5deep -v) >= 4.4" | bc) = 0 ]] ; then
-    report -wt "$(basename "${0}") requires md5deep 4.4 or greater."
+    _report -wt "$(basename "${0}") requires md5deep 4.4 or greater."
     exit 1
 fi
-cleanup(){
+_cleanup(){
     _log -a "Process aborted"
     exit 1
 }
 
 # command-line options
-check=""
-verify=""
-update=""
+CHECK=""
+VERIFY=""
+UPDATE=""
 OPTIND=1
-while getopts ":cvuh" opt ; do
-   case "${opt}" in
-       c) check="Y";;
-       v) verify="Y";;
-       u) update="Y";;
-       h) usage ;;
-       *) echo "bad option -$OPTARG" ; usage ;;
-       :) echo "Option -$OPTARG requires an argument" ; exit 1 ;;
+while getopts ":cvuh" OPT ; do
+   case "${OPT}" in
+       c) CHECK="Y";;
+       v) VERIFY="Y";;
+       u) UPDATE="Y";;
+       h) _usage ;;
+       *) echo "bad option -${OPTARG}" ; _usage ;;
+       :) echo "Option -${OPTARG} requires an argument" ; exit 1 ;;
    esac
 done
 shift $(( ${OPTIND} - 1 ))
 
-trap cleanup SIGHUP SIGINT SIGTERM
+trap _cleanup SIGHUP SIGINT SIGTERM
 
 _check_dfxml(){
     PACKAGE="${1}"
     # make temp file that lists filenames and filesizes from dfxml.xml
-    DFXML_FILELIST="$(maketemp)"
+    DFXML_FILELIST="$(_maketemp)"
     if [ ! -z "$(xml sel -T -t -m "/_:dfxml/_:fileobject" -v "_:filename" -o " " -v "_:filesize" -n "${PACKAGE}/${OUTDIR}/${DFXMLNAME}" 2>/dev/null)" ] ; then
         xml sel -T -t -m "/_:dfxml/_:fileobject" -v "_:filename" -o " " -v "_:filesize" -n "${PACKAGE}/${OUTDIR}/${DFXMLNAME}" | sort > "${DFXML_FILELIST}"
     else
         xml sel -T -t -m "/dfxml/fileobject" -v "filename" -o " " -v "filesize" -n "${PACKAGE}/${OUTDIR}/${DFXMLNAME}" | sort > "${DFXML_FILELIST}"
     fi
-    pwd=$(pwd)
+    PWD=$(pwd)
     # make temp file that lists filenames and filesizes from current objects directory
-    NEW_FILELIST="$(maketemp)"
+    NEW_FILELIST="$(_maketemp)"
     cd "${PACKAGE}/${INDIR}"
     find . -type f ! -name '.DS_Store' | while read i ; do
         echo -n "$i "
         ls -l "$i" | awk '{print $5}'
     done | sort > "${NEW_FILELIST}"
-    cd "${pwd}"
+    cd "${PWD}"
     # compare them
     if [[ $(diff "${DFXML_FILELIST}" "${NEW_FILELIST}") ]] ; then
-        report -wt "filepaths and sizes are different for ${1}"
+        _report -wt "filepaths and sizes are different for ${1}"
         diff "${DFXML_FILELIST}" "${NEW_FILELIST}"
-        echo "$(get_iso8601): $(basename "${0}"):${version}: failed to verify by filepath and size" >> "${PACKAGE}/${OUTDIR}/${CHECKSUMPROCESSLOG}"
+        echo "$(_get_iso8601): $(basename "${0}"):${VERSION}: failed to verify by filepath and size" >> "${PACKAGE}/${OUTDIR}/${CHECKSUMPROCESSLOG}"
         rm "${DFXML_FILELIST}" "${NEW_FILELIST}"
-        checkerr=0
+        CHECKERR=0
     else
-        report -dt "filepaths and sizes are still valid for ${1}"
-        echo "$(get_iso8601): $(basename "${0}"):${version}: verified by filepath and size" >> "${PACKAGE}/${OUTDIR}/${CHECKSUMPROCESSLOG}"
+        _report -dt "filepaths and sizes are still valid for ${1}"
+        echo "$(_get_iso8601): $(basename "${0}"):${VERSION}: verified by filepath and size" >> "${PACKAGE}/${OUTDIR}/${CHECKSUMPROCESSLOG}"
         rm "${DFXML_FILELIST}" "${NEW_FILELIST}"
-        checkerr=1
+        CHECKERR=1
     fi
 }
 
 _version_dfxml(){
     PACKAGE="${1}"
-    report -wdt "Creating a new version of the checksum files."
+    _report -wdt "Creating a new version of the checksum files."
     LASTMD5="${PACKAGE}/${OUTDIR}/${CHECKSUMNAME%.*}_$(stat -t '%Y%m%d-%H%M%S' -l "${PACKAGE}/${OUTDIR}/${CHECKSUMNAME}" | awk '{print $6}').md5"
     LASTDFXML="${PACKAGE}/${OUTDIR}/${DFXMLNAME%.*}_$(stat -t '%Y%m%d-%H%M%S' -l "${PACKAGE}/${OUTDIR}/${DFXMLNAME}" | awk '{print $6}').xml"
     mv -v "${PACKAGE}/${OUTDIR}/${CHECKSUMNAME}" "${LASTMD5}"
     mv -v "${PACKAGE}/${OUTDIR}/${DFXMLNAME}" "${LASTDFXML}"
-    echo "$(get_iso8601): $(basename "${0}"):${version}: checksums are versioned - ${DFXMLNAME} -> ${LASTDFXML}" >> "${PACKAGE}/${OUTDIR}/${CHECKSUMPROCESSLOG}"
-    echo "$(get_iso8601): $(basename "${0}"):${version}: checksums are versioned - ${CHECKSUMNAME} -> ${LASTMD5}" >> "${PACKAGE}/${OUTDIR}/${CHECKSUMPROCESSLOG}"
+    echo "$(_get_iso8601): $(basename "${0}"):${VERSION}: checksums are versioned - ${DFXMLNAME} -> ${LASTDFXML}" >> "${PACKAGE}/${OUTDIR}/${CHECKSUMPROCESSLOG}"
+    echo "$(_get_iso8601): $(basename "${0}"):${VERSION}: checksums are versioned - ${CHECKSUMNAME} -> ${LASTMD5}" >> "${PACKAGE}/${OUTDIR}/${CHECKSUMPROCESSLOG}"
 }
 
 while [ "${*}" != "" ] ; do
@@ -107,7 +107,7 @@ while [ "${*}" != "" ] ; do
     PACKAGE="${1}"
     if [ -d "${PACKAGE}" ] ; then
         PWD=$(pwd)
-        "${scriptdir}/removeDSStore" "${PACKAGE}"
+        "${SCRIPTDIR}/removeDSStore" "${PACKAGE}"
         if [ -d "${PACKAGE}/objects" ] ; then
             INDIR="objects"
             OUTDIR="metadata"
@@ -115,14 +115,14 @@ while [ "${*}" != "" ] ; do
             INDIR="."
             OUTDIR="."
         fi
-        if [ "${check}" = "Y" ] ; then
+        if [ "${CHECK}" = "Y" ] ; then
             if [ -s "${PACKAGE}/${OUTDIR}/${DFXMLNAME}" ] ; then
                 _check_dfxml "${PACKAGE}"
-                if [ "${checkerr}" != "0" ] ; then
+                if [ "${CHECKERR}" != "0" ] ; then
                     shift
                     continue
                 else
-                    if [ "${update}" = "Y" ] ; then
+                    if [ "${UPDATE}" = "Y" ] ; then
                         _version_dfxml "${PACKAGE}"
                     else
                         shift
@@ -130,32 +130,32 @@ while [ "${*}" != "" ] ; do
                     fi
                 fi
             else
-                report -dt "There is no dfxml.xml to check in ${PACKAGE}, skipping."
+                _report -dt "There is no dfxml.xml to check in ${PACKAGE}, skipping."
                 shift
                 continue
             fi
-        elif [ "${verify}" = "Y" ] ; then
+        elif [ "${VERIFY}" = "Y" ] ; then
                 if [ -s "${PACKAGE}/${OUTDIR}/${CHECKSUMNAME}" ] ; then
-                    report -dt "Prepping for dfxml.xml verification."
+                    _report -dt "Prepping for dfxml.xml verification."
                 else
-                    report -dt "There is no dfxml.xml to verify in ${PACKAGE}, skipping."
+                    _report -dt "There is no dfxml.xml to verify in ${PACKAGE}, skipping."
                     shift
                     continue
                 fi
         else
             if [ -s "${PACKAGE}/${OUTDIR}/${CHECKSUMNAME}" ] ; then
-                report -dt "${CHECKSUMNAME} already exists, skipping for ${PACKAGE}"
+                _report -dt "${CHECKSUMNAME} already exists, skipping for ${PACKAGE}"
                 shift
                 continue
             fi
         fi
-        report -dt "making Digital Forensics XML (${DFXMLNAME}) and (${CHECKSUMNAME}) for ${PACKAGE}"
+        _report -dt "making Digital Forensics XML (${DFXMLNAME}) and (${CHECKSUMNAME}) for ${PACKAGE}"
         cd "${PACKAGE}/${INDIR}"
-        DFXMLTMP=$(maketemp)
-        md5deep -drl . > $DFXMLTMP
+        DFXMLTMP=$(_maketemp)
+        md5deep -drl . > "${DFXMLTMP}"
         cd "${PWD}"
         [ ! -d "${PACKAGE}/${OUTDIR}" ] && mkdir -p "${PACKAGE}/${OUTDIR}"
-        echo "$(get_iso8601): $(basename "${0}"):${version}: ${DFXMLNAME} is generated" >> "${PACKAGE}/${OUTDIR}/${CHECKSUMPROCESSLOG}"
+        echo "$(_get_iso8601): $(basename "${0}"):${VERSION}: ${DFXMLNAME} is generated" >> "${PACKAGE}/${OUTDIR}/${CHECKSUMPROCESSLOG}"
         _version_dfxml "${PACKAGE}"
         cat "${DFXMLTMP}" > "${PACKAGE}/${OUTDIR}/${DFXMLNAME}"
         if [ ! -z "$(xml sel -T -t -m "/_:dfxml/_:fileobject" -v "_:filename" -o " " -v "_:filesize" -n "${PACKAGE}/${OUTDIR}/${DFXMLNAME}" 2>/dev/null)" ] ; then
@@ -163,27 +163,27 @@ while [ "${*}" != "" ] ; do
         else
             xml sel -T -t -m "/dfxml/fileobject" -v "hashdigest" -o "  " -v "filename" -n "${PACKAGE}/${OUTDIR}/${DFXMLNAME}" > "${PACKAGE}/${OUTDIR}/${CHECKSUMNAME}"
         fi
-        echo "$(get_iso8601): $(basename "${0}"):${version}: ${CHECKSUMNAME} is generated" >> "${PACKAGE}/${OUTDIR}/${CHECKSUMPROCESSLOG}"
-        if [ "${verify}" = "Y" ] ; then
-            CHECKSUMCMP1=$(maketemp)
+        echo "$(_get_iso8601): $(basename "${0}"):${VERSION}: ${CHECKSUMNAME} is generated" >> "${PACKAGE}/${OUTDIR}/${CHECKSUMPROCESSLOG}"
+        if [ "${VERIFY}" = "Y" ] ; then
+            CHECKSUMCMP1=$(_maketemp)
             sort -k2 "${PACKAGE}/${OUTDIR}/${CHECKSUMNAME}" > "${CHECKSUMCMP1}"
-            CHECKSUMCMP2=$(maketemp)
+            CHECKSUMCMP2=$(_maketemp)
             sort -k2 "${LASTMD5}" > "${CHECKSUMCMP2}"
             if [[ $(diff "${CHECKSUMCMP1}" "${CHECKSUMCMP2}") ]] ; then
-                report -wt "checksums are different for ${PACKAGE}"
+                _report -wt "checksums are different for ${PACKAGE}"
                 diff "${CHECKSUMCMP1}" "${CHECKSUMCMP2}"
-                echo "$(get_iso8601): $(basename "${0}"):${version}: FAILED to VERIFY by checksums - compare ${CHECKSUMNAME} and $(basename "${LASTMD5}")" >> "${PACKAGE}/${OUTDIR}/${CHECKSUMPROCESSLOG}"
+                echo "$(_get_iso8601): $(basename "${0}"):${VERSION}: FAILED to VERIFY by checksums - compare ${CHECKSUMNAME} and $(basename "${LASTMD5}")" >> "${PACKAGE}/${OUTDIR}/${CHECKSUMPROCESSLOG}"
             else
-                report -dt "checksums are still valid for ${PACKAGE}"
-                echo "$(get_iso8601): $(basename "${0}"):${version}: verified by checksums" >> "${PACKAGE}/${OUTDIR}/${CHECKSUMPROCESSLOG}"
+                _report -dt "checksums are still valid for ${PACKAGE}"
+                echo "$(_get_iso8601): $(basename "${0}"):${VERSION}: verified by checksums" >> "${PACKAGE}/${OUTDIR}/${CHECKSUMPROCESSLOG}"
             fi
             rm "${CHECKSUMCMP1}" "${CHECKSUMCMP2}"
         fi
         #if [ "$FILEMAKER_XML_URL" ] ; then
-            #"${scriptdir}/checksum2filemaker" "${PACKAGE}"
+            #"${SCRIPTDIR}/checksum2filemaker" "${PACKAGE}"
             #fi
     else
-        report -dt "ERROR: ${0} requires directories as input and ${PACKAGE} is not a directory."
+        _report -dt "ERROR: ${0} requires directories as input and ${PACKAGE} is not a directory."
     fi
     _log -e
     shift

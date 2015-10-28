@@ -1,22 +1,22 @@
 #!/bin/bash
 # makeflv, makes a crappy flash file
-version="1.0"
-scriptdir=$(dirname $(which "${0}"))
-. "${scriptdir}/mmfunctions" || { echo "Missing '${scriptdir}/mmfunctions'. Exiting." ; exit 1 ;};
-dependencies=(ffmpeg)
+VERSION="1.0"
+SCRIPTDIR=$(dirname $(which "${0}"))
+. "${SCRIPTDIR}/mmfunctions" || { echo "Missing '${SCRIPTDIR}/mmfunctions'. Exiting." ; exit 1 ;};
+DEPENDENCIES=(ffmpeg)
 _initialize_make
-suffix=""
-extension="flv"
-relativepath="access/flv"
+SUFFIX=""
+EXTENSION="flv"
+RELATIVEPATH="access/flv"
 
-outputdir="$HOME/Desktop/$(basename $0)" # default output directory, override with -o
+OUTPUTDIR="${HOME}/Desktop/$(basename ${0})" # default output directory, override with -o
 
-usage(){
+_usage(){
     echo
-    echo "$(basename "${0}") ${version}"
-    echo "This application will create a prores/quicktime file (suitable for editing) from a video file or package input with the following options. By default the output will be written to ${outputdir}. You can override this with the -o option."
-    echo "Dependencies: ${dependencies[@]}"
-    echo "Usage: $(basename $0) [ -o /directory/to/write/to/ ] fileorpackage1 [ fileorpackage2 ...]"
+    echo "$(basename "${0}") ${VERSION}"
+    echo "This application will create a prores/quicktime file (suitable for editing) from a video file or package input with the following options. By default the output will be written to ${OUTPUTDIR}. You can override this with the -o option."
+    echo "Dependencies: ${DEPENDENCIES[@]}"
+    echo "Usage: $(basename ${0}) [ -o /directory/to/write/to/ ] fileorpackage1 [ fileorpackage2 ...]"
     echo "  -d directory ( directory to deliver the resulting file to )"
     echo "  -o directory ( directory to write the resulting file to )"
     echo "  -n (dry-run mode, show the commands that would be run but don't do anything)"
@@ -26,93 +26,93 @@ usage(){
     echo
     exit
 }
-[ "${#}" = 0 ] && usage
+[ "${#}" = 0 ] && _usage
 
 # command-line options to set mediaid and original variables
 OPTIND=1
-while getopts ":o:d:e:E:nh" opt ; do
-    case "${opt}" in
-        o) outputdir_forced="$OPTARG" && _check_outputdir_forced ;;
-        d) deliverdir="$OPTARG" && check_deliverdir ;;
-        e) emailaddress_delivery="$OPTARG" && check_emailaddress "${emailaddress_delivery}" ;;
-        E) emailaddress_outcome="$OPTARG" && check_emailaddress "${emailaddress_outcome}" ;;
+while getopts ":o:d:e:E:nh" OPT ; do
+    case "${OPT}" in
+        o) OUTPUTDIR_FORCED="${OPTARG}" && _check_outputdir_forced ;;
+        d) DELIVERDIR="${OPTARG}" && _check_deliverdir ;;
+        e) EMAILADDRESS_DELIVERY="${OPTARG}" && check_emailaddress "${EMAILADDRESS_DELIVERY}" ;;
+        E) EMAILADDRESS_OUTCOME="${OPTARG}" && check_emailaddress "${EMAILADDRESS_OUTCOME}" ;;
         n) DRYRUN=true;;
-        h) usage ;;
-        *) echo "bad option -$OPTARG" ; usage ;;
-        :) echo "Option -$OPTARG requires an argument" ; exit 1 ;;
+        h) _usage ;;
+        *) echo "bad option -${OPTARG}" ; _usage ;;
+        :) echo "Option -${OPTARG} requires an argument" ; exit 1 ;;
     esac
 done
 shift $(( ${OPTIND} - 1 ))
 
 while [ "${*}" != "" ] ; do
     # get context about the input
-    input="${1}"
+    INPUT="${1}"
     shift
-    if [ -z "${outputdir_forced}" ] ; then
-        [ -d "${input}" ] && { outputdir="${input}/objects/${relativepath}" && logdir="${input}/metadata/submissionDocumentation/logs" ;};
-        [ -f "${input}" ] && { outputdir=$(dirname "${input}")"/${relativepath}" && logdir="$(dirname "${input}")/${relativepath}/logs" ;};
-        [ ! "${outputdir}" ] && { outputdir="${input}/objects/${relativepath}" && logdir="${input}/metadata/submissionDocumentation/logs" ;};
+    if [ -z "${OUTPUTDIR_FORCED}" ] ; then
+        [ -d "${INPUT}" ] && { OUTPUTDIR="${INPUT}/objects/${RELATIVEPATH}" && LOGDIR="${INPUT}/metadata/submissionDocumentation/logs" ;};
+        [ -f "${INPUT}" ] && { OUTPUTDIR=$(dirname "${INPUT}")"/${RELATIVEPATH}" && LOGDIR="$(dirname "${INPUT}")/${RELATIVEPATH}/logs" ;};
+        [ ! "${OUTPUTDIR}" ] && { OUTPUTDIR="${INPUT}/objects/${RELATIVEPATH}" && LOGDIR="${INPUT}/metadata/submissionDocumentation/logs" ;};
     else
-        outputdir="${outputdir_forced}"
-        logdir="${outputdir}/logs"
+        OUTPUTDIR="${OUTPUTDIR_FORCED}"
+        LOGDIR="${OUTPUTDIR}/logs"
     fi
-    _find_input "${input}"
-    mediaid=$(basename "${input}" | cut -d. -f1)
+    _find_input "${INPUT}"
+    MEDIAID=$(basename "${INPUT}" | cut -d. -f1)
 
     _set_up_output
 
     # clear local arrays
-    unset inputoptions
-    unset middleoptions
+    unset INPUTOPTIONS
+    unset MIDDLEOPTIONS
 
     # encoding options
-    get_codectagstring "${sourcefile}"
-    get_videostreamcount "${sourcefile}"
-    get_audiostreamcount "${sourcefile}"
-    inputoptions+=(-vsync 0)
-    inputoptions+=(-nostdin)
+    _get_codectagstring "${SOURCEFILE}"
+    _get_videostreamcount "${SOURCEFILE}"
+    _get_audiostreamcount "${SOURCEFILE}"
+    INPUTOPTIONS+=(-vsync 0)
+    INPUTOPTIONS+=(-nostdin)
     if [[ "${VIDEOSTREAMCOUNT}" > 0 ]] ; then
-        if [[ "${codec_tag_string}" == "mjp2" ]] ; then
-             inputoptions+=(-vcodec libopenjpeg)
+        if [[ "${CODEC_TAG_STRING}" == "mjp2" ]] ; then
+             INPUTOPTIONS+=(-vcodec libopenjpeg)
         fi
-        middleoptions+=(-map 0:v)
-        middleoptions+=(-c:v libx264)
-        middleoptions+=(-pix_fmt yuv420p)
-        middleoptions+=(-b:v 4500k)
-        middleoptions+=(-s 480x360)
-        middleoptions+=(-vf setdar=4/3,setsar=1/1)
+        MIDDLEOPTIONS+=(-map 0:v)
+        MIDDLEOPTIONS+=(-c:v libx264)
+        MIDDLEOPTIONS+=(-pix_fmt yuv420p)
+        MIDDLEOPTIONS+=(-b:v 4500k)
+        MIDDLEOPTIONS+=(-s 480x360)
+        MIDDLEOPTIONS+=(-vf setdar=4/3,setsar=1/1)
     fi
     if [[ "${AUDIOSTREAMCOUNT}" > 0 ]] ; then
-        middleoptions+=(-map 0:a)
-        middleoptions+=(-sample_fmt s16p)
-        middleoptions+=(-ar 44100)
-        middleoptions+=(-b:a 320k)
-        middleoptions+=(-ac 2)
+        MIDDLEOPTIONS+=(-map 0:a)
+        MIDDLEOPTIONS+=(-sample_fmt s16p)
+        MIDDLEOPTIONS+=(-ar 44100)
+        MIDDLEOPTIONS+=(-b:a 320k)
+        MIDDLEOPTIONS+=(-ac 2)
     fi
 
     # set in and out times if used
-    ingestlog="${logdir}/capture.log"
-    if [[ -f "${ingestlog}" && "${isobject}" = "Y" ]] ; then
-       intime=$(_readingestlog "intime")
-       outtime=$(_readingestlog "outtime")
-       if [[ "${intime}" ]] ; then
-           report -dt "ATTENTION: Transcoding will use intime (${intime}) during transcoding."
-           inputoptions+=(-seek_timestamp 1)
-           middleoptions+=(-ss "${intime}")
+    INGESTLOG="${LOGDIR}/capture.log"
+    if [[ -f "${INGESTLOG}" && "${ISOBJECT}" = "Y" ]] ; then
+       INTIME=$(_readingestlog "intime")
+       OUTTIME=$(_readingestlog "outtime")
+       if [[ "${INTIME}" ]] ; then
+           _report -dt "ATTENTION: Transcoding will use intime (${INTIME}) during transcoding."
+           INPUTOPTIONS+=(-seek_timestamp 1)
+           MIDDLEOPTIONS+=(-ss "${INTIME}")
        fi
-       if [[ "${outtime}" ]] ; then
-           report -dt "ATTENTION: Transcoding will use outtime (${outtime}) during transcoding."
-           middleoptions+=(-to "${outtime}")
+       if [[ "${OUTTIME}" ]] ; then
+           _report -dt "ATTENTION: Transcoding will use outtime (${OUTTIME}) during transcoding."
+           MIDDLEOPTIONS+=(-to "${OUTTIME}")
        fi
     fi
 
     _prep_ffmpeg_log
-    if [ "${concatsource}" != "" ] ; then
-        ffmpeginput="${concatsource}"
+    if [ "${CONCATSOURCE}" != "" ] ; then
+        FFMPEGINPUT="${CONCATSOURCE}"
     else
-        ffmpeginput="${sourcefile}"
+        FFMPEGINPUT="${SOURCEFILE}"
     fi
-    _run_critical ffmpeg ${inputoptions[@]} -i "${ffmpeginput}" ${middleoptions[@]} "${output}"
+    _run_critical ffmpeg "${INPUTOPTIONS[@]}" -i "${FFMPEGINPUT}" "${MIDDLEOPTIONS[@]}" "${OUTPUT}"
     echo
     _summarize_make
     _deliver_output

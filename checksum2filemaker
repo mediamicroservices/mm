@@ -1,6 +1,6 @@
 #!/bin/bash
 # This script presumes that you've setup a filemaker database with Filemaker Server using a table called 'checksums' with fields according to the DFXML format.
-version=1.0
+VERSION=1.0
 
 SCRIPTDIR=$(dirname "${0}")
 . "${SCRIPTDIR}/mmfunctions" || { echo "Missing '${SCRIPTDIR}/mmfunctions'. Exiting." ; exit 1 ;};
@@ -10,23 +10,23 @@ SCRIPTDIR=$(dirname "${0}")
 [ -z "${FILEMAKER_XML_URL}" ] && { echo "The filemaker xml path must be set. Run mmconfig to set FILEMAKER_XML_URL." ; exit 1 ;};
 
 while [ "${*}" != "" ] ; do
-    input="${1}"
-    if [[ ! -f "${input}/metadata/checksum.md5" ]] ; then
-        report -dt "${input} does not have a checksum.md5 file, skipping for $(basename "$input")"
+    INPUT="${1}"
+    if [[ ! -f "${INPUT}/metadata/checksum.md5" ]] ; then
+        _report -dt "${INPUT} does not have a checksum.md5 file, skipping for $(basename "${INPUT}")"
         shift
         continue
     fi
-    OLDIFS=$IFS
+    OLDIFS="${IFS}"
     IFS=$'\n'
-    echo "Uploading checksum data for $(basename "$input"). Please wait…"
-    for hash in $(cat "${input}/metadata/checksum.md5"); do
-        if [[ "$hash" ]] ; then
-            hashinsert=$(echo "$hash" | awk '{ printf " --data-urlencode \"hashdigest=" $1 "\" --data-urlencode \"filename=" $NF "\" --data-urlencode \"hashdigest_type=MD5\"" }')" --data-urlencode \"source=$input\" --data-urlencode \"uniq="checksum.md5.${input}.${hash}.${1}"\""
-            hashcmd="curl -s -S -G $hashinsert \"http://${FILEMAKER_XML_URL}?-db=${FILEMAKER_DB}&-lay=checksums&-new\" 1>/dev/null"
-            eval "$hashcmd"
+    echo "Uploading checksum data for $(basename "${INPUT}"). Please wait…"
+    for HASH in $(cat "${INPUT}/metadata/checksum.md5"); do
+        if [[ "$HASH" ]] ; then
+            HASHINSERT=$(echo "$HASH" | awk '{ printf " --data-urlencode \"hashdigest=" $1 "\" --data-urlencode \"FILENAME=" $NF "\" --data-urlencode \"hashdigest_type=MD5\"" }')" --data-urlencode \"source=${INPUT}\" --data-urlencode \"uniq="checksum.md5.${INPUT}.${HASH}.${1}"\""
+            HASHCMD="curl -s -S -G ${HASHINSERT} \"http://${FILEMAKER_XML_URL}?-db=${FILEMAKER_DB}&-lay=checksums&-new\" 1>/dev/null"
+            eval "${HASHCMD}"
         fi
     done
-    IFS=$OLDIFS
+    IFS="${OLDIFS}"
     echo "Done uploading metadata for $(basename "${1}")."
     shift
 done

@@ -21,33 +21,33 @@
 # @author Joseph Perry <joseph@artefactual.com>
 # @version svn: $Id: 9e1ecac84215aaafd740d15eb0cbdc4c17b7fa1e $
 
-scriptdir=$(dirname $(which "${0}"))
-. "${scriptdir}/mmfunctions" || { echo "Missing '${scriptdir}/mmfunctions'. Exiting." ; exit 1 ;};
+SCRIPTDIR=$(dirname $(which "${0}"))
+. "${SCRIPTDIR}/mmfunctions" || { echo "Missing '${SCRIPTDIR}/mmfunctions'. Exiting." ; exit 1 ;};
 
-target="${1}"
+TARGET="${1}"
 
-if [ -d "${target}" ]; then
-    mkdir "${target}/objects"
-    mv $(find "${target}" -mindepth 1 -maxdepth 1 ! -name "objects") "${target}objects/"
-    mkdir -p "${target}/metadata/submissionDocumentation"
-    mkdir -p "${target}/metadata/submissionDocumentation/fileMeta"
-    mkdir -p "${target}/metadata/submissionDocumentation/logs"
-elif [ -f "${target}" -a ! -d "$(dirname "${target}")/$(basename "${target%.*}")" ]; then
-    report -qn "Enter the Media ID: "
-    read mediaid
-    mkdir -p "$(dirname "${target}")/${mediaid}/objects"
-    mv "$target" "$(dirname "${target}")/${mediaid}/objects/"
-    mkdir -p "$(dirname "${target}")/${mediaid}/metadata/submissionDocumentation/fileMeta"
-    logdir="$(dirname "${target}")/${mediaid}/metadata/submissionDocumentation/logs"
-    mkdir -p "${logdir}"
+if [ -d "${TARGET}" ]; then
+    mkdir "${TARGET}/objects"
+    mv $(find "${TARGET}" -mindepth 1 -maxdepth 1 ! -name "objects") "${TARGET}objects/"
+    mkdir -p "${TARGET}/metadata/submissionDocumentation"
+    mkdir -p "${TARGET}/metadata/submissionDocumentation/fileMeta"
+    mkdir -p "${TARGET}/metadata/submissionDocumentation/logs"
+elif [ -f "${TARGET}" -a ! -d "$(dirname "${TARGET}")/$(basename "${TARGET%.*}")" ]; then
+    _report -qn "Enter the Media ID: "
+    read MEDIAID
+    mkdir -p "$(dirname "${TARGET}")/${MEDIAID}/objects"
+    mv "${TARGET}" "$(dirname "${TARGET}")/${MEDIAID}/objects/"
+    mkdir -p "$(dirname "${TARGET}")/${MEDIAID}/metadata/submissionDocumentation/fileMeta"
+    LOGDIR="$(dirname "${TARGET}")/${MEDIAID}/metadata/submissionDocumentation/logs"
+    mkdir -p "${LOGDIR}"
     _ask_intime
-    ingestlog="${logdir}/capture.log"
-    if [ "${intime}" ] ; then
-        _writeingestlog "intime" "${intime}"
+    INGESTLOG="${LOGDIR}/capture.log"
+    if [ "${INTIME}" ] ; then
+        _writeingestlog "intime" "${INTIME}"
     fi
     _ask_outtime
-    if [ "${outtime}" ] ; then
-        _writeingestlog "outtime" "${outtime}"
+    if [ "${OUTTIME}" ] ; then
+        _writeingestlog "outtime" "${OUTTIME}"
     fi
 else
     echo Error: Needs SIP directory or file as argument 1>&2

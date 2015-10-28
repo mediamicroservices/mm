@@ -1,59 +1,59 @@
 #!/bin/bash
-requireconfig="Y"
+REQUIRECONFIG="Y"
 
-scriptdir=$(dirname "${0}")
-. "${scriptdir}/mmfunctions" || { echo "Missing '${scriptdir}/mmfunctions'. Exiting." ; exit 1 ;};
+SCRIPTDIR=$(dirname "${0}")
+. "${SCRIPTDIR}/mmfunctions" || { echo "Missing '${SCRIPTDIR}/mmfunctions'. Exiting." ; exit 1 ;};
 
-cleanup(){
+_cleanup(){
     _log -a "Process aborted"
     exit 1
 }
 
-trap cleanup SIGHUP SIGINT SIGTERM
+trap _cleanup SIGHUP SIGINT SIGTERM
 _log -b
 
-ask_operator
+_ask_operator
 
-ask_mediaid
+_ask_mediaid
 
-if [ -d "$OUTDIR_PAPER/$mediaid" ] ; then
-    report -wdt "It looks like this $mediaid was already scanned. If you want to overwrite the existing one please delete $mediaid first and then try again."
+if [ -d "${OUTDIR_PAPER}/${MEDIAID}" ] ; then
+    _report -wdt "It looks like this ${MEDIAID} was already scanned. If you want to overwrite the existing one please delete ${MEDIAID} first and then try again."
 exit
 fi
 
-free_space 5 "$OUTDIR_PAPER"
+_free_space 5 "${OUTDIR_PAPER}"
 
-origdir="$OUTDIR_PAPER/$mediaid/objects"
-submissionMetadataDir="$OUTDIR_PAPER/$mediaid/metadata/submissionDocumentation"
-logdir="$OUTDIR_PAPER/$mediaid/logs"
+ORIGDIR="${OUTDIR_PAPER}/${MEDIAID}/objects"
+SUBMISSIONMETADATADIR="${OUTDIR_PAPER}/${MEDIAID}/metadata/submissionDocumentation"
+LOGDIR="${OUTDIR_PAPER}/${MEDIAID}/logs"
 
-mkdir -p "$origdir"
-mkdir -p "$submissionMetadataDir"
-mkdir -p "$logdir"
+mkdir -p "${ORIGDIR}"
+mkdir -p "${SUBMISSIONMETADATADIR}"
+mkdir -p "${LOGDIR}"
 
-start=$(date -u "+%Y%m%dT%H%M%SZ")
+START=$(date -u "+%Y%m%dT%H%M%SZ")
 
-command="fscanx  --adf --rgb --bits 8 --resolution 600 --paper-width 10200 --paper-height 13200 --rotate-n-n --left 0 --width 10200 --top 0 --height 13200 --double-feed n --tiff --no-jpeg --images-per-file 1 --compress zlib '$origdir/${mediaid}_.tif'"
-exec &> "$submissionMetadataDir/fscanx_process.txt"
-eval "$command"
-first=$(find "$origdir" -type f -mindepth 1 -maxdepth 1 ! -name ".*" -exec ls -1rt '{}' \; | head -n 1)
-last=$(ls -1t "$origdir" | head -n 1)
-open -a /Applications/Preview.app/ "$first" "$origdir/$last"
-end=$(date -u "+%Y%m%dT%H%M%SZ")
-system_data=$(system_profiler SPHardwareDataType)
+COMMAND="fscanx  --adf --rgb --bits 8 --resolution 600 --paper-width 10200 --paper-height 13200 --rotate-n-n --left 0 --width 10200 --top 0 --height 13200 --double-feed n --tiff --no-jpeg --images-per-file 1 --compress zlib '${ORIGDIR}/${MEDIAID}_.tif'"
+exec &> "${SUBMISSIONMETADATADIR}/fscanx_process.txt"
+eval "${COMMAND}"
+FIRST=$(find "${ORIGDIR}" -type f -mindepth 1 -maxdepth 1 ! -name ".*" -exec ls -1rt '{}' \; | head -n 1)
+LAST=$(ls -1t "${ORIGDIR}" | head -n 1)
+open -a /Applications/Preview.app/ "${FIRST}" "${ORIGDIR}/${LAST}"
+END=$(date -u "+%Y%m%dT%H%M%SZ")
+SYSTEM_DATA=$(system_profiler SPHardwareDataType)
 #These retrieved the right info on the Mac I'm using, but I don't know how standard the output is
-serial_number=$(echo "$system_data" | grep "Serial Number" | awk '{ print $4 }')
-model=$(echo "$system_data" | grep "Model Identifier" | awk '{ print $3; }')
-os=$(system_profiler SPSoftwareDataType | grep "System Version" | awk '{ print substr($0, index($0,$3)); }')
-echo "datetime_start: ${start}" >> "$submissionMetadataDir/operation_process.txt"
-echo "datetime_end: ${end}" >> "$submissionMetadataDir/operation_process.txt"
-echo "serial number: ${serial_number}" >> "$submissionMetadataDir/operation_process.txt"
-echo "model id: ${model}" >> "$submissionMetadataDir/operation_process.txt"
-echo "os: ${os}" >> "$submissionMetadataDir/operation_process.txt"
-echo "identifier: ${mediaid}" >> "$submissionMetadataDir/operation_process.txt"
-echo "operator: ${op}" >> "$submissionMetadataDir/operation_process.txt"
-echo "command: ${command}"  >> "$submissionMetadataDir/operation_process.txt"
+SERIAL_NUMBER=$(echo "${SYSTEM_DATA}" | grep "Serial Number" | awk '{ print $4 }')
+MODEL=$(echo "${SYSTEM_DATA}" | grep "Model Identifier" | awk '{ print $3; }')
+OS=$(system_profiler SPSoftwareDataType | grep "System Version" | awk '{ print substr(${0}, index(${0},$3)); }')
+echo "datetime_start: ${START}" >> "${SUBMISSIONMETADATADIR}/operation_process.txt"
+echo "datetime_end: ${END}" >> "${SUBMISSIONMETADATADIR}/operation_process.txt"
+echo "serial number: ${SERIAL_NUMBER}" >> "${SUBMISSIONMETADATADIR}/operation_process.txt"
+echo "model id: ${MODEL}" >> "${SUBMISSIONMETADATADIR}/operation_process.txt"
+echo "os: ${OS}" >> "${SUBMISSIONMETADATADIR}/operation_process.txt"
+echo "identifier: ${MEDIAID}" >> "${SUBMISSIONMETADATADIR}/operation_process.txt"
+echo "operator: ${OP}" >> "${SUBMISSIONMETADATADIR}/operation_process.txt"
+echo "command: ${COMMAND}"  >> "${SUBMISSIONMETADATADIR}/operation_process.txt"
 
-echo done scanning "$mediaid"
+echo done scanning "${MEDIAID}"
 
 _log -e

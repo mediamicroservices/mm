@@ -1,46 +1,46 @@
 #!/bin/bash
 # makepdf, makes a pdf from an image series
-version="1.0"
-scriptdir=$(dirname $(which "${0}"))
-. "${scriptdir}/mmfunctions" || { echo "Missing '${scriptdir}/mmfunctions'. Exiting." ; exit 1 ;};
-dependencies=(ffmpeg convert pdfjoin tesseract)
+VERSION="1.0"
+SCRIPTDIR=$(dirname $(which "${0}"))
+. "${SCRIPTDIR}/mmfunctions" || { echo "Missing '${SCRIPTDIR}/mmfunctions'. Exiting." ; exit 1 ;};
+DEPENDENCIES=(ffmpeg convert pdfjoin tesseract)
 _initialize_make
 
 fix_tif_name(){
     local tif="${1}"
-    local tifname=$(basename "${tif}")
-    local tifdir=$(dirname "${tif}")
+    local tifname=$(basename "${TIF}")
+    local tifdir=$(dirname "${TIF}")
     local basename=$(echo "${tifname}" | cut -d_ -f1 | cut -d. -f2)
     local pageno=$(echo "${tifname}" | cut -d_ -f2 | cut -d. -f1)
-    local extension=$(echo "${tifname}" | cut -d_ -f2 | cut -d. -f2)
+    local EXTENSION=$(echo "${tifname}" | cut -d_ -f2 | cut -d. -f2)
     local pageno=$(echo "0000${pageno}" | tail -c 4 | head -c 3)
-    report -dt "Renaming to fit image sequence naming pattern."
-    local old_tif_name="${tif}"
-    new_tif_name="${tifdir}/${basename}_${pageno}.${extension}"
-    mv -v -n "${old_tif_name}" "${new_tif_name}"
+    _report -dt "Renaming to fit image sequence naming pattern."
+    local old_tif_name="${TIF}"
+    NEW_TIF_NAME="${tifdir}/${basename}_${pageno}.${EXTENSION}"
+    mv -v -n "${old_tif_name}" "${NEW_TIF_NAME}"
 }
 
 check_tif_name(){
     local tif="${1}"
-    local tifname=$(basename "${tif}")
-    local tifdir=$(dirname "${tif}")
+    local tifname=$(basename "${TIF}")
+    local tifdir=$(dirname "${TIF}")
     local basename=$(echo "${tifname}" | cut -d_ -f2 | cut -d. -f2)
     local pageno=$(echo "${tifname}" | cut -d_ -f2 | cut -d. -f1)
-    local extension=$(echo "${tifname}" | cut -d_ -f2 | cut -d. -f1)
+    local EXTENSION=$(echo "${tifname}" | cut -d_ -f2 | cut -d. -f1)
     local pageno=$(echo "0000${pageno}" | tail -c 4 | head -c 3)
-    if [ "$extension" = "tif" ] && [ $(echo $pageno | awk '{print length()}') = "3" ] ; then
+    if [ "$EXTENSION" = "TIF" ] && [ $(echo $pageno | awk '{print length()}') = "3" ] ; then
         continue
     else
-        fix_tif_name "${tif}"
+        fix_tif_name "${TIF}"
     fi
 }
 
-usage(){
+_usage(){
     echo
-    echo "$(basename "${0}") ${version}"
+    echo "$(basename "${0}") ${VERSION}"
     echo "This application will create a small pdf file (suitable for sharing online) from a collection of image file or package input with the following options."
-    echo "Dependencies: ${dependencies[@]}"
-    echo "Usage: $(basename $0) [ -d /path/to/deliver/to/ ] fileorpackage1 [ fileorpackage2 ...]"
+    echo "Dependencies: ${DEPENDENCIES[@]}"
+    echo "Usage: $(basename ${0}) [ -d /path/to/deliver/to/ ] fileorpackage1 [ fileorpackage2 ...]"
     echo "  -d directory ( directory to deliver the resulting file to )"
     echo "  -o directory ( directory to write the resulting file to )"
     echo "  -n (dry-run mode, show the commands that would be run but don't do anything)"
@@ -50,76 +50,76 @@ usage(){
     echo
     exit
 }
-[ "${#}" = 0 ] && usage
+[ "${#}" = 0 ] && _usage
 
 # command-line options to set mediaid and original variables
 OPTIND=1
-while getopts ":o:d:e:E:nh" opt ; do
-    case "${opt}" in
-        o) outputdir_forced="$OPTARG" && _check_outputdir_forced ;;
-        d) deliverdir="$OPTARG" && check_deliverdir ;;
-        e) emailaddress_delivery="$OPTARG" ;;
-        E) emailaddress_outcome="$OPTARG" ;;
+while getopts ":o:d:e:E:nh" OPT ; do
+    case "${OPT}" in
+        o) OUTPUTDIR_FORCED="${OPTARG}" && _check_outputdir_forced ;;
+        d) DELIVERDIR="${OPTARG}" && _check_deliverdir ;;
+        e) EMAILADDRESS_DELIVERY="${OPTARG}" ;;
+        E) EMAILADDRESS_OUTCOME="${OPTARG}" ;;
         n) DRYRUN=true;;
-        h) usage ;;
-        *) echo "bad option -$OPTARG" ; usage ;;
-        :) echo "Option -$OPTARG requires an argument" ; exit 1 ;;
+        h) _usage ;;
+        *) echo "bad option -${OPTARG}" ; _usage ;;
+        :) echo "Option -${OPTARG} requires an argument" ; exit 1 ;;
     esac
 done
 shift $(( ${OPTIND} - 1 ))
 
-[ "${emailaddress_outcome}" ] && check_emailaddress "${emailaddress_outcome}"
-[ "${emailaddress_delivery}" ] &&  check_emailaddress "${emailaddress_delivery}"
+[ "${EMAILADDRESS_OUTCOME}" ] && check_emailaddress "${EMAILADDRESS_OUTCOME}"
+[ "${EMAILADDRESS_DELIVERY}" ] &&  check_emailaddress "${EMAILADDRESS_DELIVERY}"
 
 while [ "${*}" != "" ] ; do
     # get context about the input
-    input="${1}"
+    INPUT="${1}"
     shift
-    if [ -z "${outputdir_forced}" ] ; then
-        [ -d "${input}" ] && { outputdir="${input}/objects/access/pdf_1" && logdir="${input}/metadata/submissionDocumentation/logs" ;};
-        [ -f "${input}" ] && { outputdir=$(dirname "${input}")"/access/pdf_1" && logdir="$(dirname "${input}")/access/logs" ;};
-        [ ! "${outputdir}" ] && { outputdir="${input}/objects/access/pdf_1" && logdir="${input}/metadata/submissionDocumentation/logs" ;};
+    if [ -z "${OUTPUTDIR_FORCED}" ] ; then
+        [ -d "${INPUT}" ] && { OUTPUTDIR="${INPUT}/objects/access/pdf_1" && LOGDIR="${INPUT}/metadata/submissionDocumentation/logs" ;};
+        [ -f "${INPUT}" ] && { OUTPUTDIR=$(dirname "${INPUT}")"/access/pdf_1" && LOGDIR="$(dirname "${INPUT}")/access/logs" ;};
+        [ ! "${OUTPUTDIR}" ] && { OUTPUTDIR="${INPUT}/objects/access/pdf_1" && LOGDIR="${INPUT}/metadata/submissionDocumentation/logs" ;};
     else
-        outputdir="${outputdir_forced}"
-        logdir="${outputdir}/logs"
+        OUTPUTDIR="${OUTPUTDIR_FORCED}"
+        LOGDIR="${OUTPUTDIR}/logs"
     fi
-    _run mkdir -p "${logdir}"
-    exec > >(tee "${logdir}/$(basename "${0}")_$(get_iso8601_c)_$(basename $0)_${version}.txt")
+    _run mkdir -p "${LOGDIR}"
+    exec > >(tee "${LOGDIR}/$(basename "${0}")_$(_get_iso8601_c)_$(basename ${0})_${VERSION}.txt")
     exec 2>&1
 
-    #_find_input "${input}"
-    if [ -d "${input}/objects" ] ; then
-        sourcedir="${input}/objects"
+    #_find_input "${INPUT}"
+    if [ -d "${INPUT}/objects" ] ; then
+        SOURCEDIR="${INPUT}/objects"
     else
-        report -wt "No source objects folder"
+        _report -wt "No source objects folder"
         exit 1
     fi
-    mediaid=$(basename "${input}" | cut -d. -f1)
+    MEDIAID=$(basename "${INPUT}" | cut -d. -f1)
 
     # set up output
     _log -b
-    output="${outputdir}/${mediaid%.*}.pdf"
-    [ -s "${output}" ] && { report -wt "WARNING ${output} already exists, skipping process" ; shift ; continue ;};
-    _run mkdir -p "${outputdir}"
+    OUTPUT="${OUTPUTDIR}/${MEDIAID%.*}.pdf"
+    [ -s "${OUTPUT}" ] && { _report -wt "WARNING ${OUTPUT} already exists, skipping process" ; shift ; continue ;};
+    _run mkdir -p "${OUTPUTDIR}"
 
-    tmp_makepdf_dir="${input}/tmp"
-    tmp_png_dir="${tmp_makepdf_dir}/pngs"
-    tmp_clean_dir="${tmp_makepdf_dir}/pngs_cleaned"
-    _run mkdir -p "${tmp_makepdf_dir}" "${tmp_png_dir}" "${tmp_clean_dir}"
+    TMP_MAKEPDF_DIR="${INPUT}/tmp"
+    TMP_PNG_DIR="${TMP_MAKEPDF_DIR}/pngs"
+    TMP_CLEAN_DIR="${TMP_MAKEPDF_DIR}/pngs_cleaned"
+    _run mkdir -p "${TMP_MAKEPDF_DIR}" "${TMP_PNG_DIR}" "${TMP_CLEAN_DIR}"
 
-    for tif in `find "$sourcedir" -maxdepth 1 -mindepth 1 -iname "*.tif" -type f` ; do
-        check_tif_name "${tif}"
-        if [ "${new_tif_name}" ] ; then
-            tif="${new_tif_name}"
+    for TIF in `find "${SOURCEDIR}" -maxdepth 1 -mindepth 1 -iname "*.tif" -type f` ; do
+        check_tif_name "${TIF}"
+        if [ "${NEW_TIF_NAME}" ] ; then
+            TIF="${NEW_TIF_NAME}"
         fi
-        ffmpeg -i "${tif}" -pix_fmt gray "${tmp_png_dir}/$(basename "${tif%.*}").png"
-        convert "${tmp_png_dir}/$(basename "${tif%.*}").png" -level 10%,90%,1 -blur 2 +dither -resize 2550x3300 -monochrome -flatten +repage -define png:bit-depth=8 -define png:color-type=0 "${tmp_clean_dir}/$(basename "${tif%.*}").png"
-        tesseract "${tmp_clean_dir}/$(basename "${tif%.*}").png" "${tmp_clean_dir}/$(basename "${tif%.*}")" -l eng -psm 4 pdf "${scriptdir}/tesseract.conf"
+        ffmpeg -i "${TIF}" -pix_fmt gray "${TMP_PNG_DIR}/$(basename "${TIF%.*}").png"
+        convert "${TMP_PNG_DIR}/$(basename "${TIF%.*}").png" -level 10%,90%,1 -blur 2 +dither -resize 2550x3300 -monochrome -flatten +repage -define png:bit-depth=8 -define png:color-type=0 "${TMP_CLEAN_DIR}/$(basename "${TIF%.*}").png"
+        tesseract "${TMP_CLEAN_DIR}/$(basename "${TIF%.*}").png" "${TMP_CLEAN_DIR}/$(basename "${TIF%.*}")" -l eng -psm 4 pdf "${SCRIPTDIR}/tesseract.conf"
     done
-    pdfjoin --fitpaper 'false' --rotateoversize 'false' --paper letter $(find "${tmp_clean_dir}" -name "*.pdf" | sort | xargs) --outfile "${outputdir}/${mediaid}.pdf"
+    pdfjoin --fitpaper 'false' --rotateoversize 'false' --paper letter $(find "${TMP_CLEAN_DIR}" -name "*.pdf" | sort | xargs) --outfile "${OUTPUTDIR}/${MEDIAID}.pdf"
 
-    #if [ -d "${tmp_makepdf_dir}" ] ; then
-    #    _run rm -rvf "${tmp_makepdf_dir}"
+    #if [ -d "${TMP_MAKEPDF_DIR}" ] ; then
+    #    _run rm -rvf "${TMP_MAKEPDF_DIR}"
     #fi
     _summarize_make
     _deliver_output "${MAKEYOUTUBE_DELIVERY_EMAIL_TO}"

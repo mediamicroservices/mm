@@ -1,67 +1,67 @@
 #!/bin/bash
 # make metadata
-version="0.2"
-scriptdir=$(dirname $(which "${0}"))
-. "${scriptdir}/mmfunctions" || { echo "Missing '${scriptdir}/mmfunctions'. Exiting." ; exit 1 ;};
-dependencies=(ffprobe mediainfo exiftool)
+VERSION="0.2"
+SCRIPTDIR=$(dirname $(which "${0}"))
+. "${SCRIPTDIR}/mmfunctions" || { echo "Missing '${SCRIPTDIR}/mmfunctions'. Exiting." ; exit 1 ;};
+DEPENDENCIES=(ffprobe mediainfo exiftool)
 _initialize_make
 
-usage(){
+_usage(){
     echo
-    echo "$(basename "${0}") ${version}"
+    echo "$(basename "${0}") ${VERSION}"
     echo "Produces a set of metadata reports for an archival information package on all files in the objects subdirectory."
     echo "Usage: $(basename "${0}") [ -h ] package1 [ package2 ... ]"
-    echo "  -h (show usage)"
+    echo "  -h (show _usage)"
     exit
 }
-[ "${#}" = 0 ] && usage
+[ "${#}" = 0 ] && _usage
 
 # command-line options to set mediaid and original variables
 OPTIND=1
-while getopts ":h" opt ; do
-    case "${opt}" in
-        h) usage ;;
-        *) echo "bad option -${OPTARG}" ; usage ;;
+while getopts ":h" OPT ; do
+    case "${OPT}" in
+        h) _usage ;;
+        *) echo "bad option -${OPTARG}" ; _usage ;;
         :) echo "Option -${OPTARG} requires an argument" ; exit 1 ;;
     esac
 done
 shift $(( ${OPTIND} - 1 ))
 
 _log -b
-outputdir="./metadata/submissionDocumentation/fileMeta"
-if [ ! -d "${outputdir}" ] ; then
-    _run mkdir -p "${outputdir}"
+OUTPUTDIR="./metadata/submissionDocumentation/fileMeta"
+if [ ! -d "${OUTPUTDIR}" ] ; then
+    _run mkdir -p "${OUTPUTDIR}"
 fi
 
 while [ "${*}" != "" ] ; do
-    package_path="${1}"
-    pwd=$(pwd)
-    cd "${package_path}"
-    FILELIST=$(maketemp)
+    PACKAGE_PATH="${1}"
+    PWD=$(pwd)
+    cd "${PACKAGE_PATH}"
+    FILELIST=$(_maketemp)
     find "./objects" -type f ! -name ".*" ! -path "*/access/images/*" > "${FILELIST}"
-    report -dt "Making metadata reports for ${package_path}."
-    while read file ; do
-        filenameroot=$(basename "${file}")
-        parentdir=$(dirname "${file}")
-        fileoutput="${outputdir}/${parentdir}"
-        if [ ! -d "${fileoutput}" ] ; then
-            _run mkdir -p "${fileoutput}"
+    _report -dt "Making metadata reports for ${PACKAGE_PATH}."
+    while read FILE ; do
+        FILENAMEROOT=$(basename "${FILE}")
+        PARENTDIR=$(dirname "${FILE}")
+        FILEOUTPUT="${OUTPUTDIR}/${PARENTDIR}"
+        if [ ! -d "${FILEOUTPUT}" ] ; then
+            _run mkdir -p "${FILEOUTPUT}"
         fi
-        FFPROBEXML="$fileoutput/${filenameroot%.*}_ffprobe.xml"
-        FFPROBEJSON="$fileoutput/${filenameroot%.*}_ffprobe.json"
-        MEDIAINFOXML="${fileoutput}/${filenameroot%.*}_mediainfo.xml"
-        MEDIAINFOTRACE="${fileoutput}/${filenameroot%.*}_mediainfo_trace.txt"
-        EXIFTOOLXML="${fileoutput}/${filenameroot%.*}_exiftool.xml"
-        EXIFTOOLTXT="${fileoutput}/${filenameroot%.*}_exiftool.txt"
-        ffprobe 2> /dev/null "${file}" -show_format -show_streams -show_data -show_error -show_versions -show_chapters -noprivate -of xml="q=1:x=1" > "${FFPROBEXML}"
-        ffprobe 2> /dev/null "${file}" -show_format -show_streams -show_data -show_error -show_versions -show_chapters -of json > "${FFPROBEJSON}"
-        mediainfo --language=raw -f --output=XML "${file}" > "${MEDIAINFOXML}"
-        mediainfo --inform="Details;1" "$file" > "${MEDIAINFOTRACE}"
-        exiftool -X "${file}" > "${EXIFTOOLXML}"
-        exiftool "${file}" > "${EXIFTOOLTXT}"
+        FFPROBEXML="${FILEOUTPUT}/${FILENAMEROOT%.*}_ffprobe.xml"
+        FFPROBEJSON="${FILEOUTPUT}/${FILENAMEROOT%.*}_ffprobe.json"
+        MEDIAINFOXML="${FILEOUTPUT}/${FILENAMEROOT%.*}_mediainfo.xml"
+        MEDIAINFOTRACE="${FILEOUTPUT}/${FILENAMEROOT%.*}_mediainfo_trace.txt"
+        EXIFTOOLXML="${FILEOUTPUT}/${FILENAMEROOT%.*}_exiftool.xml"
+        EXIFTOOLTXT="${FILEOUTPUT}/${FILENAMEROOT%.*}_exiftool.txt"
+        ffprobe 2> /dev/null "${FILE}" -show_format -show_streams -show_data -show_error -show_versions -show_chapters -noprivate -of xml="q=1:x=1" > "${FFPROBEXML}"
+        ffprobe 2> /dev/null "${FILE}" -show_format -show_streams -show_data -show_error -show_versions -show_chapters -of json > "${FFPROBEJSON}"
+        mediainfo --language=raw -f --output=XML "${FILE}" > "${MEDIAINFOXML}"
+        mediainfo --inform="Details;1" "${FILE}" > "${MEDIAINFOTRACE}"
+        exiftool -X "${FILE}" > "${EXIFTOOLXML}"
+        exiftool "${FILE}" > "${EXIFTOOLTXT}"
     done < "${FILELIST}"
 
-    cd "${pwd}"
+    cd "${PWD}"
     _run rm -r -f "${FILELIST}"
     shift
     _log -e
