@@ -188,11 +188,22 @@ _ask_input(){
     fi
 }
 
-_ask_trimmed_materials(){
-        _report -qn "Drag in any trimmed materials: "
-        read -e -a TRIMMED
-        [ "${TRIMMED[0]}" == "q" ] && exit 0
-        [ ! -z "${TRIMMED}" ] && LOG+="trimmed_materials: ${TRIMMED}\n"
+_ask_digitization_logs(){
+        report -qn "Drag in any logs from digitization: "
+        read -e -a FILES
+        [ "$FILES[0]" == "q" ] && exit 0
+        [ ! -z "${FILES}" ] && log+="digitization_logs: ${FILES}\n"
+}
+
+_reset_directory(){
+    if [ "${preservation_mode}" == "Y" ] ; then
+        report -qn "Drag in the directory you want you AIP to be delivered to: "
+        read OUTDIR_INGESTFILE
+        if [ ! -d "${OUTDIR_INGESTFILE}" ] ; then
+            report -wt "ERROR You must choose a directory for delivery"
+            _reset_directory            
+        fi
+    fi
 }
 
 _ask_intime(){

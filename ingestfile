@@ -32,6 +32,14 @@ _usage(){
 }
 
 OPTIND=1
+<<<<<<< HEAD
+while getopts ":F:pnhe" opt ; do
+    case "${opt}" in
+        F) formula="${OPTARG}";;
+        e) edit_mode="Y" ;;
+        p) preservation_mode="Y" ; deliverytoomneon="N" ; deliveraccesscopies="N" ; deliverytoaipstorage="N" ;;
+        n) deliverytoomneon="N" ; deliveraccesscopies="N" ;;
+=======
 while getopts ":F:pnhei" OPT ; do
     case "${OPT}" in
         F) FORMULA="${OPTARG}";;
@@ -39,6 +47,7 @@ while getopts ":F:pnhei" OPT ; do
         p) PRESERVATION_MODE="Y" ; DELIVERYTOOMNEON="N" ; DELIVERACCESSCOPIES="Y" ; DELIVERYTOAIPSTORAGE="N" ;;
         n) DELIVERYTOOMNEON="N" ; DELIVERACCESSCOPIES="N" ;;
         i) DELIVERYTOOMNEON="Y" ; DELIVERACCESSCOPIES="N" ; DELIVERYTOAIPSTORAGE="Y" ;;
+>>>>>>> master
         h) _usage ;;
         *) echo "bad option -${OPTARG}" ; _usage ;;
         :) echo "Option -${OPTARG} requires an argument" ; exit 1 ;;
@@ -192,8 +201,14 @@ if [ "${EDIT_MODE}" == "Y" ] ; then
 fi
 
 # interview the operator
+<<<<<<< HEAD
+ask_operator
+ask_mediaid
+
+=======
 _ask_operator
 _ask_mediaid
+>>>>>>> master
 ## check for existing output
 [ -d "${OUTDIR_INGESTFILE}/${MEDIAID}" ] && { _report -wt "It looks like ${MEDIAID} was already ingested. If you want to overwrite the existing one please delete ${OUTDIR_INGESTFILE}/${MEDIAID} first and then try again." ; exit 1 ;};
 [ -d "${AIP_STORAGE}/${MEDIAID}" ] && { _report -wt "It looks like ${MEDIAID} was already ingested. If you want to overwrite the existing one please delete ${AIP_STORAGE}/${MEDIAID} first and then try again." ; exit 1 ;};
@@ -257,10 +272,19 @@ if [ "${PRIORITY}" = "" ] ; then
 fi
 
 # blackframe analysis or in/out requests
+<<<<<<< HEAD
+if [ "${preservation_mode}" == "Y" ] ; then
+    _reset_directory
+    _ask_intime
+    _ask_outtime
+    _ask_digitization_logs
+    
+=======
 if [ "${PRESERVATION_MODE}" == "Y" ] ; then
     _ask_intime
     _ask_outtime
     _ask_trimmed_materials
+>>>>>>> master
 else
     if [ "${BLACKFRAMETEST}" = "Y" ] ; then
         _black_at_ends "${INPUT}"
@@ -310,12 +334,22 @@ _run _mkdir2 "${SUBMISSIONDOCDIR}"
 LOGDIR="${OUTDIR_INGESTFILE}/${MEDIAID}/metadata/submissionDocumentation/logs"
 _run _mkdir2 "${LOGDIR}"
 
+<<<<<<< HEAD
+ingestlog="${logdir}/capture.log"
+echo -e "$log" >> "${ingestlog}"
+_writeingestlog "processing_directory" "${OUTDIR_INGESTFILE}"
+_writeingestlog "audiodecision" "${audiodecision}"
+_writeingestlog "cropdecision" "${cropdecision}"
+_writeingestlog "cleanupdecision" "${cleanupdecision}"
+_writeingestlog "formula" "${formula}"
+=======
 INGESTLOG="${LOGDIR}/capture.log"
 echo -e "${LOG}" >> "${INGESTLOG}"
 _writeingestlog "audiodecision" "${AUDIODECISION}"
 _writeingestlog "cropdecision" "${CROPDECISION}"
 _writeingestlog "cleanupdecision" "${CLEANUPDECISION}"
 _writeingestlog "formula" "${FORMULA}"
+>>>>>>> master
 _writeingestlog "ingest_process_dir" "${OUTDIR_INGESTFILE}"
 _writeingestlog "ingest_process_dir_freespace" "$(df -h "${OUTDIR_INGESTFILE}" | tail -n1 | awk '{print $4}')"
 _writeingestlog "computer_name" "$(uname -n)"
@@ -350,12 +384,19 @@ else
     _run_critical rsync -rt --progress --log-file="${LOGDIR}/rsync_$(_get_iso8601_c)_$(basename ${0})_${VERSION}.txt" "${INPUT}" "${OBJECTSDIR}/"
 fi
 
+<<<<<<< HEAD
+# if in preservation mode then handle DIGITIZATION LOGS
+if [ "${preservation_mode}" = "Y" ] ; then
+    if [ ! "${#FILES[@]}" = 0 ] ; then
+        _run_critical rsync -rt --progress --log-file="${logdir}/rsync_$(get_iso8601_c)_$(basename $0)_${version}.txt" "${FILES[@]}" "${logdir}/"
+=======
 # if in preservation mode then handle trimmed materials
 if [ "${PRESERVATION_MODE}" = "Y" ] ; then
     if [ ! "${#TRIMMED[@]}" = 0 ] ; then
         TRIMMED_MATERIALS_DIR="${OBJECTSDIR}/trimmed_materials"
         _mkdir2 "${TRIMMED_MATERIALS_DIR}"
         _run_critical rsync -rt --progress --log-file="${LOGDIR}/rsync_$(_get_iso8601_c)_$(basename ${0})_${VERSION}.txt" "${TRIMMED[@]}" "${TRIMMED_MATERIALS_DIR}/"
+>>>>>>> master
     fi
     makelossless "${OUTDIR_INGESTFILE}/${MEDIAID}"
 fi
@@ -407,8 +448,12 @@ if [ "${DOCHECKSUMS}" = "Y" ] ; then
 fi
 
 # more logging
+<<<<<<< HEAD
+_writeingestlog "datetime_end" "$(get_iso8601)"
+=======
 LOGDIR="${OUTDIR_INGESTFILE}/${MEDIAID}/metadata/submissionDocumentation/logs"
 _writeingestlog "datetime_end" "$(_get_iso8601)"
+>>>>>>> master
 
 # move and cleanup
 if [ "${DELIVERYTOAIPSTORAGE}" == "Y" ] ; then
