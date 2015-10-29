@@ -196,7 +196,7 @@ _ask_digitization_logs(){
 }
 
 _reset_directory(){
-    if [ "${preservation_mode}" == "Y" ] ; then
+    if [ "${PRESERVATION_MODE}" == "Y" ] ; then
         report -qn "Drag in the directory you want you AIP to be delivered to: "
         read OUTDIR_INGESTFILE
         if [ ! -d "${OUTDIR_INGESTFILE}" ] ; then
