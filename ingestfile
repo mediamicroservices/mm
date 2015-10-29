@@ -193,8 +193,8 @@ if [ "${EDIT_MODE}" == "Y" ] ; then
 fi
 
 # interview the operator
-ask_operator
-ask_mediaid
+_ask_operator
+_ask_mediaid
 
 ## check for existing output
 [ -d "${OUTDIR_INGESTFILE}/${MEDIAID}" ] && { _report -wt "It looks like ${MEDIAID} was already ingested. If you want to overwrite the existing one please delete ${OUTDIR_INGESTFILE}/${MEDIAID} first and then try again." ; exit 1 ;};
