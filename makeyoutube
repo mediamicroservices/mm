@@ -1,21 +1,21 @@
 #!/bin/bash
 # makeyoutube, makes a file appropriate for uploading to youtube
-version="1.0"
-scriptdir=$(dirname $(which "${0}"))
-. "${scriptdir}/mmfunctions" || { echo "Missing '${scriptdir}/mmfunctions'. Exiting." ; exit 1 ;};
-dependencies=(ffmpeg ffprobe)
+VERSION="1.0"
+SCRIPTDIR=$(dirname $(which "${0}"))
+. "${SCRIPTDIR}/mmfunctions" || { echo "Missing '${SCRIPTDIR}/mmfunctions'. Exiting." ; exit 1 ;};
+DEPENDENCIES=(ffmpeg ffprobe)
 _initialize_make
-suffix=""
-extension="mp4"
-relativepath="access/youtube_up"
+SUFFIX=""
+EXTENSION="mp4"
+RELATIVEPATH="access/youtube_up"
 unset YOUTUBEUPLOAD
 
-usage(){
+_usage(){
     echo
-    echo "$(basename "${0}") ${version}"
+    echo "$(basename "${0}") ${VERSION}"
     echo "This application will create a high quality h264 file (suitable for uploading to YouTube) from a video file or package input with the following options."
-    echo "Dependencies: ${dependencies[@]}"
-    echo "Usage: $(basename $0) [ -d /path/to/deliver/to/ ] fileorpackage1 [ fileorpackage2 ...]"
+    echo "Dependencies: ${DEPENDENCIES[@]}"
+    echo "Usage: $(basename ${0}) [ -d /path/to/deliver/to/ ] fileorpackage1 [ fileorpackage2 ...]"
     echo "  -l (only use the left channel of the first audio track)"
     echo "  -r (only use the right channel of the first audio track)"
     echo "  -d directory ( directory to deliver the resulting file to )"
@@ -28,120 +28,120 @@ usage(){
     echo
     exit
 }
-[ "${#}" = 0 ] && usage
+[ "${#}" = 0 ] && _usage
 
 # command-line options to set mediaid and original variables
 OPTIND=1
-while getopts ":lrv:o:d:e:E:nhY" opt ; do
-    case "${opt}" in
-        l) audiomap="L";;
-        r) audiomap="R";;
+while getopts ":lrv:o:d:e:E:nhY" OPT ; do
+    case "${OPT}" in
+        l) AUDIOMAP="L";;
+        r) AUDIOMAP="R";;
         v) VOLADJUST="${OPTARG}";;
-        o) outputdir_forced="$OPTARG" && _check_outputdir_forced ;;
-        d) deliverdir="$OPTARG" && check_deliverdir ;;
-        e) emailaddress_delivery="$OPTARG" && check_emailaddress "${emailaddress_delivery}" ;;
-        E) emailaddress_outcome="$OPTARG" && check_emailaddress "${emailaddress_outcome}" ;;
+        o) OUTPUTDIR_FORCED="${OPTARG}" && _check_outputdir_forced ;;
+        d) DELIVERDIR="${OPTARG}" && _check_deliverdir ;;
+        e) EMAILADDRESS_DELIVERY="${OPTARG}" && check_emailaddress "${EMAILADDRESS_DELIVERY}" ;;
+        E) EMAILADDRESS_OUTCOME="${OPTARG}" && check_emailaddress "${EMAILADDRESS_OUTCOME}" ;;
         n) DRYRUN=true;;
         Y) YOUTUBEUPLOAD="Y";;
-        h) usage ;;
-        *) echo "bad option -$OPTARG" ; usage ;;
-        :) echo "Option -$OPTARG requires an argument" ; exit 1 ;;
+        h) _usage ;;
+        *) echo "bad option -${OPTARG}" ; _usage ;;
+        :) echo "Option -${OPTARG} requires an argument" ; exit 1 ;;
     esac
 done
 shift $(( ${OPTIND} - 1 ))
 
 while [ "${*}" != "" ] ; do
     # get context about the input
-    input="${1}"
+    INPUT="${1}"
     shift
-    if [ -z "${outputdir_forced}" ] ; then
-        [ -d "${input}" ] && { outputdir="${input}/objects/${relativepath}" && logdir="${input}/metadata/submissionDocumentation/logs" ;};
-        [ -f "${input}" ] && { outputdir=$(dirname "${input}")"/${relativepath}" && logdir="$(dirname "${input}")/${relativepath}/logs" ;};
-        [ ! "${outputdir}" ] && { outputdir="${input}/objects/${relativepath}" && logdir="${input}/metadata/submissionDocumentation/logs" ;};
+    if [ -z "${OUTPUTDIR_FORCED}" ] ; then
+        [ -d "${INPUT}" ] && { OUTPUTDIR="${INPUT}/objects/${RELATIVEPATH}" && LOGDIR="${INPUT}/metadata/submissionDocumentation/logs" ;};
+        [ -f "${INPUT}" ] && { OUTPUTDIR=$(dirname "${INPUT}")"/${RELATIVEPATH}" && LOGDIR="$(dirname "${INPUT}")/${RELATIVEPATH}/logs" ;};
+        [ ! "${OUTPUTDIR}" ] && { OUTPUTDIR="${INPUT}/objects/${RELATIVEPATH}" && LOGDIR="${INPUT}/metadata/submissionDocumentation/logs" ;};
     else
-        outputdir="${outputdir_forced}"
-        logdir="${outputdir}/logs"
+        OUTPUTDIR="${OUTPUTDIR_FORCED}"
+        LOGDIR="${OUTPUTDIR}/logs"
     fi
-    _find_input "${input}"
-    mediaid=$(basename "${input}" | cut -d. -f1)
-    ingestlog="${logdir}/capture.log"
+    _find_input "${INPUT}"
+    MEDIAID=$(basename "${INPUT}" | cut -d. -f1)
+    INGESTLOG="${LOGDIR}/capture.log"
 
     _set_up_output
 
     # get information on the input
-    get_height "${sourcefile}"
-    get_width "${sourcefile}"
-    _get_seconds "${sourcefile}"
+    _get_height "${SOURCEFILE}"
+    _get_width "${SOURCEFILE}"
+    _get_seconds "${SOURCEFILE}"
 
     # clear local arrays
-    unset inputoptions
-    unset middleoptions
-    unset audiomapping_ffmpeg
+    unset INPUTOPTIONS
+    unset MIDDLEOPTIONS
+    unset AUDIOMAPPING_FFMPEG
 
     # encoding options
-    get_codectagstring "${sourcefile}"
-    get_videostreamcount "${sourcefile}"
-    get_audiostreamcount "${sourcefile}"
-    inputoptions+=(-vsync 0)
-    inputoptions+=(-nostdin)
+    _get_codectagstring "${SOURCEFILE}"
+    _get_videostreamcount "${SOURCEFILE}"
+    _get_audiostreamcount "${SOURCEFILE}"
+    INPUTOPTIONS+=(-vsync 0)
+    INPUTOPTIONS+=(-nostdin)
     if [[ "${VIDEOSTREAMCOUNT}" > 0 ]] ; then
-        if [[ "${codec_tag_string}" == "mjp2" ]] ; then
-             inputoptions+=(-vcodec libopenjpeg)
+        if [[ "${CODEC_TAG_STRING}" == "mjp2" ]] ; then
+             INPUTOPTIONS+=(-vcodec libopenjpeg)
         fi
-        middleoptions+=(-movflags faststart)
-        middleoptions+=(-pix_fmt yuv420p)
-        middleoptions+=(-c:v libx264)
-        middleoptions+=(-crf 18)
-        if [ "${seconds%.*}" -gt "7200" ] ; then
-            middleoptions+=(-maxrate 2190k)
-        elif [ "${seconds%.*}" -gt "3600" ] ; then
-            middleoptions+=(-maxrate 4380k)
+        MIDDLEOPTIONS+=(-movflags faststart)
+        MIDDLEOPTIONS+=(-pix_fmt yuv420p)
+        MIDDLEOPTIONS+=(-c:v libx264)
+        MIDDLEOPTIONS+=(-crf 18)
+        if [ "${SECONDS%.*}" -gt "7200" ] ; then
+            MIDDLEOPTIONS+=(-maxrate 2190k)
+        elif [ "${SECONDS%.*}" -gt "3600" ] ; then
+            MIDDLEOPTIONS+=(-maxrate 4380k)
         else
-            middleoptions+=(-maxrate 8760k)
+            MIDDLEOPTIONS+=(-maxrate 8760k)
         fi
-        middleoptions+=(-bufsize 1835k)
-        if  [[ "${width}" == 720 && "${height}" == 486 ]] ; then
-            middleoptions+=(-vf "crop=720:480:0:4,yadif")
-        elif  [[ "${width}" == 720 && "${height}" == 512 ]] ; then
-            middleoptions+=(-vf "crop=720:480:0:32,yadif")
+        MIDDLEOPTIONS+=(-bufsize 1835k)
+        if  [[ "${WIDTH}" == 720 && "${HEIGHT}" == 486 ]] ; then
+            MIDDLEOPTIONS+=(-vf "crop=720:480:0:4,yadif")
+        elif  [[ "${WIDTH}" == 720 && "${HEIGHT}" == 512 ]] ; then
+            MIDDLEOPTIONS+=(-vf "crop=720:480:0:32,yadif")
         else
-            middleoptions+=(-vf yadif)
+            MIDDLEOPTIONS+=(-vf yadif)
         fi
     fi
     if [[ "${AUDIOSTREAMCOUNT}" > 0 ]] ; then
-        middleoptions+=(-c:a aac -strict -2)
-        middleoptions+=(-ac 2)
-        middleoptions+=(-b:a 128k)
-        get_audio_index "${sourcefile}"
-        if [ "${audiomap}" = "L" ] ; then
-            audiomapping_ffmpeg=(-map_channel 0.${audio_index_1}.0)
-        elif [ "${audiomap}" = "R" ] ; then
-            audiomapping_ffmpeg=(-map_channel 0.${audio_index_1}.1)
+        MIDDLEOPTIONS+=(-c:a aac -strict -2)
+        MIDDLEOPTIONS+=(-ac 2)
+        MIDDLEOPTIONS+=(-b:a 128k)
+        _get_audio_index "${SOURCEFILE}"
+        if [ "${AUDIOMAP}" = "L" ] ; then
+            AUDIOMAPPING_FFMPEG=(-map_channel 0.${AUDIO_INDEX_1}.0)
+        elif [ "${AUDIOMAP}" = "R" ] ; then
+            AUDIOMAPPING_FFMPEG=(-map_channel 0.${AUDIO_INDEX_1}.1)
         else
-            get_audio_mapping "${sourcefile}"
+            _get_audio_mapping "${SOURCEFILE}"
         fi
-        middleoptions+=(${audiomapping_ffmpeg[@]})
+        MIDDLEOPTIONS+=("${AUDIOMAPPING_FFMPEG[@]}")
     fi
-    middleoptions+=(-f mp4)
+    MIDDLEOPTIONS+=(-f mp4)
 
     _prep_ffmpeg_log
     _prep_volume_adjustment
-    if [ "${concatsource}" != "" ] ; then
-        ffmpeginput="${concatsource}"
+    if [ "${CONCATSOURCE}" != "" ] ; then
+        FFMPEGINPUT="${CONCATSOURCE}"
     else
-        ffmpeginput="${sourcefile}"
+        FFMPEGINPUT="${SOURCEFILE}"
     fi
-    _run_critical ffmpeg ${inputoptions[@]} -i "${ffmpeginput}" ${middleoptions[@]} "${output}"
+    _run_critical ffmpeg "${INPUTOPTIONS[@]}" -i "${FFMPEGINPUT}" "${MIDDLEOPTIONS[@]}" "${OUTPUT}"
     echo
     _summarize_make
     _deliver_output "${MAKEYOUTUBE_DELIVERY_EMAIL_TO}"
     if [[ "${YOUTUBEUPLOAD}" == "Y" ]] ; then
         if [ $(which uploadyoutube) ] ; then
-            report -dt "Attempting to run uploadyoutube on ${output}"
-            uploadyoutube "${output}"
-            echo "$(get_iso8601),${output},attempted upload,$?" >> "$HOME/Desktop/upload.log"
+            _report -dt "Attempting to run uploadyoutube on ${OUTPUT}"
+            uploadyoutube "${OUTPUT}"
+            echo "$(_get_iso8601),${OUTPUT},attempted upload,$?" >> "${HOME}/Desktop/upload.log"
         else
-            report -wt "$(basename "${output}") qualified for uploadyoutube but it is not installed."
+            _report -wt "$(basename "${OUTPUT}") qualified for uploadyoutube but it is not installed."
         fi
     fi
     _log -e

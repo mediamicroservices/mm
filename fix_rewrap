@@ -1,57 +1,57 @@
 #!/bin/bash
 # this script takes one argument which is a video file. It then rewraps it to make a new file.
 # version 1.2 swap from ffmbc to ffmpeg
-version=1.2
-unset dependencies
-dependencies=(ffmpeg ffprobe)
+VERSION=1.2
+unset DEPENDENCIES
+DEPENDENCIES=(ffmpeg ffprobe)
 
-scriptdir=$(dirname "${0}")
-. "${scriptdir}/mmfunctions" || { echo "Missing '${scriptdir}/mmfunctions'. Exiting." ; exit 1 ;};
+SCRIPTDIR=$(dirname "${0}")
+. "${SCRIPTDIR}/mmfunctions" || { echo "Missing '${SCRIPTDIR}/mmfunctions'. Exiting." ; exit 1 ;};
 
-usage(){
+_usage(){
     echo
-    echo "$(basename "${0}") ${version}"
+    echo "$(basename "${0}") ${VERSION}"
     echo "This application takes an input video file(s) and produces outputs through re-multiplexing all tracks of the input into a new container."
-    echo "Dependencies: ${dependencies[@]}"
+    echo "Dependencies: ${DEPENDENCIES[@]}"
     echo "Usage: $(basename "${0}") file1 [ file2 ...]"
     echo
     exit
 }
-[ "${#}" = 0 ] && usage
-check_dependencies "${dependencies[@]}"
+[ "${#}" = 0 ] && _usage
+_check_dependencies "${DEPENDENCIES[@]}"
 
-cleanup(){
+_cleanup(){
     _log -a "Process aborted"
     exit 1
 }
 
 # local variables
-suffix="_rewrap"
+SUFFIX="_rewrap"
 
-trap cleanup SIGHUP SIGINT SIGTERM
+trap _cleanup SIGHUP SIGINT SIGTERM
 _log -b
 
 while [ "${*}" != "" ] ; do
 
-    sourcefile="${1}"
-    name=$(basename "${sourcefile}")
+    SOURCEFILE="${1}"
+    NAME=$(basename "${SOURCEFILE}")
 
-    get_codectagstring
-    unset ffmpeg_opts
-    ffmpeg_opts+=(-map 0:v -map 0:a -c:v copy -c:a copy)
-    if [ "${codec_tag_string}" = "mpeg" ] ; then
-        extension="mxf"
+    _get_codectagstring
+    unset FFMPEG_OPTS
+    FFMPEG_OPTS+=(-map 0:v -map 0:a -c:v copy -c:a copy)
+    if [ "${CODEC_TAG_STRING}" = "mpeg" ] ; then
+        EXTENSION="mxf"
     else
-        extension="mov"
+        EXTENSION="mov"
     fi
 
-    output_movie="${sourcefile%.*}${suffix}.${extension}"
-    if [ -f "${output_movie}" ] ; then
-        report -wt "The intended output of $(basename "${0}") already exists. Skipping for now. Please delete ${output_movie} and rerun or figure out why you are trying to do this."
+    OUTPUT_MOVIE="${SOURCEFILE%.*}${SUFFIX}.${EXTENSION}"
+    if [ -f "${OUTPUT_MOVIE}" ] ; then
+        _report -wt "The intended output of $(basename "${0}") already exists. Skipping for now. Please delete ${OUTPUT_MOVIE} and rerun or figure out why you are trying to do this."
     else
-        report -dt "Generating ${output_movie} ... with these options ${ffmpeg_opts[*]}"
-        ffmpeg -i "${sourcefile}" "${ffmepg_opts[@]}" "${output_movie}"
-        report -dt "$(basename "${0}") is done with ${name}."
+        _report -dt "Generating ${OUTPUT_MOVIE} ... with these options ${FFMPEG_OPTS[*]}"
+        ffmpeg -i "${SOURCEFILE}" "${FFMPEG_OPTS[@]}" "${OUTPUT_MOVIE}"
+        _report -dt "$(basename "${0}") is done with ${NAME}."
     fi
     shift
 done

@@ -1,106 +1,106 @@
 #!/bin/bash
 # verifypackage, run package through various tests and report on overal status
-version="1.0"
-unset dependencies
-dependencies=(ffmpeg mediainfo)
+VERSION="1.0"
+unset DEPENDENCIES
+DEPENDENCIES=(ffmpeg mediainfo)
 
-scriptdir=$(dirname "${0}")
-. "${scriptdir}/mmfunctions" || { echo "Missing '${scriptdir}/mmfunctions'. Exiting." ; exit 1 ;};
+SCRIPTDIR=$(dirname "${0}")
+. "${SCRIPTDIR}/mmfunctions" || { echo "Missing '${SCRIPTDIR}/mmfunctions'. Exiting." ; exit 1 ;};
 
-usage(){
+_usage(){
     echo
-    echo "$(basename $0) ${version}"
+    echo "$(basename ${0}) ${VERSION}"
     echo "This script will test an archival package for validity and status."
-    echo "Dependencies: ${dependencies[@]}"
-    echo "Usage: $(basename $0) package1 [ package2 ...]"
+    echo "Dependencies: ${DEPENDENCIES[@]}"
+    echo "Usage: $(basename ${0}) package1 [ package2 ...]"
     echo "  -h ( display this help )"
     echo
     exit
 }
-[ "$#" = 0 ] && usage
-check_dependencies "${dependencies[@]}"
+[ "${#}" = 0 ] && _usage
+_check_dependencies "${DEPENDENCIES[@]}"
 
-cleanup(){
-    log -a "Process aborted"
+_cleanup(){
+    _log -a "Process aborted"
     exit 1
 }
 
-trap cleanup SIGHUP SIGINT SIGTERM
+trap _cleanup SIGHUP SIGINT SIGTERM
 
 OPTIND=1
-while getopts ":ho:n" opt; do
-    case "$opt" in
-        h) usage ;;
-        *) echo "bad option -$OPTARG" ; usage ;;
-        :) echo "Option -$OPTARG requires an argument" ; exit 1 ;;
+while getopts ":ho:n" OPT; do
+    case "${OPT}" in
+        h) _usage ;;
+        *) echo "bad option -${OPTARG}" ; _usage ;;
+        :) echo "Option -${OPTARG} requires an argument" ; exit 1 ;;
     esac
 done
 shift $(( ${OPTIND} - 1 ))
 
 while [ "${*}" != "" ] ; do
-    package="${1}"
-    find_input "$input"
-    mediaid=$(basename "${1}" | cut -d. -f1)
+    PACKAGE="${1}"
+    find_input "${INPUT}"
+    MEDIAID=$(basename "${1}" | cut -d. -f1)
 
-    log -b
+    _log -b
 
     # get lists of files and directories anywhere in the package
-    filelist=$(find "${package}" -type f -exec basename "{}" \;)
-    dirlist=$(find "${package}" -type d -exec basename "{}" \;)
+    FILELIST=$(find "${PACKAGE}" -type f -exec basename "{}" \;)
+    DIRLIST=$(find "${PACKAGE}" -type d -exec basename "{}" \;)
 
     # TEST 1 - character use
     # test to ensure files and directories meet file character requirements
     # file and directory names should only use characters 'a' through 'z', 'A' through 'Z', '0' through '9' and period, plus, hyphen, underscore and score
     # addition the name should not start with plus, hyphen, underscore and score
     # or end with period, plus, hyphen, underscore and score
-    failfileschar=`echo "$filelist" | egrep "^\+\|^\-\|^\_\|^\ \|\.$\|\+$\|\-$\|\_$\|\ $\|[^a-zA-Z0-9.+-_ ]"`
-    if [ `echo "$failfileschar" | wc -w | awk '{print $1}'` -gt 0 ]; then
+    FAILFILESCHAR=`echo "${FILELIST}" | egrep "^\+\|^\-\|^\_\|^\ \|\.$\|\+$\|\-$\|\_$\|\ $\|[^a-zA-Z0-9.+-_ ]"`
+    if [ `echo "${FAILFILESCHAR}" | wc -w | awk '{print $1}'` -gt 0 ]; then
     echo FAIL - these files do not meet the file character specifications
-    echo failed: "$failfileschar"
+    echo failed: "${FAILFILESCHAR}"
     exit 1
     fi
 
-    faildirschar=`echo "$dirlist" | egrep "^\+\|^\-\|^\_\|^\ \|\.$\|\+$\|\-$\|\_$\|\ $\|[^a-zA-Z0-9.+-_ ]"`
-    if [ `echo "$faildirschar" | wc -w | awk '{print $1}'` -gt 0 ]; then
+    FAILDIRSCHAR=`echo "${DIRLIST}" | egrep "^\+\|^\-\|^\_\|^\ \|\.$\|\+$\|\-$\|\_$\|\ $\|[^a-zA-Z0-9.+-_ ]"`
+    if [ `echo "${FAILDIRSCHAR}" | wc -w | awk '{print $1}'` -gt 0 ]; then
     echo FAIL - these directories do not meet the file character specifications
     exit 1
     fi
 
     # TEST 2 - minimal subdirectories
     # test to ensure package directory contains the minimum subdirectories, 'media', 'metadata', and 'thumbnail'
-    firstdirlist=$(find "${package}" -maxdepth 1 -mindepth 1 -type d -exec basename "{}" \;)
-    founddirlist=$(echo "$firstdirlist" | egrep "^media$|^metadata$|^thumbnail$")
-    if [ $(echo "$founddirlist" | wc -l | awk '{print $1}') != "3" ]; then
+    FIRSTDIRLIST=$(find "${PACKAGE}" -maxdepth 1 -mindepth 1 -type d -exec basename "{}" \;)
+    FOUNDDIRLIST=$(echo "${FIRSTDIRLIST}" | egrep "^media$|^metadata$|^thumbnail$")
+    if [ $(echo "${FOUNDDIRLIST}" | wc -l | awk '{print $1}') != "3" ]; then
     echo 'FAIL - Did not find the minimal subdirectories: media, metadata, and thumbnail'
-    echo founddirlist "$founddirlist"
+    echo FOUNDDIRLIST "${FOUNDDIRLIST}"
     exit 2
     fi
 
     # TEST 3 - media subdirectory should contain at least one media tracks in at least one of the files
-    avtracks=`"mediainfo" --inform="General;%VideoCount%\n%AudioCount%\n" "${package}/media/" | awk '{s+=$1} END {print s}'`
-    if [ "$avtracks" == "0" ]; then
-    #echo "${package}/media"
+    AVTRACKS=`"mediainfo" --inform="General;%VideoCount%\n%AudioCount%\n" "${PACKAGE}/media/" | awk '{s+=$1} END {print s}'`
+    if [ "${AVTRACKS}" == "0" ]; then
+    #echo "${PACKAGE}/media"
     #echo "$avtracks"
     echo FAIL - The media subdirectory does not contain any identifiable audiovisual tracks in any of the files.
     exit 3
     fi
 
     # TEST 4 - metadata subdirectory should contain at least one dub watch form, which is has an .xslx extension (Microsoft Excel OpenXML format)
-    md_ext=`find "${package}/metadata" -name '*.xlsx' | grep . -c`
-    if [ "$md_ext" = "0" ]; then
+    MD_EXT=`find "${PACKAGE}/metadata" -name '*.xlsx' | grep . -c`
+    if [ "${MD_EXT}" = "0" ]; then
     echo FAIL - The metadata subdirectory does not contain any OpenXML Microsoft Excel files.
     exit 4
     fi
 
     # TEST 5 - SIP package directory name must pass Fedora regular expression for valid PID prefixes.
-    pkgname=`basename "${package}"`
-    file_pkg_name=`echo "$pkgname" | egrep -v ^[A-Za-z0-9.-]*$`
-    if [ `echo "$file_pkg_name" | wc -w | awk '{print $1}'` -gt 0 ]; then
+    PKGNAME=`basename "${PACKAGE}"`
+    FILE_PKG_NAME=`echo "${PKGNAME}" | egrep -v ^[A-Za-z0-9.-]*$`
+    if [ `echo "${FILE_PKG_NAME}" | wc -w | awk '{print $1}'` -gt 0 ]; then
     echo FAIL - the package directory name does not meet the file character specifications
     exit 5
     fi
 
-    report -dt "$(basename "${outputfile}") is done."
+    _report -dt "$(basename "${OUTPUTFILE}") is done."
     shift
-    log -e
+    _log -e
 done

@@ -1,116 +1,116 @@
 #!/bin/bash
 # uploadomneon
 # upload to omneon
-requireconfig="Y"
+REQUIRECONFIG="Y"
 
-version="1.0"
+VERSION="1.0"
 
-scriptdir=$(dirname "${0}")
-. "${scriptdir}/mmfunctions" || { echo "Missing '${scriptdir}/mmfunctions'. Exiting." ; exit 1 ;};
+SCRIPTDIR=$(dirname "${0}")
+. "${SCRIPTDIR}/mmfunctions" || { echo "Missing '${SCRIPTDIR}/mmfunctions'. Exiting." ; exit 1 ;};
 
-usage(){
+_usage(){
     echo
-    echo "$(basename "${0}") ${version}"
+    echo "$(basename "${0}") ${VERSION}"
     echo "This application will upload file(s) to a server via rsync in sequential order. Options are specified via 'mmconfig'."
     echo
     echo "Settings:"
     echo "OMNEONIP=${OMNEONIP}"
     echo "OMNEONPATH=${OMNEONPATH}"
     echo "TMPDIR=${TMPDIR}"
-    echo "Usage: $(basename $0) file1 [ file2 ...]"
+    echo "Usage: $(basename ${0}) file1 [ file2 ...]"
     echo "  -h ( display this help )"
     echo
     exit
 }
-[ "$#" = 0 ] && usage
+[ "${#}" = 0 ] && _usage
 
-cleanup(){
+_cleanup(){
     _log -a "Process aborted"
     exit 1
 }
 
 get_ftp_status(){
-local filename="${1}"
-status=$(ftp -a "$OMNEONIP" <<END_SCRIPT
+local FILENAME="${1}"
+STATUS=$(ftp -a "${OMNEONIP}" <<END_SCRIPT
 binary
-ls "${OMNEONPATH}/${filename}"
+ls "${OMNEONPATH}/${FILENAME}"
 exit
 END_SCRIPT)
-size=$(echo "$status" | grep "${filename}" | awk '{print $5}')
+SIZE=$(echo "${STATUS}" | grep "${FILENAME}" | awk '{print $5}')
 }
 
-trap cleanup SIGHUP SIGINT SIGTERM
+trap _cleanup SIGHUP SIGINT SIGTERM
 _log -b
 
 # command-line options to set mediaid and original variables
 OPTIND=1
-while getopts ":h" opt; do
-    case "$opt" in
-        h) usage ;;
-        *) echo "Invalid option: -$OPTARG" ; exit 1 ;;
-        :) echo "Option -$OPTARG requires an argument" ; exit 1 ;;
+while getopts ":h" OPT; do
+    case "${OPT}" in
+        h) _usage ;;
+        *) echo "Invalid option: -${OPTARG}" ; exit 1 ;;
+        :) echo "Option -${OPTARG} requires an argument" ; exit 1 ;;
     esac
 done
 shift $(( ${OPTIND} - 1 ))
 
-[ ! "$TMPDIR" ] && { report -wt "The temporary directory must be set and be available. Run 'mmconfig'." ; exit 1 ;};
-[ ! -d "$TMPDIR" ] && mkdir -p "$TMPDIR"
-[ ! -n "$OMNEONIP" ] && { report -wt "The Omneon IP must be set. Run 'mmconfig'." ; exit 1 ;};
-[ ! -n "$OMNEONPATH" ] && { report -wt "The Omneon Path must be set. Run 'mmconfig'." ; exit 1 ;};
+[ ! "${TMPDIR}" ] && { _report -wt "The temporary directory must be set and be available. Run 'mmconfig'." ; exit 1 ;};
+[ ! -d "${TMPDIR}" ] && mkdir -p "${TMPDIR}"
+[ ! -n "${OMNEONIP}" ] && { _report -wt "The Omneon IP must be set. Run 'mmconfig'." ; exit 1 ;};
+[ ! -n "${OMNEONPATH}" ] && { _report -wt "The Omneon Path must be set. Run 'mmconfig'." ; exit 1 ;};
 
 while [ "${*}" != "" ] ; do
 
-sourcefile="${1}"
-extension=$(echo "$sourcefile" |awk -F . '{print $NF}')
-if [ "$extension" == "mov" -o "$extension" == "mxf" ] ; then
+SOURCEFILE="${1}"
+EXTENSION=$(echo "${SOURCEFILE}" |awk -F . '{print $NF}')
+if [ "${EXTENSION}" == "mov" -o "${EXTENSION}" == "mxf" ] ; then
 
-removetmp="n"
-filename=$(basename "$sourcefile")
+REMOVETMP="n"
+FILENAME=$(basename "${SOURCEFILE}")
 
 _log -b
 
-get_ftp_status "${filename}"
-if [[ ! $(echo "$status" | grep "${OMNEONPATH}") ]] ; then
-report "The file named $filename is not currently on the omneon, proceeding..."
+get_ftp_status "${FILENAME}"
+if [[ ! $(echo "${STATUS}" | grep "${OMNEONPATH}") ]] ; then
+_report "The file named ${FILENAME} is not currently on the omneon, proceeding..."
 
-if echo "$sourcefile" | grep -q "/Volumes/" ; then
-    report -dt "The file ${filename} is coming from an external volume. It will first move the file to ${TMPDIR} and then upload to the omneon."
-    rsync -rtv --progress "$sourcefile" "${TMPDIR}/"
-    uploadfile="${TMPDIR}/${filename}"
-    removetmp="y"
+if echo "${SOURCEFILE}" | grep -q "/Volumes/" ; then
+    _report -dt "The file ${FILENAME} is coming from an external volume. It will first move the file to ${TMPDIR} and then upload to the omneon."
+    rsync -rtv --progress "${SOURCEFILE}" "${TMPDIR}/"
+    UPLOADFILE="${TMPDIR}/${FILENAME}"
+    REMOVETMP="y"
 else
-    uploadfile="$sourcefile"
+    UPLOADFILE="${SOURCEFILE}"
 fi
-extension=$(basename "${sourcefile##*.}")
+EXTENSION=$(basename "${SOURCEFILE##*.}")
 
-report -dt "Starting to ftp $filename to the Omneon..."
-ftp -a "$OMNEONIP" <<END_SCRIPT
+_report -dt "Starting to ftp ${FILENAME} to the Omneon..."
+ftp -a "${OMNEONIP}" <<END_SCRIPT
 binary
-put "${uploadfile}" "${OMNEONPATH}/${filename}.uploading.${extension}"
-rename "${OMNEONPATH}/${filename}.uploading.${extension}" "${OMNEONPATH}/${filename}"
+put "${UPLOADFILE}" "${OMNEONPATH}/${FILENAME}.uploading.${EXTENSION}"
+rename "${OMNEONPATH}/${FILENAME}.uploading.${EXTENSION}" "${OMNEONPATH}/${FILENAME}"
 exit
 END_SCRIPT
-upload_err="${?}"
-get_ftp_status "${filename}"
-if [ "$upload_err" = "0" ] ; then
-    report -dt "${filename} is uploaded to the omneon"
-    localsize=$(ls -l "${sourcefile}" | awk '{print $5}')
-    if [[ "${localsize}" = "${size}" ]] ; then
-        report -dt "Uploaded file matches source file at ${size} bytes. Looks good."
+UPLOAD_ERR="${?}"
+get_ftp_status "${FILENAME}"
+if [ "${UPLOAD_ERR}" = "0" ] ; then
+    _report -dt "${FILENAME} is uploaded to the omneon"
+    LOCALSIZE=$(ls -l "${SOURCEFILE}" | awk '{print $5}')
+    if [[ "${LOCALSIZE}" = "${SIZE}" ]] ; then
+        _report -dt "Uploaded file matches source file at ${SIZE} bytes. Looks good."
     else
-        report -wt "WARNING: Uploaded file is ${size} bytes and local file is ${localsize} bytes."
+        _report -wt "WARNING: Uploaded file is ${SIZE} bytes and local file is ${LOCALSIZE} bytes."
     fi
-    if [ "$removetmp" = "y" ] ; then
-        rm -v "${TMPDIR}/${filename}"
+    if [ "${REMOVETMP}" = "y" ] ; then
+        rm -v "${TMPDIR}/${FILENAME}"
     fi
 else
-    report -wt "ftp exited with code ${upload_err} for $uploadfile"
+    _report -wt "ftp exited with code ${UPLOAD_ERR} for ${UPLOADFILE}"
 fi
 else
-report -wt "$filename is already on the omneon as a $size byte file."
+_report -wt "${FILENAME} is already on the omneon as a ${SIZE} byte file."
 fi
 else
-    report -wt "$sourcefile does not use a mov or mxf extension. This will NOT be uploaded."
+    _report -wt "${SOURCEFILE} does not use a mov or mxf EXTENSION. This will NOT be uploaded."
 fi
 shift
 done

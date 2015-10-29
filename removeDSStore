@@ -1,21 +1,21 @@
 #!/bin/bash
 # @author Dave Rice
 
-scriptdir=$(dirname "${0}")
-. "${scriptdir}/mmfunctions" || { echo "Missing '${scriptdir}/mmfunctions'. Exiting." ; exit 1 ;};
+SCRIPTDIR=$(dirname "${0}")
+. "${SCRIPTDIR}/mmfunctions" || { echo "Missing '${SCRIPTDIR}/mmfunctions'. Exiting." ; exit 1 ;};
 
-cleanup(){
+_cleanup(){
     _log -a "Process aborted"
     exit 1
 }
 
-trap cleanup SIGHUP SIGINT SIGTERM
+trap _cleanup SIGHUP SIGINT SIGTERM
 _log -b
 
 while [ "${*}" != "" ] ; do
-    target=$1
-    if [ -d "$target" ]; then
-        find "$target" -name '.DS_Store' -type f -delete
+    TARGET=${1}
+    if [ -d "${TARGET}" ]; then
+        find "${TARGET}" -name '.DS_Store' -type f -delete
     fi
     shift
 done

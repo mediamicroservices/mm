@@ -1,85 +1,85 @@
 #!/bin/bash
 # makeframes
-version="1.0"
-scriptdir=$(dirname $(which "${0}"))
-. "${scriptdir}/mmfunctions" || { echo "Missing '${scriptdir}/mmfunctions'. Exiting." ; exit 1 ;};
-dependencies=(ffmpeg ffprobe)
+VERSION="1.0"
+SCRIPTDIR=$(dirname $(which "${0}"))
+. "${SCRIPTDIR}/mmfunctions" || { echo "Missing '${SCRIPTDIR}/mmfunctions'. Exiting." ; exit 1 ;};
+DEPENDENCIES=(ffmpeg ffprobe)
 _initialize_make
-extension="tiff"
+EXTENSION="tiff"
 
 # local variables
 IMAGECOUNT=10
 
-usage(){
+_usage(){
     echo
-    echo "$(basename "${0}") ${version}"
+    echo "$(basename "${0}") ${VERSION}"
     echo "This application will create a series of still images from a video file or package input with the following options."
-    echo "Dependencies: ${dependencies[@]}"
-    echo "Usage: $(basename $0) [ -d /path/to/deliver/to/ ] fileorpackage1 [ fileorpackage2 ...]"
+    echo "Dependencies: ${DEPENDENCIES[@]}"
+    echo "Usage: $(basename ${0}) [ -d /path/to/deliver/to/ ] fileorpackage1 [ fileorpackage2 ...]"
     echo "  -d directory ( directory to deliver the resulting file to )"
     echo "  -n (dry-run mode, show the commands that would be run but don't do anything)"
     echo "  -h display this help"
     echo
     exit
 }
-[ "${#}" = 0 ] && usage
+[ "${#}" = 0 ] && _usage
 
 # command-line options to set mediaid and original variables
 OPTIND=1
-while getopts ":d:e:E:nh" opt ; do
-    case "${opt}" in
-        d) deliverdir="$OPTARG" && check_deliverdir ;;
-        e) emailaddress_delivery="$OPTARG" && check_emailaddress "${emailaddress_delivery}" ;;
-        E) emailaddress_outcome="$OPTARG" && check_emailaddress "${emailaddress_outcome}" ;;
+while getopts ":d:e:E:nh" OPT ; do
+    case "${OPT}" in
+        d) DELIVERDIR="${OPTARG}" && _check_deliverdir ;;
+        e) EMAILADDRESS_DELIVERY="${OPTARG}" && check_emailaddress "${EMAILADDRESS_DELIVERY}" ;;
+        E) EMAILADDRESS_OUTCOME="${OPTARG}" && check_emailaddress "${EMAILADDRESS_OUTCOME}" ;;
         n) DRYRUN=true;;
-        h) usage ;;
-        *) echo "bad option -$OPTARG" ; usage ;;
-        :) echo "Option -$OPTARG requires an argument" ; exit 1 ;;
+        h) _usage ;;
+        *) echo "bad option -${OPTARG}" ; _usage ;;
+        :) echo "Option -${OPTARG} requires an argument" ; exit 1 ;;
     esac
 done
 shift $(( ${OPTIND} - 1 ))
 
 while [ "${*}" != "" ] ; do
-    input="${1}"
-    [ -d "$input" ] && { outputdir="$input/objects/access/images" && logdir="$input/metadata/submissionDocumentation/logs" ;};
-    [ -f "$input" ] && { outputdir=$(dirname "$input")"/access/images" && logdir="$(dirname "$input")/access/logs" ;};
-    [ ! "$outputdir" ] && { outputdir="$input/objects/access/images" && logdir="$input/metadata/submissionDocumentation/logs" ;};
-    _find_input "$input"
+    INPUT="${1}"
+    [ -d "${INPUT}" ] && { OUTPUTDIR="${INPUT}/objects/access/images" && LOGDIR="${INPUT}/metadata/submissionDocumentation/logs" ;};
+    [ -f "${INPUT}" ] && { OUTPUTDIR=$(dirname "${INPUT}")"/access/images" && LOGDIR="$(dirname "${INPUT}")/access/logs" ;};
+    [ ! "$OUTPUTDIR" ] && { OUTPUTDIR="${INPUT}/objects/access/images" && LOGDIR="${INPUT}/metadata/submissionDocumentation/logs" ;};
+    _find_input "${INPUT}"
 
-    mediaid=$(basename "${1}" | cut -d. -f1)
+    MEDIAID=$(basename "${1}" | cut -d. -f1)
 
     # clear local arrays
-    unset inputoptions
+    unset INPUTOPTIONS
 
     # encoding options
-    get_codectagstring "${sourcefile}"
-    inputoptions+=(-vsync 0)
-    inputoptions+=(-nostdin)
-    if [[ "${codec_tag_string}" == "mjp2" ]] ; then
-         inputoptions+=(-vcodec libopenjpeg)
+    _get_codectagstring "${SOURCEFILE}"
+    INPUTOPTIONS+=(-vsync 0)
+    INPUTOPTIONS+=(-nostdin)
+    if [[ "${CODEC_TAG_STRING}" == "mjp2" ]] ; then
+         INPUTOPTIONS+=(-vcodec libopenjpeg)
     fi
 
     _log -b
-    DURATION=$(ffprobe 2>/dev/null "${sourcefile}" -show_format | grep duration | cut -d= -f2)
-    _run_critical mkdir -p "$outputdir"
-    for (( IMAGENUMBER=1; IMAGENUMBER<=$IMAGECOUNT; IMAGENUMBER++)) ; do
-        START=$(echo "( $DURATION / ( $IMAGECOUNT + 1 )) * $IMAGENUMBER" | bc)
-        suffix="_${IMAGENUMBER}"
+    DURATION=$(ffprobe 2>/dev/null "${SOURCEFILE}" -show_format | grep duration | cut -d= -f2)
+    _run_critical mkdir -p "${OUTPUTDIR}"
+    for (( IMAGENUMBER=1; IMAGENUMBER<=${IMAGECOUNT}; IMAGENUMBER++)) ; do
+        START=$(echo "( ${DURATION} / ( ${IMAGECOUNT} + 1 )) * ${IMAGENUMBER}" | bc)
+        SUFFIX="_${IMAGENUMBER}"
         _set_up_output
-        report -d "Making frame $IMAGENUMBER of $IMAGECOUNT  - dur:${DURATION} start:${START} - $output"
+        _report -d "Making frame ${IMAGENUMBER} of ${IMAGECOUNT}  - dur:${DURATION} start:${START} - ${OUTPUT}"
         _prep_ffmpeg_log -q
-        if [ "${concatsource}" != "" ] ; then
-            ffmpeginput="${concatsource}"
+        if [ "${CONCATSOURCE}" != "" ] ; then
+            FFMPEGINPUT="${CONCATSOURCE}"
         else
-            ffmpeginput="${sourcefile}"
+            FFMPEGINPUT="${SOURCEFILE}"
         fi
-        _run_critical ffmpeg -y ${inputoptions[@]} -v warning -ss "$START" -i "${ffmpeginput}" -vf yadif,thumbnail=100 -frames:v 1 "$output"
+        _run_critical ffmpeg -y ${INPUTOPTIONS[@]} -v warning -ss "$START" -i "${FFMPEGINPUT}" -vf yadif,thumbnail=100 -frames:v 1 "${OUTPUT}"
     done
     echo
-    if [ -d "${deliverdir}" ] ; then
-        report -dt "Delivering output"
-        _run mkdir -p "${deliverdir}/${mediaid}_images/"
-        _run cp -av "${outputdir}/" "${deliverdir}/${mediaid}_images/"
+    if [ -d "${DELIVERDIR}" ] ; then
+        _report -dt "Delivering output"
+        _run mkdir -p "${DELIVERDIR}/${MEDIAID}_images/"
+        _run cp -av "${OUTPUTDIR}/" "${DELIVERDIR}/${MEDIAID}_images/"
     fi
     shift
     _log -e

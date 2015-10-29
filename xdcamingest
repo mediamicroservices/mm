@@ -1,126 +1,126 @@
 #!/bin/bash
 # xdcamingest
 # ingest an xdcam disc, make a package, and deliver select files
-requireconfig="Y"
+REQUIRECONFIG="Y"
 
-scriptdir=$(dirname "${0}")
-. "${scriptdir}/mmfunctions" || { echo "Missing '${scriptdir}/mmfunctions'. Exiting." ; exit 1 ;};
+SCRIPTDIR=$(dirname "${0}")
+. "${SCRIPTDIR}/mmfunctions" || { echo "Missing '${SCRIPTDIR}/mmfunctions'. Exiting." ; exit 1 ;};
 
-cleanup(){
+_cleanup(){
     _log -a "Process aborted"
     exit 1
 }
 
-trap cleanup SIGHUP SIGINT SIGTERM
+trap _cleanup SIGHUP SIGINT SIGTERM
 _log -b
 
-usage(){
+_usage(){
     echo
-    echo "$(basename "${0}") ${version}"
+    echo "$(basename "${0}") ${VERSION}"
     echo "This script may be run interactively by running it with no arguments or may be used with the following options."
-    echo "Usage: $(basename $0) [ -c output_directory_for_xdcam ]"
-    echo "  -c output_directory_for_xdcam (else will default to $CONFIG_FILE)"
+    echo "_usage: $(basename ${0}) [ -c output_directory_for_xdcam ]"
+    echo "  -c output_directory_for_xdcam (else will default to ${CONFIG_FILE})"
     exit
 }
 
 # command-line options to set mediaid and original variables
 OPTIND=1
-while getopts ":hm:f:p:a:w:y:x" opt; do
-    case "$opt" in
-        h) usage ;;
-        c) OUTDIR_INGESTXDCAM="$OPTARG" ;;
-        \?) report -w "Invalid option: -$OPTARG" ; exit 1 ;;
-        :) report -w "Option -$OPTARG requires an argument" ; exit 1 ;;
+while getopts ":hm:f:p:a:w:y:x" OPT; do
+    case "${OPT}" in
+        h) _usage ;;
+        c) OUTDIR_INGESTXDCAM="${OPTARG}" ;;
+        \?) _report -w "Invalid option: -${OPTARG}" ; exit 1 ;;
+        :) _report -w "Option -${OPTARG} requires an argument" ; exit 1 ;;
     esac
 done
 
-[ ! -d "$OUTDIR_INGESTXDCAM" ] && { report -w "The XDCam processing directory must be set. Use [ -c /path/to/XDCam/processing/directory ]." ; exit 1 ;};
+[ ! -d "${OUTDIR_INGESTXDCAM}" ] && { _report -w "The XDCam processing directory must be set. Use [ -c /path/to/XDCam/processing/directory ]." ; exit 1 ;};
 
 defaults write com.apple.desktopservices DSDontWriteNetworkStores true
 
 while true ; do
 
     # check to make sure there is only 1 XDCam deck with mounted disk attached.
-    xdcam_count=$(find /Volumes -name 'XDCAM*' -maxdepth 1 | wc -l | awk '{print $1}')
-    while [ $xdcam_count -ne 1 ]; do
-        if [ $xdcam_count -gt 1 ]; then
-            report -wt "More than 1 XDCam deck appears to be mounted, please connect only one."
+    XDCAM_COUNT=$(find /Volumes -name 'XDCAM*' -maxdepth 1 | wc -l | awk '{print $1}')
+    while [ "${XDCAM_COUNT}" -ne 1 ]; do
+        if [ "${XDCAM_COUNT}" -gt 1 ]; then
+            _report -wt "More than 1 XDCam deck appears to be mounted, please connect only one."
             exit 3
         else
-            report -qn "No XDCam disk found. Check deck connection. Click return to continue or 'q' to quit: "
-            read -e ok
-            if [ "$ok" == "q" ]; then
+            _report -qn "No XDCam disk found. Check deck connection. Click return to continue or 'q' to quit: "
+            read -e OK
+            if [ "${OK}" == "q" ]; then
                 exit 0
             fi
         fi
-        xdcam_count=$(find /Volumes -name 'XDCAM*' -maxdepth 1 | wc -l | awk '{print $1}')
+        XDCAM_COUNT=$(find /Volumes -name 'XDCAM*' -maxdepth 1 | wc -l | awk '{print $1}')
     done
 
     #identify deck
-    xdcam_mount=$(find /Volumes -name 'XDCAM*' -maxdepth 1)
-    deck1=$(basename "$xdcam_mount")
-    report -dt "Found the XDCAM deck: ${deck1}"
+    XDCAM_MOUNT=$(find /Volumes -name 'XDCAM*' -maxdepth 1)
+    DECK1=$(basename "${XDCAM_MOUNT}")
+    _report -dt "Found the XDCAM deck: ${DECK1}"
 
-    report -qn "Scan the barcode1, type 1st media_id, or 'q' to quit: "
-    read -e barcode1
-    if [ "$barcode1" == "q" ]; then
+    _report -qn "Scan the barcode1, type 1st media_id, or 'q' to quit: "
+    read -e BARCODE1
+    if [ "${BARCODE1}" == "q" ]; then
         exit 0
     fi
-    report -qn "Scan the barcode2, type 2nd media_id, or 'q' to quit or leave blank if there is no second barcode: "
-    read -e barcode2
-    if [ "$barcode2" == "q" ]; then
+    _report -qn "Scan the barcode2, type 2nd media_id, or 'q' to quit or leave blank if there is no second barcode: "
+    read -e BARCODE2
+    if [ "${BARCODE2}" == "q" ]; then
         exit 0
     fi
 
-    report -qn "Enter the name of the operator or 'q' to quit: "
-    read -e op
-    if [ "$op" == "q" ]; then
+    _report -qn "Enter the name of the operator or 'q' to quit: "
+    read -e OP
+    if [ "${OP}" == "q" ]; then
         exit 0
     fi
 
     # there are two types of barcodes accepted
-    # a. A 58 byte barcode that contains mediaid, deviceid, starttime, and duration
+    # a. A 58 byte barcode that contains mediaid, DEVICEID, starttime, and duration
     # b. A mediaid-only barcode (other values will be requested).
-    if [ "$(echo ${#barcode1})" -eq 58 ] ; then
+    if [ "$(echo ${#BARCODE1})" -eq 58 ] ; then
         # process barcodes with barcode_interpret and parse results into pieces
-        barcode_values1=$(${scriptdir}/barcodeinterpret $barcode1)
-        deviceid1=$(echo $barcode_values1 | cut -d , -f 2)
-        materialid1=$(echo $barcode_values1 | cut -d , -f 4)
-        som1=$(echo $barcode_values1 | cut -d , -f 6)
-        duration1=$(echo $barcode_values1 | cut -d , -f 8)
+        BARCODE_VALUES1=$(${SCRIPTDIR}/barcodeinterpret ${BARCODE1})
+        DEVICEID1=$(echo ${BARCODE_VALUES1} | cut -d , -f 2)
+        MATERIALID1=$(echo ${BARCODE_VALUES1} | cut -d , -f 4)
+        SOM1=$(echo ${BARCODE_VALUES1} | cut -d , -f 6)
+        duration1=$(echo ${BARCODE_VALUES1} | cut -d , -f 8)
 
-        if [ "$barcode2" != "" ] ; then
-            barcode_values2=$(${scriptdir}/barcodeinterpret $barcode2)
-            deviceid2=$(echo $barcode_values2 | cut -d , -f 2)
-            materialid2=$(echo $barcode_values2 | cut -d , -f 4)
-            som2=$(echo $barcode_values2 | cut -d , -f 6)
-            duration2=$(echo $barcode_values2 | cut -d , -f 8)
+        if [ "${BARCODE2}" != "" ] ; then
+            BARCODE_VALUES2=$(${SCRIPTDIR}/barcodeinterpret ${BARCODE2})
+            DEVICEID2=$(echo ${BARCODE_VALUES2} | cut -d , -f 2)
+            MATERIALID2=$(echo ${BARCODE_VALUES2} | cut -d , -f 4)
+            SOM2=$(echo ${BARCODE_VALUES2} | cut -d , -f 6)
+            duration2=$(echo ${BARCODE_VALUES2} | cut -d , -f 8)
         fi
     else
-        # use the barcode for mediaid and deviceid and request other values
-        materialid1="$barcode1"
-        deviceid1="$barcode1"
-        report -qn "BARCODE 1 - Enter start of media in HH:MM:SS:FF format or 'q' to quit: "
-        read -e som1
-        if [ "$som1" == "q" ]; then
+        # use the barcode for mediaid and DEVICEID and request other values
+        MATERIALID1="${BARCODE1}"
+        DEVICEID1="${BARCODE1}"
+        _report -qn "BARCODE 1 - Enter start of media in HH:MM:SS:FF format or 'q' to quit: "
+        read -e SOM1
+        if [ "${SOM1}" == "q" ]; then
             exit 0
         fi
-        report -qn "BARCODE 1 - Enter duration of media in HH:MM:SS:FF format or 'q' to quit: "
-        read -e duration1
-        if [ "$duration1" == "q" ]; then
+        _report -qn "BARCODE 1 - Enter duration of media in HH:MM:SS:FF format or 'q' to quit: "
+        read -e DURATION1
+        if [ "${DURATION1}" == "q" ]; then
             exit 0
         fi
-        if [ "$barcode2" != "" ] ; then
-            materialid2="$barcode2"
-            deviceid2="$barcode2"
-            report -qn "BARCODE 2 - Enter start of media in HH:MM:SS:FF format or 'q' to quit: "
-            read -e som2
-            if [ "$som2" == "q" ]; then
+        if [ "${BARCODE2}" != "" ] ; then
+            MATERIALID2="${BARCODE2}"
+            DEVICEID2="${BARCODE2}"
+            _report -qn "BARCODE 2 - Enter start of media in HH:MM:SS:FF format or 'q' to quit: "
+            read -e SOM2
+            if [ "${SOM2}" == "q" ]; then
                 exit 0
             fi
-            report -qn "BARCODE 2 - Enter duration of media in HH:MM:SS:FF format or 'q' to quit: "
-            read -e duration2
-            if [ "$duration2" == "q" ]; then
+            _report -qn "BARCODE 2 - Enter duration of media in HH:MM:SS:FF format or 'q' to quit: "
+            read -e DURATION2
+            if [ "${DURATION2}" == "q" ]; then
                 exit 0
             fi
         fi
@@ -129,87 +129,87 @@ while true ; do
     # report results of barcode scanning
     echo
     echo ----------------------------------
-    echo deviceid1 is   $deviceid1
-    echo materialid1 is $materialid1
-    echo som1 is        $som1
-    echo duration1 is   $duration1
-    if [ "$barcode2" != "" ] ; then
-        echo deviceid2 is $deviceid2
-        echo materialid2 is $materialid2
-        echo som2 is $som2
-        echo duration2 is $duration2
+    echo DEVICEID1 is   "${DEVICEID1}"
+    echo MATERIALID1 is "${MATERIALID1}"
+    echo SOM1 is        "${SOM1}"
+    echo DURATION1 is   "${DURATION1}"
+    if [ "${BARCODE2}" != "" ] ; then
+        echo DEVICEID2 is "${DEVICEID2}"
+        echo MATERIALID2 is "${MATERIALID2}"
+        echo SOM2 is "${SOM2}"
+        echo DURATION2 is "${DURATION2}"
     fi
     echo ----------------------------------
     PS3="Do you values look correct? "
     eval set "'Yes' 'No'"
-    select option in "$@"
+    select OPTION in "${@}"
     do
         break
     done
-    if [ "$option" != "Yes" ] ; then
+    if [ "${OPTION}" != "Yes" ] ; then
         echo Start Over
         echo
     else
         # check for existing output
-        if [ -d "$OUTDIR_INGESTXDCAM/$deviceid1" ] ; then
-            report -dt "It looks like $deviceid1 was already ingested. If you want to overwrite the existing one please delete $OUTDIR_INGESTXDCAM/$deviceid1 first and then try again."
+        if [ -d "${OUTDIR_INGESTXDCAM}/${DEVICEID1}" ] ; then
+            _report -dt "It looks like ${DEVICEID1} was already ingested. If you want to overwrite the existing one please delete ${OUTDIR_INGESTXDCAM}/${DEVICEID1} first and then try again."
         else
             # start xdcam ingest process
-            start=$(date -u "+%Y%m%dT%H%M%SZ")
-            mkdir -p "$OUTDIR_INGESTXDCAM/$deviceid1/object"
-            report -dt "copying disc..."
-            rsync -rtv --stats --progress --log-file="$OUTDIR_INGESTXDCAM/$deviceid1/object/cp.log" "/Volumes/${deck1}" "$OUTDIR_INGESTXDCAM/$deviceid1/object/"
+            START=$(date -u "+%Y%m%dT%H%M%SZ")
+            mkdir -p "${OUTDIR_INGESTXDCAM}/${DEVICEID1}/object"
+            _report -dt "copying disc..."
+            rsync -rtv --stats --progress --log-file="${OUTDIR_INGESTXDCAM}/${DEVICEID1}/object/cp.log" "/Volumes/${DECK1}" "${OUTDIR_INGESTXDCAM}/${DEVICEID1}/object/"
             end=$(date -u "+%Y%m%dT%H%M%SZ")
-            hdiutil eject "/Volumes/${deck1}"
+            hdiutil eject "/Volumes/${DECK1}"
 
-            mxffile=$(find "${OUTDIR_INGESTXDCAM}/${deviceid1}/object/${deck1}/Clip" -name "*.MXF")
-            if [[ $(echo "$mxffile" | wc -l | sed 's/ //g') > 1 ]] ; then
-                echo error. The clip directory of "$deviceid1" has more than 1 MXF file.
+            MXFFILE=$(find "${OUTDIR_INGESTXDCAM}/${DEVICEID1}/object/${DECK1}/Clip" -name "*.MXF")
+            if [[ $(echo "${MXFFILE}" | wc -l | sed 's/ //g') > 1 ]] ; then
+                echo error. The clip directory of "${DEVICEID1}" has more than 1 MXF file.
                 exit 1
             fi
 
             # test for data track
-            hasdata1=$(if [ $(ffprobe -show_streams "$mxffile" 2>&1 | grep codec_type=data | wc -l) = 0 ] ; then echo no; else echo yes; fi)
+            HASDATA1=$(if [ $(ffprobe -show_streams "${MXFFILE}" 2>&1 | grep codec_type=data | wc -l) = 0 ] ; then echo no; else echo yes; fi)
 
             # start reporting to operator log
-            echo "datetime_start: ${start}" >> "$OUTDIR_INGESTXDCAM/$deviceid1/object/op.log"
-            echo "datetime_end: ${end}" >> "$OUTDIR_INGESTXDCAM/$deviceid1/object/op.log"
-            echo "operator: ${op}" >> "$OUTDIR_INGESTXDCAM/$deviceid1/object/op.log"
-            echo "deck: ${deck1}" >> "$OUTDIR_INGESTXDCAM/$deviceid1/object/op.log"
-            echo "barcode.1: ${barcode1}" >> "$OUTDIR_INGESTXDCAM/$deviceid1/object/op.log"
-            echo "deviceid.1: ${deviceid1}" >> "$OUTDIR_INGESTXDCAM/$deviceid1/object/op.log"
-            echo "materialid.1: ${materialid1}" >> "$OUTDIR_INGESTXDCAM/$deviceid1/object/op.log"
-            echo "som.1: ${som1}" >> "$OUTDIR_INGESTXDCAM/$deviceid1/object/op.log"
-            echo "duration.1: ${duration1}" >> "$OUTDIR_INGESTXDCAM/$deviceid1/object/op.log"
-            echo "mxffile.1: ${mxffile}" >> "$OUTDIR_INGESTXDCAM/$deviceid1/object/op.log"
-            echo "hasdata.1: ${hasdata1}" >> "$OUTDIR_INGESTXDCAM/$deviceid1/object/op.log"
-            if [ "$barcode2" != "" ] ; then
-                echo "barcode.2: ${barcode2}" >> "$OUTDIR_INGESTXDCAM/$deviceid1/object/op.log"
-                echo "deviceid.2: ${deviceid2}" >> "$OUTDIR_INGESTXDCAM/$deviceid1/object/op.log"
-                echo "materialid.2: ${materialid2}" >> "$OUTDIR_INGESTXDCAM/$deviceid1/object/op.log"
-                echo "som.2: ${som2}" >> "$OUTDIR_INGESTXDCAM/$deviceid1/object/op.log"
-                echo "duration.2: ${duration2}" >> "$OUTDIR_INGESTXDCAM/$deviceid1/object/op.log"
+            echo "datetime_start: ${START}" >> "${OUTDIR_INGESTXDCAM}/${DEVICEID1}/object/op.log"
+            echo "datetime_end: ${END}" >> "${OUTDIR_INGESTXDCAM}/${DEVICEID1}/object/op.log"
+            echo "operator: ${OP}" >> "${OUTDIR_INGESTXDCAM}/${DEVICEID1}/object/op.log"
+            echo "deck: ${DECK1}" >> "${OUTDIR_INGESTXDCAM}/${DEVICEID1}/object/op.log"
+            echo "BARCODE.1: ${BARCODE1}" >> "${OUTDIR_INGESTXDCAM}/${DEVICEID1}/object/op.log"
+            echo "DEVICEID.1: ${DEVICEID1}" >> "${OUTDIR_INGESTXDCAM}/${DEVICEID1}/object/op.log"
+            echo "MATERIALID.1: ${MATERIALID1}" >> "${OUTDIR_INGESTXDCAM}/${DEVICEID1}/object/op.log"
+            echo "SOM.1: ${SOM1}" >> "${OUTDIR_INGESTXDCAM}/${DEVICEID1}/object/op.log"
+            echo "duration.1: ${DURATION1}" >> "${OUTDIR_INGESTXDCAM}/${DEVICEID1}/object/op.log"
+            echo "mxffile.1: ${MXFFILE}" >> "${OUTDIR_INGESTXDCAM}/${DEVICEID1}/object/op.log"
+            echo "hasdata.1: ${HASDATA1}" >> "${OUTDIR_INGESTXDCAM}/${DEVICEID1}/object/op.log"
+            if [ "${BARCODE2}" != "" ] ; then
+                echo "BARCODE.2: ${BARCODE2}" >> "${OUTDIR_INGESTXDCAM}/${DEVICEID1}/object/op.log"
+                echo "DEVICEID.2: ${DEVICEID2}" >> "${OUTDIR_INGESTXDCAM}/${DEVICEID1}/object/op.log"
+                echo "MATERIALID.2: ${MATERIALID2}" >> "${OUTDIR_INGESTXDCAM}/${DEVICEID1}/object/op.log"
+                echo "SOM.2: ${SOM2}" >> "${OUTDIR_INGESTXDCAM}/${DEVICEID1}/object/op.log"
+                echo "duration.2: ${DURATION2}" >> "${OUTDIR_INGESTXDCAM}/${DEVICEID1}/object/op.log"
             fi
 
             # make and deliver broadcast version
-            report -dt "making omneon version..."
-            mezzfiledir="${OUTDIR_INGESTXDCAM}/${deviceid1}/broadcast_version"
-            mkdir -p "$mezzfiledir"
-            report -dt "running make_mezz_for_xdcam $som1 $duration1 $mxffile $mezzfiledir/${materialid1}.mxf"
-            make_mezz_for_xdcam "$som1" "$duration1" "$mxffile" "$mezzfiledir/${materialid1}.mxf"
-            report -dt "starting to ftp the broadcast file for "${materialid1}" to the Omneon..."
-            "${scriptdir}/uploadomneon" "$mezzfiledir/${materialid1}.mxf"
+            _report -dt "making omneon version..."
+            MEZZFILEDIR="${OUTDIR_INGESTXDCAM}/${DEVICEID1}/broadcast_version"
+            mkdir -p "${MEZZFILEDIR}"
+            _report -dt "running make_mezz_for_xdcam ${SOM1} ${DURATION1} ${MXFFILE} ${MEZZFILEDIR}/${MATERIALID1}.mxf"
+            _make_mezz_for_xdcam "${SOM1}" "${DURATION1}" "${MXFFILE}" "${MEZZFILEDIR}/${MATERIALID1}.mxf"
+            _report -dt "starting to ftp the broadcast file for "${MATERIALID1}" to the Omneon..."
+            "${SCRIPTDIR}/uploadomneon" "${MEZZFILEDIR}/${MATERIALID1}.mxf"
 
-            if [ "$barcode2" != "" ] ; then
-                report -dt "running make_mezz_for_xdcam $som2 $duration2 $mxffile $mezzfiledir/${materialid2}.mxf"
-                make_mezz_for_xdcam "$som2" "$duration2" "$mxffile" "$mezzfiledir/${materialid2}.mxf"
-                report -dt "starting to ftp the broadcast file for "${materialid2}" to the Omneon..."
-                "${scriptdir}/uploadomneon" "$mezzfiledir/${materialid2}.mxf"
+            if [ "${BARCODE2}" != "" ] ; then
+                _report -dt "running make_mezz_for_xdcam $SOM2 ${DURATION2} ${MXFFILE} ${MEZZFILEDIR}/${MATERIALID2}.mxf"
+                _make_mezz_for_xdcam "$SOM2" "${DURATION2}" "${MXFFILE}" "${MEZZFILEDIR}/${MATERIALID2}.mxf"
+                _report -dt "starting to ftp the broadcast file for "${MATERIALID2}" to the Omneon..."
+                "${SCRIPTDIR}/uploadomneon" "${MEZZFILEDIR}/${MATERIALID2}.mxf"
             fi
 
-            report -dt "starting initial checksum and packaging..."
-            bag baginplace "${OUTDIR_INGESTXDCAM}/${deviceid1}"
-            report -dt "done with $deviceid1 at $(date)"
+            _report -dt "starting initial checksum and packaging..."
+            bag baginplace "${OUTDIR_INGESTXDCAM}/${DEVICEID1}"
+            _report -dt "done with ${DEVICEID1} at $(date)"
         fi
     fi
 done

@@ -1,104 +1,104 @@
 #!/bin/bash
 # makelossless
-version="1.0"
-scriptdir=$(dirname $(which "${0}"))
-. "${scriptdir}/mmfunctions" || { echo "Missing '${scriptdir}/mmfunctions'. Exiting." ; exit 1 ;};
-dependencies=(ffmpeg ffprobe mediainfo)
+VERSION="1.0"
+SCRIPTDIR=$(dirname $(which "${0}"))
+. "${SCRIPTDIR}/mmfunctions" || { echo "Missing '${SCRIPTDIR}/mmfunctions'. Exiting." ; exit 1 ;};
+DEPENDENCIES=(ffmpeg ffprobe mediainfo)
 _initialize_make
 
-usage(){
+_usage(){
     echo
-    echo "$(basename "${0}") ${version}"
+    echo "$(basename "${0}") ${VERSION}"
     echo "This application will losslessly transcode a video file or package input with the following options."
-    echo "Dependencies: ${dependencies[@]}"
-    echo "Usage: $(basename $0) fileorpackage1 [ fileorpackage2 ...]"
+    echo "Dependencies: ${DEPENDENCIES[@]}"
+    echo "Usage: $(basename ${0}) fileorpackage1 [ fileorpackage2 ...]"
     echo "  -j (use lossless jpeg2000 instead of ffv1 version 3)"
     echo "  -n (dry-run mode, show the commands that would be run but don't do anything)"
     echo "  -h display this help"
     echo
     exit
 }
-[ "${#}" = 0 ] && usage
+[ "${#}" = 0 ] && _usage
 
 # command-line options to set mediaid and original variables
 OPTIND=1
-while getopts ":jnh" opt ; do
-    case "${opt}" in
-        j) jpeg2000mode="Y";;
+while getopts ":jnh" OPT ; do
+    case "${OPT}" in
+        j) JPEG2000MODE="Y";;
         n) DRYRUN=true;;
-        h) usage ;;
-        *) echo "bad option -$OPTARG" ; usage ;;
-        :) echo "Option -$OPTARG requires an argument" ; exit 1 ;;
+        h) _usage ;;
+        *) echo "bad option -${OPTARG}" ; _usage ;;
+        :) echo "Option -${OPTARG} requires an argument" ; exit 1 ;;
     esac
 done
 shift $(( ${OPTIND} - 1 ))
 
 while [ "${*}" != "" ] ; do
     # get context about the input
-    input="${1}"
-    [ -d "${input}" ] && logdir="${input}/metadata/submissionDocumentation/logs"
-    [ -f "${input}" ] && logdir="$(dirname "${input}")/lossless/logs"
-    [ ! "${logdir}" ] && logdir="${input}/metadata/submissionDocumentation/logs"
+    INPUT="${1}"
+    [ -d "${INPUT}" ] && LOGDIR="${INPUT}/metadata/submissionDocumentation/logs"
+    [ -f "${INPUT}" ] && LOGDIR="$(dirname "${INPUT}")/lossless/logs"
+    [ ! "${LOGDIR}" ] && LOGDIR="${INPUT}/metadata/submissionDocumentation/logs"
 
-    find "${input}" -type f \( -iname "*.mov" -o -iname "*.avi" -o -iname "*.mxf" \) -print0 | while read -d $'\0' sourcefile ; do
-        outputdir=$(dirname "${sourcefile}")
-        sourcefilename=$(basename "${sourcefile}")
+    find "${INPUT}" -type f \( -iname "*.mov" -o -iname "*.avi" -o -iname "*.mxf" \) -print0 | while read -d $'\0' SOURCEFILE ; do
+        OUTPUTDIR=$(dirname "${SOURCEFILE}")
+        SOURCEFILENAME=$(basename "${SOURCEFILE}")
 
         _log -b
 
         # clear local arrays
-        unset inputoptions
-        unset inputoptionsframemd5
-        unset middleoptions
+        unset INPUTOPTIONS
+        unset INPUTOPTIONSFRAMEMD5
+        unset MIDDLEOPTIONS
 
         # encoding options
-        get_codectagstring "${sourcefile}"
-        get_videostreamcount "${sourcefile}"
-        get_audiostreamcount "${sourcefile}"
-        inputoptions+=(-nostdin)
-        inputoptions+=(-vsync 0)
+        _get_codectagstring "${SOURCEFILE}"
+        _get_videostreamcount "${SOURCEFILE}"
+        _get_audiostreamcount "${SOURCEFILE}"
+        INPUTOPTIONS+=(-nostdin)
+        INPUTOPTIONS+=(-vsync 0)
         if [[ "${VIDEOSTREAMCOUNT}" > 0 ]] ; then
-            if [[ "${codec_tag_string}" == "mjp2" ]] ; then
-                 inputoptions+=(-vcodec libopenjpeg)
+            if [[ "${CODEC_TAG_STRING}" == "mjp2" ]] ; then
+                 INPUTOPTIONS+=(-vcodec libopenjpeg)
             fi
-            middleoptions+=(-map 0:v)
-            middleoptions+=(-map 0:a)
-            if [[ "${jpeg2000mode}" == "Y" ]] ; then
-                middleoptions+=(-c:v libopenjpeg)
-                inputoptionsframemd5+=(-vcodec libopenjpeg)
-                suffix="_j2k"
+            MIDDLEOPTIONS+=(-map 0:v)
+            MIDDLEOPTIONS+=(-map 0:a)
+            if [[ "${JPEG2000MODE}" == "Y" ]] ; then
+                MIDDLEOPTIONS+=(-c:v libopenjpeg)
+                INPUTOPTIONSFRAMEMD5+=(-vcodec libopenjpeg)
+                SUFFIX="_j2k"
             else
-                middleoptions+=(-c:v ffv1 -level 3 -g 1)
-                suffix="_ffv1"
+                MIDDLEOPTIONS+=(-c:v ffv1 -level 3 -g 1)
+                SUFFIX="_ffv1"
             fi
-            middleoptions+=(-vf setfield=bff) # this is a presumption but much of the uncompressed input is bff but not probably labelled
+            MIDDLEOPTIONS+=(-vf setfield=bff) # this is a presumption but much of the uncompressed input is bff but not probably labelled
         fi
         if [[ "${AUDIOSTREAMCOUNT}" > 0 ]] ; then
-            middleoptions+=(-c:a copy)
+            MIDDLEOPTIONS+=(-c:a copy)
         fi
-        get_codectagstring "${sourcefile}"
-        _run mkdir -p "${outputdir}" "${logdir}"
-        if [ "${codec_tag_string}" == "2vuy" -o "${codec_tag_string}" == "v210" ] ; then
-            report -dt "${sourcefilename} is ${codec_tag_string}, starting encode"
+        _get_codectagstring "${SOURCEFILE}"
+        _run mkdir -p "${OUTPUTDIR}" "${LOGDIR}"
+        if [ "${CODEC_TAG_STRING}" == "2vuy" -o "${CODEC_TAG_STRING}" == "v210" ] ; then
+            _report -dt "${SOURCEFILENAME} is ${CODEC_TAG_STRING}, starting encode"
             _prep_ffmpeg_log
-            _run_critical ffmpeg ${inputoptions[@]} -i "${sourcefile}"  ${middleoptions[@]} "${outputdir}/${sourcefilename%.*}${suffix}.mov" -f framemd5 -an "${logdir}/${sourcefilename%.*}.framemd5"
-            if [ "${codec_tag_string}" == "2vuy" ] ; then
-                _run_critical ffmpeg ${inputoptions[@]} -i "${outputdir}/${sourcefilename%.*}${suffix}.mov" -f framemd5 -pix_fmt uyvy422 -an "${logdir}/${sourcefilename%.*}${suffix}.framemd5"
+            _run_critical ffmpeg ${INPUTOPTIONS[@]} -i "${SOURCEFILE}"  ${MIDDLEOPTIONS[@]} "${OUTPUTDIR}/${SOURCEFILENAME%.*}${SUFFIX}.mov" -f framemd5 -an "${LOGDIR}/${SOURCEFILENAME%.*}.framemd5"
+            if [ "${CODEC_TAG_STRING}" == "2vuy" ] ; then
+                _run_critical ffmpeg ${INPUTOPTIONS[@]} -i "${OUTPUTDIR}/${SOURCEFILENAME%.*}${SUFFIX}.mov" -f framemd5 -pix_fmt uyvy422 -an "${LOGDIR}/${SOURCEFILENAME%.*}${SUFFIX}.framemd5"
             else
-                _run_critical ffmpeg ${inputoptions[@]} ${inputoptionsframemd5[@]} -i "${outputdir}/${sourcefilename%.*}${suffix}.mov" -f framemd5 -an "${logdir}/${sourcefilename%.*}${suffix}.framemd5"
+                _run_critical ffmpeg ${INPUTOPTIONS[@]} ${INPUTOPTIONSFRAMEMD5[@]} -i "${OUTPUTDIR}/${SOURCEFILENAME%.*}${SUFFIX}.mov" -f framemd5 -an "${LOGDIR}/${SOURCEFILENAME%.*}${SUFFIX}.framemd5"
             fi
-            if [ $(grep -v "^#" "${logdir}/${sourcefilename%.*}.framemd5" | md5 -q) = $(grep -v "^#" "${logdir}/${sourcefilename%.*}${suffix}.framemd5" | md5 -q) ] ; then
-                report -dt "Everything looks safe. Going to delete the original."
-                _run_critical mediainfo -f --language=raw --output=XML "${sourcefile}" > "${logdir}/${sourcefilename%.*}_mediainfo.xml"
-                _run_critical rm -f -v "${sourcefile}"
+            if [ $(grep -v "^#" "${LOGDIR}/${SOURCEFILENAME%.*}.framemd5" | md5 -q) = $(grep -v "^#" "${LOGDIR}/${SOURCEFILENAME%.*}${SUFFIX}.framemd5" | md5 -q) ] ; then
+                _report -dt "Everything looks safe. Going to delete the original."
+                _run_critical mediainfo -f --language=raw --output=XML "${SOURCEFILE}" > "${LOGDIR}/${SOURCEFILENAME%.*}_mediainfo.xml"
+                _run_critical rm -f -v "${SOURCEFILE}"
             else
-                report -wt "Not looking safe. Going to keep the original."
+                _report -wt "Not looking safe. Going to keep the original."
             fi
         else
-            report -wt "${sourcefilename} is not 2vuy or v210 or progressive ffv1, skipping"
+            _report -wt "${SOURCEFILENAME} is not 2vuy or v210 or progressive ffv1, skipping"
             continue
         fi
-        report -dt done with "${sourcefile}"
+        _report -dt done with "${SOURCEFILE}"
     done
     shift
     _log -e
