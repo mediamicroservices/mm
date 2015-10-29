@@ -135,7 +135,6 @@ _run_critical(){
     fi
 }
 
-<<<<<<< HEAD
 _black_at_ends(){
     INPUT_MOVIE="${1}"
     ANALYSIS_HEAD_SECONDS=10
@@ -145,17 +144,6 @@ _black_at_ends(){
     _report -dt "Black frames in first ${ANALYSIS_HEAD_SECONDS} seconds: ${HEAD_BLACK}."
     TAIL_BLACK=$(ffmpeg -sseof "${ANALYSIS_TAIL_SECONDS}" -i "${1}" -an -vf blackdetect=pix_th=0.05 -loglevel debug -f null - 2>&1 | grep -c -o picture_black_ratio:1)
     _report -dt "Black frames in last  ${ANALYSIS_HEAD_SECONDS} seconds: ${TAIL_BLACK}."
-=======
-black_at_ends(){
-    input_movie="${1}"
-    analysis_head_seconds=10
-    analysis_tail_seconds=-10
-    report -dt "Analyzing $(basename "${input_movie}") for excessive black at head or tail."
-    head_black=$(ffmpeg -t "${analysis_head_seconds}" -i "${1}" -an -vf blackdetect=pix_th=0.05 -loglevel debug -f null - 2>&1 | grep -c -o picture_black_ratio:1)
-    report -dt "Black frames in first ${analysis_head_seconds} seconds: ${head_black}."
-    tail_black=$(ffmpeg -sseof "${analysis_tail_seconds}" -i "${1}" -an -vf blackdetect=pix_th=0.05 -loglevel debug -f null - 2>&1 | grep -c -o picture_black_ratio:1)
-    report -dt "Black frames in last  ${analysis_head_seconds} seconds: ${tail_black}."
->>>>>>> combine-restructure-finishpackage
 }
 
 _maketemp(){
@@ -200,30 +188,11 @@ _ask_input(){
     fi
 }
 
-<<<<<<< HEAD
 _ask_trimmed_materials(){
         _report -qn "Drag in any trimmed materials: "
         read -e -a TRIMMED
         [ "${TRIMMED[0]}" == "q" ] && exit 0
         [ ! -z "${TRIMMED}" ] && LOG+="trimmed_materials: ${TRIMMED}\n"
-=======
-_ask_digitization_logs(){
-        report -qn "Drag in any logs from digitization: "
-        read -e -a FILES
-        [ "$FILES[0]" == "q" ] && exit 0
-        [ ! -z "${FILES}" ] && log+="digitization_logs: ${FILES}\n"
-}
-
-_reset_directory(){
-    if [ "${preservation_mode}" == "Y" ] ; then
-        report -qn "Drag in the directory you want you AIP to be delivered to: "
-        read OUTDIR_INGESTFILE
-        if [ ! -d "${OUTDIR_INGESTFILE}" ] ; then
-            report -wt "ERROR You must choose a directory for delivery"
-            _reset_directory            
-        fi
-    fi
->>>>>>> combine-restructure-finishpackage
 }
 
 _ask_intime(){
