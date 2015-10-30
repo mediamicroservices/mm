@@ -37,7 +37,7 @@ while getopts ":F:pnhei" OPT ; do
     case "${OPT}" in
         F) FORMULA="${OPTARG}";;
         e) EDIT_MODE="Y" ;;
-        p) PRESERVATION_MODE="Y" ; DELIVERYTOOMNEON="N" ; DELIVERACCESSCOPIES="N" ; DELIVERYTOAIPSTORAGE="N" ; CLEANUPDECISION="Remove source file after successful ingest" ;;
+        p) PRESERVATION_MODE="Y" ; DELIVERYTOOMNEON="N" ; DELIVERACCESSCOPIES="N" ; DELIVERYTOAIPSTORAGE="N" ; CLEANUP_CHOICE="Y" ; CLEANUPDECISION="Remove source file after successful ingest" ;;
         n) DELIVERYTOOMNEON="N" ; DELIVERACCESSCOPIES="N" ;;
         i) DELIVERYTOOMNEON="Y" ; DELIVERACCESSCOPIES="N" ; DELIVERYTOAIPSTORAGE="Y" ;;
         h) _usage ;;
@@ -410,7 +410,7 @@ if [ "${DOCHECKSUMS}" = "Y" ] ; then
 fi
 
 # more logging
-_writeingestlog "datetime_end" "$(get_iso8601)"
+_writeingestlog "datetime_end" "$(_get_iso8601)"
 
 # move and cleanup
 if [ "${DELIVERYTOAIPSTORAGE}" == "Y" ] ; then

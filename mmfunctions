@@ -98,7 +98,7 @@ _writeingestlog(){
         KEY="${1}"
         VALUE="${2}"
         # need to add yaml style escaping
-        echo "${KEY}: ${VALUE}" >> "${INGEST}"
+        echo "${KEY}: ${VALUE}" >> "${INGESTLOG}"
     else
         _report -wt "The _writeingestlog function was called but the ingestlog file (${INGESTLOG}) is not declared."
     fi
