@@ -120,13 +120,13 @@ while [ "${*}" != "" ] ; do
         MIDDLEOPTIONS+=(-lmin 1)
         MIDDLEOPTIONS+=(-lmax 200000)
         if  [[ "${WIDTH}" == 720 && "${HEIGHT}" == 486 ]] ; then
-            MIDDLEOPTIONS+=(-vf "FIELDORDER=bff,crop=720:480:0:4,setdar=${ASPECT}${TIMECODEOVERLAY}" -aspect "${ASPECT}")
+            MIDDLEOPTIONS+=(-vf "fieldorder=bff,crop=720:480:0:4,setdar=${ASPECT}${TIMECODEOVERLAY}" -aspect "${ASPECT}")
         elif  [[ "${WIDTH}" == 720 && "${HEIGHT}" == 480 ]] ; then
-            MIDDLEOPTIONS+=(-vf "FIELDORDER=bff,setdar=${ASPECT}${TIMECODEOVERLAY}" -aspect "${ASPECT}")
+            MIDDLEOPTIONS+=(-vf "fieldorder=bff,setdar=${ASPECT}${TIMECODEOVERLAY}" -aspect "${ASPECT}")
         elif  [[ "${WIDTH}" == 720 && "${HEIGHT}" == 512 ]] ; then
-            MIDDLEOPTIONS+=(-vf "FIELDORDER=bff,crop=720:480:0:32,setdar=${ASPECT}${TIMECODEOVERLAY}" -aspect "${ASPECT}")
+            MIDDLEOPTIONS+=(-vf "fieldorder=bff,crop=720:480:0:32,setdar=${ASPECT}${TIMECODEOVERLAY}" -aspect "${ASPECT}")
         else
-            MIDDLEOPTIONS+=(-vf "FIELDORDER=bff,scale=720:480:interl=1,setdar=${ASPECT}${TIMECODEOVERLAY}" -aspect "${ASPECT}")
+            MIDDLEOPTIONS+=(-vf "fieldorder=bff,scale=720:480:interl=1,setdar=${ASPECT}${TIMECODEOVERLAY}" -aspect "${ASPECT}")
         fi
     fi
     if [[ "${AUDIOSTREAMCOUNT}" > 0 ]] ; then

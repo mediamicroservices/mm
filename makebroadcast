@@ -175,7 +175,7 @@ while [ "${*}" != "" ] ; do
         fi
         _get_fieldorder "${SOURCEFILE}"
         if [ "${FIELDORDER}" != "tff" ] ; then
-            FILTERCHAIN_START="${FILTERCHAIN_START}FIELDORDER=tff,"
+            FILTERCHAIN_START="${FILTERCHAIN_START}fieldorder=tff,"
         fi
         if [ "${FORMULA}" = "hds" ] ; then
             MIDDLEOPTIONS+=(-vf "${FILTERCHAIN_START}scale=size=hd1080:interl=1,format=yuv422p,setsar=1/1,setdar=16/9,fps=fps=ntsc")

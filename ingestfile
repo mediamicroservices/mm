@@ -37,7 +37,7 @@ while getopts ":F:pnhei" OPT ; do
     case "${OPT}" in
         F) FORMULA="${OPTARG}";;
         e) EDIT_MODE="Y" ;;
-        p) PRESERVATION_MODE="Y" ; DELIVERYTOOMNEON="N" ; DELIVERACCESSCOPIES="N" ; DELIVERYTOAIPSTORAGE="N" ;;
+        p) PRESERVATION_MODE="Y" ; DELIVERYTOOMNEON="N" ; DELIVERACCESSCOPIES="N" ; DELIVERYTOAIPSTORAGE="N" ; CLEANUPDECISION="Remove source file after successful ingest" ;;
         n) DELIVERYTOOMNEON="N" ; DELIVERACCESSCOPIES="N" ;;
         i) DELIVERYTOOMNEON="Y" ; DELIVERACCESSCOPIES="N" ; DELIVERYTOAIPSTORAGE="Y" ;;
         h) _usage ;;
@@ -358,7 +358,7 @@ fi
 # if in preservation mode then handle DIGITIZATION LOGS
 if [ "${PRESERVATION_MODE}" = "Y" ] ; then
     if [ ! "${#FILES[@]}" = 0 ] ; then
-        _run_critical rsync -rt --progress --log-file="${LOGDIR}/rsync_$(get_iso8601_c)_$(basename $0)_${VERSION}.txt" "${FILES[@]}" "${LOGDIR}/"
+        _run_critical rsync -rt --progress --log-file="${LOGDIR}/rsync_$(_get_iso8601_c)_$(basename $0)_${VERSION}.txt" "${FILES[@]}" "${LOGDIR}/"
     fi
     makelossless "${OUTDIR_INGESTFILE}/${MEDIAID}"
 fi
