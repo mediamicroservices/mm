@@ -349,17 +349,20 @@ fi
 if [ "${FROM}" == "${TO}" -a "${CLEANUP_CHOICE}" == "Y" ] ; then
     _report -dt "Because ${INPUT} and ${OBJECTSDIR} are on the same filesystem and preservation mode is enabled we will mv rather than rsync."
     _run_critical mv -v -n "${INPUT}" "${OBJECTSDIR}/"
+    if [ ! "${#FILES[@]}" = 0 ] ; then
+        _run_critical mv -v -n "${FILES[@]}" "${LOGDIR}/"
+    fi
 else
     _report -dt "STATUS Copying the original file to library storage at ${OBJECTSDIR}."
     _run_critical rsync -rt --progress --log-file="${LOGDIR}/rsync_$(_get_iso8601_c)_$(basename ${0})_${VERSION}.txt" "${INPUT}" "${OBJECTSDIR}/"
-fi
-
-
-# if in preservation mode then handle DIGITIZATION LOGS
-if [ "${PRESERVATION_MODE}" = "Y" ] ; then
     if [ ! "${#FILES[@]}" = 0 ] ; then
         _run_critical rsync -rt --progress --log-file="${LOGDIR}/rsync_$(_get_iso8601_c)_$(basename $0)_${VERSION}.txt" "${FILES[@]}" "${LOGDIR}/"
     fi
+fi
+
+
+# if the input is uncompressed, this will try and compress the file
+if [ "${PRESERVATION_MODE}" = "Y" ] ; then   
     makelossless "${OUTDIR_INGESTFILE}/${MEDIAID}"
 fi
 
