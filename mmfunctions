@@ -281,12 +281,12 @@ _check_deliverdir(){
 }
 
 _check_outputdir_forced(){
-    if [ ! -d "${1}" ] ; then
-        _report -wt "The directory, ${1}, does not exist. Can not write the output of $(basename "${0}")."
+    if [ ! -d "${OUTPUTDIR_FORCED}" ] ; then
+        _report -wt "The directory, ${OUTPUTDIR_FORCED}, does not exist. Can not write the output of $(basename "${0}")."
     fi
 }
 
-check_emailaddress(){
+_check_emailaddress(){
     EMAILREGEX="^((\w+([-+.']\w+)*@\w+([-.]\w+)*\.\w+([-.]\w+)*)*([,])*)*$"
     if ! $(echo "${1}" | grep -Eq "^((\w+([-+.']\w+)*@\w+([-.]\w+)*\.\w+([-.]\w+)*)*([,])*)*$") ; then
         _report -wt "${1} is not a valid email address."
