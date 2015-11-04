@@ -436,11 +436,11 @@ _find_input (){
 }
 
 _get_width(){
-    WIDTH=$(ffprobe "${1}" -show_streams -select_streams v:0 2> /dev/null | grep "^WIDTH=" | cut -d = -f 2)
+    WIDTH=$(ffprobe "${1}" -show_streams -select_streams v:0 2> /dev/null | grep "^width=" | cut -d = -f 2)
 }
 
 _get_height(){
-    HEIGHT=$(ffprobe "${1}" -show_streams -select_streams v:0 2> /dev/null | grep "^HEIGHT=" | cut -d = -f 2)
+    HEIGHT=$(ffprobe "${1}" -show_streams -select_streams v:0 2> /dev/null | grep "^height=" | cut -d = -f 2)
 }
 
 _get_dar(){
@@ -479,7 +479,7 @@ _get_audio_channels(){
 
 _get_channel_layout(){
     # get ffmpeg's channel count of the first audio stream.
-    CHANNEL_LAYOUT=$(ffprobe "${1}" -show_streams -select_streams a 2> /dev/null | grep "^CHANNEL_LAYOUT=" | cut -d = -f 2 | head -n 1)
+    CHANNEL_LAYOUT=$(ffprobe "${1}" -show_streams -select_streams a 2> /dev/null | grep "^channel_layout=" | cut -d = -f 2 | head -n 1)
 }
 
 _get_audio_mapping(){
@@ -499,7 +499,7 @@ _get_audio_mapping(){
 }
 
 _get_codectagstring(){
-    CODEC_TAG_STRING=$(ffprobe "${1}" -show_streams -select_streams v:0 2> /dev/null | grep "^CODEC_TAG_STRING=" | cut -d = -f 2)
+    CODEC_TAG_STRING=$(ffprobe "${1}" -show_streams -select_streams v:0 2> /dev/null | grep "^codec_tag_string=" | cut -d = -f 2)
     if [ "${CODEC_TAG_STRING}" = "FFV1" ] ; then
         FFV1_VERSION=$(ffmpeg -debug 1 -i "${1}" -t 0.1 -f null - </dev/null 2>&1 | grep -o "ver:[0-9]*" | tail -n1 | cut -d: -f2)
     else
