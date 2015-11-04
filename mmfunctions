@@ -763,7 +763,7 @@ _pashua_run() {
         RESULT=`"${PASHUAPATH}" ${ENCODING} ${PASHUA_CONFIGFILE} | sed 's/ /;;;/g'`
 
         # Parse result
-        for LINE in "${RESULT}"
+        for LINE in ${RESULT}
         do
             KEY=`echo ${LINE} | sed 's/^\([^=]*\)=.*$/\1/'`
             VALUE=`echo ${LINE} | sed 's/^[^=]*=\(.*\)$/\1/' | sed 's/;;;/ /g'`        
