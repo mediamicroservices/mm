@@ -372,6 +372,9 @@ unset MAKEBROADCASTOPTS
 [ "${AUDIODECISION}" == "Only use left of the first audio track [for 21st Century]" -o "${AUDIODECISION}" == "left" ] && MAKEBROADCASTOPTS+=(-l)
 [ "${AUDIODECISION}" == "Only use right of the first audio track" ] && MAKEBROADCASTOPTS+=(-r)
 [ "${CROPDECISION}" == "Examine the video and auto-crop out black borders (slower)" ] && MAKEBROADCASTOPTS+=(-c)
+if [ ! -z "${FORMULA}" ] ; then
+    MAKEBROADCASTOPTS+=(-F "${FORMULA}")
+fi
 "${SCRIPTDIR}/makebroadcast" "${MAKEBROADCASTOPTS[@]}" "${OUTDIR_INGESTFILE}/${MEDIAID}"
 
 # upload broadcast copy
