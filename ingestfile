@@ -146,6 +146,7 @@ FORMULA.option = none
 FORMULA.option = tff
 FORMULA.option = bff
 FORMULA.option = hds
+FORMULA.option = sds
 FORMULA.width = 100
 
 # Cleanup Strategy
@@ -226,9 +227,9 @@ fi
 
 if [ "${FORMULA}" = "" ] ; then
     _report -q "Select an optional formula for unusual cases? "
-    _report -d "In most cases, select 'none'. To force the input file to be interpreted as top or bottom field first interlacement, select tff or bff. To stretch the input video to 1920x1080 HD frame size, select 'hds'."
+    _report -d "In most cases, select 'none'. To force the input file to be interpreted as top or bottom field first interlacement, select tff or bff. To stretch the input video to 1920x1080 HD frame size, select 'hds'. To squish into Standard Definition, select 'sds'."
     PS3="Selection? "
-    select FORMULA in "none" "tff" "bff" "hds"
+    select FORMULA in "none" "tff" "bff" "hds" "sds"
     do
         break
     done

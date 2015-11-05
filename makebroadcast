@@ -180,6 +180,9 @@ while [ "${*}" != "" ] ; do
         if [ "${FORMULA}" = "hds" ] ; then
             MIDDLEOPTIONS+=(-vf "${FILTERCHAIN_START}scale=size=hd1080:interl=1,format=yuv422p,setsar=1/1,setdar=16/9,fps=fps=ntsc")
             MIDDLEOPTIONS+=("${MIDDLEOPTIONSXDCAM[@]}")
+        elif [ "${FORMULA}" = "sds" ] ; then
+            MIDDLEOPTIONS+=(-vf "${FILTERCHAIN_START}scale=720:480,pad=720:512:0:24,setsar=1/1,setdar=4/3")
+            MIDDLEOPTIONS+=("${MIDDLEOPTIONSIMX[@]}")
         elif [ "${DARRATIO}" = "1.777" -a ! "${CROPDETECT}" = "Y" ] ; then
             MIDDLEOPTIONS+=(-vf "${FILTERCHAIN_START}scale=size=hd1080:interl=1,format=yuv422p,setsar=1/1,setdar=16/9,fps=fps=ntsc")
             MIDDLEOPTIONS+=("${MIDDLEOPTIONSXDCAM[@]}")
