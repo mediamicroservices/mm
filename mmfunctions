@@ -293,10 +293,12 @@ _check_emailaddress(){
     fi
 }
 
-_get_duration(){
-    FFDURATION=$(ffprobe "${1}" -show_format -pretty 2> /dev/null | grep "^duration=" | cut -d= -f2)
+_get_prettyduration(){
+    PRETTYDURATION=$(ffprobe "${1}" -show_format -pretty 2> /dev/null | grep "^duration=" | cut -d= -f2)
 }
-
+_get_duration(){
+    DURATION=$(ffprobe "${1}" -show_format 2> /dev/null | grep "^duration=" | cut -d = -f 2)
+}
 _get_seconds(){
     SECONDS=$(ffprobe "${1}" -show_format 2> /dev/null | grep "^duration=" | cut -d= -f2)
 }
@@ -307,7 +309,7 @@ _email_delivery(){
         [ -d "${INPUT}" ] && LOGDIR="${INPUT}/metadata/submissionDocumentation/logs"
         [ -f "${INPUT}" ] && LOGDIR="$(dirname "${INPUT}")/service/logs"
         INGESTLOG="${LOGDIR}/capture.log"
-        _get_duration "${OUTPUT}" 
+        _get_prettyduration "${OUTPUT}" 
         if [[ -f "${INGESTLOG}" ]] ; then
             FROMLOG="Operator: $(_readingestlog "operator")\n
 Processing Computer: $(_readingestlog "computer_name")
@@ -322,7 +324,7 @@ Process: $(basename "${0}")
 MediaID: ${MEDIAID}\n
 Filename: ${OUTPUT}
 Sourcefile: ${SOURCEFILE}
-Duration: ${FFDURATION}\n
+Duration: ${PRETTYDURATION}\n
 Decoding_options: ${INPUTOPTIONS[@]}
 Encoding_options: ${MIDDLEOPTIONS[@]}\n
 Delivery Exit Status: ${DELIVER_EXIT_STATUS}\n
@@ -513,10 +515,6 @@ _get_fieldorder(){
 
 _get_pix_fmt(){
     PIXFMT=$(ffprobe "${1}" -show_streams -select_streams v:0 2> /dev/null | grep "^pix_fmt=" | cut -d = -f 2)
-}
-
-_get_duration(){
-    DURATION=$(ffprobe "${1}" -show_format 2> /dev/null | grep "^duration=" | cut -d = -f 2)
 }
 
 _get_videostreamcount(){
