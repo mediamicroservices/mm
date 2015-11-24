@@ -23,6 +23,7 @@ _usage(){
     echo "  -e emailaddress ( send an email about the delivery, only valid if -d is used )"
     echo "  -E emailaddress ( send an email about process outcome )"
     echo "  -Y ( attempt to use uploadyoutube on the resulting file )"
+    echo "  -v Y|N (run the video through a volume adjustment filter, then adjust the volume accordingly during transcoding, slower). Defaults to ${VOLADJUST}."
     echo "  -h ( display this help )"
     echo
     exit
@@ -123,7 +124,6 @@ while [ "${*}" != "" ] ; do
     MIDDLEOPTIONS+=(-f mp4)
 
     _prep_ffmpeg_log
-    _prep_volume_adjustment
     if [ "${CONCATSOURCE}" != "" ] ; then
         FFMPEGINPUT="${CONCATSOURCE}"
     else
