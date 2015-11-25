@@ -7,24 +7,16 @@ while [ "${*}" != "" ] ; do
     # get context about the input
     INPUT="${1}"
     shift
-    if [ -z "${OUTPUTDIR_FORCED}" ] ; then
-        [ -d "${INPUT}" ] && { OUTPUTDIR="${INPUT}/objects/access/dvd" && LOGDIR="${INPUT}/metadata/submissionDocumentation/logs" ;};
-        [ -f "${INPUT}" ] && { OUTPUTDIR=$(dirname "${INPUT}")"/access/dvd" && LOGDIR="$(dirname "${INPUT}")/access/logs" ;};
-        [ ! "${OUTPUTDIR}" ] && { OUTPUTDIR="${INPUT}/objects/access/dvd" && LOGDIR="${INPUT}/metadata/submissionDocumentation/logs" ;};
+    if [ -d "${INPUT}" ] ; then 
+        OUTPUTDIR="${INPUT}/metadata"
+        if [ -s "${OUTPUTDIR}/tree.xml" ] ; then
+            _report -dt "directory tree already exists, skipping for ${INPUT}"
+            continue
+        fi
+        _mkdir2 "${OUTPUTDIR}"
+        tree -DaNXs --du --timefmt "%Y-%m-%dT%H:%M:%SZ" "${INPUT}" > "${OUTPUTDIR}/tree.xml"
     else
-        OUTPUTDIR="${OUTPUTDIR_FORCED}"
-        LOGDIR="${OUTPUTDIR}/logs"
-    fi
-    _find_input "${INPUT}"
-    MEDIAID=$(basename "${INPUT}" | cut -d. -f1)
-    
-    if [ -s "${INPUT}/metadata/tree.xml" ] ; then
-        _report -dt "directory tree already exists, skipping for ${INPUT}"
-        shift
-        continue
-    fi
-    if [ -d "${INPUT}" ] ; then
-        tree -DaNXs --du --timefmt "%Y-%m-%dT%H:%M:%SZ" "${INPUT}" > "${INPUT}/metadata/tree.xml"
+        _report -dt "${INPUT} is not a directory, can't make a tree!"
     fi
 done
 
