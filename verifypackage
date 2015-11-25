@@ -28,7 +28,7 @@ _cleanup(){
 trap _cleanup SIGHUP SIGINT SIGTERM
 
 OPTIND=1
-while getopts ":ho:n" OPT; do
+while getopts ":h" OPT; do
     case "${OPT}" in
         h) _usage ;;
         *) echo "bad option -${OPTARG}" ; _usage ;;
