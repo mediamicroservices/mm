@@ -146,7 +146,7 @@ while [ "${*}" != "" ] ; do
     exit 2
     fi
     
-    if [ -d dvd/ mp3/ podcast/ youtube_up/]
+    if [ -d dvd/ mp3/ podcast/ youtube_up/] #i know this isn't the right way to show directories, just conceptually trying to say if the directories exist 
         find . -type f \( -name "*.txt" -and -name "*.json" -and -name "*.xml" \)
 #4 xml, 1 txt, 1 json
 
@@ -170,7 +170,7 @@ while [ "${*}" != "" ] ; do
     FIRSTDIRLIST=$(find "${PACKAGE}/objects/access" -maxdepth 1 -mindepth 1 -type d -exec basename "{}" \;)
     FOUNDDIRLIST=$(echo "${FIRSTDIRLIST}" | egrep "^dvd$|^mp3$|^podcast$|^youtube_up$")
     if [ $(echo "${FOUNDDIRLIST}" | wc -l | awk '{print $1}') != "3" ]; then
-        echo 'FAIL - Did not find access, captions, or service subdirectories'
+        echo 'FAIL - Did not find dvd, mp3, podcast, or youtube subdirectories'
         echo FOUNDDIRLIST "${FOUNDDIRLIST}"
         exit 2
     fi

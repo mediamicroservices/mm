@@ -90,10 +90,19 @@ choose this option to edit the config file using [nano](http://www.nano-editor.o
 
 2. edit config file in TextMate 
 choose this option to edit the config file using [TextMate](http://macromates.com/)
-3. OUTDIR_INGESTFILE  
+
+3. OUTDIR_INGESTFILE
+this variable is the processing directory. it is directory where your package will be created, and if you do not choose to deliver the package to AIP_STORAGE, this is where the completed package will remain. #make sure this is true! 
+  
 4. OUTDIR_INGESTXDCAM
+this variable is the processing directory for xdcam files that are processed using using the mediamicroservices xdcamingest. 
+
 5. OUTDIR_PAPER
+this variable is the processing directory when using the paperingest script. 
+
 6. AIP_STORAGE
+this variable is the directory where the archival information package is delivered. 
+
 7. PODCASTDELIVER
 8. YOUTUBEDELIVER
 9. TMPDIR
