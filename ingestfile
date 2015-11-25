@@ -4,6 +4,7 @@
 VERSION="1.0"
 REQUIRECONFIG="Y"
 DOCHECKSUMS="Y"
+MAKETREE="Y"
 FORMULA=""
 INTIME=""
 OUTTIME=""
@@ -414,6 +415,11 @@ fi
 # checksums
 if [ "${DOCHECKSUMS}" = "Y" ] ; then
     "${SCRIPTDIR}/checksumpackage" "${OUTDIR_INGESTFILE}/${MEDIAID}"
+fi
+
+#make xml file of directory structure 
+if [ "${MAKETREE}" = "Y "] ; then
+    "${SCRIPTDIR}/maketree" "${OUTDIR_INGESTFILE}/${MEDIAID}"
 fi
 
 # more logging

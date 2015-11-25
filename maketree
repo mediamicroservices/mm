@@ -1,0 +1,30 @@
+#!/bin/bash
+#maketree creates an .xml from a directory structure
+SCRIPTDIR=$(dirname $(which "${0}"))
+. "${SCRIPTDIR}/mmfunctions" || { echo "Missing '${SCRIPTDIR}/mmfunctions'. Exiting." ; exit 1 ;};
+
+while [ "${*}" != "" ] ; do
+    # get context about the input
+    INPUT="${1}"
+    shift
+    if [ -z "${OUTPUTDIR_FORCED}" ] ; then
+        [ -d "${INPUT}" ] && { OUTPUTDIR="${INPUT}/objects/access/dvd" && LOGDIR="${INPUT}/metadata/submissionDocumentation/logs" ;};
+        [ -f "${INPUT}" ] && { OUTPUTDIR=$(dirname "${INPUT}")"/access/dvd" && LOGDIR="$(dirname "${INPUT}")/access/logs" ;};
+        [ ! "${OUTPUTDIR}" ] && { OUTPUTDIR="${INPUT}/objects/access/dvd" && LOGDIR="${INPUT}/metadata/submissionDocumentation/logs" ;};
+    else
+        OUTPUTDIR="${OUTPUTDIR_FORCED}"
+        LOGDIR="${OUTPUTDIR}/logs"
+    fi
+    _find_input "${INPUT}"
+    MEDIAID=$(basename "${INPUT}" | cut -d. -f1)
+    
+    if [ -s "${INPUT}/metadata/tree.xml" ] ; then
+        _report -dt "directory tree already exists, skipping for ${INPUT}"
+        shift
+        continue
+    fi
+    if [ -d "${INPUT}" ] ; then
+        tree -DaNXs --du --timefmt "%Y-%m-%dT%H:%M:%SZ" "${INPUT}" > "${INPUT}/metadata/tree.xml"
+    fi
+done
+
