@@ -12,16 +12,26 @@ while [ "${*}" != "" ] ; do
     if [ -d "${INPUT}" ] ; then 
         OUTPUTDIR="${INPUT}/metadata"
         if [ -s "${OUTPUTDIR}/tree.xml" ] ; then
-            #make a new temp tree - how to exclude original tree.xml in creation?
+            #make a new temp tree - how to exclude original tree.xml in creation of temp_tree?
             tree -DaNXs --du --timefmt "%Y-%m-%dT%H:%M:%SZ" "${INPUT}" > "${OUTPUTDIR}/temp_tree.xml"
-            #if tree.xml exists, compare it to the specified xpath expression of an AIP
-            #any directories that are not objects or metadata 
-            "$(xml sel -m /tree/directory/directory/@metadata | //file[@*])"
+            #if tree.xml exists, compare it to the specified xpath expressions of an AIP
             
-            #parent node= directory, attribute metadata
-            #child nodes= file, attributes .md5, .log, .xml
-            #sibling node=directory name, attribute objects
-            
+            #looks for any directories that are not objects or metadata or tmp (for digitized materials) #use this structure for access: dvd, images, mp3, podcast, youtube_up
+            xml sel -t -v "/tree/directory/directory[@name!='objects' and @name!='metadata' and @name!='tmp']/@name" -n "${OUTPUTDIR}/tree.xml"
+            #looks for all files in metadata directory 
+            xml sel -t -v "/tree/directory/directory[@name='metadata']/file/@name" -n "${OUTPUTDIR}/tree.xml"
+            #looks for unexpected files in youtube_up dir 
+            xml sel -t -v "/tree/directory/directory[@name='objects']/directory[@name='access']/directory[@name='youtube_up']/file[@name!='${MEDIAID}.mp4']/@name" -n  "${OUTPUTDIR}/tree.xml"
+            #looks for unexpected files in dvd dir 
+            xml sel -t -v "/tree/directory/directory[@name='objects']/directory[@name='access']/directory[@name='dvd']/file[@name!='${MEDIAID}.iso']/@name" -n  "${OUTPUTDIR}/tree.xml"
+            #looks for unexpected files in images dir
+            xml sel -t -v "/tree/directory/directory[@name='objects']/directory[@name='access']/directory[@name='images']/file[@name!='${MEDIAID}.tiff']/@name" -n  "${OUTPUTDIR}/tree.xml"
+            #looks for unexpected files in mp3 dir
+            xml sel -t -v "/tree/directory/directory[@name='objects']/directory[@name='access']/directory[@name='mp3']/file[@name!='${MEDIAID}.mp3']/@name" -n  "${OUTPUTDIR}/tree.xml"
+            #looks for unexpected files in podcast dir
+            xml sel -t -v "/tree/directory/directory[@name='objects']/directory[@name='access']/directory[@name='podcast']/file[@name!='${MEDIAID}.mov']/@name" -n  "${OUTPUTDIR}/tree.xml"
+            #looks for unexpected files in service dir 
+            xml sel -t -v "/tree/directory/directory[@name='objects']/directory[@name='service']/file[@name!='${MEDIAID}.mov']/@name" -n  "${OUTPUTDIR}/tree.xml"
         else 
             #if tree.xml doesn't exist, make it and then compare it to the xpath expression
             tree -DaNXs --du --timefmt "%Y-%m-%dT%H:%M:%SZ" "${INPUT}" > "${OUTPUTDIR}/tree.xml"
@@ -29,7 +39,7 @@ while [ "${*}" != "" ] ; do
             #output to some sort of log file which directories do not match, and what they are missing
         fi
 
-
+        #remove temp_tree.xml at end?
 
 #search xml file for match to XPath expression
 #.. - parent, child has no specifier?, @ - attribute 
