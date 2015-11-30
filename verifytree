@@ -1,0 +1,37 @@
+#!/bin/bash
+#verifytree creates a temporary xml of package and compares against a set directory structure
+#create temp xml of package and set xml, compare the two. xml starlet, temp has to exclude the tree.xml file in temp creation
+
+
+
+#input the package
+while [ "${*}" != "" ] ; do
+#look for tree.xml
+    INPUT="${1}"
+    shift
+    if [ -d "${INPUT}" ] ; then 
+        OUTPUTDIR="${INPUT}/metadata"
+        if [ -s "${OUTPUTDIR}/tree.xml" ] ; then
+            #make a new temp tree - how to exclude original tree.xml in creation?
+            tree -DaNXs --du --timefmt "%Y-%m-%dT%H:%M:%SZ" "${INPUT}" > "${OUTPUTDIR}/temp_tree.xml"
+            #if tree.xml exists, compare it to the specified xpath expression of an AIP
+            #any directories that are not objects or metadata 
+            "$(xml sel -m /tree/directory/directory/@metadata | //file[@*])"
+            
+            #parent node= directory, attribute metadata
+            #child nodes= file, attributes .md5, .log, .xml
+            #sibling node=directory name, attribute objects
+            
+        else 
+            #if tree.xml doesn't exist, make it and then compare it to the xpath expression
+            tree -DaNXs --du --timefmt "%Y-%m-%dT%H:%M:%SZ" "${INPUT}" > "${OUTPUTDIR}/tree.xml"
+            continue
+            #output to some sort of log file which directories do not match, and what they are missing
+        fi
+
+
+
+#search xml file for match to XPath expression
+#.. - parent, child has no specifier?, @ - attribute 
+
+done
