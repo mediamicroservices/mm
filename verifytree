@@ -16,12 +16,51 @@ while [ "${*}" != "" ] ; do
             tree -DaNXs --du --timefmt "%Y-%m-%dT%H:%M:%SZ" "${INPUT}" > "${OUTPUTDIR}/temp_tree.xml"
             #if tree.xml exists, compare it to the specified xpath expressions of an AIP
             
-            #looks for any directories that are not objects or metadata or tmp (for digitized materials) #use this structure for access: dvd, images, mp3, podcast, youtube_up
-            xml sel -t -v "/tree/directory/directory[@name!='objects' and @name!='metadata' and @name!='tmp']/@name" -n "${OUTPUTDIR}/tree.xml"
-            #looks for all files in metadata directory 
-            xml sel -t -v "/tree/directory/directory[@name='metadata']/file/@name" -n "${OUTPUTDIR}/tree.xml"
+            #find ds_stores and get the full paths
+            xml sel -t -m "//file[@name='.DS_Store']" -m "ancestor-or-self::directory" -v "@name" -o "/" -b -v @name  -n "${OUTPUTDIR}/tree.xml"
+            
+            #searching for high-level directories 
+            
+            #looks for any directories that are not objects or metadata or tmp (for digitized materials)
+            xml sel -t -v "/tree/directory/directory[@name!='objects' and @name!='metadata' and @name!='tmp']/@name" -n "${OUTPUTDIR}/tree.xml" #>> #"${OUTPUTDIR}/verifytree.txt" write results to a file?
+            #looks for any unexpected files in the upper level metadata directory  
+            xml sel -t -v "/tree/directory/directory[@name='metadata']/file[@name!='checksum.md5' and @name!='checksumchecks.log' and @name!='dfxml.xml']" -n "${OUTPUTDIR}/tree.xml"
+            
+            #begin search of metadata subdirectories, looks for directories that are not submissionDocumenation 
+            xml sel -t -v "/tree/directory/directory[@name='metadata']/directory[@name!='submissionDocumentation']" -n "${OUTPUTDIR}/tree.xml"
+            #looks for any sub directories in submission Documentation that are not fileMeta or logs
+            xml sel -t -v "/tree/directory/directory[@name='metadata']/directory[@name='submissionDocumentation']/directory[@name!='fileMeta' and @name!='logs']" -n "${OUTPUTDIR}/tree.xml"
+            #looks in logs directory for any files that aren't .log or .txt - is there a better way to do this?
+            xml sel -t -v "/tree/directory/directory[@name='metadata']/directory[@name='submissionDocumentation']/directory[@name='logs']/file[@name!='*.log' and @name!='*.txt']" -n "${OUTPUTDIR}/tree.xml"
+            #looks for any directories in fileMeta that are not objects
+            xml sel -t -v "/tree/directory/directory[@name='metadata']/directory[@name='submissionDocumentation']/directory[@name='fileMeta']/directory[@name!='objects']" -n "${OUTPUTDIR}/tree.xml"
+            #looks for any directories that are not access and service 
+            xml sel -t -v "/tree/directory/directory[@name='metadata']/directory[@name='submissionDocumentation']/directory[@name='fileMeta']/directory[@name='objects']/directory[@name!='access' and @name!='service']" -n "${OUTPUTDIR}/tree.xml"
+            #and any files that aren't .txt, .xml, .json
+            xml sel -t -v "/tree/directory/directory[@name='metadata']/directory[@name='submissionDocumentation']/directory[@name='fileMeta']/directory[@name='objects']/file[@name!='*.txt' and @name!='*.xml' and @name!='*.json']" -n "${OUTPUTDIR}/tree.xml"
+            #looks in service subdirectory for unexpected files
+            xml sel -t -v "/tree/directory/directory[@name='metadata']/directory[@name='submissionDocumentation']/directory[@name='fileMeta']/directory[@name='objects']/directory[@name='service']/file[@name!='*.txt' and @name!='*.xml' and @name!='*.json']" -n "${OUTPUTDIR}/tree.xml"
+            #looks in access for unexpected directories that are not dvd, mp3, podcast, and youtube_up
+            xml sel -t -v "/tree/directory/directory[@name='metadata']/directory[@name='submissionDocumentation']/directory[@name='fileMeta']/directory[@name='objects']/directory[@name='access']/directory[@name!='dvd' and @name!='mp3' and @name!='podcast' and @name!='youtube_up']" -n "${OUTPUTDIR}/tree.xml"
+            #looks in dvd directory for unexpected metadata files 
+            xml sel -t -v "/tree/directory/directory[@name='metadata']/directory[@name='submissionDocumentation']/directory[@name='fileMeta']/directory[@name='objects']/directory[@name='access']/directory[@name='dvd']/file[@name!='*.txt' and @name!='*.xml' and @name!='*.json']" -n "${OUTPUTDIR}/tree.xml"
+            #looks in mp3 directory for unexpected metadata files
+            xml sel -t -v "/tree/directory/directory[@name='metadata']/directory[@name='submissionDocumentation']/directory[@name='fileMeta']/directory[@name='objects']/directory[@name='access']/directory[@name='mp3']/file[@name!='*.txt' and @name!='*.xml' and @name!='*.json']" -n "${OUTPUTDIR}/tree.xml"
+            #looks in podcast directory for unexpected metadata files
+            xml sel -t -v "/tree/directory/directory[@name='metadata']/directory[@name='submissionDocumentation']/directory[@name='fileMeta']/directory[@name='objects']/directory[@name='access']/directory[@name='podcast']/file[@name!='*.txt' and @name!='*.xml' and @name!='*.json']" -n "${OUTPUTDIR}/tree.xml"
+            #looks in youtube_up directory for unexpected metadata files
+            xml sel -t -v "/tree/directory/directory[@name='metadata']/directory[@name='submissionDocumentation']/directory[@name='fileMeta']/directory[@name='objects']/directory[@name='access']/directory[@name='youtube_up']/file[@name!='*.txt' and @name!='*.xml' and @name!='*.json']" -n "${OUTPUTDIR}/tree.xml"
+            
+            #begin search of objects
+            
+            #looks for any directories that are not access or service within the objects directory
+            xml sel -t -v "/tree/directory/directory[@name='objects']/directory[@name!='access' and @name!='service']" -n "${OUTPUTDIR}/tree.xml"
+            #looks for anything unexpected in the objects directory can you look for files and directories at the same time?
+            xml sel -t -v "/tree/directory/directory[@name='objects']/directory[@name!='access and @name!='service']/file[@name!='*.*']" -n "${OUTPUTDIR}/tree.xml" #not sure how to represent the orig file bc it comes in different formats w/ no set naming scheme/extension
+            #looks for any directories within access directory that are not dvd, images, mp3, podcast, or youtube_up
+            xml sel -t -v "/tree/directory/directory[@name='objects']/directory[@name='access']/directory[@name!='dvd' and @name!='images' and @name!='mp3' and @name!='podcast' and @name!='youtube_up']" -n "${OUTPUTDIR}/tree.xml"
             #looks for unexpected files in youtube_up dir 
-            xml sel -t -v "/tree/directory/directory[@name='objects']/directory[@name='access']/directory[@name='youtube_up']/file[@name!='${MEDIAID}.mp4']/@name" -n  "${OUTPUTDIR}/tree.xml"
+            xml sel -t -v "/tree/directory/directory[@name='objects']/directory[@name='access']/directory[@name='youtube_up']/file[@name!='${MEDIAID}.mp4']/@name" -n  "${OUTPUTDIR}/tree.xml" 
             #looks for unexpected files in dvd dir 
             xml sel -t -v "/tree/directory/directory[@name='objects']/directory[@name='access']/directory[@name='dvd']/file[@name!='${MEDIAID}.iso']/@name" -n  "${OUTPUTDIR}/tree.xml"
             #looks for unexpected files in images dir
@@ -32,16 +71,17 @@ while [ "${*}" != "" ] ; do
             xml sel -t -v "/tree/directory/directory[@name='objects']/directory[@name='access']/directory[@name='podcast']/file[@name!='${MEDIAID}.mov']/@name" -n  "${OUTPUTDIR}/tree.xml"
             #looks for unexpected files in service dir 
             xml sel -t -v "/tree/directory/directory[@name='objects']/directory[@name='service']/file[@name!='${MEDIAID}.mov']/@name" -n  "${OUTPUTDIR}/tree.xml"
+            
+            #finally, find any files or directories that are empty
+            xml sel -t -m "//directory[not(file)]" -m "ancestor-or-self::directory" -v "@name" -o "/" -b -n  "${OUTPUTDIR}/tree.xml"
+            xml sel -t -m "//file[@size=0]" -m "ancestor-or-self::directory" -v "@name" -o "/" -b -v "@name" -n  "${OUTPUTDIR}/tree.xml"
+            
         else 
             #if tree.xml doesn't exist, make it and then compare it to the xpath expression
             tree -DaNXs --du --timefmt "%Y-%m-%dT%H:%M:%SZ" "${INPUT}" > "${OUTPUTDIR}/tree.xml"
             continue
             #output to some sort of log file which directories do not match, and what they are missing
         fi
-
+    fi
         #remove temp_tree.xml at end?
-
-#search xml file for match to XPath expression
-#.. - parent, child has no specifier?, @ - attribute 
-
 done
