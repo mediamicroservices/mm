@@ -5,18 +5,19 @@ SCRIPTDIR=$(dirname $(which "${0}"))
 
 while [ "${*}" != "" ] ; do
     # get context about the input
-    INPUT="${1}"
+    PACKAGE="${1}"
     shift
-    if [ -d "${INPUT}" ] ; then 
-        OUTPUTDIR="${INPUT}/metadata"
+    if [ -d "${PACKAGE}" ] ; then 
+        OUTPUTDIR="${PACKAGE}/metadata"
         if [ -s "${OUTPUTDIR}/tree.xml" ] ; then
-            _report -dt "directory tree already exists, skipping for ${INPUT}"
+            _report -dt "directory tree already exists, skipping for ${PACKAGE}"
             continue
         fi
         _mkdir2 "${OUTPUTDIR}"
-        tree -DaNXs --du --timefmt "%Y-%m-%dT%H:%M:%SZ" "${INPUT}" > "${OUTPUTDIR}/tree.xml"
+        "${SCRIPTDIR}/removeDSStore" "${PACKAGE}"
+        tree -DaNXs --du --timefmt "%Y-%m-%dT%H:%M:%SZ" -I "tree.xml" "${PACKAGE}" > "${OUTPUTDIR}/tree.xml"
     else
-        _report -dt "${INPUT} is not a directory, can't make a tree!"
+        _report -dt "${PACKAGE} is not a directory, can't make a tree!"
     fi
 done
 
