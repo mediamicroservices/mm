@@ -1,0 +1,45 @@
+#!/bin/bash
+
+cowsay "MediaID?"
+echo -n ":: "
+read MEDIAID
+
+cowsay "Series Title?"
+echo -n ":: "
+read SERIESTITLE
+
+cowsay "Episode Title?"
+echo -n ":: "
+read EPISODETITLE
+
+COLORBARS_SECS=60
+SLATE_SECS=20
+COUNTDOWN_SECS=8.2
+BLACK_SECS=1.8
+
+echo "
+AssetID: ${MEDIAID}
+
+Series:  ${SERIESTITLE}
+
+Episode: ${EPISODETITLE}
+
+Distributed by Executive Program Services
+
+© CUNY Television 2015" > /tmp/slate.txt
+
+ffmpeg -f lavfi -i "smptehdbars=s=1920x1080:r=30000/1001:sar=16/9:d=${COLORBARS_SECS}" \
+    -f lavfi -i "aevalsrc=0.141253*sin(1000*2*PI*t):d=${COLORBARS_SECS}:s=48000:c=2" \
+    -f lavfi -i "color=black:s=1920x1080:r=30000/1001:sar=16/9:d=${SLATE_SECS}" \
+    -f lavfi -i "aevalsrc=0:d=${SLATE_SECS}:s=48000:c=2" \
+    -f lavfi -i "color=black:s=1920x1080:r=30000/1001:sar=16/9:d=${COUNTDOWN_SECS}" \
+    -f lavfi -i "sine=r=48000:frequency=1:beep_factor=400:duration=${COUNTDOWN_SECS}"\
+    -f lavfi -i "color=black:s=1920x1080:r=30000/1001:sar=16/9:d=${BLACK_SECS}" \
+    -f lavfi -i "aevalsrc=0:d=${BLACK_SECS}:s=48000:c=2" \
+    -filter_complex "[0:v:0][1:a:0][2:v:0][3:a:0][4:v:0][5:a:0][6:v:0][7:a:0]concat=n=4:v=1:a=1[v][a];\
+    [v]\
+    drawtext=fontsize=52:fontfile=/Library/Fonts/Courier New Bold.ttf:fontcolor=white:enable=gte(t\,${COLORBARS_SECS})*lt(t\,${COLORBARS_SECS}+${SLATE_SECS}):x=(w-text_w)/2:y=(h-text_h-line_h)/2:textfile=/tmp/slate.txt,\
+    drawtext=fontsize=420:fontfile=/Library/Fonts/Courier New Bold.ttf:fontcolor=white:enable=gte(t\,${COLORBARS_SECS}+${SLATE_SECS})*lt(t\,${COLORBARS_SECS}+${SLATE_SECS}+${COUNTDOWN_SECS}):x=(w-text_w)/2:y=(h-text_h-line_h)/2:text='%{eif\:${COLORBARS_SECS}+${SLATE_SECS}+11-t\:d}',\
+    scale=size=hd1080,format=yuv422p,setsar=1/1,setdar=16/9,fps=fps=ntsc[v1]" \
+    -map '[v1]' -map '[a]' -shortest \
+    -r ntsc -c:v mpeg2video -intra_vlc 1 -non_linear_quant 1 -qmin 1 -dc 10 -lmin QP2LAMBDA -ps 1 -flags +ildct+ilme -pix_fmt yuv422p -metadata:s:v:0 "timecode=00:58:00;00" -s 1920x1080 -vtag xd5b -aspect 16:9 -q:v 1 -qmax 8 -g 15 -bf 2 -b:v 50M -maxrate:v 50M -minrate:v 50M -bufsize 17825792 -rc_init_occupancy 17825792 -acodec pcm_s24be -ar 48k -ac 2 ~/DeskTop/slate.mov
