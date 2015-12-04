@@ -418,7 +418,7 @@ if [ "${DOCHECKSUMS}" = "Y" ] ; then
 fi
 
 #make xml file of directory structure 
-if [ "${MAKETREE}" = "Y "] ; then
+if [ "${MAKETREE}" = "Y" ] ; then
     "${SCRIPTDIR}/maketree" "${OUTDIR_INGESTFILE}/${MEDIAID}"
 fi
 
