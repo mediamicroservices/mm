@@ -36,8 +36,7 @@ table of contents
     23. paperingest
     24. quickcompare
     25. uploadomneon
-    26. verifypackage
-    27. xdcamingest
+    26. xdcamingest
 
 ## summary ##
 
@@ -73,15 +72,13 @@ photo to come
 hooray, you've installed mediamicroservices! 
 
 ### configuring mediamicroservices ###
-in order for mediamicroservices to run, you must configure your delivery settings. 
+in order for mediamicroservices to run, you must configure your variable settings. first, take a look at the list of variables below to get a sense of what each variable means. Then, create all of the delivery directories that you'll need, in the place you'd like them to be. you can name the directories themselves anything you'd like- the more important part is tying them to a variable in the configuration process. Not all variables are necessary for microservices to run, so look over which microservices you'd like to use to get a sense of whether or not you'll need to a specific variable. 
 
-Type `$ mmconfig ` to access the configuration file. This file will store your system variables. For example,  #example!
+Type `$ mmconfig -a` to access the configuration GUI, which will take information input and save a file as mm.conf. This file will store your system variables. For example,  #example!
 
-photo: your terminal should look something like this
+mmconfig only has to be run once to create the configuration file, and will rewrite over itself if run again. 
 
-If you are familiar with using nano, which opens and edits the file within terminal, choose option 1. Similarly, if you use the text editor TextMate, choose option 2. Either of these options allow for you to edit multiple variables at once. 
-
-If you simply want to edit one variable at a time, then choose the corresponding number. You will be prompted to enter the value, which will be a directory, email address, filemaker url, or server path. For a directory path, create a directory first, and then drag and drop the directory into the terminal. This saves you time and potential errors in mistyping directory paths. Some variables you may never use, for example if you only use makelossless, you won't need to set the PODCASTDELIVER directory. At a minimum for the scripts to run, you must set the following directories: #which ones? Once you've completed your editing of the config file, 
+if you prefer to edit in the terminal, simply run `$ mmconfig` and follow the directions on screen. this option allows for you to also choose to edit the config file in nano or TextMate. 
 
 #### variable explanations ####
 
@@ -104,27 +101,86 @@ this variable is the processing directory when using the paperingest script.
 this variable is the directory where the archival information package is delivered. 
 
 7. PODCASTDELIVER
+this variable is the directory where your podcast access copy is delivered. 
+
 8. YOUTUBEDELIVER
+this variable is the directory where your youtube access copy is delivered. 
+
 9. TMPDIR
+this variable is a temporary directory. it is used in the uploadomneon microservice as a temporary place for a file to live before it is uploaded to the omneon server. 
+
 10. REGEX4PODCAST
+this varible holds regular expressions that are queried when makepodcast is run, in order to determine if a file qualifies for podcast creation. If you want all of your files to qualify for podcast creation, enter a "." which matches (almost) any character. Learn more about [regex](https://en.wikipedia.org/wiki/Regular_expression).
+
 11. DVDLABELPREFIX
+this variable is for adding a set prefix to the filename for DVDs in makedvd. You may leave this variable blank if you do not want to have a prefix uniformly assigned. #is this right?
+
 12. OMNEONIP   
+this variable sets the IP address for delivery of files to the omneon server in uploadomneon and ingestfile. this variable can be set to the IP address of any server that you'd like to have the broadcast copy of your files delivered to. 
+
 13. OMNEONPATH
+this variable is the file path to the specific directory you'd like assets to be delivered to on the omneon server. 
+
 14. CUSTOM_LOG_DIR
+this variable is the directory that stores processing logs for all of the media microservices, and is used when the _log function is called. Consider creating a directory called mmlogs in your documents directory, and assigning it to this variable. 
+
 15. LTO_INDEX_DIR
+this variable is the directory that stores the .schema files created when LTOs are mounted and written to. If you are not using LTO in your workflow, you do not need to create this variable. If you do use LTO in your workflow, consider creating a directory called LTO Indexes, to be housed in your documents directory, and assigning it to this variable. 
+
 16. LOCAL_MM_DIR
+this variable is the directory that stores mediamicroservices scripts locally. 
+
 17. EMAIL_FROM
+this variable is the email address that notifications will be sent from, once processes have been completed. You may leave this variable blank if you do not want any notification emails sent once actions have been performed on files. 
+
 18. MAKEYOUTUBE_DELIVERY_EMAIL_TO
+this variable is the email address (or addresses) that notifications will be sent to once makeyoutube has been run on a file. 
+
 19. MAKEBROADCAST_DELIVERY_EMAIL_TO
+this variable is the email address (or addresses) that notifications will be sent to once makebroadcast has been run on a file. 
+
 20. FILEMAKER_DB
+this variable stores the name of the FileMaker database that is used in checksum2filemaker to upload metadata from processed files to a FileMaker database. You may leave this variable blank if you do not use FileMaker.
+
 21. FILEMAKER_XML_URL
+this variable stores the API address where metadata is delivered to in FileMaker. 
+
 22. VOLADJUST
+This variable must be set to yes (Y) or no (N). If set to yes, volume will be run through a volume adjustment filter and adjusted accordingly during transcoding. 
+
 23. Quit
+if editing in the terminal, use this option to leave the configuration file editor.
+
+## mediamicroservices functions and step by step instructions for use ##
 
 
-
-
-
+barcodeinterpret
+blackatends
+checksum2filemaker
+checksumpackage
+finishpackage
+fix_left2stereo
+fix_rewrite
+fix_volume
+ingestfile
+makebroadcast
+makedvd
+makeflv
+makeframes
+makelossless
+makemetadata
+makemp3
+makepdf
+makepodcast
+makeprores
+makeqctoolsreport
+makeresourcespace
+maketree
+makeyoutube
+paperingest
+quickcompare 
+uploadomneon
+verifytree
 
 
 
