@@ -29,9 +29,6 @@ shift $(( ${OPTIND} - 1 ))
 
 _log -b
 OUTPUTDIR="./metadata/submissionDocumentation/fileMeta"
-if [ ! -d "${OUTPUTDIR}" ] ; then
-    _run mkdir -p "${OUTPUTDIR}"
-fi
 
 while [ "${*}" != "" ] ; do
     PACKAGE_PATH="${1}"
