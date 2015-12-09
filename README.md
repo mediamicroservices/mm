@@ -6,44 +6,44 @@ table of contents
 
 1. [summary](https://github.com/mediamicroservices/mm#summary)
 2. [installing and configuring mediamicroservices](https://github.com/mediamicroservices/mm#installing-and-configuring-mediamicroservices)
-    1. installing homebrew
-    2. installing mediamicroservices
-    3. configuring mediamicroservices
-        1. variable explanations
+    1. [installing homebrew](https://github.com/mediamicroservices/mm#installing-homebrew)
+    2. [installing mediamicroservices](https://github.com/mediamicroservices/mm#installing-mediamicroservices)
+    3. [configuring mediamicroservices](https://github.com/mediamicroservices/mm#configuring-mediamicroservices)
+        1. [variable explanations](https://github.com/mediamicroservices/mm#variable-explanations)
 3. [mediamicroservices functions and instructions for use](https://github.com/mediamicroservices/mm#mediamicroservices-functions-and-instructions-for-use)
-    * barcodeinterpret
-    * blackatends
-    * checksum2filemaker
-    * checksumpackage
-    * finishpackage
-    * fix_left2stereo
-    * fix_rewrap
-    * fix_volume
-    * ingestfile
-    * makebroadcast
-    * makedvd
-    * makeflv
-    * makeframes
-    * makelossless
-    * makemetadata
-    * makemp3
-    * makepodcast
-    * makeprores
+    * [barcodeinterpret](https://github.com/mediamicroservices/mm#barcodeinterpret)
+    * [blackatends](https://github.com/mediamicroservices/mm#blackatends)
+    * [checksum2filemaker](https://github.com/mediamicroservices/mm#checksum2filemaker)
+    * [checksumpackage](https://github.com/mediamicroservices/mm#checksumpackage)
+    * [finishpackage](https://github.com/mediamicroservices/mm#finishpackage)
+    * [fix_left2stereo](https://github.com/mediamicroservices/mm#fix_left2stereo)
+    * [fix_rewrap](https://github.com/mediamicroservices/mm#fix_rewrap)
+    * [fix_volume](https://github.com/mediamicroservices/mm#fix_volume)
+    * [ingestfile](https://github.com/mediamicroservices/mm#ingestfile)
+    * [makebroadcast](https://github.com/mediamicroservices/mm#makebroadcast)
+    * [makedvd](https://github.com/mediamicroservices/mm#makedvd)
+    * [makeflv](https://github.com/mediamicroservices/mm#makeflv)
+    * [makeframes](https://github.com/mediamicroservices/mm#makeframes)
+    * [makelossless](https://github.com/mediamicroservices/mm#makelossless)
+    * [makemetadata](https://github.com/mediamicroservices/mm#makemetadata)
+    * [makemp3](https://github.com/mediamicroservices/mm#makemp3)
+    * [makepodcast](https://github.com/mediamicroservices/mm#makepodcast)
+    * [makeprores](https://github.com/mediamicroservices/mm#makeprores)
     * makeqctoolsreport
-    * makeresourcespace
-    * makeslate
-    * maketree
-    * makeyoutube
-    * quickcompare
-    * uploadomneon
-    * xdcamingest
-    * verifytree
+    * [makeresourcespace](https://github.com/mediamicroservices/mm#makeresourcespace)
+    * [makeslate](https://github.com/mediamicroservices/mm#makeslate)
+    * [maketree](https://github.com/mediamicroservices/mm#maketree)
+    * [makeyoutube](https://github.com/mediamicroservices/mm#makeyoutube)
+    * [quickcompare](https://github.com/mediamicroservices/mm#quickcompare)
+    * [uploadomneon](https://github.com/mediamicroservices/mm#uploadomneon)
+    * [verifytree](https://github.com/mediamicroservices/mm#verifytree)
+    * [xdcamingest](https://github.com/mediamicroservices/mm#xdcamingest)
 
 ## summary ##
 
 mediamicroservices has been developed for the purpose of processing audiovisual collections at [CUNY Television](http://cuny.tv). This repository includes scripts to run ffmpeg to create access and service copies of audio visual assets, as well as to analyze, report, and deliver media as individual files or as Archive Information Packages. Mediamicroservices are developed and tested for a Mac OS X environment. 
 
-Mediamicroservices are installed and run using the terminal application, so knowledge of the command line is useful. For information on the command line, please see [The Command Line Crash Course](http://cli.learncodethehardway.org/book/). Documentation is intended to assist individuals of all technical levels in installing and using mediamicroservices. 
+Mediamicroservices are installed and run using the terminal application, so knowledge of the command line is necessary. For information on the command line, please see [The Command Line Crash Course](http://cli.learncodethehardway.org/book/) or the [Code Academy Course](https://www.codecademy.com/learn/learn-the-command-line).  
 
 Please use the [issue tracker](https://github.com/mediamicroservices/mm/issues) to report any issues with installation and usage of mediamicroservices.  
 
@@ -57,16 +57,14 @@ homebrew is a package manager that assists in managing all of the necessary comp
 
 be sure to update/upgrade homebrew regularly. 
 
-to update the packages in homebrew, type:  brew update into the command line. This command will tell you which packages need to be updated.
-photo to come 
+to update the packages in homebrew, type: brew update into the command line. This command will tell you which packages need to be updated. 
 
-to upgrade the packages in homebrew, type:  brew upgrade into the command line. This command will update all packages to their most recent version.
-photo to come 
+to upgrade the packages in homebrew, type: brew upgrade into the command line. This command will update all packages to their most recent version.
 
 ### installing mediamicroservices ###
-once homebrew has been installed, you can install mediamicroservices. 
+once homebrew has been installed, you can install mediamicroservices. First, use the [tap](https://github.com/Homebrew/homebrew/blob/master/share/doc/homebrew/brew-tap.md) command. Then, you can install. 
 
-Type brew tap [link to a page about what a tap is] mediamicroservices/mm into the command line.  
+Type brew tap mediamicroservices/mm into the command line.  
 photo to come
 
 Then, type brew install mm into the command line. This command will install mediamicroservices to your computer. 
@@ -77,11 +75,11 @@ hooray, you've installed mediamicroservices!
 ### configuring mediamicroservices ###
 in order for mediamicroservices to run, you must configure your variable settings. first, take a look at the list of variables below to get a sense of what each variable means. Then, create all of the delivery directories that you'll need, in the place you'd like them to be. you can name the directories themselves anything you'd like- the more important part is tying them to a variable in the configuration process. Not all variables are necessary for microservices to run, so look over which microservices you'd like to use to get a sense of whether or not you'll need to a specific variable. 
 
-Type  mmconfig -a to access the configuration GUI, which will take information input and save a file as mm.conf. This file will store your system variables. For example,  #example!
+Type mmconfig -a into the terminal to access the configuration GUI, which will take information input and save a file as mm.conf. This file will store your system variables. For example,  #example!
 
 mmconfig only has to be run once to create the configuration file, and will rewrite over itself if run again. 
 
-if you prefer to edit in the terminal, simply run  mmconfig and follow the directions on screen. this option allows for you to also choose to edit the config file in nano or TextMate. 
+if you prefer to edit in the terminal, simply run mmconfig and follow the directions on screen. this option allows for you to also choose to edit the config file in nano or TextMate. 
 
 #### variable explanations ####
 
@@ -116,7 +114,7 @@ this variable is a temporary directory. it is used in the uploadomneon microserv
 this varible holds regular expressions that are queried when makepodcast is run, in order to determine if a file qualifies for podcast creation. If you want all of your files to qualify for podcast creation, enter a "." which matches (almost) any character. Learn more about [regex](https://en.wikipedia.org/wiki/Regular_expression).  
   
 **11. DVDLABELPREFIX**  
-this variable is for adding a set prefix to the filename for DVDs in makedvd. You may leave this variable blank if you do not want to have a prefix uniformly assigned. #is this right?  
+this variable is for adding a set prefix to the filename for DVDs in makedvd. You may leave this variable blank if you do not want to have a prefix uniformly assigned.  
   
 **12. OMNEONIP**     
 this variable sets the IP address for delivery of files to the omneon server in uploadomneon and ingestfile. this variable can be set to the IP address of any server that you'd like to have the broadcast copy of your files delivered to.   
@@ -160,7 +158,7 @@ For all microservices, the structure of the command looks like this:  [microserv
 
 Across all mediamicroservices, you can always receive the usage information by typing the microservice and -h. Your command will look like ths: [microservice] -h.  
 
-makepodcast, makebroadcast, makeflv, and makedvd also share the following options:  
+makepodcast, makebroadcast, makeflv, make prores, makeresourcespace, makeyoutube, and makedvd also share the following options:  
 
 * if you want to specify a directory for the file to be delivered to, use the -d option, and follow -d with the directory path. Your command will look like this: [microservice] -d [directory/path] [input]. This option delivers a copy of the resulting file to a specific location, in addition to the default OUTPUTDIR.  
 * if you want to specify a directory for the file to be written directly to, use option o. Your command will look like this: [microservice] -o [directory/path] [input].
@@ -216,17 +214,17 @@ To view the specific ffmpeg encoding options for each file, view the sourcecode 
 * if you want to apply a formula that will override the defualt ffmpeg settings, use option F. Your command will look like this: makebroadcast -F [formula] [input].  
 * if you want to run the video through a crop detection filter and crop the video during transcoding, use option c. Your command will look like this: makebroadcast -c [input].  
 * if you want to run the video through a volume adjustment filter, then adjust the volume accordingly during transcoding, use option v. This process will be slower. Defaults to ${VOLADJUST} variable set in mmconfig. Your command will look like this: makebroadcast -v Y OR N [input]. 
-* makebroadcast has options d, o, n, e, E. To reread what those options mean, return to [link to section header]. If you use options o or d, your command will look like this: makebroadcast -o OR -d [path/to/directory] [input]. If you use option n, your command will look like this: makebroadcast -n [input]. If you use option e, your command will look like this: makebroadcast -e -d [path/to/directory] [input]. If you use option -E, your command will look like this: makebroadcast -E [input].  
+* makebroadcast has options d, o, n, e, E. To reread what those options mean, return to [section header](https://github.com/mediamicroservices/mm#mediamicroservices-functions-and-instructions-for-use). If you use options o or d, your command will look like this: makebroadcast -o OR -d [path/to/directory] [input]. If you use option n, your command will look like this: makebroadcast -n [input]. If you use option e, your command will look like this: makebroadcast -e -d [path/to/directory] [input]. If you use option -E, your command will look like this: makebroadcast -E [input].  
 
 #### makedvd ####
 * makedvd creates a DVD .iso file from a video file or package input. Your command will look like makedvd [input]. A file run with no additional options will be a .iso file in a directory called access, which is created by the script in the same location as the file input. A package input run with no additional options will behave similarly, in that the access directory will be created inside the package (if it is not already there), and will hold the DVD .iso file.  
 * if you would like to use only the left or right channel of first audio track, your command will look like this: makedvd -l [input] for left or makedvd -r [input] for right.  
 * if you would like to add the DVDLABELPREFIX, which you set as a varible in mmconfig, you will want to use option v. Your command will look like this: makedvd -v [input].  
-* makedvd has options d, o, n, e, E. To reread what those options mean, return to [link to section header]. If you use options o or d, your command will look like this: makedvd -o OR -d [path/to/directory] [input]. If you use option n, your command will look like this: makedvd -n [input]. If you use option e, your command will look like this: makedvd -e -d [path/to/directory] [input]. If you use option -E, your command will look like this: makedvd -E [input].  
+* makedvd has options d, o, n, e, E. To reread what those options mean, return to [section header](https://github.com/mediamicroservices/mm#mediamicroservices-functions-and-instructions-for-use). If you use options o or d, your command will look like this: makedvd -o OR -d [path/to/directory] [input]. If you use option n, your command will look like this: makedvd -n [input]. If you use option e, your command will look like this: makedvd -e -d [path/to/directory] [input]. If you use option -E, your command will look like this: makedvd -E [input].  
 
 #### makeflv ####
 * makeflv creates a flash file from a video file or package input. Your command will look like this: makeflv [input].   
-* makeflv has options d, o, n, e, E. To reread what those options mean, return to [link to section header]. If you use options o or d, your command will look like this: makeflv -o OR -d [path/to/directory] [input]. If you use option n, your command will look like this: makeflv -n [input]. If you use option e, your command will look like this: makeflv -e -d [path/to/directory] [input]. If you use option -E, your command will look like this: makeflv -E [input].    
+* makeflv has options d, o, n, e, E. To reread what those options mean, return to [section header](https://github.com/mediamicroservices/mm#mediamicroservices-functions-and-instructions-for-use). If you use options o or d, your command will look like this: makeflv -o OR -d [path/to/directory] [input]. If you use option n, your command will look like this: makeflv -n [input]. If you use option e, your command will look like this: makeflv -e -d [path/to/directory] [input]. If you use option -E, your command will look like this: makeflv -E [input].    
 
 #### makeframes ####
 * makeframes creates 10 still images from a video file or package input. Your command will look like:  makeframes [input]. To deliver still images to a specific directory, use this command  ingestfile -d [path/to/directory] [input]. Example: #phototocome  
@@ -245,11 +243,11 @@ To view the specific ffmpeg encoding options for each file, view the sourcecode 
 
 #### makepodcast ####
 * makepodcast creates a Quicktime file that is suitable for podcasting from a video file or package input. Your command will look like this: makepodcast [input].
-* makepodcast has options d, o, n, e, E. To reread what those options mean, return to [link to section header]. If you use options o or d, your command will look like this: makepodcast -o OR -d [path/to/directory] [input]. If you use option n, your command will look like this: makepodcast -n [input]. If you use option e, your command will look like this: makepodcast -e -d [path/to/directory] [input]. If you use option -E, your command will look like this: makepodcast -E [input].  
+* makepodcast has options d, o, n, e, E. To reread what those options mean, return to [section header](https://github.com/mediamicroservices/mm#mediamicroservices-functions-and-instructions-for-use). If you use options o or d, your command will look like this: makepodcast -o OR -d [path/to/directory] [input]. If you use option n, your command will look like this: makepodcast -n [input]. If you use option e, your command will look like this: makepodcast -e -d [path/to/directory] [input]. If you use option -E, your command will look like this: makepodcast -E [input].  
 
 ####  makeprores ####
 * makeprores creates a prores/quicktime file from a video file or package input. Your command will look like this: makeprores [input].  
-* makeprores has options d, o, n, e, E. To reread what those options mean, return to [link to section header]. If you use options o or d, your command will look like this: makeprores -o OR -d [path/to/directory] [input]. If you use option n, your command will look like this: makeprores -n [input]. If you use option e, your command will look like this: makeprores -e -d [path/to/directory] [input]. If you use option -E, your command will look like this: makeprores -E [input].  
+* makeprores has options d, o, n, e, E. To reread what those options mean, return to [section header](https://github.com/mediamicroservices/mm#mediamicroservices-functions-and-instructions-for-use). If you use options o or d, your command will look like this: makeprores -o OR -d [path/to/directory] [input]. If you use option n, your command will look like this: makeprores -n [input]. If you use option e, your command will look like this: makeprores -e -d [path/to/directory] [input]. If you use option -E, your command will look like this: makeprores -E [input].  
 
 #### makeqctoolsreport ####
 
@@ -257,7 +255,7 @@ To view the specific ffmpeg encoding options for each file, view the sourcecode 
 * makeresourcespace creates a high quality h264 file from a video file or package input. Your commmand will look like this: uploadyoutube [input].
 * if you would like to use only the left or right channel of first audio track, use options r or l. Your command will look like this: makeresourcespace -l [input] for left or makeresourcespace -r [input] for right.  
 * if you want to run the video through a volume adjustment filter, then adjust the volume accordingly during transcoding, use option v. This process will be slower. Defaults to ${VOLADJUST} variable set in mmconfig. Your command will look like this: makeresourcespace -v Y OR N [input].  
-* makeresourcespace has options d, o, n, e, E. To reread what those options mean, return to [link to section header]. If you use options o or d, your command will look like this: makeresourcespace -o OR -d [path/to/directory] [input]. If you use option n, your command will look like this: makeresourcespace -n [input]. If you use option e, your command will look like this: makeresourcespace -e -d [path/to/directory] [input]. If you use option -E, your command will look like this: makeresourcespace -E [input].  
+* makeresourcespace has options d, o, n, e, E. To reread what those options mean, return to [section header](https://github.com/mediamicroservices/mm#mediamicroservices-functions-and-instructions-for-use). If you use options o or d, your command will look like this: makeresourcespace -o OR -d [path/to/directory] [input]. If you use option n, your command will look like this: makeresourcespace -n [input]. If you use option e, your command will look like this: makeresourcespace -e -d [path/to/directory] [input]. If you use option -E, your command will look like this: makeresourcespace -E [input].  
 
 #### makeslate ####
 * makeslate creates a slate to be inserted before a broadcast program begins. To use makeslate at your own institution, you will have to manually edit the file based on your institutional needs. makeslate writes a short .mov file to your desktop. to run makeslate, your command will look like this: makeslate [input].
@@ -269,7 +267,7 @@ To view the specific ffmpeg encoding options for each file, view the sourcecode 
 * makeyoutube creates a high quality h264 file from a video file or package input. Your command will look like this: makeyoutube [input]. 
 * if you would like to use only the left or right channel of first audio track, use options r or l. Your command will look like this: makeyoutube -l [input] for left or makeyoutube -r [input] for right.  
 * if you want to run the video through a volume adjustment filter, then adjust the volume accordingly during transcoding, use option v. This process will be slower. Defaults to ${VOLADJUST} variable set in mmconfig. Your command will look like this: makeyoutube -v Y OR N [input].  
-* makeyoutube has options d, o, n, e, E. To reread what those options mean, return to [link to section header]. If you use options o or d, your command will look like this: makeyoutube -o OR -d [path/to/directory] [input]. If you use option n, your command will look like this: makeyoutube -n [input]. If you use option e, your command will look like this: makeyoutube -e -d [path/to/directory] [input]. If you use option -E, your command will look like this: makeyoutube -E [input].  
+* makeyoutube has options d, o, n, e, E. To reread what those options mean, return to [section header](https://github.com/mediamicroservices/mm#mediamicroservices-functions-and-instructions-for-use). If you use options o or d, your command will look like this: makeyoutube -o OR -d [path/to/directory] [input]. If you use option n, your command will look like this: makeyoutube -n [input]. If you use option e, your command will look like this: makeyoutube -e -d [path/to/directory] [input]. If you use option -E, your command will look like this: makeyoutube -E [input].  
 
 #### quickcompare ####
 * quickcompare takes two files and compares the checksums against one another, and outputs the results into the terminal. Your command will look like this: quickcompare [input1] [input2]  
