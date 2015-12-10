@@ -139,9 +139,9 @@ _black_at_ends(){
     ANALYSIS_HEAD_SECONDS=10
     ANALYSIS_TAIL_SECONDS=-10
     _report -dt "Analyzing $(basename "${INPUT_MOVIE}") for excessive black at head or tail."
-    HEAD_BLACK=$(ffmpeg -t "${ANALYSIS_HEAD_SECONDS}" -i "${1}" -an -vf blackdetect=pix_th=0.05 -loglevel debug -f null - 2>&1 | grep -c -o picture_black_ratio:1)
+    HEAD_BLACK=$(ffmpeg -t "${ANALYSIS_HEAD_SECONDS}" -i "${1}" -an -filter_complex     blackdetect=pix_th=0.05 -loglevel debug -f null - 2>&1 | grep -c -o picture_black_ratio:1)
     _report -dt "Black frames in first ${ANALYSIS_HEAD_SECONDS} seconds: ${HEAD_BLACK}."
-    TAIL_BLACK=$(ffmpeg -sseof "${ANALYSIS_TAIL_SECONDS}" -i "${1}" -an -vf blackdetect=pix_th=0.05 -loglevel debug -f null - 2>&1 | grep -c -o picture_black_ratio:1)
+    TAIL_BLACK=$(ffmpeg -sseof "${ANALYSIS_TAIL_SECONDS}" -i "${1}" -an -filter_complex     blackdetect=pix_th=0.05 -loglevel debug -f null - 2>&1 | grep -c -o picture_black_ratio:1)
     _report -dt "Black frames in last  ${ANALYSIS_HEAD_SECONDS} seconds: ${TAIL_BLACK}."
 }
 
@@ -599,7 +599,7 @@ _get_volume_adjustment(){
 _get_cropdetection(){
     INPUT_MOVIE="${1}"
     _report -dt "Getting cropping data for $(basename "${INPUT_MOVIE}") ..."
-    CROP_DATA=$(ffmpeg -i "${INPUT_MOVIE}" -an -vf cropdetect -f null - 2>&1 | grep -o "crop=[0-9:]*")
+    CROP_DATA=$(ffmpeg -i "${INPUT_MOVIE}" -an -filter_complex     cropdetect -f null - 2>&1 | grep -o "crop=[0-9:]*")
     CROP_ERR="${?}"
     [ "${CROP_ERR}" -ne 0 ] && { _report -wt "Crop detection analysis for ${INPUT_MOVIE} exited with ${CROP_ERR}." ; exit ;};
     for i in $(echo "${CROP_DATA}"); do

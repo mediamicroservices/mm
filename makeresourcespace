@@ -100,11 +100,11 @@ while [ "${*}" != "" ] ; do
         fi
         MIDDLEOPTIONS+=(-bufsize 1835k)
         if  [[ "${WIDTH}" == 720 && "${HEIGHT}" == 486 ]] ; then
-            MIDDLEOPTIONS+=(-vf "crop=720:480:0:4,yadif")
+            MIDDLEOPTIONS+=(-filter_complex     "crop=720:480:0:4,yadif")
         elif  [[ "${WIDTH}" == 720 && "${HEIGHT}" == 512 ]] ; then
-            MIDDLEOPTIONS+=(-vf "crop=720:480:0:32,yadif")
+            MIDDLEOPTIONS+=(-filter_complex     "crop=720:480:0:32,yadif")
         else
-            MIDDLEOPTIONS+=(-vf yadif)
+            MIDDLEOPTIONS+=(-filter_complex     yadif)
         fi
     fi
     if [[ "${AUDIOSTREAMCOUNT}" > 0 ]] ; then

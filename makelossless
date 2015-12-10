@@ -71,7 +71,7 @@ while [ "${*}" != "" ] ; do
                 MIDDLEOPTIONS+=(-c:v ffv1 -level 3 -g 1)
                 SUFFIX="_ffv1"
             fi
-            MIDDLEOPTIONS+=(-vf setfield=bff) # this is a presumption but much of the uncompressed input is bff but not probably labelled
+            MIDDLEOPTIONS+=(-filter_complex     setfield=bff) # this is a presumption but much of the uncompressed input is bff but not probably labelled
         fi
         if [[ "${AUDIOSTREAMCOUNT}" > 0 ]] ; then
             MIDDLEOPTIONS+=(-c:a copy)

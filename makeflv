@@ -80,7 +80,7 @@ while [ "${*}" != "" ] ; do
         MIDDLEOPTIONS+=(-pix_fmt yuv420p)
         MIDDLEOPTIONS+=(-b:v 4500k)
         MIDDLEOPTIONS+=(-s 480x360)
-        MIDDLEOPTIONS+=(-vf setdar=4/3,setsar=1/1)
+        MIDDLEOPTIONS+=(-filter_complex     setdar=4/3,setsar=1/1)
     fi
     if [[ "${AUDIOSTREAMCOUNT}" > 0 ]] ; then
         MIDDLEOPTIONS+=(-map 0:a)

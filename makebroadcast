@@ -178,31 +178,31 @@ while [ "${*}" != "" ] ; do
             FILTERCHAIN_START="${FILTERCHAIN_START}fieldorder=tff,"
         fi
         if [ "${FORMULA}" = "hds" ] ; then
-            MIDDLEOPTIONS+=(-vf "${FILTERCHAIN_START}scale=size=hd1080:interl=1,format=yuv422p,setsar=1/1,setdar=16/9,fps=fps=ntsc")
+            MIDDLEOPTIONS+=(-filter_complex     "${FILTERCHAIN_START}scale=size=hd1080:interl=1,format=yuv422p,setsar=1/1,setdar=16/9,fps=fps=ntsc")
             MIDDLEOPTIONS+=("${MIDDLEOPTIONSXDCAM[@]}")
         elif [ "${FORMULA}" = "sds" ] ; then
-            MIDDLEOPTIONS+=(-vf "${FILTERCHAIN_START}scale=720:480,pad=720:512:0:24,setsar=1/1,setdar=4/3")
+            MIDDLEOPTIONS+=(-filter_complex     "${FILTERCHAIN_START}scale=720:480,pad=720:512:0:24,setsar=1/1,setdar=4/3")
             MIDDLEOPTIONS+=("${MIDDLEOPTIONSIMX[@]}")
         elif [ "${DARRATIO}" = "1.777" -a ! "${CROPDETECT}" = "Y" ] ; then
-            MIDDLEOPTIONS+=(-vf "${FILTERCHAIN_START}scale=size=hd1080:interl=1,format=yuv422p,setsar=1/1,setdar=16/9,fps=fps=ntsc")
+            MIDDLEOPTIONS+=(-filter_complex     "${FILTERCHAIN_START}scale=size=hd1080:interl=1,format=yuv422p,setsar=1/1,setdar=16/9,fps=fps=ntsc")
             MIDDLEOPTIONS+=("${MIDDLEOPTIONSXDCAM[@]}")
         elif [ $(echo "scale=3 ; ${DARRATIO} > (16/9)" | bc -l) = 1 ] ; then
-            MIDDLEOPTIONS+=(-vf "${FILTERCHAIN_START}pad=${WIDTH}:${WIDTH}*(9/16)*(${SAR}):(ow-${WIDTH})/2:(oh-${HEIGHT})/2,scale=size=hd1080:interl=1")
+            MIDDLEOPTIONS+=(-filter_complex     "${FILTERCHAIN_START}pad=${WIDTH}:${WIDTH}*(9/16)*(${SAR}):(ow-${WIDTH})/2:(oh-${HEIGHT})/2,scale=size=hd1080:interl=1")
             MIDDLEOPTIONS+=("${MIDDLEOPTIONSXDCAM[@]}")
         elif [ $(echo "scale=3 ; $DARRATIO > (3/2)" | bc -l) = 1 ] ; then
-            MIDDLEOPTIONS+=(-vf "${FILTERCHAIN_START}pad=${HEIGHT}*(16/9)/(${SAR}):${HEIGHT}:(ow-${WIDTH})/2:(oh-${HEIGHT})/2,scale=size=hd1080:interl=1")
+            MIDDLEOPTIONS+=(-filter_complex     "${FILTERCHAIN_START}pad=${HEIGHT}*(16/9)/(${SAR}):${HEIGHT}:(ow-${WIDTH})/2:(oh-${HEIGHT})/2,scale=size=hd1080:interl=1")
             MIDDLEOPTIONS+=("${MIDDLEOPTIONSXDCAM[@]}")
         elif [ "${WIDTH}" = "720" -a "${HEIGHT}" = "480" -a $(echo "scale=3 ; ${DARRATIO} < (3/2)" | bc -l) = 1 -a ! "${CROPDETECT}" = "Y" ] ; then
-            MIDDLEOPTIONS+=(-vf "${FILTERCHAIN_START}"pad=720:512:0:24,setsar=1/1,setdar=4/3)
+            MIDDLEOPTIONS+=(-filter_complex     "${FILTERCHAIN_START}"pad=720:512:0:24,setsar=1/1,setdar=4/3)
             MIDDLEOPTIONS+=("${MIDDLEOPTIONSIMX[@]}")
         elif [ "${HEIGHT}" -eq "486" -a "${WIDTH}" -eq "720" ] ; then
-            MIDDLEOPTIONS+=(-vf "${FILTERCHAIN_START}crop=720:480:0:4,pad=720:512:0:24,setsar=1/1,setdar=4/3")
+            MIDDLEOPTIONS+=(-filter_complex     "${FILTERCHAIN_START}crop=720:480:0:4,pad=720:512:0:24,setsar=1/1,setdar=4/3")
             MIDDLEOPTIONS+=("${MIDDLEOPTIONSIMX[@]}")
         elif  [ "${HEIGHT}" -eq "512" -a "${WIDTH}" -eq "720" ] ;then
-            MIDDLEOPTIONS+=(-vf "${FILTERCHAIN_START}crop=720:480:0:32,pad=720:512:0:24,setsar=1/1,setdar=4/3")
+            MIDDLEOPTIONS+=(-filter_complex     "${FILTERCHAIN_START}crop=720:480:0:32,pad=720:512:0:24,setsar=1/1,setdar=4/3")
             MIDDLEOPTIONS+=("${MIDDLEOPTIONSIMX[@]}")
         else
-            MIDDLEOPTIONS+=(-vf "${FILTERCHAIN_START}scale=720:480,pad=720:512:0:24,setsar=1/1,setdar=4/3")
+            MIDDLEOPTIONS+=(-filter_complex     "${FILTERCHAIN_START}scale=720:480,pad=720:512:0:24,setsar=1/1,setdar=4/3")
             MIDDLEOPTIONS+=("${MIDDLEOPTIONSIMX[@]}")
         fi
     fi
