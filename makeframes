@@ -61,8 +61,12 @@ while [ "${*}" != "" ] ; do
     VIDEOFILTERCHAIN+="yadif,thumbnail=100"
     MIDDLEOPTIONS+=(-frames:v 1) 
     
-    if [ -n  "${VIDEOFILTERCHAIN}" ] ; then
+    if [ -n  "${VIDEOFILTERCHAIN}" -a -n "${AUDIOFILTERCHAIN}" ] ; then
+           MIDDLEOPTIONS+=(-filter_complex ${VIDEOFILTERCHAIN}\;${AUDIOFILTERCHAIN})
+       elif [ -n  "${VIDEOFILTERCHAIN}" ] ; then 
            MIDDLEOPTIONS+=(-filter_complex ${VIDEOFILTERCHAIN})
+       elif [ -n  "${AUDIOFILTERCHAIN}" ] ; then 
+           MIDDLEOPTIONS+=(-filter_complex ${AUDIOFILTERCHAIN})
        fi
 
     _log -b

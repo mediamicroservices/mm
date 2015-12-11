@@ -706,7 +706,7 @@ _prep_volume_adjustment(){
             VOLADJ=$(_readingestlog "audio_adjustment")
         fi
         if [ "${VOLADJ}" ] ; then
-            MIDDLEOPTIONS+=(-af volume=${VOLADJ}dB)
+            AUDIOFILTERCHAIN+="volume=${VOLADJ}dB"
         else
             _get_volume_adjustment "${SOURCEFILE}"
             if [ "${VOLADJ}" ] ; then
@@ -714,7 +714,7 @@ _prep_volume_adjustment(){
                     _report -dt "Integrated loudness for $(basename "${INPUT_MOVIE}") is ${INTEGRATED_LOUDNESS}dB. Reference is ${REFERENCE}dB. No adjustment is needed, skipping."
                 else
                     _report -dt "Integrated loudness for $(basename "${INPUT_MOVIE}") is ${INTEGRATED_LOUDNESS}dB. Reference is ${REFERENCE}dB. Will adjust by ${VOLADJ}dB."
-                    MIDDLEOPTIONS+=(-af volume=${VOLADJ}dB)
+                    AUDIOFILTERCHAIN+="volume=${VOLADJ}dB"
                 fi
             fi
         fi

@@ -151,8 +151,12 @@ while [ "${*}" != "" ] ; do
         FFMPEGINPUT="${SOURCEFILE}"
     fi
     
-    if [ -n  "${VIDEOFILTERCHAIN}" ] ; then
-               MIDDLEOPTIONS+=(-filter_complex ${VIDEOFILTERCHAIN})
+    if [ -n  "${VIDEOFILTERCHAIN}" -a -n "${AUDIOFILTERCHAIN}" ] ; then
+           MIDDLEOPTIONS+=(-filter_complex ${VIDEOFILTERCHAIN}\;${AUDIOFILTERCHAIN})
+       elif [ -n  "${VIDEOFILTERCHAIN}" ] ; then 
+           MIDDLEOPTIONS+=(-filter_complex ${VIDEOFILTERCHAIN})
+       elif [ -n  "${AUDIOFILTERCHAIN}" ] ; then 
+           MIDDLEOPTIONS+=(-filter_complex ${AUDIOFILTERCHAIN})
        fi
     
     _run_critical ffmpeg ${INPUTOPTIONS[@]} -i "${FFMPEGINPUT}" ${MIDDLEOPTIONS[@]} "${OUTPUTDIR}/${MEDIAID%.*}.mpeg"

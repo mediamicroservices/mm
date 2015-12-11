@@ -82,8 +82,12 @@ while [ "${*}" != "" ] ; do
             _report -dt "${SOURCEFILENAME} is ${CODEC_TAG_STRING}, starting encode"
             _prep_ffmpeg_log
            
-            if [ -n  "${VIDEOFILTERCHAIN}" ] ; then
+            if [ -n  "${VIDEOFILTERCHAIN}" -a -n "${AUDIOFILTERCHAIN}" ] ; then
+                   MIDDLEOPTIONS+=(-filter_complex ${VIDEOFILTERCHAIN}\;${AUDIOFILTERCHAIN})
+               elif [ -n  "${VIDEOFILTERCHAIN}" ] ; then 
                    MIDDLEOPTIONS+=(-filter_complex ${VIDEOFILTERCHAIN})
+               elif [ -n  "${AUDIOFILTERCHAIN}" ] ; then 
+                   MIDDLEOPTIONS+=(-filter_complex ${AUDIOFILTERCHAIN})
                fi
            
             _run_critical ffmpeg ${INPUTOPTIONS[@]} -i "${SOURCEFILE}"  ${MIDDLEOPTIONS[@]} "${OUTPUTDIR}/${SOURCEFILENAME%.*}${SUFFIX}.mov" -f framemd5 -an "${LOGDIR}/${SOURCEFILENAME%.*}.framemd5"
