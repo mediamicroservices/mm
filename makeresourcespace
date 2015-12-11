@@ -100,11 +100,11 @@ while [ "${*}" != "" ] ; do
         fi
         MIDDLEOPTIONS+=(-bufsize 1835k)
         if  [[ "${WIDTH}" == 720 && "${HEIGHT}" == 486 ]] ; then
-            MIDDLEOPTIONS+=(-filter_complex     "crop=720:480:0:4,yadif")
+            VIDEOFILTERCHAIN+="crop=720:480:0:4,yadif"
         elif  [[ "${WIDTH}" == 720 && "${HEIGHT}" == 512 ]] ; then
-            MIDDLEOPTIONS+=(-filter_complex     "crop=720:480:0:32,yadif")
+            VIDEOFILTERCHAIN+="crop=720:480:0:32,yadif"
         else
-            MIDDLEOPTIONS+=(-filter_complex     yadif)
+            VIDEOFILTERCHAIN+="yadif"
         fi
     fi
     if [[ "${AUDIOSTREAMCOUNT}" > 0 ]] ; then
@@ -129,6 +129,11 @@ while [ "${*}" != "" ] ; do
     else
         FFMPEGINPUT="${SOURCEFILE}"
     fi
+    
+    if [ -n  "${VIDEOFILTERCHAIN}" ] ; then
+           MIDDLEOPTIONS+=(-filter_complex ${VIDEOFILTERCHAIN})
+       fi
+       
     _run_critical ffmpeg "${INPUTOPTIONS[@]}" -i "${FFMPEGINPUT}" "${MIDDLEOPTIONS[@]}" "${OUTPUT}"
     echo
     _summarize_make

@@ -71,7 +71,7 @@ while [ "${*}" != "" ] ; do
                 MIDDLEOPTIONS+=(-c:v ffv1 -level 3 -g 1)
                 SUFFIX="_ffv1"
             fi
-            MIDDLEOPTIONS+=(-filter_complex     setfield=bff) # this is a presumption but much of the uncompressed input is bff but not probably labelled
+            VIDEOFILTERCHAIN+="setfield=bff" # this is a presumption but much of the uncompressed input is bff but not probably labelled
         fi
         if [[ "${AUDIOSTREAMCOUNT}" > 0 ]] ; then
             MIDDLEOPTIONS+=(-c:a copy)
@@ -81,6 +81,11 @@ while [ "${*}" != "" ] ; do
         if [ "${CODEC_TAG_STRING}" == "2vuy" -o "${CODEC_TAG_STRING}" == "v210" ] ; then
             _report -dt "${SOURCEFILENAME} is ${CODEC_TAG_STRING}, starting encode"
             _prep_ffmpeg_log
+           
+            if [ -n  "${VIDEOFILTERCHAIN}" ] ; then
+                   MIDDLEOPTIONS+=(-filter_complex ${VIDEOFILTERCHAIN})
+               fi
+           
             _run_critical ffmpeg ${INPUTOPTIONS[@]} -i "${SOURCEFILE}"  ${MIDDLEOPTIONS[@]} "${OUTPUTDIR}/${SOURCEFILENAME%.*}${SUFFIX}.mov" -f framemd5 -an "${LOGDIR}/${SOURCEFILENAME%.*}.framemd5"
             if [ "${CODEC_TAG_STRING}" == "2vuy" ] ; then
                 _run_critical ffmpeg ${INPUTOPTIONS[@]} -i "${OUTPUTDIR}/${SOURCEFILENAME%.*}${SUFFIX}.mov" -f framemd5 -pix_fmt uyvy422 -an "${LOGDIR}/${SOURCEFILENAME%.*}${SUFFIX}.framemd5"

@@ -241,7 +241,7 @@ while [ "${*}" != "" ] ; do
     fi
     
     if [ -n  "${VIDEOFILTERCHAIN}" ] ; then
-           MIDDLEOPTIONS+="-filter_complex ${VIDEOFILTERCHAIN}"
+           MIDDLEOPTIONS+=(-filter_complex ${VIDEOFILTERCHAIN})
        fi
     
     _run_critical ffmpeg "${INPUTOPTIONS[@]}" -i "${FFMPEGINPUT}" "${MIDDLEOPTIONS[@]}" "${OUTPUT}"
