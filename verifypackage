@@ -216,13 +216,13 @@ if [[ "${VIDEOSTREAMCOUNT}" > 0 ]] ; then
     MIDDLEOPTIONS+=(-lmin 1)
     MIDDLEOPTIONS+=(-lmax 200000)
     if  [[ "${WIDTH}" == 720 && "${HEIGHT}" == 486 ]] ; then
-        MIDDLEOPTIONS+=(-vf "fieldorder=bff,crop=720:480:0:4,setdar=${ASPECT}${TIMECODEOVERLAY}" -aspect "${ASPECT}")
+        MIDDLEOPTIONS+=(-filter_complex     "fieldorder=bff,crop=720:480:0:4,setdar=${ASPECT}${TIMECODEOVERLAY}" -aspect "${ASPECT}")
     elif  [[ "${WIDTH}" == 720 && "${HEIGHT}" == 480 ]] ; then
-        MIDDLEOPTIONS+=(-vf "fieldorder=bff,setdar=${ASPECT}${TIMECODEOVERLAY}" -aspect "${ASPECT}")
+        MIDDLEOPTIONS+=(-filter_complex     "fieldorder=bff,setdar=${ASPECT}${TIMECODEOVERLAY}" -aspect "${ASPECT}")
     elif  [[ "${WIDTH}" == 720 && "${HEIGHT}" == 512 ]] ; then
-        MIDDLEOPTIONS+=(-vf "fieldorder=bff,crop=720:480:0:32,setdar=${ASPECT}${TIMECODEOVERLAY}" -aspect "${ASPECT}")
+        MIDDLEOPTIONS+=(-filter_complex     "fieldorder=bff,crop=720:480:0:32,setdar=${ASPECT}${TIMECODEOVERLAY}" -aspect "${ASPECT}")
     else
-        MIDDLEOPTIONS+=(-vf "fieldorder=bff,scale=720:480:interl=1,setdar=${ASPECT}${TIMECODEOVERLAY}" -aspect "${ASPECT}")
+        MIDDLEOPTIONS+=(-filter_complex     "fieldorder=bff,scale=720:480:interl=1,setdar=${ASPECT}${TIMECODEOVERLAY}" -aspect "${ASPECT}")
     fi
 fi
 if [[ "${AUDIOSTREAMCOUNT}" > 0 ]] ; then
@@ -268,7 +268,7 @@ find 1 podcast.mov file
         MIDDLEOPTIONS+=(-maxrate:v 3000k)
         MIDDLEOPTIONS+=(-minrate:v 375k)
         MIDDLEOPTIONS+=(-bufsize:v 6000k)
-        MIDDLEOPTIONS+=(-vf "yadif,scale=640:trunc(ow/dar/2)*2:interl=1")
+        MIDDLEOPTIONS+=(-filter_complex     "yadif,scale=640:trunc(ow/dar/2)*2:interl=1")
     fi
     if [[ "${AUDIOSTREAMCOUNT}" > 0 ]] ; then
         MIDDLEOPTIONS+=(-c:a aac -strict -2)
@@ -301,11 +301,11 @@ find 1 .mp4 file
         fi
         MIDDLEOPTIONS+=(-bufsize 1835k)
         if  [[ "${WIDTH}" == 720 && "${HEIGHT}" == 486 ]] ; then
-            MIDDLEOPTIONS+=(-vf "crop=720:480:0:4,yadif")
+            MIDDLEOPTIONS+=(-filter_complex     "crop=720:480:0:4,yadif")
         elif  [[ "${WIDTH}" == 720 && "${HEIGHT}" == 512 ]] ; then
-            MIDDLEOPTIONS+=(-vf "crop=720:480:0:32,yadif")
+            MIDDLEOPTIONS+=(-filter_complex     "crop=720:480:0:32,yadif")
         else
-            MIDDLEOPTIONS+=(-vf yadif)
+            MIDDLEOPTIONS+=(-filter_complex     yadif)
         fi
     fi
     if [[ "${AUDIOSTREAMCOUNT}" > 0 ]] ; then

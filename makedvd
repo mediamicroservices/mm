@@ -119,14 +119,15 @@ while [ "${*}" != "" ] ; do
         MIDDLEOPTIONS+=(-muxrate 10080000)
         MIDDLEOPTIONS+=(-lmin 1)
         MIDDLEOPTIONS+=(-lmax 200000)
+        MIDDLEOPTIONS+=(-aspect "${ASPECT}")
         if  [[ "${WIDTH}" == 720 && "${HEIGHT}" == 486 ]] ; then
-            MIDDLEOPTIONS+=(-vf "fieldorder=bff,crop=720:480:0:4,setdar=${ASPECT}${TIMECODEOVERLAY}" -aspect "${ASPECT}")
+            VIDEOFILTERCHAIN+="fieldorder=bff,crop=720:480:0:4,setdar=${ASPECT}${TIMECODEOVERLAY}" 
         elif  [[ "${WIDTH}" == 720 && "${HEIGHT}" == 480 ]] ; then
-            MIDDLEOPTIONS+=(-vf "fieldorder=bff,setdar=${ASPECT}${TIMECODEOVERLAY}" -aspect "${ASPECT}")
+            VIDEOFILTERCHAIN+="fieldorder=bff,setdar=${ASPECT}${TIMECODEOVERLAY}" 
         elif  [[ "${WIDTH}" == 720 && "${HEIGHT}" == 512 ]] ; then
-            MIDDLEOPTIONS+=(-vf "fieldorder=bff,crop=720:480:0:32,setdar=${ASPECT}${TIMECODEOVERLAY}" -aspect "${ASPECT}")
+            VIDEOFILTERCHAIN+="fieldorder=bff,crop=720:480:0:32,setdar=${ASPECT}${TIMECODEOVERLAY}" 
         else
-            MIDDLEOPTIONS+=(-vf "fieldorder=bff,scale=720:480:interl=1,setdar=${ASPECT}${TIMECODEOVERLAY}" -aspect "${ASPECT}")
+            VIDEOFILTERCHAIN+="fieldorder=bff,scale=720:480:interl=1,setdar=${ASPECT}${TIMECODEOVERLAY}" 
         fi
     fi
     if [[ "${AUDIOSTREAMCOUNT}" > 0 ]] ; then
@@ -149,6 +150,15 @@ while [ "${*}" != "" ] ; do
     else
         FFMPEGINPUT="${SOURCEFILE}"
     fi
+    
+    if [ -n  "${VIDEOFILTERCHAIN}" -a -n "${AUDIOFILTERCHAIN}" ] ; then
+           MIDDLEOPTIONS+=(-filter_complex ${VIDEOFILTERCHAIN}\;${AUDIOFILTERCHAIN})
+       elif [ -n  "${VIDEOFILTERCHAIN}" ] ; then 
+           MIDDLEOPTIONS+=(-filter_complex ${VIDEOFILTERCHAIN})
+       elif [ -n  "${AUDIOFILTERCHAIN}" ] ; then 
+           MIDDLEOPTIONS+=(-filter_complex ${AUDIOFILTERCHAIN})
+       fi
+    
     _run_critical ffmpeg ${INPUTOPTIONS[@]} -i "${FFMPEGINPUT}" ${MIDDLEOPTIONS[@]} "${OUTPUTDIR}/${MEDIAID%.*}.mpeg"
     # Making DVD VIDEO_TS folder, chapters every 5 minutes, dvdauthor will ignore chapter markers greater than duration
     export VIDEO_FORMAT=NTSC

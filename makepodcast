@@ -79,7 +79,7 @@ while [ "${*}" != "" ] ; do
         MIDDLEOPTIONS+=(-maxrate:v 3000k)
         MIDDLEOPTIONS+=(-minrate:v 375k)
         MIDDLEOPTIONS+=(-bufsize:v 6000k)
-        MIDDLEOPTIONS+=(-vf "yadif,scale=640:trunc(ow/dar/2)*2:interl=1")
+        VIDEOFILTERCHAIN+="yadif,scale=640:trunc(ow/dar/2)*2:interl=1"
     fi
     if [[ "${AUDIOSTREAMCOUNT}" > 0 ]] ; then
         MIDDLEOPTIONS+=(-c:a aac -strict -2)
@@ -93,6 +93,15 @@ while [ "${*}" != "" ] ; do
     else
         FFMPEGINPUT="${SOURCEFILE}"
     fi
+    
+    if [ -n  "${VIDEOFILTERCHAIN}" -a -n "${AUDIOFILTERCHAIN}" ] ; then
+           MIDDLEOPTIONS+=(-filter_complex ${VIDEOFILTERCHAIN}\;${AUDIOFILTERCHAIN})
+       elif [ -n  "${VIDEOFILTERCHAIN}" ] ; then 
+           MIDDLEOPTIONS+=(-filter_complex ${VIDEOFILTERCHAIN})
+       elif [ -n  "${AUDIOFILTERCHAIN}" ] ; then 
+           MIDDLEOPTIONS+=(-filter_complex ${AUDIOFILTERCHAIN})
+       fi
+    
     _run_critical ffmpeg "${INPUTOPTIONS[@]}" -i "${FFMPEGINPUT}" "${MIDDLEOPTIONS[@]}" "${OUTPUT}"
     echo
     _summarize_make
