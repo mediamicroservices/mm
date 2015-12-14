@@ -42,4 +42,6 @@ ffmpeg -f lavfi -i "smptehdbars=s=1920x1080:r=30000/1001:sar=16/9:d=${COLORBARS_
     drawtext=fontsize=420:fontfile=/Library/Fonts/Courier New Bold.ttf:fontcolor=white:enable=gte(t\,${COLORBARS_SECS}+${SLATE_SECS})*lt(t\,${COLORBARS_SECS}+${SLATE_SECS}+${COUNTDOWN_SECS}):x=(w-text_w)/2:y=(h-text_h-line_h)/2:text='%{eif\:${COLORBARS_SECS}+${SLATE_SECS}+11-t\:d}',\
     scale=size=hd1080,format=yuv422p,setsar=1/1,setdar=16/9,fps=fps=ntsc[v1]" \
     -map '[v1]' -map '[a]' -shortest \
-    -r ntsc -c:v mpeg2video -intra_vlc 1 -non_linear_quant 1 -qmin 1 -dc 10 -lmin QP2LAMBDA -ps 1 -flags +ildct+ilme -pix_fmt yuv422p -metadata:s:v:0 "timecode=00:58:00;00" -s 1920x1080 -vtag xd5b -aspect 16:9 -q:v 1 -qmax 8 -g 15 -bf 2 -b:v 50M -maxrate:v 50M -minrate:v 50M -bufsize 17825792 -rc_init_occupancy 17825792 -acodec pcm_s24be -ar 48k -ac 2 ~/DeskTop/slate.mov
+    -r ntsc -c:v mpeg2video -intra_vlc 1 -non_linear_quant 1 -qmin 1 -dc 10 -lmin QP2LAMBDA -ps 1 -flags +ildct+ilme -pix_fmt yuv422p -metadata:s:v:0 "timecode=00:58:00;00" -s 1920x1080 -vtag xd5b -aspect 16:9 -q:v 1 -qmax 8 -g 15 -bf 2 -b:v 50M -maxrate:v 50M -minrate:v 50M -bufsize 17825792 -rc_init_occupancy 17825792 -acodec pcm_s24be -ar 48k -ac 2 "${HOME}/DeskTop/${MEDIAID}_SLATE.mov"
+
+cowsay "I left ${MEDIAID}_SLATE.mov on your Desktop, peace"
