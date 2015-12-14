@@ -119,8 +119,3 @@ cd "$1"
 tree -DaNXs --du --timefmt "%Y-%m-%dT%H:%M:%SZ" -I "tree.xml" . > /tmp/tree.xml
 xsltproc --stringparam root "$(pwd)" /tmp/makemets.xsl /tmp/tree.xml > ~/mets.xml
 cd "$PWD"
-xml sel -T -t -m //_:file -v @ID -o ":" -v _:FLocat/@xlink:href -n ~/mets.xml | while read METS_FILE_INFO ; do
-    FILE_ID="${METS_FILE_INFO%:*}"
-    RELATIVE_PATH="${METS_FILE_INFO%*:}"
-    echo "$FILE_ID   $RELATIVE_PATH"
-done
