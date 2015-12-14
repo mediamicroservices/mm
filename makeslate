@@ -4,11 +4,11 @@ cowsay "MediaID?"
 echo -n ":: "
 read MEDIAID
 
-cowsay "Series Title?"
+cowsay -t "Series Title?"
 echo -n ":: "
 read SERIESTITLE
 
-cowsay "Episode Title?"
+cowsay -s "Episode Title?"
 echo -n ":: "
 read EPISODETITLE
 
