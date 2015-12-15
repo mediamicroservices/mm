@@ -93,11 +93,13 @@ If at any point you would like to uninstall mediamicroservices, type brew uninst
 ### configuring mediamicroservices ###
 in order for mediamicroservices to run, you must configure your variable settings. first, take a look at the list of variables below to get a sense of what each variable means. Then, create all of the delivery directories that you'll need, in the place you'd like them to be. you can name the directories themselves anything you'd like- the more important part is tying them to a variable in the configuration process. Not all variables are necessary for microservices to run, so look over which microservices you'd like to use to get a sense of whether or not you'll need to a specific variable. 
 
-Type mmconfig -a into the terminal to access the configuration GUI, which will take information input and save a file as mm.conf. This file will store your system variables. For example,  #example!
+Type mmconfig -a into the terminal to access the configuration GUI, which will take information input and save a file as mm.conf. This file will store your system variables. 
+![Alt text](Resources/mmconfiggui.png "mmconfig GUI")
 
 mmconfig only has to be run once to create the configuration file, and will rewrite over itself if run again. 
 
 if you prefer to edit in the terminal, simply run mmconfig and follow the directions on screen. this option allows for you to also choose to edit the config file in nano or TextMate. 
+![Alt text](Resources/mmconfigterminal.png "mmconfig in terminal")
 
 #### variable explanations ####
 
