@@ -61,16 +61,34 @@ to update the packages in homebrew, type: brew update into the command line. Thi
 
 to upgrade the packages in homebrew, type: brew upgrade into the command line. This command will update all packages to their most recent version.
 
-### installing mediamicroservices ###
+### installing mediamicroservices and dependencies###
 once homebrew has been installed, you can install mediamicroservices. First, use the [tap](https://github.com/Homebrew/homebrew/blob/master/share/doc/homebrew/brew-tap.md) command. Then, you can install. 
 
 Type brew tap mediamicroservices/mm into the command line.  
 photo to come
 
-Then, type brew install mm into the command line. This command will install mediamicroservices to your computer. 
+Then, type brew install mediamicroservices/mm/mm into the command line. This command will install mediamicroservices to your computer. 
 photo to come
 
 hooray, you've installed mediamicroservices! 
+
+mediamicroservices is dependent on other open source software to run. If you do not have the following software, homebrew will install it for you. 
+
+mediamicroservice dependencies: 
+
+* cowsay
+* dvdauthor
+* exiftool
+* sdl
+* ffmpeg
+* flac
+* md5deep
+* mediainfo
+* normalize
+* xmlstarlet
+* tree
+
+If at any point you would like to uninstall mediamicroservices, type brew uninstall mediamicroservices/mm/mm into the command line. 
 
 ### configuring mediamicroservices ###
 in order for mediamicroservices to run, you must configure your variable settings. first, take a look at the list of variables below to get a sense of what each variable means. Then, create all of the delivery directories that you'll need, in the place you'd like them to be. you can name the directories themselves anything you'd like- the more important part is tying them to a variable in the configuration process. Not all variables are necessary for microservices to run, so look over which microservices you'd like to use to get a sense of whether or not you'll need to a specific variable. 
@@ -177,13 +195,13 @@ To view the specific ffmpeg encoding options for each file, view the sourcecode 
 * checksum2filemaker delivers checksums from a package input into a predefined table in a FileMaker Database called checksums, using the dfxml format. this script requires the user to set up a FileMaker database and server URL, which are both variables stored in the configuration file. To use this script, type checksum2filemaker in your command line, followed by the package, like this:  checksum2filemaker [package]  
 
 #### checksumpackage ####
-* checksum creates, checks, updates, and verifies checksums from an input of a directory or package. To use, type checksumpackage into the command line, followed by the input, like this:  checksumpackage [input]. You should see something resembling this output in your terminal and in your directory: #photostocome  
-* If you only want to check that filenames and filesizes are the same as in existing files, use option -c. Type  checksumpackage -c [input] and if no existing checksum files exist, they will be created. You should see something resembling this output in your terminal and in your directory: #photostocome  
+* checksum creates, checks, updates, and verifies checksums from an input of a directory or package. To use, type checksumpackage into the command line, followed by the input, like this:  checksumpackage [input].   
+* If you only want to check that filenames and filesizes are the same as in existing files, use option -c. Type  checksumpackage -c [input] and if no existing checksum files exist, they will be created.   
 * Another option is to use -c in conjunction with -u, which will create new checksums and version the previous ones if the check is unsuccessful, meaning your checksums have changed. Type  checksumpackage -cu [input] for this option. You should see something resembling this output in your terminal and in your directory: #photostocome  
 * Finally, use -v as an option if you want to fully verify two checksum files against one another. If no checksums exist, the script will create the initial ones. Verification will version existing checksums and make new ones, and log the difference to a checksumprocess log, which will be placed in the metadata directory of the package, or in the same directory as the file if the input is a directory. (need to check on how this option actually works). To use -v, type  checksumpackage -v [input]  
 
 #### finishpackage ####
-* finishpackage is a combination of the microservices makelossless, makebroadcast, makeyoutube, makemetadata, checksumpackage, and maketree. The purpose is to losslessly transcode, create access copies, and create metadata and directory structure information for a file or package input. To use finishpackage, type finishpackage and drag your input into the command line, like this:  finishpackage [input]. You should see something resembling this output in your terminal and in your directory: #photostocome  
+* finishpackage is a combination of the microservices makelossless, makebroadcast, makeyoutube, makemetadata, checksumpackage, and maketree. The purpose is to losslessly transcode, create access copies, and create metadata and directory structure information for a file or package input. To use finishpackage, type finishpackage and drag your input into the command line, like this:  finishpackage [input].  
 
 #### fix_left2stereo ####
 * fix\_left2stereo takes an input video file or files and produces outputs that map the left channel of the input to a stereo mix in the output. The suffix "\_left2stereo" is added to the filename to distinguish it from the original. Your command will look like this: fix_left2stereo [file1] [file2]  
@@ -203,10 +221,10 @@ To view the specific ffmpeg encoding options for each file, view the sourcecode 
     * creates metadata, checksums, and maps the directory's contents. 
     * finishes by delivering the AIP to the specified AIP_STORAGE location. 
 
-* To run ingestfle with a graphical user interface (GUI), use option -e. Your command will look like:  ingestfile -e [input] and the GUI looks like this: #phototocome  
-* if you are running ingestfile on digitized video files that have additional logs from digitization, and you need to set the in and out times for the file to be trimmed, you can use option -c. Your command will look like:  ingestfile -p [input]. This option does not have a GUI, so you will input information when prompted into the command line, including setting in and out times and dragging in any logs from digitization. Note that this option does not deliver to AIP storage, instead it keeps the AIP in the original directory. You should see something resembling this output in terminal: #photo to come  
-* if you would like to create an AIP but not have the file delivered to the omneon server or any of the access copies delivered, you can use option -n. Your command will look like:  ingestfile -n [input].  
-* if you would like to only deliver the AIP to the omneon server and AIP storage, you can use -i. Your command will look like:  ingestfile -i [input].  
+* To run ingestfle with a graphical user interface (GUI), use option -e. Your command will look like:  ingestfile -e [file]  
+* if you are running ingestfile on digitized video files that have additional logs from digitization, and you need to set the in and out times for the file to be trimmed, you can use option -c. Your command will look like:  ingestfile -p [file]. This option does not have a GUI, so you will input information when prompted into the command line, including setting in and out times and dragging in any logs from digitization. Note that this option does not deliver to AIP storage, instead it keeps the AIP in the original directory. 
+* if you would like to create an AIP but not have the file delivered to the omneon server or any of the access copies delivered, you can use option -n. Your command will look like:  ingestfile -n [file].  
+* if you would like to only deliver the AIP to the omneon server and AIP storage, you can use -i. Your command will look like:  ingestfile -i [file].  
 
 #### makebroadcast ####
 * makebroadcast creates a file suitable for broadcast or editing from the input of a file or package. Your command will look like this: makebroadcast [input].  
