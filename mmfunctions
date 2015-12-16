@@ -94,14 +94,14 @@ _report(){
 }
 
 _writeingestlog(){
-    if [ "${INGESTLOG}" ] ; then
-        KEY="${1}"
-        VALUE="${2}"
-        # need to add yaml style escaping
-        echo "${KEY}: ${VALUE}" >> "${INGESTLOG}"
-    else
-        _report -wt "The _writeingestlog function was called but the ingestlog file (${INGESTLOG}) is not declared."
+    if [ ! -f "${INGESTLOG}" ] ; then
+        _mkdir2 $(dirname "${INGESTLOG}")
+        touch "${INGESTLOG}"
     fi
+    KEY="${1}"
+    VALUE="${2}"
+    # need to add yaml style escaping
+    echo "${KEY}: ${VALUE}" >> "${INGESTLOG}"
 }
 
 _readingestlog(){
@@ -157,7 +157,7 @@ _ask_operator(){
     if [ -z "${OP}" ] ; then
         _report -qn "Enter the name of the operator or 'q' to quit: "
         read -e OP
-        [ -z "${OP}" ] && _ask_operator || LOG+="operator: ${OP}\n"
+        [ -z "${OP}" ] && _ask_operator
         [ "${OP}" == "q" ] && exit 0
     fi
 }
@@ -171,9 +171,8 @@ _ask_mediaid(){
         [ "${MEDIAID}" == "q" ] && exit 0
         # validate id and perhaps fail with exit
         [ -z "${MEDIAID}" ] && { _report -wt "ERROR You must enter a valid MEDIA ID" ; exit ;};
-        [ ! -z $(echo "${MEDIAID}" | grep -v "^[A-Z0-9_-]*$") ] && { _report -wt "ERROR The MEDIA ID must only contain capital letters, letters, hyphen and underscore" ; exit 1 ;};
+        [ ! -z $(echo "${MEDIAID}" | grep -v "^[A-Z0-9_-]*$") ] && { _report -wt "ERROR The MEDIA ID must only contain capital letters, numbers, hyphen and underscore" ; exit 1 ;};
     fi
-    [ ! -z "${MEDIAID}" ] && LOG+="mediaid: ${MEDIAID}\n"
 }
 
 _ask_input(){
@@ -183,7 +182,6 @@ _ask_input(){
         [ -z "${INPUT}" ] && _ask_input
         [ "${INPUT}" == "q" ] && exit 0
         basename=$(basename "${INPUT}")
-        [ ! -z "${INPUT}" ] && LOG+="input: ${INPUT}\n"
     fi
 }
 

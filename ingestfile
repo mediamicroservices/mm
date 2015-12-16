@@ -125,15 +125,15 @@ AUDIODECISION.option = Only use right of the first audio track
 AUDIODECISION.width = 400
 
 # Cropping Strategy
-CROPDETECTION.x = 20
-CROPDETECTION.y = 220
-CROPDETECTION.type = combobox
-CROPDETECTION.label = Select a cropping strategy:
-CROPDETECTION.default = Do not crop
-CROPDETECTION.option =
-CROPDETECTION.option = Do not crop
-CROPDETECTION.option = Examine the video and auto-crop out black borders (slower)
-CROPDETECTION.width = 400
+CROPDECISION.x = 20
+CROPDECISION.y = 220
+CROPDECISION.type = combobox
+CROPDECISION.label = Select a cropping strategy:
+CROPDECISION.default = Do not crop
+CROPDECISION.option =
+CROPDECISION.option = Do not crop
+CROPDECISION.option = Examine the video and auto-crop out black borders (slower)
+CROPDECISION.width = 400
 
 # Optional Formula
 FORMULA.x = 20
@@ -187,7 +187,7 @@ if [ "${EDIT_MODE}" == "Y" ] ; then
     echo "  INPUT = ${INPUT}"
     echo "  MEDIAID = ${MEDIAID}"
     echo "  AUDIODECISION = ${AUDIODECISION}"
-    echo "  CROPDETECTION = ${CROPDETECTION}"
+    echo "  CROPDECISION = ${CROPDECISION}"
     echo "  FORMULA = ${FORMULA}"
     echo "  CLEANUPDECISION = ${CLEANUPDECISION}"
     echo "  PRIORITY = ${PRIORITY}"
@@ -217,7 +217,7 @@ if [ "${AUDIODECISION}" = "" ] ; then
     done
 fi
 
-if [ "${CROPDETECTION}" = "" ] ; then
+if [ "${CROPDECISION}" = "" ] ; then
     _report -q "Select a cropping strategy? "
     PS3="Selection? "
     select CROPDECISION in "Do not crop." "Examine the video and auto-crop out black borders (slower)"
@@ -317,6 +317,8 @@ _run _mkdir2 "${LOGDIR}"
 
 INGESTLOG="${LOGDIR}/capture.log"
 echo -e "${LOG}" >> "${INGESTLOG}"
+_writeingestlog "operator" "${OP}"
+_writeingestlog "input" "${INPUT}"
 _writeingestlog "processing_directory" "${OUTDIR_INGESTFILE}"
 _writeingestlog "audiodecision" "${AUDIODECISION}"
 _writeingestlog "cropdecision" "${CROPDECISION}"
