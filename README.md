@@ -65,10 +65,8 @@ to upgrade the packages in homebrew, type: brew upgrade into the command line. T
 once homebrew has been installed, you can install mediamicroservices. First, use the [tap](https://github.com/Homebrew/homebrew/blob/master/share/doc/homebrew/brew-tap.md) command. Then, you can install. 
 
 Type brew tap mediamicroservices/mm into the command line.  
-photo to come
 
 Then, type brew install mediamicroservices/mm/mm into the command line. This command will install mediamicroservices to your computer. 
-photo to come
 
 hooray, you've installed mediamicroservices! 
 
@@ -151,7 +149,7 @@ this variable is the directory that stores the .schema files created when LTOs a
 **16. LOCAL_MM_DIR**  
 this variable is the directory that stores mediamicroservices scripts locally.   
   
-**17. EMAIL_FROM** 
+**17. EMAIL_FROM**  
 this variable is the email address that notifications will be sent from, once processes have been completed. You may leave this variable blank if you do not want any notification emails sent once actions have been performed on files.   
   
 **18. MAKEYOUTUBE_DELIVERY_EMAIL_TO**  
