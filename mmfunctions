@@ -459,6 +459,48 @@ _get_sar(){
     fi
 }
 
+_add_audio_filter(){
+    OPTIND=1
+    unset ADDASPREFIX
+    while getopts ":p" OPT; do
+        case "${OPT}" in
+            p) ADDASPREFIX=true ;;
+        esac
+    done
+    shift $(( ${OPTIND} - 1 ))
+    local FILTER2ADD="${1}"
+    if [[ -n "${FILTER2ADD}" ]] ; then
+        if [[ -n "${AUDIOFILTERCHAIN}" ]] ; then
+            AUDIOFILTERCHAIN="${FILTER2ADD}"
+        elif [[ "${ADDASPREFIX}" == true ]] ; then
+            AUDIOFILTERCHAIN="${FILTER2ADD},${AUDIOFILTERCHAIN}"
+        else
+            AUDIOFILTERCHAIN="${AUDIOFILTERCHAIN},${FILTER2ADD}"
+        fi
+    fi
+}
+
+_add_video_filter(){
+    OPTIND=1
+    unset ADDASPREFIX
+    while getopts ":p" OPT; do
+        case "${OPT}" in
+            p) ADDASPREFIX=true ;;
+        esac
+    done
+    shift $(( ${OPTIND} - 1 ))
+    local FILTER2ADD="${1}"
+    if [[ -n "${FILTER2ADD}" ]] ; then
+        if [[ -n "${VIDEOFILTERCHAIN}" ]] ; then
+            VIDEOFILTERCHAIN="${FILTER2ADD}"
+        elif [[ "${ADDASPREFIX}" == true ]] ; then
+            VIDEOFILTERCHAIN="${FILTER2ADD},${VIDEOFILTERCHAIN}"
+        else
+            VIDEOFILTERCHAIN="${VIDEOFILTERCHAIN},${FILTER2ADD}"
+        fi
+    fi
+}
+
 _has_first_two_tracks_mono(){
     [ $(ffprobe 2>/dev/null "${1}" -show_streams | grep -c "codec_type=audio") -ge 2 ] && \
     [ $(ffprobe 2>/dev/null "${1}" -show_streams -select_streams a:0 | grep "^channels=" | cut -d= -f2) = "1" ] && \
