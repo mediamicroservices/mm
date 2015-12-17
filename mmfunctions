@@ -491,7 +491,7 @@ _add_video_filter(){
     shift $(( ${OPTIND} - 1 ))
     local FILTER2ADD="${1}"
     if [[ -n "${FILTER2ADD}" ]] ; then
-        if [[ -n "${VIDEOFILTERCHAIN}" ]] ; then
+        if [[ -z "${VIDEOFILTERCHAIN}" ]] ; then
             VIDEOFILTERCHAIN="${FILTER2ADD}"
         elif [[ "${ADDASPREFIX}" == true ]] ; then
             VIDEOFILTERCHAIN="${FILTER2ADD},${VIDEOFILTERCHAIN}"
