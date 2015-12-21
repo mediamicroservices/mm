@@ -70,7 +70,7 @@ Then, type brew install mediamicroservices/mm/mm into the command line. This com
 
 hooray, you've installed mediamicroservices! 
 
-mediamicroservices is dependent on other open source software to run. If you do not have the following software, homebrew will install it for you. 
+mediamicroservices is dependent on other open source software to run. If you do not have the following software when installing mediamicroservices, homebrew will install it for you. 
 
 mediamicroservice dependencies: 
 
@@ -81,11 +81,12 @@ mediamicroservice dependencies:
 * ffmpeg
 * flac
 * md5deep
-* mediaconch
 * mediainfo
 * normalize
-* tree
 * xmlstarlet
+* tree
+
+mediamicroservices also uses Pashua to run a graphical user interface. It is recommended to install Pashua before running media microservices. Type brew install Pashua into the command line and press enter. You will be prompted for your password. Enter your password, and then you will be able to run mediamicroservices scripts and options that utilize a GUI.
 
 If at any point you would like to uninstall mediamicroservices, type brew uninstall mediamicroservices/mm/mm into the command line. 
 
@@ -181,7 +182,7 @@ makepodcast, makebroadcast, makeflv, make prores, makeresourcespace, makeyoutube
 
 * if you want to specify a directory for the file to be delivered to, use the -d option, and follow -d with the directory path. Your command will look like this: [microservice] -d [directory/path] [input]. This option delivers a copy of the resulting file to a specific location, in addition to the default OUTPUTDIR.  
 * if you want to specify a directory for the file to be written directly to, use option o. Your command will look like this: [microservice] -o [directory/path] [input].
-* if you want to run a microservice in "dry-run" mode, which means that the commands will be shown in the terminal but not run, use option n. Your command will look like this: [microservice] -n [input].
+* if you want to run makebroadcast in "dry-run" mode, which means that the commands will be shown in the terminal but not run, use option n. Your command will look like this: [microservice] -n [input].
 * if you want to send email notifications about the delivery of a file, and you set the email variables, you can use option e or E. option e will send an email about the delivery but only if -d is also used. Your command will look like this: [microservice] -d [directory/path] -e [input]. If you want to send an email about the process outcomes, use E. Your command will look like this: [microservice] -E [input].
 
 To view the specific ffmpeg encoding options for each file, view the sourcecode of the microservice directly on GitHub or using a text editor on your computer. 
