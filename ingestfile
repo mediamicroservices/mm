@@ -317,6 +317,7 @@ _run _mkdir2 "${LOGDIR}"
 
 INGESTLOG="${LOGDIR}/capture.log"
 echo -e "${LOG}" >> "${INGESTLOG}"
+_writeingestlog "media ID" "${MEDIAID}"
 _writeingestlog "operator" "${OP}"
 _writeingestlog "input" "${INPUT}"
 _writeingestlog "processing_directory" "${OUTDIR_INGESTFILE}"
