@@ -1,4 +1,4 @@
-#/bin/bash
+#!/bin/bash
 # qctools reporter
 # this bash script accepts one or many video file inputs and produces
 # sidecar QCTools xml.gz report file for each input
