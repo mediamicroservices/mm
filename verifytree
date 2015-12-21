@@ -84,7 +84,7 @@ while [ "${*}" != "" ] ; do
             _runtest "There are unexpected files in the service directory." xml sel -t -v "/tree/directory/directory[@name='objects']/directory[@name='service']/file[@name!='${MEDIAID}.mov']/@name" -n  "${ORIGTREE}"
             
             #finally, find any files or directories that are empty - these don't work yet :(
-            #_runtest "There are empty directories in your package!" xml sel -t -m "//directory[not(file) and not(directory)]" -m "ancestor-or-self::directory" -v "@name" -o "/" -b -n  "${ORIGTREE}"
+            #_runtest "There are empty directories in your package!" xml sel -t -m "//ns:directory[not(ns:file | ns:directory]" -v "@name" -o "/" -b -n  "${ORIGTREE}"
             #_runtest "There are empty files in your package!" xml sel -t -m "//file[@size=0]" -m "ancestor-or-self::directory" -v "@name" -o "/" -b -v "@name" -n  "${ORIGTREE}"
             
             #verify the tree is up to date by comparing the temp tree to orig tree
