@@ -304,9 +304,6 @@ _get_seconds(){
 _email_delivery(){
     EMAILTO="${1}"
     if [ "${EMAILTO}" ] ; then
-        [ -d "${INPUT}" ] && LOGDIR="${INPUT}/metadata/submissionDocumentation/logs"
-        [ -f "${INPUT}" ] && LOGDIR="$(dirname "${INPUT}")/service/logs"
-        INGESTLOG="${LOGDIR}/capture.log"
         _get_prettyduration "${OUTPUT}" 
         if [[ -f "${INGESTLOG}" ]] ; then
             FROMLOG="Operator: $(_readingestlog "operator")\n
@@ -711,7 +708,6 @@ _get_filesystem(){
 
 _set_accesstimes(){
     # set in and out times if used
-    INGESTLOG="${LOGDIR}/capture.log"
     if [[ -f "${INGESTLOG}" && "${ISOBJECT}" = "Y" ]] ; then
         INTIME=$(_readingestlog "intime")
         OUTTIME=$(_readingestlog "outtime")
