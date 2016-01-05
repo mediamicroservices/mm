@@ -178,7 +178,6 @@ while [ "${*}" != "" ] ; do
         fi
         if [ "${FORMULA}" = "hds" ] ; then
             _add_video_filter "scale=size=hd1080:interl=1"
-            _add_video_filter "format=yuv422p"
             _add_video_filter "setsar=1/1"
             _add_video_filter "setdar=16/9"
             _add_video_filter "fps=fps=ntsc"
@@ -191,7 +190,6 @@ while [ "${*}" != "" ] ; do
             MIDDLEOPTIONS+=("${MIDDLEOPTIONSIMX[@]}")
         elif [ "${DARRATIO}" = "1.777" -a ! "${CROPDETECT}" = "Y" ] ; then
             _add_video_filter "scale=size=hd1080:interl=1"
-            _add_video_filter "format=yuv422p"
             _add_video_filter "setsar=1/1"
             _add_video_filter "setdar=16/9"
             _add_video_filter "fps=fps=ntsc"
@@ -236,6 +234,8 @@ while [ "${*}" != "" ] ; do
             MIDDLEOPTIONS+=("${MIDDLEOPTIONSIMX[@]}")
         fi
     fi
+    _add_video_filter "format=yuv422p"
+    _add_video_filter "lut=y=if(gt(val\,235)\,235\,if(lt(val\,16)\,16\,val)):u=if(gt(val\,235)\,235\,if(lt(val\,16)\,16\,val)):v=if(gt(val\,235)\,235\,if(lt(val\,16)\,16\,val))"
 
     if [[ "${AUDIOSTREAMCOUNT}" > 0 ]] ; then
         _get_audio_index "${SOURCEFILE}"
