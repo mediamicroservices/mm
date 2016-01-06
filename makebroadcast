@@ -277,6 +277,10 @@ while [ "${*}" != "" ] ; do
     elif [ -n  "${AUDIOFILTERCHAIN}" ] ; then 
         MIDDLEOPTIONS+=(-filter_complex ${AUDIOFILTERCHAIN})
     fi
+#    MIDDLEOPTIONS+=(-metadata comment="INPUTOPTIONS: ${INPUTOPTIONS[@]}
+#FFMPEGINPUT: ${FFMPEGINPUT}
+#MIDDLEOPTIONS: ${MIDDLEOPTIONS[@]}
+#OUTPUT: ${OUTPUT}")
 
     _run_critical ffmpeg "${INPUTOPTIONS[@]}" -i "${FFMPEGINPUT}" "${MIDDLEOPTIONS[@]}" "${OUTPUT}"
     echo
