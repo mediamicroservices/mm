@@ -249,7 +249,7 @@ while [ "${*}" != "" ] ; do
         elif [ "${AUDIOMAP}" = "R" ] ; then
             AUDIOMAPPING_FFMPEG=(-map_channel 0.${AUDIO_INDEX_1}.1)
         else
-            _get_audio_mapping "${SOURCEFILE}"
+            _get_audio_mapping -bv "${SOURCEFILE}"
         fi
         MIDDLEOPTIONS+=("${AUDIOMAPPING_FFMPEG[@]}")
         # add audio options
@@ -268,7 +268,6 @@ while [ "${*}" != "" ] ; do
 
     # log process
     _prep_ffmpeg_log
-    _prep_volume_adjustment
     if [ "${CONCATSOURCE}" != "" ] ; then
         FFMPEGINPUT="${CONCATSOURCE}"
     else
