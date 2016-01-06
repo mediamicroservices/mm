@@ -245,13 +245,7 @@ while [ "${*}" != "" ] ; do
 
     if [[ "${AUDIOSTREAMCOUNT}" > 0 ]] ; then
         _get_audio_index "${SOURCEFILE}"
-        if [ "${AUDIOMAP}" = "L" ] ; then
-            AUDIOMAPPING_FFMPEG=(-map_channel 0.${AUDIO_INDEX_1}.0)
-        elif [ "${AUDIOMAP}" = "R" ] ; then
-            AUDIOMAPPING_FFMPEG=(-map_channel 0.${AUDIO_INDEX_1}.1)
-        else
-            _get_audio_mapping -bv "${SOURCEFILE}"
-        fi
+        _get_audio_mapping -bv "${SOURCEFILE}"
         MIDDLEOPTIONS+=("${AUDIOMAPPING_FFMPEG[@]}")
         # add audio options
         MIDDLEOPTIONS+=(-acodec pcm_s24be)
