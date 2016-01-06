@@ -85,6 +85,7 @@ while [ "${*}" != "" ] ; do
     unset MIDDLEOPTIONSIMX
     unset AUDIOMAPPING_FFMPEG
     unset MULTIMONO
+    unset FIRSTMONO
     unset VIDEOFILTERCHAIN
     unset AUDIOFILTERCHAIN
     _get_videostreamcount "${SOURCEFILE}"
