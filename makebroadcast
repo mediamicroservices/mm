@@ -121,6 +121,7 @@ while [ "${*}" != "" ] ; do
             fi
         fi
 
+        if [[ "${VIDEOSTREAMCOUNT}" > 0 ]] ; then
         #options for either xdcam or imx
         MIDDLEOPTIONS+=(-r ntsc)
         MIDDLEOPTIONS+=(-c:v mpeg2video)
@@ -236,6 +237,7 @@ while [ "${*}" != "" ] ; do
     fi
     _add_video_filter "format=yuv422p"
     _add_video_filter "lut=y=if(gt(val\,235)\,235\,val):u=if(gt(val\,235)\,235\,val):v=if(gt(val\,235)\,235\,val)"
+    fi
 
     if [[ "${AUDIOSTREAMCOUNT}" > 0 ]] ; then
         _get_audio_index "${SOURCEFILE}"
