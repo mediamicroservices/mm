@@ -522,6 +522,16 @@ _get_channel_layout(){
 }
 
 _get_audio_mapping(){
+    OPTIND=1
+    unset PBSMIX
+    unset ADD_VOLADJ
+    while getopts ":bv" OPT; do
+        case "${OPT}" in
+            b) PBSMIX="Y" ;;
+            v) ADD_VOLADJ="Y" ;;
+        esac
+    done
+    shift $(( ${OPTIND} - 1 ))
     _get_audio_index "${1}"
     _get_audio_channels "${1}"
 	_get_channel_layout "${1}"
@@ -529,11 +539,19 @@ _get_audio_mapping(){
     if [[ "${MULTIMONO}" == true ]] ; then
         _report -wt "The first two audio tracks are both mono. Considering track 1 for left and track 2 for right."
         _add_audio_filter -p "[0:a:0][0:a:1]amerge=inputs=2"
-    elif [[ "${AUDIO_CHANNELS}" -gt 2 && "${CHANNEL_LAYOUT}" == "unknown" ]] ; then
+        _add_audio_filter "aformat=channel_layouts=stereo"
+    elif [[ "${AUDIO_CHANNELS}" -gt 2 && "${CHANNEL_LAYOUT}" == "4.0" ]] ; then
         _report -wt "The first audio track has more than 2 channels. Considering channel 1 for left and channel 2 for right and ignoring the rest."
-        AUDIOMAPPING_FFMPEG=(-map_channel "0.${AUDIO_INDEX_1}.0" -map_channel "0.${AUDIO_INDEX_1}.1")
+        _add_audio_filter -p "channelmap=0|1:stereo"
     else
-        AUDIOMAPPING_FFMPEG=()
+        _add_audio_filter "aformat=channel_layouts=stereo"
+    fi
+    if [[ "${ADD_VOLADJ}" == "Y" ]] ; then
+        _prep_volume_adjustment
+    fi
+    if [[ "${PBSMIX}" == "Y" ]] ; then
+         _add_audio_filter  "asplit[a][b];[a]aformat=channel_layouts=stereo[stereo1];[b]aformat=channel_layouts=mono,asplit[mono1][mono2]"
+         MIDDLEOPTIONS+=(-map "[stereo1]" -map "[mono1]" -map "[mono2]")
     fi
 }
 
