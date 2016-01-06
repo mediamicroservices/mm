@@ -28,6 +28,17 @@ Distributed by Executive Program Services
 
 © CUNY Television 2015" > /tmp/slate.txt
 
+echo "VIDEO:
+1080i
+59.94DF" > /tmp/slate_video.txt
+
+echo "AUDIO:
+Ch. 1: Stereo L
+Ch. 2: Stereo R
+Ch. 3: Unused
+Ch. 4: Unused" > /tmp/slate_audio.txt
+
+
 ffmpeg -f lavfi -i "smptehdbars=s=1920x1080:r=30000/1001:sar=16/9:d=${COLORBARS_SECS}" \
     -f lavfi -i "aevalsrc=0.1*sin(1000*2*PI*t):d=${COLORBARS_SECS}:s=48000:c=2" \
     -f lavfi -i "color=black:s=1920x1080:r=30000/1001:sar=16/9:d=${SLATE_SECS}" \
