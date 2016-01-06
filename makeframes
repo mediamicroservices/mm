@@ -58,7 +58,8 @@ while [ "${*}" != "" ] ; do
     if [[ "${CODEC_TAG_STRING}" == "mjp2" ]] ; then
          INPUTOPTIONS+=(-vcodec libopenjpeg)
     fi
-    VIDEOFILTERCHAIN+="yadif,thumbnail=100"
+    _add_video_filter "yadif"
+    _add_video_filter "thumbnail=100"
     MIDDLEOPTIONS+=(-frames:v 1) 
     
     if [ -n  "${VIDEOFILTERCHAIN}" -a -n "${AUDIOFILTERCHAIN}" ] ; then

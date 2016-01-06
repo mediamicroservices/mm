@@ -79,7 +79,8 @@ while [ "${*}" != "" ] ; do
         MIDDLEOPTIONS+=(-maxrate:v 3000k)
         MIDDLEOPTIONS+=(-minrate:v 375k)
         MIDDLEOPTIONS+=(-bufsize:v 6000k)
-        VIDEOFILTERCHAIN+="yadif,scale=640:trunc(ow/dar/2)*2:interl=1"
+        _add_video_filter "yadif"
+        _add_video_filter "scale=640:trunc(ow/dar/2)*2:interl=1"
     fi
     if [[ "${AUDIOSTREAMCOUNT}" > 0 ]] ; then
         MIDDLEOPTIONS+=(-c:a aac -strict -2)

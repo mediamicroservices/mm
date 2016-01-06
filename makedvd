@@ -121,13 +121,20 @@ while [ "${*}" != "" ] ; do
         MIDDLEOPTIONS+=(-lmax 200000)
         MIDDLEOPTIONS+=(-aspect "${ASPECT}")
         if  [[ "${WIDTH}" == 720 && "${HEIGHT}" == 486 ]] ; then
-            VIDEOFILTERCHAIN+="fieldorder=bff,crop=720:480:0:4,setdar=${ASPECT}${TIMECODEOVERLAY}" 
+            _add_video_filter "fieldorder=bff" 
+            _add_video_filter "crop=720:480:0:4"
+            _add_video_filter "setdar=${ASPECT}${TIMECODEOVERLAY}"
         elif  [[ "${WIDTH}" == 720 && "${HEIGHT}" == 480 ]] ; then
-            VIDEOFILTERCHAIN+="fieldorder=bff,setdar=${ASPECT}${TIMECODEOVERLAY}" 
-        elif  [[ "${WIDTH}" == 720 && "${HEIGHT}" == 512 ]] ; then
-            VIDEOFILTERCHAIN+="fieldorder=bff,crop=720:480:0:32,setdar=${ASPECT}${TIMECODEOVERLAY}" 
+            _add_video_filter "fieldorder=bff"
+            _add_video_filter "setdar=${ASPECT}${TIMECODEOVERLAY}"
+        elif  [[ "${WIDTH}" == 720 && "${HEIGHT}" == 512 ]] ; then 
+            _add_video_filter "fieldorder=bff"
+            _add_video_filter "crop=720:480:0:32"
+            _add_video_filter "setdar=${ASPECT}${TIMECODEOVERLAY}"
         else
-            VIDEOFILTERCHAIN+="fieldorder=bff,scale=720:480:interl=1,setdar=${ASPECT}${TIMECODEOVERLAY}" 
+            _add_video_filter "fieldorder=bff"
+            _add_video_filter "scale=720:480:interl=1"
+            _add_video_filter "setdar=${ASPECT}${TIMECODEOVERLAY}"
         fi
     fi
     if [[ "${AUDIOSTREAMCOUNT}" > 0 ]] ; then
