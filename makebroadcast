@@ -255,7 +255,6 @@ while [ "${*}" != "" ] ; do
         # add audio options
         MIDDLEOPTIONS+=(-acodec pcm_s24be)
         MIDDLEOPTIONS+=(-ar 48k)
-        MIDDLEOPTIONS+=(-ac 2)
     fi
 
     # set input options for ffmpeg
