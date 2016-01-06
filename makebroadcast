@@ -235,7 +235,7 @@ while [ "${*}" != "" ] ; do
         fi
     fi
     _add_video_filter "format=yuv422p"
-    _add_video_filter "lut=y=if(gt(val\,235)\,235\,if(lt(val\,16)\,16\,val)):u=if(gt(val\,235)\,235\,if(lt(val\,16)\,16\,val)):v=if(gt(val\,235)\,235\,if(lt(val\,16)\,16\,val))"
+    _add_video_filter "lut=y=if(gt(val\,235)\,235\,val):u=if(gt(val\,235)\,235\,val):v=if(gt(val\,235)\,235\,val)"
 
     if [[ "${AUDIOSTREAMCOUNT}" > 0 ]] ; then
         _get_audio_index "${SOURCEFILE}"
