@@ -791,6 +791,16 @@ _prep_volume_adjustment(){
     fi
 }
 
+_filter_to_middle_option(){
+    if [ -n  "${VIDEOFILTERCHAIN}" -a -n "${AUDIOFILTERCHAIN}" ] ; then
+        MIDDLEOPTIONS+=(-filter_complex ${VIDEOFILTERCHAIN}\;${AUDIOFILTERCHAIN})
+    elif [ -n  "${VIDEOFILTERCHAIN}" ] ; then 
+        MIDDLEOPTIONS+=(-filter_complex ${VIDEOFILTERCHAIN})
+    elif [ -n  "${AUDIOFILTERCHAIN}" ] ; then 
+        MIDDLEOPTIONS+=(-filter_complex ${AUDIOFILTERCHAIN})
+    fi
+}
+
 _pashua_run() {
     # Wrapper function for interfacing to Pashua. Written by Carsten
     # Bluem <carsten@bluem.net> in 10/2003, modified in 12/2003 (including
