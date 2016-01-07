@@ -83,6 +83,10 @@ while [ "${*}" != "" ] ; do
     unset INPUTOPTIONS
     unset MIDDLEOPTIONS
     unset AUDIOMAPPING_FFMPEG
+    unset MULTIMONO
+    unset FIRSTMONO
+    unset VIDEOFILTERCHAIN
+    unset AUDIOFILTERCHAIN
     _get_videostreamcount "${SOURCEFILE}"
     _get_audiostreamcount "${SOURCEFILE}"
 
@@ -136,19 +140,14 @@ while [ "${*}" != "" ] ; do
             _add_video_filter "scale=720:480:interl=1"
             _add_video_filter "setdar=${ASPECT}${TIMECODEOVERLAY}"
         fi
+    else
+        _report -wt "You can't make a dvd from this file. Exiting." ; exit 1 ;
     fi
     if [[ "${AUDIOSTREAMCOUNT}" > 0 ]] ; then
         MIDDLEOPTIONS+=(-b:a 448000)
         MIDDLEOPTIONS+=(-ar 48000)
         _get_audio_index "${SOURCEFILE}"
-        if [ "${AUDIOMAP}" = "L" ] ; then
-            AUDIOMAPPING_FFMPEG=(-map_channel 0.${AUDIO_INDEX_1}.0)
-        elif [ "${AUDIOMAP}" = "R" ] ; then
-            AUDIOMAPPING_FFMPEG=(-map_channel 0.${AUDIO_INDEX_1}.1)
-        else
-            _get_audio_mapping "${SOURCEFILE}"
-        fi
-        MIDDLEOPTIONS+=("${AUDIOMAPPING_FFMPEG[@]}")
+        _get_audio_mapping "${SOURCEFILE}"
     fi
     _prep_ffmpeg_log
     # making the initial mpeg2 for the dvd
@@ -158,13 +157,7 @@ while [ "${*}" != "" ] ; do
         FFMPEGINPUT="${SOURCEFILE}"
     fi
     
-    if [ -n  "${VIDEOFILTERCHAIN}" -a -n "${AUDIOFILTERCHAIN}" ] ; then
-           MIDDLEOPTIONS+=(-filter_complex ${VIDEOFILTERCHAIN}\;${AUDIOFILTERCHAIN})
-       elif [ -n  "${VIDEOFILTERCHAIN}" ] ; then 
-           MIDDLEOPTIONS+=(-filter_complex ${VIDEOFILTERCHAIN})
-       elif [ -n  "${AUDIOFILTERCHAIN}" ] ; then 
-           MIDDLEOPTIONS+=(-filter_complex ${AUDIOFILTERCHAIN})
-       fi
+    _filter_to_middle_option
     
     _run_critical ffmpeg ${INPUTOPTIONS[@]} -i "${FFMPEGINPUT}" ${MIDDLEOPTIONS[@]} "${OUTPUTDIR}/${MEDIAID%.*}.mpeg"
     # Making DVD VIDEO_TS folder, chapters every 5 minutes, dvdauthor will ignore chapter markers greater than duration

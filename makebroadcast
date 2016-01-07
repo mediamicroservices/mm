@@ -268,13 +268,7 @@ while [ "${*}" != "" ] ; do
         FFMPEGINPUT="${SOURCEFILE}"
     fi
 
-    if [ -n  "${VIDEOFILTERCHAIN}" -a -n "${AUDIOFILTERCHAIN}" ] ; then
-        MIDDLEOPTIONS+=(-filter_complex ${VIDEOFILTERCHAIN}\;${AUDIOFILTERCHAIN})
-    elif [ -n  "${VIDEOFILTERCHAIN}" ] ; then 
-        MIDDLEOPTIONS+=(-filter_complex ${VIDEOFILTERCHAIN})
-    elif [ -n  "${AUDIOFILTERCHAIN}" ] ; then 
-        MIDDLEOPTIONS+=(-filter_complex ${AUDIOFILTERCHAIN})
-    fi
+    _filter_to_middle_option
 #    MIDDLEOPTIONS+=(-metadata comment="INPUTOPTIONS: ${INPUTOPTIONS[@]}
 #FFMPEGINPUT: ${FFMPEGINPUT}
 #MIDDLEOPTIONS: ${MIDDLEOPTIONS[@]}

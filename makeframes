@@ -62,13 +62,7 @@ while [ "${*}" != "" ] ; do
     _add_video_filter "thumbnail=100"
     MIDDLEOPTIONS+=(-frames:v 1) 
     
-    if [ -n  "${VIDEOFILTERCHAIN}" -a -n "${AUDIOFILTERCHAIN}" ] ; then
-           MIDDLEOPTIONS+=(-filter_complex ${VIDEOFILTERCHAIN}\;${AUDIOFILTERCHAIN})
-       elif [ -n  "${VIDEOFILTERCHAIN}" ] ; then 
-           MIDDLEOPTIONS+=(-filter_complex ${VIDEOFILTERCHAIN})
-       elif [ -n  "${AUDIOFILTERCHAIN}" ] ; then 
-           MIDDLEOPTIONS+=(-filter_complex ${AUDIOFILTERCHAIN})
-       fi
+    _filter_to_middle_option
 
     _log -b
     DURATION=$(ffprobe 2>/dev/null "${SOURCEFILE}" -show_format | grep duration | cut -d= -f2)

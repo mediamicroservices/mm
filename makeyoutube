@@ -77,6 +77,10 @@ while [ "${*}" != "" ] ; do
     unset INPUTOPTIONS
     unset MIDDLEOPTIONS
     unset AUDIOMAPPING_FFMPEG
+    unset MULTIMONO
+    unset FIRSTMONO
+    unset VIDEOFILTERCHAIN
+    unset AUDIOFILTERCHAIN
 
     # encoding options
     _get_codectagstring "${SOURCEFILE}"
@@ -115,32 +119,20 @@ while [ "${*}" != "" ] ; do
         MIDDLEOPTIONS+=(-ac 2)
         MIDDLEOPTIONS+=(-b:a 128k)
         _get_audio_index "${SOURCEFILE}"
-        if [ "${AUDIOMAP}" = "L" ] ; then
-            AUDIOMAPPING_FFMPEG=(-map_channel 0.${AUDIO_INDEX_1}.0)
-        elif [ "${AUDIOMAP}" = "R" ] ; then
-            AUDIOMAPPING_FFMPEG=(-map_channel 0.${AUDIO_INDEX_1}.1)
-        else
-            _get_audio_mapping "${SOURCEFILE}"
-        fi
+        _get_audio_mapping -v "${SOURCEFILE}"
         MIDDLEOPTIONS+=("${AUDIOMAPPING_FFMPEG[@]}")
     fi
     MIDDLEOPTIONS+=(-f mp4)
 
     _prep_ffmpeg_log
-    _prep_volume_adjustment
+    
     if [ "${CONCATSOURCE}" != "" ] ; then
         FFMPEGINPUT="${CONCATSOURCE}"
     else
         FFMPEGINPUT="${SOURCEFILE}"
     fi
     
-    if [ -n  "${VIDEOFILTERCHAIN}" -a -n "${AUDIOFILTERCHAIN}" ] ; then
-           MIDDLEOPTIONS+=(-filter_complex ${VIDEOFILTERCHAIN}\;${AUDIOFILTERCHAIN})
-       elif [ -n  "${VIDEOFILTERCHAIN}" ] ; then 
-           MIDDLEOPTIONS+=(-filter_complex ${VIDEOFILTERCHAIN})
-       elif [ -n  "${AUDIOFILTERCHAIN}" ] ; then 
-           MIDDLEOPTIONS+=(-filter_complex ${AUDIOFILTERCHAIN})
-       fi
+    _filter_to_middle_option
     
     _run_critical ffmpeg "${INPUTOPTIONS[@]}" -i "${FFMPEGINPUT}" "${MIDDLEOPTIONS[@]}" "${OUTPUT}"
     echo

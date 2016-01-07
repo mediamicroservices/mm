@@ -50,6 +50,10 @@ while [ "${*}" != "" ] ; do
         unset INPUTOPTIONS
         unset INPUTOPTIONSFRAMEMD5
         unset MIDDLEOPTIONS
+        unset MULTIMONO
+        unset FIRSTMONO
+        unset VIDEOFILTERCHAIN
+        unset AUDIOFILTERCHAIN
 
         # encoding options
         _get_codectagstring "${SOURCEFILE}"
@@ -74,6 +78,8 @@ while [ "${*}" != "" ] ; do
             _add_video_filter "setfield=bff" # this is a presumption but much of the uncompressed input is bff but not probably labelled
         fi
         if [[ "${AUDIOSTREAMCOUNT}" > 0 ]] ; then
+            _get_audio_index "${SOURCEFILE}"
+            _get_audio_mapping "${SOURCEFILE}"
             MIDDLEOPTIONS+=(-c:a copy)
         fi
         _get_codectagstring "${SOURCEFILE}"
@@ -82,13 +88,7 @@ while [ "${*}" != "" ] ; do
             _report -dt "${SOURCEFILENAME} is ${CODEC_TAG_STRING}, starting encode"
             _prep_ffmpeg_log
            
-            if [ -n  "${VIDEOFILTERCHAIN}" -a -n "${AUDIOFILTERCHAIN}" ] ; then
-                   MIDDLEOPTIONS+=(-filter_complex ${VIDEOFILTERCHAIN}\;${AUDIOFILTERCHAIN})
-               elif [ -n  "${VIDEOFILTERCHAIN}" ] ; then 
-                   MIDDLEOPTIONS+=(-filter_complex ${VIDEOFILTERCHAIN})
-               elif [ -n  "${AUDIOFILTERCHAIN}" ] ; then 
-                   MIDDLEOPTIONS+=(-filter_complex ${AUDIOFILTERCHAIN})
-               fi
+            _filter_to_middle_option
            
             _run_critical ffmpeg ${INPUTOPTIONS[@]} -i "${SOURCEFILE}"  ${MIDDLEOPTIONS[@]} "${OUTPUTDIR}/${SOURCEFILENAME%.*}${SUFFIX}.mov" -f framemd5 -an "${LOGDIR}/${SOURCEFILENAME%.*}.framemd5"
             if [ "${CODEC_TAG_STRING}" == "2vuy" ] ; then
