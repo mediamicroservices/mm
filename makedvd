@@ -80,13 +80,8 @@ while [ "${*}" != "" ] ; do
     _get_maxdvdbitrate "${SOURCEFILE}"
 
     # clear local arrays
-    unset INPUTOPTIONS
-    unset MIDDLEOPTIONS
-    unset AUDIOMAPPING_FFMPEG
-    unset MULTIMONO
-    unset FIRSTMONO
-    unset VIDEOFILTERCHAIN
-    unset AUDIOFILTERCHAIN
+    _unset_variables
+    
     _get_videostreamcount "${SOURCEFILE}"
     _get_audiostreamcount "${SOURCEFILE}"
 

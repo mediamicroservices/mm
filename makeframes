@@ -49,7 +49,7 @@ while [ "${*}" != "" ] ; do
     MEDIAID=$(basename "${1}" | cut -d. -f1)
 
     # clear local arrays
-    unset INPUTOPTIONS
+    _unset_variables
 
     # encoding options
     _get_codectagstring "${SOURCEFILE}"

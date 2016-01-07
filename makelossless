@@ -47,13 +47,7 @@ while [ "${*}" != "" ] ; do
         _log -b
 
         # clear local arrays
-        unset INPUTOPTIONS
-        unset INPUTOPTIONSFRAMEMD5
-        unset MIDDLEOPTIONS
-        unset MULTIMONO
-        unset FIRSTMONO
-        unset VIDEOFILTERCHAIN
-        unset AUDIOFILTERCHAIN
+        _unset_variables
 
         # encoding options
         _get_codectagstring "${SOURCEFILE}"

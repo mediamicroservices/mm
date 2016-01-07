@@ -66,8 +66,8 @@ while [ "${*}" != "" ] ; do
 
     _set_up_output
     
-    unset INPUTOPTIONS
-    unset MIDDLEOPTIONS
+    _unset_variables
+    
     INPUTOPTIONS+=(-nostdin)
     MIDDLEOPTIONS+=(-map 0:a:0)
     MIDDLEOPTIONS+=(-ac 2)

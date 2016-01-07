@@ -79,15 +79,9 @@ while [ "${*}" != "" ] ; do
     INTIME=""
     OUTTIME=""
     audio_adjustment=""
-    unset INPUTOPTIONS
-    unset MIDDLEOPTIONS
-    unset MIDDLEOPTIONSXDCAM
-    unset MIDDLEOPTIONSIMX
-    unset AUDIOMAPPING_FFMPEG
-    unset MULTIMONO
-    unset FIRSTMONO
-    unset VIDEOFILTERCHAIN
-    unset AUDIOFILTERCHAIN
+    
+    _unset_variables
+    
     _get_videostreamcount "${SOURCEFILE}"
     _get_audiostreamcount "${SOURCEFILE}"
 

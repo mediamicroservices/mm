@@ -62,8 +62,7 @@ while [ "${*}" != "" ] ; do
     _set_up_output
 
     # clear local arrays
-    unset INPUTOPTIONS
-    unset MIDDLEOPTIONS
+    _unset_variables
 
     # encoding options
     _get_codectagstring "${SOURCEFILE}"
