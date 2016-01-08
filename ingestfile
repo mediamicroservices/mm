@@ -339,6 +339,13 @@ if [ "${OUTTIME}" ] ; then
     _writeingestlog "outtime" "${OUTTIME}"
 fi
 
+#log package type
+if [ "${PRESERVATION_MODE}" == "Y" ] ; then
+    _writeingestlog "package type" "Preservation-Video"
+else
+    _writeingestlog "package type" "Production"
+fi
+
 # rsync
 FROM=$(_get_filesystem "${INPUT}")
 TO=$(_get_filesystem "${OBJECTSDIR}/")
