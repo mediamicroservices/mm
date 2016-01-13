@@ -76,6 +76,7 @@ while [ "${*}" != "" ] ; do
         fi
         MIDDLEOPTIONS+=(-map 0:v)
         MIDDLEOPTIONS+=(-c:v prores)
+        MIDDLEOPTIONS+=(-profile:v 3)
     fi
     if [[ "${AUDIOSTREAMCOUNT}" > 0 ]] ; then
         MIDDLEOPTIONS+=(-map 0:a)
