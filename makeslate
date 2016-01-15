@@ -48,10 +48,10 @@ ffmpeg \
     drawtext=fontsize=32:fontfile=${fontfile}:fontcolor=white:${fontenable}:x=388:y=831:text='1080i',\
     drawtext=fontsize=32:fontfile=${fontfile}:fontcolor=white:${fontenable}:x=388:y=869:text='59.94DF',\
     drawtext=fontsize=32:fontfile=${fontfile}:fontcolor=white:${fontenable}:x=790:y=793:text='AUDIO',\
-    drawtext=fontsize=32:fontfile=${fontfile}:fontcolor=white:${fontenable}:x=790:y=831:text='Ch 1: Stereo L',\
-    drawtext=fontsize=32:fontfile=${fontfile}:fontcolor=white:${fontenable}:x=790:y=869:text='Ch 2: Stereo R',\
-    drawtext=fontsize=32:fontfile=${fontfile}:fontcolor=white:${fontenable}:x=790:y=908:text='Ch 3: Mono Mix',\
-    drawtext=fontsize=32:fontfile=${fontfile}:fontcolor=white:${fontenable}:x=790:y=947:text='Ch 4: Mono Mix',\
+    drawtext=fontsize=32:fontfile=${fontfile}:fontcolor=white:${fontenable}:x=790:y=831:text='Ch 1\: Stereo L',\
+    drawtext=fontsize=32:fontfile=${fontfile}:fontcolor=white:${fontenable}:x=790:y=869:text='Ch 2\: Stereo R',\
+    drawtext=fontsize=32:fontfile=${fontfile}:fontcolor=white:${fontenable}:x=790:y=908:text='Ch 3\: Mono Mix',\
+    drawtext=fontsize=32:fontfile=${fontfile}:fontcolor=white:${fontenable}:x=790:y=947:text='Ch 4\: Mono Mix',\
     drawtext=fontsize=32:fontfile=${fontfile}:fontcolor=white:${fontenable}:x=1151:y=908:text='Duration',\
     drawtext=fontsize=420:fontfile=${fontfile}:fontcolor=white:enable=gte(t\,${COLORBARS_SECS}+${SLATE_SECS})*lt(t\,${COLORBARS_SECS}+${SLATE_SECS}+${COUNTDOWN_SECS}):x=(w-text_w)/2:y=(h-text_h-line_h)/2:text='%{eif\:${COLORBARS_SECS}+${SLATE_SECS}+11-t\:d}',\
     scale=size=hd1080,format=yuv422p,setsar=1/1,setdar=16/9,fps=fps=ntsc[v1]" \
