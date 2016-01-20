@@ -580,7 +580,7 @@ _get_audio_mapping(){
         _add_audio_filter "aformat=channel_layouts=stereo"
     elif [[ "${AUDIO_CHANNELS}" -gt 2 && "${CHANNEL_LAYOUT}" == "4.0" ]] ; then
         _report -wt "The first audio track has more than 2 channels. Considering channel 1 for left and channel 2 for right and ignoring the rest."
-        _add_audio_filter -p "channelmap=0|1:stereo"
+        _add_audio_filter -p "[0:a:0]channelmap=0|1:stereo"
     else
         _add_audio_filter "aformat=channel_layouts=stereo"
     fi
