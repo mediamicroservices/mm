@@ -789,7 +789,6 @@ _set_up_output(){
     OUTPUT="${OUTPUTDIR}/${MEDIAID%.*}${SUFFIX}.${EXTENSION}"
     if [ -s "${OUTPUT}" ] ; then
         _report -wt "WARNING ${OUTPUT} already exists, skipping transcode"
-        shift
         continue
     fi
     _mkdir2 "${OUTPUTDIR}"

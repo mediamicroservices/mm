@@ -50,6 +50,7 @@ shift $(( ${OPTIND} - 1 ))
 
 while [ "${*}" != "" ] ; do
     INPUT="${1}"
+    shift
     if [ -z "${OUTPUTDIR}" ] ; then
         [ -d "${INPUT}" ] && { OUTPUTDIR="${INPUT}/objects/${RELATIVEPATH}" && LOGDIR="${INPUT}/metadata/submissionDocumentation/logs" ;};
         [ -f "${INPUT}" ] && { OUTPUTDIR=$(dirname "${INPUT}")"/${RELATIVEPATH}" && LOGDIR="$(dirname "${INPUT}")/${RELATIVEPATH}/logs" ;};
