@@ -15,6 +15,7 @@ DELIVERYTOOMNEON="Y"       # use 'Y' for yes or any other character for no
 DELIVERACCESSCOPIES="Y"    # use 'Y' for yes or any other character for no
 DELIVERYTOAIPSTORAGE="Y"   # use 'Y' for yes or any other character for no
 
+
 QUEUEFILE="${HOME}/Desktop/queue.txt"
 SCRIPTDIR=$(dirname "${0}")
 . "${SCRIPTDIR}/mmfunctions" || { echo "Missing '${SCRIPTDIR}/mmfunctions'. Exiting." ; exit 1 ;};
@@ -43,20 +44,20 @@ while getopts ":F:pnhei" OPT ; do
         i) DELIVERYTOOMNEON="Y" ; DELIVERACCESSCOPIES="N" ; DELIVERYTOAIPSTORAGE="Y" ;;
         h) _usage ;;
         *) echo "bad option -${OPTARG}" ; _usage ;;
-        :) echo "Option -${OPTARG} requires an argument" ; exit 1 ;;
+        :) echo "Option -${OPTARG} requires an argument" ;  _writeerrorlog "ingestfile" "You used an invalid option and the script had to exit" ; exit 1 ;;
     esac
 done
 shift $(( ${OPTIND} - 1 ))
 
 _add_mediaid_to_queue(){
-    [ -n "${MEDIAID}" ] || { _report -wt "Error: mediaid is undefined in add_media_to_queue function" ; exit 1 ;};
-    [ -n "${QUEUEFILE}" ] || { _report -wt "Error: queuefile is undefined in add_media_to_queue function" ; exit 1 ;};
+    [ -n "${MEDIAID}" ] || { _report -wt "Error: mediaid is undefined in add_media_to_queue function" ; _writeerrorlog "_add_mediaid_to_queue" "The media id is undefined in the _add_mediaid_to_queue function, and caused the script to exit." ; exit 1 ;};
+    [ -n "${QUEUEFILE}" ] || { _report -wt "Error: queuefile is undefined in add_media_to_queue function" ; _writeerrorlog "_add_mediaid_to_queue" "The queuefile is undefined in the _add_mediaid_to_queue function, and caused the script to exit." ; exit 1 ;};
     echo "${MEDIAID}" >> "${QUEUEFILE}"
 }
 
 _remove_mediaid_from_queue(){
-    [ -n "${MEDIAID}" ] || { _report -wt "Error: mediaid is undefined in remove_media_from_queue function" ; exit 1 ;};
-    [ -f "${QUEUEFILE}" ] || { _report -wt "Error: queuefile is undefined in remove_media_from_queue function" ; exit 1 ;};
+    [ -n "${MEDIAID}" ] || { _report -wt "Error: mediaid is undefined in remove_media_from_queue function" ; _writeerrorlog "_remove_mediaid_from_queue" "The media id is undefined in the _remove_mediaid_from_queue function, and caused the script to exit." ; exit 1 ;};
+    [ -f "${QUEUEFILE}" ] || { _report -wt "Error: queuefile is undefined in remove_media_from_queue function" ; _writeerrorlog "_remove_mediaid_from_queue" "The queuefile is undefined in the _remove_mediaid_from_queue function, and caused the script to exit." ; exit 1 ;};
     grep -v "^${MEDIAID}$" "${QUEUEFILE}" | grep "^[A-Z0-9_-]\+$" > "${QUEUEFILE}_tmp"
     rm "${QUEUEFILE}"
     mv "${QUEUEFILE}_tmp" "${QUEUEFILE}"
@@ -199,8 +200,14 @@ _ask_operator
 _ask_mediaid
 
 ## check for existing output
-[ -d "${OUTDIR_INGESTFILE}/${MEDIAID}" ] && { _report -wt "It looks like ${MEDIAID} was already ingested. If you want to overwrite the existing one please delete ${OUTDIR_INGESTFILE}/${MEDIAID} first and then try again." ; exit 1 ;};
-[ -d "${AIP_STORAGE}/${MEDIAID}" ] && { _report -wt "It looks like ${MEDIAID} was already ingested. If you want to overwrite the existing one please delete ${AIP_STORAGE}/${MEDIAID} first and then try again." ; exit 1 ;};
+if [ -d "${OUTDIR_INGESTFILE}/${MEDIAID}" ] ; then
+     _report -wt "It looks like ${MEDIAID} was already ingested. If you want to overwrite the existing one please delete ${OUTDIR_INGESTFILE}/${MEDIAID} first and then try again." 
+     exit 1 
+fi
+if [ -d "${AIP_STORAGE}/${MEDIAID}" ] ; then 
+    _report -wt "It looks like ${MEDIAID} was already ingested. If you want to overwrite the existing one please delete ${AIP_STORAGE}/${MEDIAID} first and then try again." 
+    exit 1
+fi
 _ask_input
 #here is where we would insert an option for searching for  directory. 
 if [ ! $(_is_video "${INPUT}") ] ; then
@@ -352,6 +359,7 @@ TO=$(_get_filesystem "${OBJECTSDIR}/")
 # make sure the input is still there
 if [ ! -f "${INPUT}" ] ; then
     _report -wt "The input file is no longer available! Where did $(basename "${INPUT}") go? Please redo."
+    _writeerrorlog "ingestfile" "The input file, $(basename "${INPUT}"), was no longer available, so ingest file could not continue."
     # clean up queue
     [ "${PRIORITY}" == "put in queue" ] && _cleanup
     exit 1
@@ -416,6 +424,7 @@ if [ "${MAKEACCESSCOPIES}" == "Y" ] ; then
         "${SCRIPTDIR}/makepodcast" "${MAKEPODCASTOPTS[@]}" "${OUTDIR_INGESTFILE}/${MEDIAID}"
     else
         _report -dt "${MEDIAID} does NOT qualify for podcast creation, skipping."
+        _writeerrorlog "makepodcast" "${MEDIAID} did not qualify for podcast creation and was skipped."
     fi
     # makedvd
     "${SCRIPTDIR}/makedvd" "${OUTDIR_INGESTFILE}/${MEDIAID}"
@@ -442,6 +451,7 @@ if [ "${DELIVERYTOAIPSTORAGE}" == "Y" ] ; then
     [ $(du -s "${OUTDIR_INGESTFILE}/${MEDIAID}" | awk '{print $1}') = "0" ] && rm -r "${OUTDIR_INGESTFILE}/${MEDIAID}"
     _report -dt "STATUS Done. Final package has been delivered to ${AIP_STORAGE}/${MEDIAID}"
 fi
+    
 if [ "${CLEANUP_CHOICE}" == "Y" ] ; then
     if [ "${RSYNC_ERR}" -gt "0" ] ; then
         _report -wt "Cancelling requested deletion of source file, not looking safe."

@@ -53,10 +53,25 @@ while getopts ":h" OPT; do
 done
 shift $(( ${OPTIND} - 1 ))
 
-[ ! "${TMPDIR}" ] && { _report -wt "The temporary directory must be set and be available. Run 'mmconfig'." ; exit 1 ;};
-[ ! -d "${TMPDIR}" ] && mkdir -p "${TMPDIR}"
-[ ! -n "${OMNEONIP}" ] && { _report -wt "The Omneon IP must be set. Run 'mmconfig'." ; exit 1 ;};
-[ ! -n "${OMNEONPATH}" ] && { _report -wt "The Omneon Path must be set. Run 'mmconfig'." ; exit 1 ;};
+
+if [ ! "${TMPDIR}" ] ; then  
+    _report -wt "The temporary directory must be set and be available. Run 'mmconfig'." 
+    exit 1 
+fi
+
+if [ ! -d "${TMPDIR}" ] ; then  
+    mkdir -p "${TMPDIR}"
+fi
+if [ ! -n "${OMNEONIP}" ] ; then 
+    _report -wt "The Omneon IP must be set. Run 'mmconfig'."
+    _writeerrorlog "uploadomneon" "The omneon IP was not set, so files could not be uploaded the omneon."
+    exit 1 
+fi
+if [ ! -n "${OMNEONPATH}" ] ; then 
+    _report -wt "The Omneon Path must be set. Run 'mmconfig'." 
+    _writeerrorlog "uploadomneon" "The filepath to the delivery folder on the omneon was not set, so files could not be delivered."
+    exit 1
+fi
 
 while [ "${*}" != "" ] ; do
 
@@ -105,12 +120,14 @@ if [ "${UPLOAD_ERR}" = "0" ] ; then
     fi
 else
     _report -wt "ftp exited with code ${UPLOAD_ERR} for ${UPLOADFILE}"
+    _writeerrorlog "uploadomneon" "ftp exited with code ${UPLOAD_ERR} for ${UPLOADFILE}"
 fi
 else
 _report -wt "${FILENAME} is already on the omneon as a ${SIZE} byte file."
 fi
 else
     _report -wt "${SOURCEFILE} does not use a mov or mxf EXTENSION. This will NOT be uploaded."
+    _writeerrorlog "uploadomneon" "${SOURCEFILE} does not use a mov or mxf EXTENSION. This will NOT be uploaded."
 fi
 shift
 done

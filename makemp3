@@ -38,11 +38,12 @@ while getopts ":ho:" OPT; do
         o)             OUTPUTDIR="${OPTARG}"
             if [ ! -d "${OUTPUTDIR}" ] ; then
                 _report -wt "The output directory option, ${OUTPUTDIR}, does not refer to an actual directory. Quitting."
+                _writeerrorlog "makemp3" "The directory specified for the output does not refer to an actual directory, forcing the script to quit."
                 exit 1
             fi
             ;;
         *) echo "bad option -${OPTARG}" ; _usage ;;
-        :) echo "Option -${OPTARG} requires an argument" ; exit 1 ;;
+        :) echo "Option -${OPTARG} requires an argument" ; _writeerrorlog "makemp3" "The option selected required an argument and none was provided. The script had to exit." ; exit 1 ;;
     esac
 done
 shift $(( ${OPTIND} - 1 ))

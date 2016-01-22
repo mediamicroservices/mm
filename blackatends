@@ -31,8 +31,8 @@ OPTIND=1
 while getopts ":h" OPT; do
     case "${OPT}" in
         h) _usage ;;
-        \?) echo "Invalid option: -${OPTARG}" ; exit 1 ;;
-        :) echo "Option -${OPTARG} requires an argument" ; exit 1 ;;
+        \?) echo "Invalid option: -${OPTARG}" ; _writeerrorlog "blackatends" "You used an invalid option and the script had to exit" ; exit 1 ;;
+        :) echo "Option -${OPTARG} requires an argument" ; _writeerrorlog "blackatends" "The option selected required an argument and none was provided. The script had to exit." ; exit 1 ;;
     esac
 done
 shift $(( ${OPTIND} - 1 ))

@@ -63,7 +63,7 @@ while getopts ":o:d:e:E:nh" OPT ; do
         n) DRYRUN=true;;
         h) _usage ;;
         *) echo "bad option -${OPTARG}" ; _usage ;;
-        :) echo "Option -${OPTARG} requires an argument" ; exit 1 ;;
+        :) echo "Option -${OPTARG} requires an argument" ; _writeerrorlog "makepdf" "The option selected required an argument and none was provided. The script had to exit." ; exit 1 ;;
     esac
 done
 shift $(( ${OPTIND} - 1 ))
@@ -92,6 +92,7 @@ while [ "${*}" != "" ] ; do
         SOURCEDIR="${INPUT}/objects"
     else
         _report -wt "No source objects folder"
+        _writeerrorlog "makepdf" "No source objects folder provided. The script could not continue."
         exit 1
     fi
     MEDIAID=$(basename "${INPUT}" | cut -d. -f1)

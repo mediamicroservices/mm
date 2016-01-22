@@ -30,11 +30,14 @@ while getopts ":hm:f:p:a:w:y:x" OPT; do
         h) _usage ;;
         c) OUTDIR_INGESTXDCAM="${OPTARG}" ;;
         \?) _report -w "Invalid option: -${OPTARG}" ; exit 1 ;;
-        :) _report -w "Option -${OPTARG} requires an argument" ; exit 1 ;;
+        :) _report -w "Option -${OPTARG} requires an argument" ; _writeerrorlog "xdcamingest" "The option selected required an argument and none was provided. The script had to exit." ; exit 1 ;;
     esac
 done
 
-[ ! -d "${OUTDIR_INGESTXDCAM}" ] && { _report -w "The XDCam processing directory must be set. Use [ -c /path/to/XDCam/processing/directory ]." ; exit 1 ;};
+if [ ! -d "${OUTDIR_INGESTXDCAM}" ] ; then 
+    _report -w "The XDCam processing directory must be set. Use [ -c /path/to/XDCam/processing/directory ]."  
+    exit 1 
+fi
 
 defaults write com.apple.desktopservices DSDontWriteNetworkStores true
 

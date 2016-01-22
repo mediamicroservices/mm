@@ -136,7 +136,9 @@ while [ "${*}" != "" ] ; do
             _add_video_filter "setdar=${ASPECT}${TIMECODEOVERLAY}"
         fi
     else
-        _report -wt "You can't make a dvd from this file. Exiting." ; exit 1 ;
+        _report -wt "You can't make a dvd from this file. Exiting." 
+        _writeerrorlog "makedvd" "The script was unable to create dvd from this file." 
+        exit 1
     fi
     if [[ "${AUDIOSTREAMCOUNT}" > 0 ]] ; then
         MIDDLEOPTIONS+=(-b:a 448000)

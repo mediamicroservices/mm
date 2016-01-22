@@ -32,6 +32,7 @@ _usage(){
 _check_dependencies "${DEPENDENCIES[@]}"
 if [[ $(echo "$(md5deep -v) >= 4.4" | bc) = 0 ]] ; then
     _report -wt "$(basename "${0}") requires md5deep 4.4 or greater."
+    _writeerrorlog "checksumpackage" "checksumpackage was unable to run because md5deep 4.4 or greater is required."
     exit 1
 fi
 _cleanup(){
@@ -51,7 +52,7 @@ while getopts ":cvuh" OPT ; do
        u) UPDATE="Y";;
        h) _usage ;;
        *) echo "bad option -${OPTARG}" ; _usage ;;
-       :) echo "Option -${OPTARG} requires an argument" ; exit 1 ;;
+       :) echo "Option -${OPTARG} requires an argument" ; _writeerrorlog "checksumpackage" "You used an invalid option and the script had to exit" ; exit 1 ;;
    esac
 done
 shift $(( ${OPTIND} - 1 ))
@@ -131,6 +132,7 @@ while [ "${*}" != "" ] ; do
                 fi
             else
                 _report -dt "There is no dfxml.xml to check in ${PACKAGE}, skipping."
+                _writeerrorlog "checksumpackage" "There was no dfxml.xml to check in ${PACKAGE}, so it was skipped."
                 shift
                 continue
             fi
@@ -139,6 +141,7 @@ while [ "${*}" != "" ] ; do
                     _report -dt "Prepping for dfxml.xml verification."
                 else
                     _report -dt "There is no dfxml.xml to verify in ${PACKAGE}, skipping."
+                    _writeerrorlog "checksumpackage" "There was no dfxml.xml to verify in ${PACKAGE}, so it was skipped."
                     shift
                     continue
                 fi

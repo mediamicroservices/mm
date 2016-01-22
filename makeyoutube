@@ -45,7 +45,7 @@ while getopts ":lrv:o:d:e:E:nhY" OPT ; do
         Y) YOUTUBEUPLOAD="Y";;
         h) _usage ;;
         *) echo "bad option -${OPTARG}" ; _usage ;;
-        :) echo "Option -${OPTARG} requires an argument" ; exit 1 ;;
+        :) echo "Option -${OPTARG} requires an argument" ; _writeerrorlog "makeyoutube" "The option selected required an argument and none was provided. The script had to exit." ; exit 1 ;;
     esac
 done
 shift $(( ${OPTIND} - 1 ))
@@ -139,6 +139,7 @@ while [ "${*}" != "" ] ; do
             echo "$(_get_iso8601),${OUTPUT},attempted upload,$?" >> "${HOME}/Desktop/upload.log"
         else
             _report -wt "$(basename "${OUTPUT}") qualified for uploadyoutube but it is not installed."
+            _writeerrorlog "makeyoutube" "$(basename "${OUTPUT}") qualified for uploadyoutube but it is not installed, so the file could not be uploaded."
         fi
     fi
     _log -e
