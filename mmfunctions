@@ -592,7 +592,9 @@ _get_audio_mapping(){
     fi
     if [[ "${PBSMIX}" == "Y" ]] ; then
          _add_audio_filter  "asplit[a][b];[a]aformat=channel_layouts=stereo[stereo1];[b]aformat=channel_layouts=mono,asplit[mono1][mono2]"
-         MIDDLEOPTIONS+=(-map "[stereo1]" -map "[mono1]" -map "[mono2]")
+         if [[ "${ADDSLATE}" != "Y" ]] ; then
+             MIDDLEOPTIONS+=(-map "[stereo1]" -map "[mono1]" -map "[mono2]")
+         fi
     fi
 }
 
