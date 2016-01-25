@@ -314,6 +314,9 @@ _get_prettyduration(){
 _get_duration(){
     DURATION=$(ffprobe "${1}" -show_format 2> /dev/null | grep "^duration=" | cut -d = -f 2)
 }
+_get_broadcastduration(){
+    BROADCASTDURATION=$(mediainfo --inform="General;%Duration_String4%" "${1}")
+}
 _get_seconds(){
     SECONDS=$(ffprobe "${1}" -show_format 2> /dev/null | grep "^duration=" | cut -d= -f2)
 }
