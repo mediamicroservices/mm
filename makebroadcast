@@ -84,7 +84,7 @@ while [ "${*}" != "" ] ; do
     INTIME=""
     OUTTIME=""
     audio_adjustment=""
-    
+
     _unset_variables
     _get_broadcastduration "${SOURCEFILE}"
     _get_videostreamcount "${SOURCEFILE}"
@@ -124,7 +124,7 @@ while [ "${*}" != "" ] ; do
             echo "${SERIESTITLE}" > /tmp/slate_series.txt
             echo "${EPISODETITLE}" > /tmp/slate_episode.txt
             echo "${BROADCASTDURATION}" > /tmp/slate_duration.txt
-            
+
             COLORBARS_SECS=60
             SLATE_SECS=20
             COUNTDOWN_SECS=8.2
@@ -174,7 +174,6 @@ while [ "${*}" != "" ] ; do
             MIDDLEOPTIONS+=(-ps 1)
             MIDDLEOPTIONS+=(-flags +ildct+ilme)
             MIDDLEOPTIONS+=(-pix_fmt yuv422p)
-        
 
             #xdcam options
             MIDDLEOPTIONSXDCAM+=(-s 1920x1080)
@@ -328,7 +327,7 @@ scale=size=hd1080,format=yuv422p,setsar=1/1,setdar=16/9,fps=fps=ntsc[slate_v1];[
 [slate_v1][slate_stereo1][slate_mono1][slate_mono2][program_video][stereo1][mono1][mono2]concat=n=2:v=1:a=3[with_slate_video][with_slate_stereo1][with_slate_mono1][with_slate_mono2]"
 MIDDLEOPTIONS+=(-map "[with_slate_video]" -map "[with_slate_stereo1]" -map "[with_slate_mono1]" -map "[with_slate_mono2]")
     fi
-    
+
     _filter_to_middle_option
 #    MIDDLEOPTIONS+=(-metadata comment="INPUTOPTIONS: ${INPUTOPTIONS[@]}
 #FFMPEGINPUT: ${FFMPEGINPUT}

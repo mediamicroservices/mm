@@ -34,9 +34,9 @@ while getopts ":hm:f:p:a:w:y:x" OPT; do
     esac
 done
 
-if [ ! -d "${OUTDIR_INGESTXDCAM}" ] ; then 
-    _report -w "The XDCam processing directory must be set. Use [ -c /path/to/XDCam/processing/directory ]."  
-    exit 1 
+if [ ! -d "${OUTDIR_INGESTXDCAM}" ] ; then
+    _report -w "The XDCam processing directory must be set. Use [ -c /path/to/XDCam/processing/directory ]."
+    exit 1
 fi
 
 defaults write com.apple.desktopservices DSDontWriteNetworkStores true

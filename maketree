@@ -7,7 +7,7 @@ while [ "${*}" != "" ] ; do
     # get context about the input
     PACKAGE="${1}"
     shift
-    if [ -d "${PACKAGE}" ] ; then 
+    if [ -d "${PACKAGE}" ] ; then
         OUTPUTDIR="${PACKAGE}/metadata"
         if [ -s "${OUTPUTDIR}/tree.xml" ] ; then
             _report -dt "directory tree already exists, skipping for ${PACKAGE}"

@@ -67,9 +67,9 @@ while [ "${*}" != "" ] ; do
     _log -b
 
     _set_up_output
-    
+
     _unset_variables
-    
+
     INPUTOPTIONS+=(-nostdin)
     MIDDLEOPTIONS+=(-map 0:a:0)
     MIDDLEOPTIONS+=(-ac 2)

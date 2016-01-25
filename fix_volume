@@ -56,7 +56,7 @@ while [ "${*}" != "" ] ; do
     MIDDLEOPTIONS+=(-c:a pcm_s24be)
     MIDDLEOPTIONS+=(-ar 48000)
     MIDDLEOPTIONS+=(-ac 2)
-    
+
     if [ "${CODEC_TAG_STRING}" = "mpeg" ] ; then
         EXTENSION="mxf"
     else

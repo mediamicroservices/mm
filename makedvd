@@ -81,7 +81,7 @@ while [ "${*}" != "" ] ; do
 
     # clear local arrays
     _unset_variables
-    
+
     _get_videostreamcount "${SOURCEFILE}"
     _get_audiostreamcount "${SOURCEFILE}"
 
@@ -120,13 +120,13 @@ while [ "${*}" != "" ] ; do
         MIDDLEOPTIONS+=(-lmax 200000)
         MIDDLEOPTIONS+=(-aspect "${ASPECT}")
         if  [[ "${WIDTH}" == 720 && "${HEIGHT}" == 486 ]] ; then
-            _add_video_filter "fieldorder=bff" 
+            _add_video_filter "fieldorder=bff"
             _add_video_filter "crop=720:480:0:4"
             _add_video_filter "setdar=${ASPECT}${TIMECODEOVERLAY}"
         elif  [[ "${WIDTH}" == 720 && "${HEIGHT}" == 480 ]] ; then
             _add_video_filter "fieldorder=bff"
             _add_video_filter "setdar=${ASPECT}${TIMECODEOVERLAY}"
-        elif  [[ "${WIDTH}" == 720 && "${HEIGHT}" == 512 ]] ; then 
+        elif  [[ "${WIDTH}" == 720 && "${HEIGHT}" == 512 ]] ; then
             _add_video_filter "fieldorder=bff"
             _add_video_filter "crop=720:480:0:32"
             _add_video_filter "setdar=${ASPECT}${TIMECODEOVERLAY}"
@@ -136,8 +136,8 @@ while [ "${*}" != "" ] ; do
             _add_video_filter "setdar=${ASPECT}${TIMECODEOVERLAY}"
         fi
     else
-        _report -wt "You can't make a dvd from this file. Exiting." 
-        _writeerrorlog "makedvd" "The script was unable to create dvd from this file." 
+        _report -wt "You can't make a dvd from this file. Exiting."
+        _writeerrorlog "makedvd" "The script was unable to create dvd from this file."
         exit 1
     fi
     if [[ "${AUDIOSTREAMCOUNT}" > 0 ]] ; then
@@ -153,9 +153,9 @@ while [ "${*}" != "" ] ; do
     else
         FFMPEGINPUT="${SOURCEFILE}"
     fi
-    
+
     _filter_to_middle_option
-    
+
     _run_critical ffmpeg ${INPUTOPTIONS[@]} -i "${FFMPEGINPUT}" ${MIDDLEOPTIONS[@]} "${OUTPUTDIR}/${MEDIAID%.*}.mpeg"
     # Making DVD VIDEO_TS folder, chapters every 5 minutes, dvdauthor will ignore chapter markers greater than duration
     export VIDEO_FORMAT=NTSC

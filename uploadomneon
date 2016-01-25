@@ -54,21 +54,21 @@ done
 shift $(( ${OPTIND} - 1 ))
 
 
-if [ ! "${TMPDIR}" ] ; then  
-    _report -wt "The temporary directory must be set and be available. Run 'mmconfig'." 
-    exit 1 
+if [ ! "${TMPDIR}" ] ; then
+    _report -wt "The temporary directory must be set and be available. Run 'mmconfig'."
+    exit 1
 fi
 
-if [ ! -d "${TMPDIR}" ] ; then  
+if [ ! -d "${TMPDIR}" ] ; then
     mkdir -p "${TMPDIR}"
 fi
-if [ ! -n "${OMNEONIP}" ] ; then 
+if [ ! -n "${OMNEONIP}" ] ; then
     _report -wt "The Omneon IP must be set. Run 'mmconfig'."
     _writeerrorlog "uploadomneon" "The omneon IP was not set, so files could not be uploaded the omneon."
-    exit 1 
+    exit 1
 fi
-if [ ! -n "${OMNEONPATH}" ] ; then 
-    _report -wt "The Omneon Path must be set. Run 'mmconfig'." 
+if [ ! -n "${OMNEONPATH}" ] ; then
+    _report -wt "The Omneon Path must be set. Run 'mmconfig'."
     _writeerrorlog "uploadomneon" "The filepath to the delivery folder on the omneon was not set, so files could not be delivered."
     exit 1
 fi

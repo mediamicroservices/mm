@@ -240,8 +240,8 @@ if [[ "${RUNPASHUA}" == "Y" ]] ; then
     echo "  FILEMAKER_XML_URL = ${FILEMAKER_XML_URL}"
     echo "  VOLADJUST = ${VOLADJUST}"
     echo ""
-    
-    #write to the config file 
+
+    #write to the config file
     echo "OUTDIR_INGESTFILE=\"${OUTDIR_INGESTFILE}\"" > "${CONFIG_FILE}"
     echo "OUTDIR_INGESTXDCAM=\"${OUTDIR_INGESTXDCAM}\"" >> "${CONFIG_FILE}"
     echo "OUTDIR_PAPER=\"${OUTDIR_PAPER}\"" >> "${CONFIG_FILE}"
@@ -262,8 +262,8 @@ if [[ "${RUNPASHUA}" == "Y" ]] ; then
     echo "FILEMAKER_DB=\"${FILEMAKER_DB}\"" >> "${CONFIG_FILE}"
     echo "FILEMAKER_XML_URL=\"${FILEMAKER_XML_URL}\"" >> "${CONFIG_FILE}"
     echo "VOLADJUST=\"${VOLADJUST}\"" >> "${CONFIG_FILE}"
-else  
-    # set up configuration file using the command line 
+else
+    # set up configuration file using the command line
     echo "# $(basename ${CONFIG_FILE})" > "${CONFIG_FILE}"
     echo "# This configuration file contains variables used throughout ${WHAT_IS_THIS}." >> "${CONFIG_FILE}"
     echo "# Edit the lines below to form KEY=VALUE. Please do not add or remove the existing KEYs. Do not edit CONFIG_FILE_VERSION." >> "${CONFIG_FILE}"

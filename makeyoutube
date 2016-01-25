@@ -119,15 +119,15 @@ while [ "${*}" != "" ] ; do
     MIDDLEOPTIONS+=(-f mp4)
 
     _prep_ffmpeg_log
-    
+
     if [ "${CONCATSOURCE}" != "" ] ; then
         FFMPEGINPUT="${CONCATSOURCE}"
     else
         FFMPEGINPUT="${SOURCEFILE}"
     fi
-    
+
     _filter_to_middle_option
-    
+
     _run_critical ffmpeg "${INPUTOPTIONS[@]}" -i "${FFMPEGINPUT}" "${MIDDLEOPTIONS[@]}" "${OUTPUT}"
     echo
     _summarize_make

@@ -7,13 +7,13 @@ SCRIPTDIR=$(dirname "${0}")
 
 # check environment
 if [ -z "${FILEMAKER_DB}" ] ; then
-    echo "The filemaker database must be set. Run mmconfig to set FILEMAKER_DB."  
-    _writeerrorlog "checksum2filemaker" "The filemaker database was not set, so the script was unable to run." 
-    exit 1 
+    echo "The filemaker database must be set. Run mmconfig to set FILEMAKER_DB."
+    _writeerrorlog "checksum2filemaker" "The filemaker database was not set, so the script was unable to run."
+    exit 1
 fi
-if [ -z "${FILEMAKER_XML_URL}" ] ; then  
-    echo "The filemaker xml path must be set. Run mmconfig to set FILEMAKER_XML_URL."  
-    _writeerrorlog "checksum2filemaker" "The filemaker xml path was not set, so the script was unable to run."  
+if [ -z "${FILEMAKER_XML_URL}" ] ; then
+    echo "The filemaker xml path must be set. Run mmconfig to set FILEMAKER_XML_URL."
+    _writeerrorlog "checksum2filemaker" "The filemaker xml path was not set, so the script was unable to run."
     exit 1
 fi
 

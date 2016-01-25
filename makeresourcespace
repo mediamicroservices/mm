@@ -12,7 +12,7 @@ RELATIVEPATH="access/resourcespace"
 _usage(){
     echo
     echo "$(basename "${0}") ${VERSION}"
-    echo "This application will create a high quality h264 file (suitable for uploading to YouTube) from a video file or package input with the following options." 
+    echo "This application will create a high quality h264 file (suitable for uploading to YouTube) from a video file or package input with the following options."
     echo "DEPENDENCIES: ${DEPENDENCIES[@]}"
     echo "Usage: $(basename "${0}") [ -d /path/to/deliver/to/ ] fileorpackage1 [ fileorpackage2 ...]"
     echo "  -l (only use the left channel of the first audio track)"
@@ -122,9 +122,9 @@ while [ "${*}" != "" ] ; do
     else
         FFMPEGINPUT="${SOURCEFILE}"
     fi
-    
+
     _filter_to_middle_option
-       
+
     _run_critical ffmpeg "${INPUTOPTIONS[@]}" -i "${FFMPEGINPUT}" "${MIDDLEOPTIONS[@]}" "${OUTPUT}"
     echo
     _summarize_make

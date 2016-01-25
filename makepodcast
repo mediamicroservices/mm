@@ -93,9 +93,9 @@ while [ "${*}" != "" ] ; do
     else
         FFMPEGINPUT="${SOURCEFILE}"
     fi
-    
+
     _filter_to_middle_option
-    
+
     _run_critical ffmpeg "${INPUTOPTIONS[@]}" -i "${FFMPEGINPUT}" "${MIDDLEOPTIONS[@]}" "${OUTPUT}"
     echo
     _summarize_make

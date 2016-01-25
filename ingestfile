@@ -201,15 +201,15 @@ _ask_mediaid
 
 ## check for existing output
 if [ -d "${OUTDIR_INGESTFILE}/${MEDIAID}" ] ; then
-     _report -wt "It looks like ${MEDIAID} was already ingested. If you want to overwrite the existing one please delete ${OUTDIR_INGESTFILE}/${MEDIAID} first and then try again." 
-     exit 1 
+     _report -wt "It looks like ${MEDIAID} was already ingested. If you want to overwrite the existing one please delete ${OUTDIR_INGESTFILE}/${MEDIAID} first and then try again."
+     exit 1
 fi
-if [ -d "${AIP_STORAGE}/${MEDIAID}" ] ; then 
-    _report -wt "It looks like ${MEDIAID} was already ingested. If you want to overwrite the existing one please delete ${AIP_STORAGE}/${MEDIAID} first and then try again." 
+if [ -d "${AIP_STORAGE}/${MEDIAID}" ] ; then
+    _report -wt "It looks like ${MEDIAID} was already ingested. If you want to overwrite the existing one please delete ${AIP_STORAGE}/${MEDIAID} first and then try again."
     exit 1
 fi
 _ask_input
-#here is where we would insert an option for searching for  directory. 
+#here is where we would insert an option for searching for  directory.
 if [ ! $(_is_video "${INPUT}") ] ; then
     _report -qnt "WARNING: ${INPUT} is not recognized as a video file. Please press q to quit, any other key to continue (if you know what you're doing): "
     read NOTVIDRESPONSE
@@ -382,7 +382,7 @@ fi
 
 
 # if the input is uncompressed, this will try and compress the file
-if [ "${PRESERVATION_MODE}" = "Y" ] ; then   
+if [ "${PRESERVATION_MODE}" = "Y" ] ; then
     makelossless "${OUTDIR_INGESTFILE}/${MEDIAID}"
 fi
 
@@ -436,7 +436,7 @@ if [ "${DOCHECKSUMS}" = "Y" ] ; then
     "${SCRIPTDIR}/checksumpackage" "${OUTDIR_INGESTFILE}/${MEDIAID}"
 fi
 
-#make xml file of directory structure 
+#make xml file of directory structure
 if [ "${MAKETREE}" = "Y" ] ; then
     "${SCRIPTDIR}/maketree" "${OUTDIR_INGESTFILE}/${MEDIAID}"
 fi
@@ -451,7 +451,7 @@ if [ "${DELIVERYTOAIPSTORAGE}" == "Y" ] ; then
     [ $(du -s "${OUTDIR_INGESTFILE}/${MEDIAID}" | awk '{print $1}') = "0" ] && rm -r "${OUTDIR_INGESTFILE}/${MEDIAID}"
     _report -dt "STATUS Done. Final package has been delivered to ${AIP_STORAGE}/${MEDIAID}"
 fi
-    
+
 if [ "${CLEANUP_CHOICE}" == "Y" ] ; then
     if [ "${RSYNC_ERR}" -gt "0" ] ; then
         _report -wt "Cancelling requested deletion of source file, not looking safe."
