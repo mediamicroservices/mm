@@ -163,121 +163,121 @@ while [ "${*}" != "" ] ; do
         fi
 
         if [[ "${VIDEOSTREAMCOUNT}" > 0 ]] ; then
-        #options for either xdcam or imx
-        MIDDLEOPTIONS+=(-r ntsc)
-        MIDDLEOPTIONS+=(-c:v mpeg2video)
-        MIDDLEOPTIONS+=(-intra_vlc 1)
-        MIDDLEOPTIONS+=(-non_linear_quant 1)
-        MIDDLEOPTIONS+=(-qmin 1)
-        MIDDLEOPTIONS+=(-dc 10)
-        MIDDLEOPTIONS+=(-lmin QP2LAMBDA)
-        MIDDLEOPTIONS+=(-ps 1)
-        MIDDLEOPTIONS+=(-flags +ildct+ilme)
-        MIDDLEOPTIONS+=(-pix_fmt yuv422p)
+            #options for either xdcam or imx
+            MIDDLEOPTIONS+=(-r ntsc)
+            MIDDLEOPTIONS+=(-c:v mpeg2video)
+            MIDDLEOPTIONS+=(-intra_vlc 1)
+            MIDDLEOPTIONS+=(-non_linear_quant 1)
+            MIDDLEOPTIONS+=(-qmin 1)
+            MIDDLEOPTIONS+=(-dc 10)
+            MIDDLEOPTIONS+=(-lmin QP2LAMBDA)
+            MIDDLEOPTIONS+=(-ps 1)
+            MIDDLEOPTIONS+=(-flags +ildct+ilme)
+            MIDDLEOPTIONS+=(-pix_fmt yuv422p)
         
 
-        #xdcam options
-        MIDDLEOPTIONSXDCAM+=(-s 1920x1080)
-        MIDDLEOPTIONSXDCAM+=(-vtag xd5b)
-        MIDDLEOPTIONSXDCAM+=(-aspect 16:9)
-        MIDDLEOPTIONSXDCAM+=(-q:v 1)
-        MIDDLEOPTIONSXDCAM+=(-qmax 8)
-        MIDDLEOPTIONSXDCAM+=(-g 15)
-        MIDDLEOPTIONSXDCAM+=(-bf 2)
-        MIDDLEOPTIONSXDCAM+=(-b:v 50M)
-        MIDDLEOPTIONSXDCAM+=(-maxrate:v 50M)
-        MIDDLEOPTIONSXDCAM+=(-minrate:v 50M)
-        MIDDLEOPTIONSXDCAM+=(-bufsize 17825792)
-        MIDDLEOPTIONSXDCAM+=(-rc_init_occupancy 17825792)
+            #xdcam options
+            MIDDLEOPTIONSXDCAM+=(-s 1920x1080)
+            MIDDLEOPTIONSXDCAM+=(-vtag xd5b)
+            MIDDLEOPTIONSXDCAM+=(-aspect 16:9)
+            MIDDLEOPTIONSXDCAM+=(-q:v 1)
+            MIDDLEOPTIONSXDCAM+=(-qmax 8)
+            MIDDLEOPTIONSXDCAM+=(-g 15)
+            MIDDLEOPTIONSXDCAM+=(-bf 2)
+            MIDDLEOPTIONSXDCAM+=(-b:v 50M)
+            MIDDLEOPTIONSXDCAM+=(-maxrate:v 50M)
+            MIDDLEOPTIONSXDCAM+=(-minrate:v 50M)
+            MIDDLEOPTIONSXDCAM+=(-bufsize 17825792)
+            MIDDLEOPTIONSXDCAM+=(-rc_init_occupancy 17825792)
 
-        # imx options
-        MIDDLEOPTIONSIMX+=(-aspect 4:3)
-        MIDDLEOPTIONSIMX+=(-qmax 12)
-        MIDDLEOPTIONSIMX+=(-g 1)
-        MIDDLEOPTIONSIMX+=(-top 1)
-        MIDDLEOPTIONSIMX+=(-intra)
-        MIDDLEOPTIONSIMX+=(-b:v 30M)
-        MIDDLEOPTIONSIMX+=(-maxrate:v 30M)
-        MIDDLEOPTIONSIMX+=(-minrate:v 30M)
-        MIDDLEOPTIONSIMX+=(-bufsize 1001000)
-        MIDDLEOPTIONSIMX+=(-rc_init_occupancy 1001000)
-        MIDDLEOPTIONSIMX+=(-rc_max_vbv_use 1)
-        MIDDLEOPTIONSIMX+=(-rc_min_vbv_use 1)
-        MIDDLEOPTIONSIMX+=(-rc_buf_aggressivity 0.25)
-        MIDDLEOPTIONSIMX+=(-vbsf imxdump)
-        MIDDLEOPTIONSIMX+=(-tag:v mx3n)
+            # imx options
+            MIDDLEOPTIONSIMX+=(-aspect 4:3)
+            MIDDLEOPTIONSIMX+=(-qmax 12)
+            MIDDLEOPTIONSIMX+=(-g 1)
+            MIDDLEOPTIONSIMX+=(-top 1)
+            MIDDLEOPTIONSIMX+=(-intra)
+            MIDDLEOPTIONSIMX+=(-b:v 30M)
+            MIDDLEOPTIONSIMX+=(-maxrate:v 30M)
+            MIDDLEOPTIONSIMX+=(-minrate:v 30M)
+            MIDDLEOPTIONSIMX+=(-bufsize 1001000)
+            MIDDLEOPTIONSIMX+=(-rc_init_occupancy 1001000)
+            MIDDLEOPTIONSIMX+=(-rc_max_vbv_use 1)
+            MIDDLEOPTIONSIMX+=(-rc_min_vbv_use 1)
+            MIDDLEOPTIONSIMX+=(-rc_buf_aggressivity 0.25)
+            MIDDLEOPTIONSIMX+=(-vbsf imxdump)
+            MIDDLEOPTIONSIMX+=(-tag:v mx3n)
 
-        # decide on an output codec, aspect ratio, and padding strategy
-        DARRATIO=$(echo "scale=3 ; ${DAR}" | bc)
-        if [ "${FORMULA}" = "tff" ] ; then
-            _add_video_filter "setfield=tff"
-        elif [ "${FORMULA}" = "bff" ] ; then
-            _add_video_filter "setfield=bff"
+            # decide on an output codec, aspect ratio, and padding strategy
+            DARRATIO=$(echo "scale=3 ; ${DAR}" | bc)
+            if [ "${FORMULA}" = "tff" ] ; then
+                _add_video_filter "setfield=tff"
+            elif [ "${FORMULA}" = "bff" ] ; then
+                _add_video_filter "setfield=bff"
+            fi
+            _get_fieldorder "${SOURCEFILE}"
+            if [ "${FIELDORDER}" != "tff" ] ; then
+                _add_video_filter "fieldorder=tff"
+            fi
+            if [ "${FORMULA}" = "hds" ] ; then
+                _add_video_filter "scale=size=hd1080:interl=1"
+                _add_video_filter "setsar=1/1"
+                _add_video_filter "setdar=16/9"
+                _add_video_filter "fps=fps=ntsc"
+                MIDDLEOPTIONS+=("${MIDDLEOPTIONSXDCAM[@]}")
+            elif [ "${FORMULA}" = "sds" ] ; then
+                _add_video_filter "scale=720:480"
+                _add_video_filter "pad=720:512:0:24"
+                _add_video_filter "setsar=1/1"
+                _add_video_filter "setdar=4/3"
+                MIDDLEOPTIONS+=("${MIDDLEOPTIONSIMX[@]}")
+            elif [ "${DARRATIO}" = "1.777" -a ! "${CROPDETECT}" = "Y" ] ; then
+                _add_video_filter "scale=size=hd1080:interl=1"
+                _add_video_filter "setsar=1/1"
+                _add_video_filter "setdar=16/9"
+                _add_video_filter "fps=fps=ntsc"
+                MIDDLEOPTIONS+=("${MIDDLEOPTIONSXDCAM[@]}")
+            elif [ $(echo "scale=3 ; ${DARRATIO} > (16/9)" | bc -l) = 1 ] ; then
+                _add_video_filter "pad=${WIDTH}:${WIDTH}*(9/16)*(${SAR}):(ow-${WIDTH})/2:(oh-${HEIGHT})/2"
+                _add_video_filter "scale=size=hd1080:interl=1"
+                _add_video_filter "setsar=1/1"
+                _add_video_filter "setdar=16/9"
+                _add_video_filter "fps=fps=ntsc"
+                MIDDLEOPTIONS+=("${MIDDLEOPTIONSXDCAM[@]}")
+            elif [ $(echo "scale=3 ; $DARRATIO > (3/2)" | bc -l) = 1 ] ; then
+                _add_video_filter "pad=${HEIGHT}*(16/9)/(${SAR}):${HEIGHT}:(ow-${WIDTH})/2:(oh-${HEIGHT})/2"
+                _add_video_filter "scale=size=hd1080:interl=1"
+                _add_video_filter "setsar=1/1"
+                _add_video_filter "setdar=16/9"
+                _add_video_filter "fps=fps=ntsc"
+                MIDDLEOPTIONS+=("${MIDDLEOPTIONSXDCAM[@]}")
+            elif [ "${WIDTH}" = "720" -a "${HEIGHT}" = "480" -a $(echo "scale=3 ; ${DARRATIO} < (3/2)" | bc -l) = 1 -a ! "${CROPDETECT}" = "Y" ] ; then
+                _add_video_filter "scale=720:480"
+                _add_video_filter "pad=720:512:0:24"
+                _add_video_filter "setsar=1/1"
+                _add_video_filter "setdar=4/3"
+                MIDDLEOPTIONS+=("${MIDDLEOPTIONSIMX[@]}")
+            elif [ "${HEIGHT}" -eq "486" -a "${WIDTH}" -eq "720" ] ; then
+                _add_video_filter "crop=720:480:0:4"
+                _add_video_filter "pad=720:512:0:24"
+                _add_video_filter "setsar=1/1"
+                _add_video_filter "setdar=4/3"
+                MIDDLEOPTIONS+=("${MIDDLEOPTIONSIMX[@]}")
+            elif  [ "${HEIGHT}" -eq "512" -a "${WIDTH}" -eq "720" ] ;then
+                _add_video_filter "crop=720:480:0:32"
+                _add_video_filter "pad=720:512:0:24"
+                _add_video_filter "setsar=1/1"
+                _add_video_filter "setdar=4/3"
+                MIDDLEOPTIONS+=("${MIDDLEOPTIONSIMX[@]}")
+            else
+                _add_video_filter "scale=720:480"
+                _add_video_filter "pad=720:512:0:24"
+                _add_video_filter "setsar=1/1"
+                _add_video_filter "setdar=4/3"
+                MIDDLEOPTIONS+=("${MIDDLEOPTIONSIMX[@]}")
+            fi
         fi
-        _get_fieldorder "${SOURCEFILE}"
-        if [ "${FIELDORDER}" != "tff" ] ; then
-            _add_video_filter "fieldorder=tff"
-        fi
-        if [ "${FORMULA}" = "hds" ] ; then
-            _add_video_filter "scale=size=hd1080:interl=1"
-            _add_video_filter "setsar=1/1"
-            _add_video_filter "setdar=16/9"
-            _add_video_filter "fps=fps=ntsc"
-            MIDDLEOPTIONS+=("${MIDDLEOPTIONSXDCAM[@]}")
-        elif [ "${FORMULA}" = "sds" ] ; then
-            _add_video_filter "scale=720:480"
-            _add_video_filter "pad=720:512:0:24"
-            _add_video_filter "setsar=1/1"
-            _add_video_filter "setdar=4/3"
-            MIDDLEOPTIONS+=("${MIDDLEOPTIONSIMX[@]}")
-        elif [ "${DARRATIO}" = "1.777" -a ! "${CROPDETECT}" = "Y" ] ; then
-            _add_video_filter "scale=size=hd1080:interl=1"
-            _add_video_filter "setsar=1/1"
-            _add_video_filter "setdar=16/9"
-            _add_video_filter "fps=fps=ntsc"
-            MIDDLEOPTIONS+=("${MIDDLEOPTIONSXDCAM[@]}")
-        elif [ $(echo "scale=3 ; ${DARRATIO} > (16/9)" | bc -l) = 1 ] ; then
-            _add_video_filter "pad=${WIDTH}:${WIDTH}*(9/16)*(${SAR}):(ow-${WIDTH})/2:(oh-${HEIGHT})/2"
-            _add_video_filter "scale=size=hd1080:interl=1"
-            _add_video_filter "setsar=1/1"
-            _add_video_filter "setdar=16/9"
-            _add_video_filter "fps=fps=ntsc"
-            MIDDLEOPTIONS+=("${MIDDLEOPTIONSXDCAM[@]}")
-        elif [ $(echo "scale=3 ; $DARRATIO > (3/2)" | bc -l) = 1 ] ; then
-            _add_video_filter "pad=${HEIGHT}*(16/9)/(${SAR}):${HEIGHT}:(ow-${WIDTH})/2:(oh-${HEIGHT})/2"
-            _add_video_filter "scale=size=hd1080:interl=1"
-            _add_video_filter "setsar=1/1"
-            _add_video_filter "setdar=16/9"
-            _add_video_filter "fps=fps=ntsc"
-            MIDDLEOPTIONS+=("${MIDDLEOPTIONSXDCAM[@]}")
-        elif [ "${WIDTH}" = "720" -a "${HEIGHT}" = "480" -a $(echo "scale=3 ; ${DARRATIO} < (3/2)" | bc -l) = 1 -a ! "${CROPDETECT}" = "Y" ] ; then
-            _add_video_filter "scale=720:480"
-            _add_video_filter "pad=720:512:0:24"
-            _add_video_filter "setsar=1/1"
-            _add_video_filter "setdar=4/3"
-            MIDDLEOPTIONS+=("${MIDDLEOPTIONSIMX[@]}")
-        elif [ "${HEIGHT}" -eq "486" -a "${WIDTH}" -eq "720" ] ; then
-            _add_video_filter "crop=720:480:0:4"
-            _add_video_filter "pad=720:512:0:24"
-            _add_video_filter "setsar=1/1"
-            _add_video_filter "setdar=4/3"
-            MIDDLEOPTIONS+=("${MIDDLEOPTIONSIMX[@]}")
-        elif  [ "${HEIGHT}" -eq "512" -a "${WIDTH}" -eq "720" ] ;then
-            _add_video_filter "crop=720:480:0:32"
-            _add_video_filter "pad=720:512:0:24"
-            _add_video_filter "setsar=1/1"
-            _add_video_filter "setdar=4/3"
-            MIDDLEOPTIONS+=("${MIDDLEOPTIONSIMX[@]}")
-        else
-            _add_video_filter "scale=720:480"
-            _add_video_filter "pad=720:512:0:24"
-            _add_video_filter "setsar=1/1"
-            _add_video_filter "setdar=4/3"
-            MIDDLEOPTIONS+=("${MIDDLEOPTIONSIMX[@]}")
-        fi
-    fi
-    _add_video_filter "format=yuv422p"
-    _add_video_filter "lut=y=if(gt(val\,235)\,235\,val):u=if(gt(val\,235)\,235\,val):v=if(gt(val\,235)\,235\,val)"
+        _add_video_filter "format=yuv422p"
+        _add_video_filter "lut=y=if(gt(val\,235)\,235\,val):u=if(gt(val\,235)\,235\,val):v=if(gt(val\,235)\,235\,val)"
     fi
 
     if [[ "${AUDIOSTREAMCOUNT}" > 0 ]] ; then
