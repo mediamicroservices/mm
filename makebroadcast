@@ -133,6 +133,7 @@ while [ "${*}" != "" ] ; do
             SLATE_SECS=20
             COUNTDOWN_SECS=8.2
             BLACK_SECS=1.8
+            END_BLACK_SECS=30
             fontfile="/System/Library/Fonts/HelveticaNeue.dfont"
             fontenable="enable=gte(t\,${COLORBARS_SECS})*lt(t\,${COLORBARS_SECS}+${SLATE_SECS})"
             MIDDLEOPTIONS+=(-f lavfi -i "smptehdbars=s=1920x1080:r=30000/1001:sar=16/9:d=${COLORBARS_SECS}" \
@@ -142,7 +143,9 @@ while [ "${*}" != "" ] ; do
         -f lavfi -i "color=black:s=1920x1080:r=30000/1001:sar=16/9:d=${COUNTDOWN_SECS}" \
         -f lavfi -i "sine=r=48000:frequency=1:beep_factor=400:duration=${COUNTDOWN_SECS}"\
         -f lavfi -i "color=black:s=1920x1080:r=30000/1001:sar=16/9:d=${BLACK_SECS}" \
-        -f lavfi -i "aevalsrc=0:d=${BLACK_SECS}:s=48000:c=stereo")
+        -f lavfi -i "aevalsrc=0:d=${BLACK_SECS}:s=48000:c=stereo"\
+        -f lavfi -i "color=black:s=1920x1080:r=30000/1001:sar=16/9:d=${END_BLACK_SECS}" \
+        -f lavfi -i "aevalsrc=0:d=${END_BLACK_SECS}:s=48000:c=stereo")
             MIDDLEOPTIONS+=(-metadata:s:v:0 timecode=00:58:30\;00)
         else
             MIDDLEOPTIONS+=(-metadata:s:v:0 timecode=00:00:00.00)
@@ -328,7 +331,9 @@ drawtext=fontsize=32:fontfile=${fontfile}:fontcolor=white:${fontenable}:x=1151:y
 drawtext=fontsize=32:fontfile=${fontfile}:fontcolor=white:${fontenable}:x=1151:y=947:textfile=/tmp/slate_duration.txt,\
 drawtext=fontsize=420:fontfile=${fontfile}:fontcolor=white:enable=gte(t\,${COLORBARS_SECS}+${SLATE_SECS})*lt(t\,${COLORBARS_SECS}+${SLATE_SECS}+${COUNTDOWN_SECS}):x=(w-text_w)/2:y=(h-text_h-line_h)/2:text='%{eif\:${COLORBARS_SECS}+${SLATE_SECS}+11-t\:d}',\
 scale=size=hd1080,format=yuv422p,setsar=1/1,setdar=16/9,fps=fps=ntsc[slate_v1];[slate_a]asplit[slate_stereo1][slate_stereo2];[slate_stereo2]aformat=channel_layouts=mono,asplit[slate_mono1][slate_mono2];\
-[slate_v1][slate_stereo1][slate_mono1][slate_mono2][program_video][stereo1][mono1][mono2]concat=n=2:v=1:a=3[with_slate_video][with_slate_stereo1][with_slate_mono1][with_slate_mono2]"
+[9:v:0]format=yuv422p,setsar=1/1,setdar=16/9[end_black];\
+[10:a:0]asplit[end_stereo1][end_stereo2];[end_stereo2]aformat=channel_layouts=mono,asplit[end_mono1][end_mono2];\
+[slate_v1][slate_stereo1][slate_mono1][slate_mono2][program_video][stereo1][mono1][mono2][end_black][end_stereo1][end_mono1][end_mono2]concat=n=3:v=1:a=3[with_slate_video][with_slate_stereo1][with_slate_mono1][with_slate_mono2]"
 MIDDLEOPTIONS+=(-map "[with_slate_video]" -map "[with_slate_stereo1]" -map "[with_slate_mono1]" -map "[with_slate_mono2]")
     fi
 
