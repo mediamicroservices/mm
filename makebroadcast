@@ -310,7 +310,7 @@ while [ "${*}" != "" ] ; do
         _add_audio_filter "[1:v:0][2:a:0][3:v:0][4:a:0][5:v:0][6:a:0][7:v:0][8:a:0]concat=n=4:v=1:a=1[slate_v][slate_a];\
 [slate_v]\
 drawtext=fontsize=32:fontfile=${fontfile}:fontcolor=white:${fontenable}:x=388:y=158:textfile=/tmp/slate_mediaid.txt,\
-drawtext=fontsize=110:fontfile=${fontfile}:fontcolor=white:${fontenable}:x=388:y=370:textfile=/tmp/slate_series.txt,\
+drawtext=fontsize=80:fontfile=${fontfile}:fontcolor=white:${fontenable}:x=388:y=340:textfile=/tmp/slate_series.txt,\
 drawtext=fontsize=50:fontfile=${fontfile}:fontcolor=white:${fontenable}:x=388:y=460:textfile=/tmp/slate_episode.txt,\
 drawtext=fontsize=32:fontfile=${fontfile}:fontcolor=white:${fontenable}:x=388:y=793:text='VIDEO',\
 drawtext=fontsize=32:fontfile=${fontfile}:fontcolor=white:${fontenable}:x=388:y=831:text='1080i',\
