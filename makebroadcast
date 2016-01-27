@@ -124,6 +124,10 @@ while [ "${*}" != "" ] ; do
             echo "${SERIESTITLE}" > /tmp/slate_series.txt
             echo "${EPISODETITLE}" > /tmp/slate_episode.txt
             echo "${BROADCASTDURATION}" > /tmp/slate_duration.txt
+            echo "Ch. 1 Stereo L" > /tmp/channel1.txt
+            echo "Ch. 2 Stereo L" > /tmp/channel2.txt
+            echo "Ch. 3 Mono Mix" > /tmp/channel3.txt
+            echo "Ch. 4 Mono Mix" > /tmp/channel4.txt
 
             COLORBARS_SECS=60
             SLATE_SECS=20
@@ -316,10 +320,10 @@ drawtext=fontsize=32:fontfile=${fontfile}:fontcolor=white:${fontenable}:x=388:y=
 drawtext=fontsize=32:fontfile=${fontfile}:fontcolor=white:${fontenable}:x=388:y=831:text='1080i',\
 drawtext=fontsize=32:fontfile=${fontfile}:fontcolor=white:${fontenable}:x=388:y=869:text='59.94DF',\
 drawtext=fontsize=32:fontfile=${fontfile}:fontcolor=white:${fontenable}:x=790:y=793:text='AUDIO',\
-drawtext=fontsize=32:fontfile=${fontfile}:fontcolor=white:${fontenable}:x=790:y=831:text='Ch1StereoL',\
-drawtext=fontsize=32:fontfile=${fontfile}:fontcolor=white:${fontenable}:x=790:y=869:text='Ch2StereoR',\
-drawtext=fontsize=32:fontfile=${fontfile}:fontcolor=white:${fontenable}:x=790:y=908:text='Ch3MonoMix',\
-drawtext=fontsize=32:fontfile=${fontfile}:fontcolor=white:${fontenable}:x=790:y=947:text='Ch4MonoMix',\
+drawtext=fontsize=32:fontfile=${fontfile}:fontcolor=white:${fontenable}:x=790:y=831:textfile=/tmp/channel1.txt,\
+drawtext=fontsize=32:fontfile=${fontfile}:fontcolor=white:${fontenable}:x=790:y=869:textfile=/tmp/channel2.txt,\
+drawtext=fontsize=32:fontfile=${fontfile}:fontcolor=white:${fontenable}:x=790:y=908:textfile=/tmp/channel3.txt,\
+drawtext=fontsize=32:fontfile=${fontfile}:fontcolor=white:${fontenable}:x=790:y=947:textfile=/tmp/channel4.txt,\
 drawtext=fontsize=32:fontfile=${fontfile}:fontcolor=white:${fontenable}:x=1151:y=908:text='Duration',\
 drawtext=fontsize=32:fontfile=${fontfile}:fontcolor=white:${fontenable}:x=1151:y=947:textfile=/tmp/slate_duration.txt,\
 drawtext=fontsize=420:fontfile=${fontfile}:fontcolor=white:enable=gte(t\,${COLORBARS_SECS}+${SLATE_SECS})*lt(t\,${COLORBARS_SECS}+${SLATE_SECS}+${COUNTDOWN_SECS}):x=(w-text_w)/2:y=(h-text_h-line_h)/2:text='%{eif\:${COLORBARS_SECS}+${SLATE_SECS}+11-t\:d}',\
