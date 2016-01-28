@@ -21,6 +21,7 @@ _usage(){
     echo "Dependencies: ${DEPENDENCIES[@]}"
     echo "Usage: $(basename "${0}") [ -l ] [ -r ] [ -c ] fileorpackage1 [ fileorpackage2 ...]"
     echo "  -F (apply a formula, override default settings)"
+    echo "  -s (create slate, which adds color bars, a slate, and 30 seconds of black at the end)"
     echo "  -l (only use the left channel of the first audio track)"
     echo "  -r (only use the right channel of the first audio track)"
     echo "  -c (run the video through a crop detection filter, then crop the video accordingly during transcoding, slower)"
