@@ -120,7 +120,7 @@ _readingestlog(){
     if [ -f "${INGESTLOG}" ] ; then
         KEY="${1}"
         # need to add yaml style escaping
-        grep "^${1}:" "${INGESTLOG}" | cut -d: -f2- | sed 's/ //g'
+        grep "^${1}:" "${INGESTLOG}" | cut -d: -f2- | sed -e 's/^[[:space:]]*//' -e 's/[[:space:]]*$//'
     else
         _report -wt "The _readingestlog function was called but the ingestlog file (${INGESTLOG}) is not declared."
     fi
@@ -421,7 +421,7 @@ _find_input (){
     CONCATSOURCE=""
     SOURCEFILE=""
     ISOBJECT=""
-    [ -d "${1}" ] && [ -d "${1}/objects/service" ] && ISOBJECT="N" && SOURCEFILE=$(find "${1}/objects/service" -maxdepth 1 -mindepth 1 -type f \( -iname "*.mov" -o -iname "*.mxf" -o -iname "*.mp4" -o -iname "*.dv" -o -iname "*.mpeg" -o -iname "*.iso" -o -iname "*.mkv" -o -iname "*.m2ts" \) ! -name ".*" | head -n 1)
+    [ -d "${1}" ] && [[ -d "${1}/objects/service" && "${ADDSLATE}" -ne "Y" ]] && ISOBJECT="N" && SOURCEFILE=$(find "${1}/objects/service" -maxdepth 1 -mindepth 1 -type f \( -iname "*.mov" -o -iname "*.mxf" -o -iname "*.mp4" -o -iname "*.dv" -o -iname "*.mpeg" -o -iname "*.iso" -o -iname "*.mkv" -o -iname "*.m2ts" \) ! -name ".*" | head -n 1)
     [ -f "${1}" ] && SOURCEFILE="${1}"
     [ ! "${SOURCEFILE}" ] && [ -d "${1}/objects" ] && ISOBJECT="Y" && SOURCEFILE=$(find "${1}/objects" -maxdepth 1 -mindepth 1 -type f \( -iname "*.mov" -o -iname "*.mxf" -o -iname "*.mp4" -o -iname "*.dv" -o -iname "*.mpeg" -o -iname "*.iso" -o -iname "*.mkv" -o -iname "*.m2ts" \) ! -name ".*" | head -n 1)
     if [ ! "${SOURCEFILE}" ] ; then

@@ -109,26 +109,52 @@ while [ "${*}" != "" ] ; do
 
         # if adding a slate then request metadata
         if [ "${ADDSLATE}" = "Y" ] ; then
-            cowsay "MediaID?"
-            echo -n ":: "
-            read MEDIAID
+            if [ -z "${MEDIAID}" ] ; then
+                cowsay "MediaID?"
+                echo -n ":: "
+                read MEDIAID
+            fi
+            
+            SERIESTITLE=$(_readingestlog "Series Title")
+            if [ -z "${SERIESTITLE}" ] ; then 
+                cowsay -t "Series Title?"
+                echo -n ":: "
+                read SERIESTITLE
+                echo "the series title is ${SERIESTITLE}"
+            fi
+            
+            EPISODETITLE=$(_readingestlog "Episode Title")
+            if [ -z "${EPISODETITLE}" ] ; then
+                cowsay -s "Episode Title?"
+                echo -n ":: "
+                read EPISODETITLE
+                echo "the episode title is ${EPISODETITLE}"
+            fi
+        
+    
+                SLATE_MEDIAID=$(_maketemp)
+                echo "${MEDIAID}" > "${SLATE_MEDIAID}"
+                
+                SLATE_SERIES=$(_maketemp)
+                echo "${SERIESTITLE}" > "${SLATE_SERIES}"
 
-            cowsay -t "Series Title?"
-            echo -n ":: "
-            read SERIESTITLE
+                SLATE_EPISODE=$(_maketemp)
+                echo "${EPISODETITLE}" > "${SLATE_EPISODE}"
 
-            cowsay -s "Episode Title?"
-            echo -n ":: "
-            read EPISODETITLE
+                SLATE_DURATION=$(_maketemp)
+                echo "${BROADCASTDURATION}" > "${SLATE_DURATION}"
+                
+                SLATE_CH1=$(_maketemp)
+                echo "Ch. 1 Stereo L" > "${SLATE_CH1}"
 
-            echo "${MEDIAID}" > /tmp/slate_mediaid.txt
-            echo "${SERIESTITLE}" > /tmp/slate_series.txt
-            echo "${EPISODETITLE}" > /tmp/slate_episode.txt
-            echo "${BROADCASTDURATION}" > /tmp/slate_duration.txt
-            echo "Ch. 1 Stereo L" > /tmp/channel1.txt
-            echo "Ch. 2 Stereo L" > /tmp/channel2.txt
-            echo "Ch. 3 Mono Mix" > /tmp/channel3.txt
-            echo "Ch. 4 Mono Mix" > /tmp/channel4.txt
+                SLATE_CH2=$(_maketemp)
+                echo "Ch. 2 Stereo L" > "${SLATE_CH2}"
+                
+                SLATE_CH3=$(_maketemp)
+                echo "Ch. 3 Mono Mix" > "${SLATE_CH3}"
+                
+                SLATE_CH4=$(_maketemp)
+                echo "Ch. 4 Mono Mix" > "${SLATE_CH4}"
 
             COLORBARS_SECS=60
             SLATE_SECS=20
@@ -317,19 +343,19 @@ while [ "${*}" != "" ] ; do
         _add_video_filter "copy[program_video]"
         _add_audio_filter "[1:v:0][2:a:0][3:v:0][4:a:0][5:v:0][6:a:0][7:v:0][8:a:0]concat=n=4:v=1:a=1[slate_v][slate_a];\
 [slate_v]\
-drawtext=fontsize=32:fontfile=${fontfile}:fontcolor=white:${fontenable}:x=388:y=158:textfile=/tmp/slate_mediaid.txt,\
-drawtext=fontsize=80:fontfile=${fontfile}:fontcolor=white:${fontenable}:x=388:y=340:textfile=/tmp/slate_series.txt,\
-drawtext=fontsize=50:fontfile=${fontfile}:fontcolor=white:${fontenable}:x=388:y=460:textfile=/tmp/slate_episode.txt,\
+drawtext=fontsize=32:fontfile=${fontfile}:fontcolor=white:${fontenable}:x=388:y=158:textfile=${SLATE_MEDIAID},\
+drawtext=fontsize=80:fontfile=${fontfile}:fontcolor=white:${fontenable}:x=388:y=340:textfile=${SLATE_SERIES},\
+drawtext=fontsize=50:fontfile=${fontfile}:fontcolor=white:${fontenable}:x=388:y=460:textfile=${SLATE_EPISODE},\
 drawtext=fontsize=32:fontfile=${fontfile}:fontcolor=white:${fontenable}:x=388:y=793:text='VIDEO',\
 drawtext=fontsize=32:fontfile=${fontfile}:fontcolor=white:${fontenable}:x=388:y=831:text='1080i',\
 drawtext=fontsize=32:fontfile=${fontfile}:fontcolor=white:${fontenable}:x=388:y=869:text='59.94DF',\
 drawtext=fontsize=32:fontfile=${fontfile}:fontcolor=white:${fontenable}:x=790:y=793:text='AUDIO',\
-drawtext=fontsize=32:fontfile=${fontfile}:fontcolor=white:${fontenable}:x=790:y=831:textfile=/tmp/channel1.txt,\
-drawtext=fontsize=32:fontfile=${fontfile}:fontcolor=white:${fontenable}:x=790:y=869:textfile=/tmp/channel2.txt,\
-drawtext=fontsize=32:fontfile=${fontfile}:fontcolor=white:${fontenable}:x=790:y=908:textfile=/tmp/channel3.txt,\
-drawtext=fontsize=32:fontfile=${fontfile}:fontcolor=white:${fontenable}:x=790:y=947:textfile=/tmp/channel4.txt,\
+drawtext=fontsize=32:fontfile=${fontfile}:fontcolor=white:${fontenable}:x=790:y=831:textfile=${SLATE_CH1},\
+drawtext=fontsize=32:fontfile=${fontfile}:fontcolor=white:${fontenable}:x=790:y=869:textfile=${SLATE_CH2},\
+drawtext=fontsize=32:fontfile=${fontfile}:fontcolor=white:${fontenable}:x=790:y=908:textfile=${SLATE_CH3},\
+drawtext=fontsize=32:fontfile=${fontfile}:fontcolor=white:${fontenable}:x=790:y=947:textfile=${SLATE_CH4},\
 drawtext=fontsize=32:fontfile=${fontfile}:fontcolor=white:${fontenable}:x=1151:y=908:text='Duration',\
-drawtext=fontsize=32:fontfile=${fontfile}:fontcolor=white:${fontenable}:x=1151:y=947:textfile=/tmp/slate_duration.txt,\
+drawtext=fontsize=32:fontfile=${fontfile}:fontcolor=white:${fontenable}:x=1151:y=947:textfile=${SLATE_DURATION},\
 drawtext=fontsize=420:fontfile=${fontfile}:fontcolor=white:enable=gte(t\,${COLORBARS_SECS}+${SLATE_SECS})*lt(t\,${COLORBARS_SECS}+${SLATE_SECS}+${COUNTDOWN_SECS}):x=(w-text_w)/2:y=(h-text_h-line_h)/2:text='%{eif\:${COLORBARS_SECS}+${SLATE_SECS}+11-t\:d}',\
 scale=size=hd1080,format=yuv422p,setsar=1/1,setdar=16/9,fps=fps=ntsc[slate_v1];[slate_a]asplit[slate_stereo1][slate_stereo2];[slate_stereo2]aformat=channel_layouts=mono,asplit[slate_mono1][slate_mono2];\
 [9:v:0]format=yuv422p,setsar=1/1,setdar=16/9[end_black];\
@@ -350,3 +376,4 @@ MIDDLEOPTIONS+=(-map "[with_slate_video]" -map "[with_slate_stereo1]" -map "[wit
     _deliver_output "${MAKEBROADCAST_DELIVERY_EMAIL_TO}"
     _log -e
 done
+unset ADDSLATE

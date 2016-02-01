@@ -26,8 +26,9 @@ _usage(){
     echo "This script will run an interactive interview and then process an input file accordingly."
     echo "Dependencies: ${DEPENDENCIES[@]}"
     echo "Usage: $(basename ${0}) [ -options ]"
+    echo "  -p (do not make any deliveries, and create the package in the same directory as the input.)"
     echo "  -n (do not make any deliveries except for sending the final package to ${AIP_STORAGE}.)"
-    echo " -i (do not make any deliveries except for sending the final package to ${DELIVERYTOOMNEON}.)"
+    echo "  -i (do not make any deliveries except for sending the final package to ${DELIVERYTOOMNEON}.)"
     echo "  -h display this help"
     echo
     exit
@@ -35,13 +36,14 @@ _usage(){
 
 OPTIND=1
 
-while getopts ":F:pnhei" OPT ; do
+while getopts ":F:pnheis" OPT ; do
     case "${OPT}" in
         F) FORMULA="${OPTARG}";;
         e) EDIT_MODE="Y" ;;
         p) PRESERVATION_MODE="Y" ; DELIVERYTOOMNEON="N" ; DELIVERACCESSCOPIES="N" ; DELIVERYTOAIPSTORAGE="N" ; CLEANUP_CHOICE="Y" ; CLEANUPDECISION="Remove source file after successful ingest" ;;
         n) DELIVERYTOOMNEON="N" ; DELIVERACCESSCOPIES="N" ;;
         i) DELIVERYTOOMNEON="Y" ; DELIVERACCESSCOPIES="N" ; DELIVERYTOAIPSTORAGE="Y" ;;
+        s) SLATE="Y" ; DELIVERYTOOMNEON="Y" ;;
         h) _usage ;;
         *) echo "bad option -${OPTARG}" ; _usage ;;
         :) echo "Option -${OPTARG} requires an argument" ;  _writeerrorlog "ingestfile" "You used an invalid option and the script had to exit" ; exit 1 ;;
@@ -267,6 +269,18 @@ if [ "${PRIORITY}" = "" ] ; then
     done
 fi
 
+if [ "${SLATE}" == "Y" ] ; then
+
+    cowsay -t "Series Title?"
+    echo -n ":: "
+    read SERIESTITLE
+
+    cowsay -s "Episode Title?"
+    echo -n ":: "
+    read EPISODETITLE
+    
+fi
+
 # blackframe analysis or in/out requests
 if [ "${PRESERVATION_MODE}" == "Y" ] ; then
     _reset_directory
@@ -338,6 +352,8 @@ _writeingestlog "computer_name" "$(uname -n)"
 _writeingestlog "user_name" "$(whoami)"
 _writeingestlog "operating_system_version" "$(uname -v)"
 _writeingestlog "datetime_start" "$(_get_iso8601)"
+_writeingestlog "Series Title" "${SERIESTITLE}"
+_writeingestlog "Episode Title" "${EPISODETITLE}"
 
 if [ "${INTIME}" ] ; then
     _writeingestlog "intime" "${INTIME}"
@@ -394,7 +410,18 @@ unset MAKEBROADCASTOPTS
 if [ ! -z "${FORMULA}" ] ; then
     MAKEBROADCASTOPTS+=(-F "${FORMULA}")
 fi
+if [ "${SLATE}" == "Y" ] ; then
+    "${SCRIPTDIR}/makebroadcast" -s "${MAKEBROADCASTOPTS[@]}" "${OUTDIR_INGESTFILE}/${MEDIAID}"
+    if [ "${DELIVERYTOOMNEON}" == "Y" ] ; then
+        _report -dt "STATUS Uploading ${OBJECTSDIR}/service/${MEDIAID%.*}_SLATE.mov to the OMNEON."
+        "${SCRIPTDIR}/uploadomneon" "${OBJECTSDIR}/service/${MEDIAID%.*}_SLATE.mov"
+        _email_delivery "${MAKEBROADCAST_DELIVERY_EMAIL_TO}"
+    fi
+    
+fi
+
 "${SCRIPTDIR}/makebroadcast" "${MAKEBROADCASTOPTS[@]}" "${OUTDIR_INGESTFILE}/${MEDIAID}"
+
 
 # upload broadcast copy
 if [ "${DELIVERYTOOMNEON}" == "Y" ] ; then
@@ -408,26 +435,31 @@ if [ "${MAKEACCESSCOPIES}" == "Y" ] ; then
     _report -dt "STATUS Making access copies."
     # makemp3
     "${SCRIPTDIR}/makemp3" "${OUTDIR_INGESTFILE}/${MEDIAID}"
+    
     # makeframes
     unset MAKEFRAMESOPTS
     [ "${DELIVERACCESSCOPIES}" = "Y" ] && MAKEFRAMESOPTS=(-d "${YOUTUBEDELIVER}")
     "${SCRIPTDIR}/makeframes" "${MAKEFRAMESOPTS[@]}" "${OUTDIR_INGESTFILE}/${MEDIAID}"
+    
     # makeyoutube
     unset MAKEYOUTUBEOPTS
     [ "${DELIVERACCESSCOPIES}" = "Y" ] && MAKEYOUTUBEOPTS=(-Y -d "${YOUTUBEDELIVER}")
     "${SCRIPTDIR}/makeyoutube" "${MAKEYOUTUBEOPTS[@]}" "${OUTDIR_INGESTFILE}/${MEDIAID}"
+    
     # makepodcast
     if [ $(echo "${MEDIAID}" | grep -E "${REGEX4PODCAST}") ] ; then
         _report -dt "${MEDIAID} qualifies for podcast creation."
         unset MAKEPODCASTOPTS
         [ "${DELIVERACCESSCOPIES}" == "Y" ] && MAKEPODCASTOPTS=(-d "${PODCASTDELIVER}")
         "${SCRIPTDIR}/makepodcast" "${MAKEPODCASTOPTS[@]}" "${OUTDIR_INGESTFILE}/${MEDIAID}"
+        
     else
         _report -dt "${MEDIAID} does NOT qualify for podcast creation, skipping."
         _writeerrorlog "makepodcast" "${MEDIAID} did not qualify for podcast creation and was skipped."
     fi
     # makedvd
     "${SCRIPTDIR}/makedvd" "${OUTDIR_INGESTFILE}/${MEDIAID}"
+
 fi
 # makemetadata
 "${SCRIPTDIR}/makemetadata" "${OUTDIR_INGESTFILE}/${MEDIAID}"
