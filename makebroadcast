@@ -72,6 +72,7 @@ while [ "${*}" != "" ] ; do
         LOGDIR="${OUTPUTDIR}/logs"
     fi
     _find_input "${INPUT}"
+    MEDIAID=$(_readingestlog "media ID")
     if [[ ! "$MEDIAID" ]] ; then
         MEDIAID=$(basename "${INPUT}" | cut -d. -f1)
     fi
