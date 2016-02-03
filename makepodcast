@@ -82,7 +82,7 @@ while [ "${*}" != "" ] ; do
         _add_video_filter "scale=640:trunc(ow/dar/2)*2:interl=1"
     fi
     if [[ "${AUDIOSTREAMCOUNT}" > 0 ]] ; then
-        MIDDLEOPTIONS+=(-c:a aac)
+        MIDDLEOPTIONS+=(-c:a aac -strict -2)
         MIDDLEOPTIONS+=(-b:a 96k)
         _get_audio_mapping "${SOURCEFILE}"
         MIDDLEOPTIONS+=("${AUDIOMAPPING_FFMPEG[@]}")
