@@ -665,17 +665,15 @@ _get_volume_adjustment(){
     INPUT_MOVIE="${1}"
     _report -dt "Getting volume data for $(basename "${INPUT_MOVIE}") ..."
     VOLDETTEMP=$(_maketemp)
-    VOLUME_DATA=$(ffprobe -of compact=p=0:nk=1:s=',' -show_entries frame_tags=lavfi.r128.I,lavfi.r128.LRA -f lavfi "amovie='${INPUT_MOVIE}',ebur128=metadata=1,volumedetect" 2>"${VOLDETTEMP}")
+    VOLUME_DATA=$(ffprobe -of compact=p=0:nk=1:s=',' -show_entries frame_tags=lavfi.r128.I,lavfi.r128.LRA -f lavfi "amovie='${INPUT_MOVIE}',ebur128=metadata=1,volumedetect" 2>"${VOLDETTEMP}" | grep -v "^$" | tail -n1)
     VOLUME_EXIT_CODE="${?}"
     if [ "${VOLUME_EXIT_CODE}" -ne 0 ] ; then
         _report -wt "Volume analysis for ${INPUT_MOVIE} exited with ${VOLUME_EXIT_CODE}."
-    else
-        for i in $(echo "${VOLUME_DATA}"); do
-            AUDIOFRAME_I=$(echo "${i}" | cut -d, -f1)
-            AUDIOFRAME_LRA=$(echo "${i}" | cut -d, -f2)
-            [ "${AUDIOFRAME_I}"   != "" ] && INTEGRATED_LOUDNESS="${AUDIOFRAME_I}"
-            [ "${AUDIOFRAME_LRA}" != "" ] && LOUDNESS_RANGE="${AUDIOFRAME_LRA}"
-        done
+else
+        AUDIOFRAME_I=$(echo "${VOLUME_DATA}" | cut -d, -f1)
+        AUDIOFRAME_LRA=$(echo "${VOLUME_DATA}" | cut -d, -f2)
+        [ "${AUDIOFRAME_I}"   != "" ] && INTEGRATED_LOUDNESS="${AUDIOFRAME_I}"
+        [ "${AUDIOFRAME_LRA}" != "" ] && LOUDNESS_RANGE="${AUDIOFRAME_LRA}"
         VOLDET_MEAN_VOLUME=$(grep "mean_volume" "${VOLDETTEMP}" | cut -d: -f 2 | awk '{print $1}')
         VOLDET_MAX_VOLUME=$(grep "max_volume" "${VOLDETTEMP}" | cut -d: -f 2 | awk '{print $1}')
         VOLADJ=$(echo "${REFERENCE} - ${INTEGRATED_LOUDNESS}" | bc)
