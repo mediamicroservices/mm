@@ -72,7 +72,6 @@ while [ "${*}" != "" ] ; do
         LOGDIR="${OUTPUTDIR}/logs"
     fi
     _find_input "${INPUT}"
-    MEDIAID=$(basename "${INPUT}" | cut -d. -f1)
     INGESTLOG="${LOGDIR}/capture.log"
 
     if [ "${ADDSLATE}" = "Y" ] ; then
