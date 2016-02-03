@@ -110,6 +110,7 @@ while [ "${*}" != "" ] ; do
         fi
 
         # if adding a slate then request metadata
+        MEDIAID4SLATE=$(_readingestlog "media ID slate")
         if [ "${ADDSLATE}" = "Y" ] ; then
             if [ -z "${MEDIAID4SLATE}" ] ; then
                 cowsay "MediaID?"
