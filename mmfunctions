@@ -121,8 +121,6 @@ _readingestlog(){
         KEY="${1}"
         # need to add yaml style escaping
         grep "^${1}:" "${INGESTLOG}" | cut -d: -f2- | sed -e 's/^[[:space:]]*//' -e 's/[[:space:]]*$//'
-    else
-        _report -wt "The _readingestlog function was called but the ingestlog file (${INGESTLOG}) is not declared."
     fi
 }
 
