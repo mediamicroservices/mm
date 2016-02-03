@@ -123,7 +123,6 @@ while [ "${*}" != "" ] ; do
                 cowsay -t "Series Title?"
                 echo -n ":: "
                 read SERIESTITLE
-                echo "the series title is ${SERIESTITLE}"
             fi
             
             EPISODETITLE=$(_readingestlog "Episode Title")
@@ -131,7 +130,6 @@ while [ "${*}" != "" ] ; do
                 cowsay -s "Episode Title?"
                 echo -n ":: "
                 read EPISODETITLE
-                echo "the episode title is ${EPISODETITLE}"
             fi
         
     
