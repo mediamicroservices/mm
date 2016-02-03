@@ -72,6 +72,9 @@ while [ "${*}" != "" ] ; do
         LOGDIR="${OUTPUTDIR}/logs"
     fi
     _find_input "${INPUT}"
+    if [[ ! "$MEDIAID" ]] ; then
+        MEDIAID=$(basename "${INPUT}" | cut -d. -f1)
+    fi
     INGESTLOG="${LOGDIR}/capture.log"
 
     if [ "${ADDSLATE}" = "Y" ] ; then
@@ -108,10 +111,10 @@ while [ "${*}" != "" ] ; do
 
         # if adding a slate then request metadata
         if [ "${ADDSLATE}" = "Y" ] ; then
-            if [ -z "${MEDIAID}" ] ; then
+            if [ -z "${MEDIAID4SLATE}" ] ; then
                 cowsay "MediaID?"
                 echo -n ":: "
-                read MEDIAID
+                read MEDIAID4SLATE
             fi
             
             SERIESTITLE=$(_readingestlog "Series Title")
@@ -132,7 +135,7 @@ while [ "${*}" != "" ] ; do
         
     
                 SLATE_MEDIAID=$(_maketemp)
-                echo "${MEDIAID}" > "${SLATE_MEDIAID}"
+                echo "${MEDIAID4SLATE}" > "${SLATE_MEDIAID}"
                 
                 SLATE_SERIES=$(_maketemp)
                 echo "${SERIESTITLE}" > "${SLATE_SERIES}"
