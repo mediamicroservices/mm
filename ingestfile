@@ -278,7 +278,9 @@ if [ "${SLATE}" == "Y" ] ; then
     cowsay -s "Episode Title?"
     echo -n ":: "
     read EPISODETITLE
-    
+
+    MEDIAID4SLATE="${MEDIAID}"
+
 fi
 
 # blackframe analysis or in/out requests
