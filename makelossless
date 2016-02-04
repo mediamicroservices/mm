@@ -36,9 +36,9 @@ shift $(( ${OPTIND} - 1 ))
 while [ "${*}" != "" ] ; do
     # get context about the input
     INPUT="${1}"
-    [ -d "${INPUT}" ] && LOGDIR="${INPUT}/metadata/submissionDocumentation/logs"
+    [ -d "${INPUT}" ] && LOGDIR="${INPUT}/metadata/logs"
     [ -f "${INPUT}" ] && LOGDIR="$(dirname "${INPUT}")/lossless/logs"
-    [ ! "${LOGDIR}" ] && LOGDIR="${INPUT}/metadata/submissionDocumentation/logs"
+    [ ! "${LOGDIR}" ] && LOGDIR="${INPUT}/metadata/logs"
 
     find "${INPUT}" -type f \( -iname "*.mov" -o -iname "*.avi" -o -iname "*.mxf" \) -print0 | while read -d $'\0' SOURCEFILE ; do
         OUTPUTDIR=$(dirname "${SOURCEFILE}")

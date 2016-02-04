@@ -332,10 +332,7 @@ _log -b
 OBJECTSDIR="${OUTDIR_INGESTFILE}/${MEDIAID}/objects"
 _run_critical _mkdir2 "${OBJECTSDIR}"
 
-SUBMISSIONDOCDIR="${OUTDIR_INGESTFILE}/${MEDIAID}/metadata/submissionDocumentation"
-_run _mkdir2 "${SUBMISSIONDOCDIR}"
-
-LOGDIR="${OUTDIR_INGESTFILE}/${MEDIAID}/metadata/submissionDocumentation/logs"
+LOGDIR="${OUTDIR_INGESTFILE}/${MEDIAID}/metadata/logs"
 _run _mkdir2 "${LOGDIR}"
 
 INGESTLOG="${LOGDIR}/capture.log"

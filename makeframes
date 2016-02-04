@@ -41,9 +41,9 @@ shift $(( ${OPTIND} - 1 ))
 
 while [ "${*}" != "" ] ; do
     INPUT="${1}"
-    [ -d "${INPUT}" ] && { OUTPUTDIR="${INPUT}/objects/access/images" && LOGDIR="${INPUT}/metadata/submissionDocumentation/logs" ;};
+    [ -d "${INPUT}" ] && { OUTPUTDIR="${INPUT}/objects/access/images" && LOGDIR="${INPUT}/metadata/logs" ;};
     [ -f "${INPUT}" ] && { OUTPUTDIR=$(dirname "${INPUT}")"/access/images" && LOGDIR="$(dirname "${INPUT}")/access/logs" ;};
-    [ ! "$OUTPUTDIR" ] && { OUTPUTDIR="${INPUT}/objects/access/images" && LOGDIR="${INPUT}/metadata/submissionDocumentation/logs" ;};
+    [ ! "$OUTPUTDIR" ] && { OUTPUTDIR="${INPUT}/objects/access/images" && LOGDIR="${INPUT}/metadata/logs" ;};
     _find_input "${INPUT}"
 
     MEDIAID=$(basename "${1}" | cut -d. -f1)

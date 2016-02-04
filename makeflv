@@ -49,9 +49,9 @@ while [ "${*}" != "" ] ; do
     INPUT="${1}"
     shift
     if [ -z "${OUTPUTDIR_FORCED}" ] ; then
-        [ -d "${INPUT}" ] && { OUTPUTDIR="${INPUT}/objects/${RELATIVEPATH}" && LOGDIR="${INPUT}/metadata/submissionDocumentation/logs" ;};
+        [ -d "${INPUT}" ] && { OUTPUTDIR="${INPUT}/objects/${RELATIVEPATH}" && LOGDIR="${INPUT}/metadata/logs" ;};
         [ -f "${INPUT}" ] && { OUTPUTDIR=$(dirname "${INPUT}")"/${RELATIVEPATH}" && LOGDIR="$(dirname "${INPUT}")/${RELATIVEPATH}/logs" ;};
-        [ ! "${OUTPUTDIR}" ] && { OUTPUTDIR="${INPUT}/objects/${RELATIVEPATH}" && LOGDIR="${INPUT}/metadata/submissionDocumentation/logs" ;};
+        [ ! "${OUTPUTDIR}" ] && { OUTPUTDIR="${INPUT}/objects/${RELATIVEPATH}" && LOGDIR="${INPUT}/metadata/logs" ;};
     else
         OUTPUTDIR="${OUTPUTDIR_FORCED}"
         LOGDIR="${OUTPUTDIR}/logs"
