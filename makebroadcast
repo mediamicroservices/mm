@@ -150,7 +150,7 @@ while [ "${*}" != "" ] ; do
                 echo "Ch. 1 Stereo L" > "${SLATE_CH1}"
 
                 SLATE_CH2=$(_maketemp)
-                echo "Ch. 2 Stereo L" > "${SLATE_CH2}"
+                echo "Ch. 2 Stereo R" > "${SLATE_CH2}"
                 
                 SLATE_CH3=$(_maketemp)
                 echo "Ch. 3 Mono Mix" > "${SLATE_CH3}"
