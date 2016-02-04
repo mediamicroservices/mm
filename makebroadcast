@@ -210,6 +210,8 @@ while [ "${*}" != "" ] ; do
             MIDDLEOPTIONS+=(-ps 1)
             MIDDLEOPTIONS+=(-flags +ildct+ilme)
             MIDDLEOPTIONS+=(-pix_fmt yuv422p)
+            MIDDLEOPTIONS+=(-top 1)
+            MIDDLEOPTIONS+=(-mpv_flags strict_gop)
 
             #xdcam options
             MIDDLEOPTIONSXDCAM+=(-s 1920x1080)
