@@ -45,17 +45,13 @@ while [ "${*}" != "" ] ; do
             _run mkdir -p "${FILEOUTPUT}"
         fi
         FFPROBEXML="${FILEOUTPUT}/${FILENAMEROOT%.*}_ffprobe.xml"
-        FFPROBEJSON="${FILEOUTPUT}/${FILENAMEROOT%.*}_ffprobe.json"
         MEDIAINFOXML="${FILEOUTPUT}/${FILENAMEROOT}_mediainfo.xml"
         MEDIAINFOTRACE="${FILEOUTPUT}/${FILENAMEROOT}_mediatrace.xml"
         EXIFTOOLXML="${FILEOUTPUT}/${FILENAMEROOT%.*}_exiftool.xml"
-        EXIFTOOLTXT="${FILEOUTPUT}/${FILENAMEROOT%.*}_exiftool.txt"
         ffprobe 2> /dev/null "${FILE}" -show_format -show_streams -show_data -show_error -show_versions -show_chapters -noprivate -of xml="q=1:x=1" > "${FFPROBEXML}"
-        ffprobe 2> /dev/null "${FILE}" -show_format -show_streams -show_data -show_error -show_versions -show_chapters -of json > "${FFPROBEJSON}"
         mediaconch -mi -fx "${FILE}" | xml fo > "${MEDIAINFOXML}"
         mediaconch -mi -mt -fx "${FILE}" | xml fo > "${MEDIAINFOTRACE}"
         exiftool -X "${FILE}" > "${EXIFTOOLXML}"
-        exiftool "${FILE}" > "${EXIFTOOLTXT}"
     done < "${FILELIST}"
 
     cd "${PWD}"
