@@ -124,5 +124,5 @@ echo "<?xml version=\"1.0\"?>
 PWD=$(pwd)
 cd "$1"
 tree -DaNXs --du --timefmt "%Y-%m-%dT%H:%M:%SZ" -I "tree.xml" . > /tmp/tree.xml
-xsltproc --stringparam root "$(pwd)" /tmp/makemets.xsl /tmp/tree.xml | xml fo > ~/mets.xml
+xsltproc --stringparam root "$(pwd)" /tmp/makemets.xsl /tmp/tree.xml | xml fo > "${1}/metadata/mets.xml"
 cd "$PWD"
