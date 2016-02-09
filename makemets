@@ -16,7 +16,7 @@ echo "<?xml version=\"1.0\"?>
                     </xsl:for-each>
                     <xsl:value-of select=\"@name\"/>
                 </xsl:variable>
-                <xsl:if test=\"document(concat(\$root,'/metadata/submissionDocumentation/fileMeta/',\$RELATIVE_PATH,'_mediaconch.xml'))/mi:MediaInfo/mi:media/mi:track[@type='General']/mi:Format\">
+                <xsl:if test=\"document(concat(\$root,'/metadata/fileMeta/',\$RELATIVE_PATH,'_mediainfo.xml'))/mi:MediaInfo/mi:media/mi:track[@type='General']/mi:Format\">
                     <amdSec>
                         <xsl:attribute name=\"ID\">
                             <xsl:value-of select=\"concat('amdSec-',generate-id())\"/>
@@ -41,17 +41,17 @@ echo "<?xml version=\"1.0\"?>
                                             <format>
                                                 <formatDesignation>
                                                     <formatName>
-                                                        <xsl:value-of select=\"document(concat(\$root,'/metadata/submissionDocumentation/fileMeta/',\$RELATIVE_PATH,'_mediaconch.xml'))/mi:MediaInfo/mi:media/mi:track[@type='General']/mi:Format\"/>
+                                                        <xsl:value-of select=\"document(concat(\$root,'/metadata/fileMeta/',\$RELATIVE_PATH,'_mediainfo.xml'))/mi:MediaInfo/mi:media/mi:track[@type='General']/mi:Format\"/>
                                                     </formatName>
-                                                    <xsl:if test=\"document(concat(\$root,'/metadata/submissionDocumentation/fileMeta/',\$RELATIVE_PATH,'_mediaconch.xml'))/mi:MediaInfo/mi:media/mi:track[@type='General']/mi:Format_Version\">
+                                                    <xsl:if test=\"document(concat(\$root,'/metadata/fileMeta/',\$RELATIVE_PATH,'_mediainfo.xml'))/mi:MediaInfo/mi:media/mi:track[@type='General']/mi:Format_Version\">
                                                         <formatVersion>
-                                                            <xsl:value-of select=\"document(concat(\$root,'/metadata/submissionDocumentation/fileMeta/',\$RELATIVE_PATH,'_mediaconch.xml'))/mi:MediaInfo/mi:media/mi:track[@type='General']/mi:Format_Version\"/>
+                                                            <xsl:value-of select=\"document(concat(\$root,'/metadata/fileMeta/',\$RELATIVE_PATH,'_mediainfo.xml'))/mi:MediaInfo/mi:media/mi:track[@type='General']/mi:Format_Version\"/>
                                                         </formatVersion>
                                                     </xsl:if>
                                                 </formatDesignation>
                                             </format>
                                             <objectCharacteristicsExtension>
-                                                <xsl:copy-of select=\"document(concat(\$root,'/metadata/submissionDocumentation/fileMeta/',\$RELATIVE_PATH,'_mediaconch.xml'))\"/>
+                                                <xsl:copy-of select=\"document(concat(\$root,'/metadata/fileMeta/',\$RELATIVE_PATH,'_mediainfo.xml'))\"/>
                                             </objectCharacteristicsExtension>
                                         </objectCharacteristics>
                                     </premis:object>
