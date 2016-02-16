@@ -354,6 +354,7 @@ _writeingestlog "operating_system_version" "$(uname -v)"
 _writeingestlog "datetime_start" "$(_get_iso8601)"
 _writeingestlog "Series Title" "${SERIESTITLE}"
 _writeingestlog "Episode Title" "${EPISODETITLE}"
+_writeingestlog "made this" "ingestfile"
 
 if [ "${INTIME}" ] ; then
     _writeingestlog "intime" "${INTIME}"
