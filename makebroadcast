@@ -13,6 +13,8 @@ _initialize_make
 SUFFIX=""
 EXTENSION="mov"
 RELATIVEPATH="service"
+FRAMEMD5="Y"
+
 
 _usage(){
     echo
@@ -73,7 +75,7 @@ while [ "${*}" != "" ] ; do
     fi
     _find_input "${INPUT}"
     MEDIAID=$(_readingestlog "media ID")
-    if [[ ! "$MEDIAID" ]] ; then
+    if [[ ! "${MEDIAID}" ]] ; then
         MEDIAID=$(basename "${INPUT}" | cut -d. -f1)
     fi
     INGESTLOG="${LOGDIR}/capture.log"
@@ -316,6 +318,11 @@ while [ "${*}" != "" ] ; do
         fi
         _add_video_filter "format=yuv422p"
         _add_video_filter "lut=y=if(gt(val\,235)\,235\,val):u=if(gt(val\,235)\,235\,val):v=if(gt(val\,235)\,235\,val)"
+        #framemd5s 
+        FRAMEMD5FILE="${LOGDIR}/$(basename "${SOURCEFILE}").framemd5"
+        if [[ "${FRAMEMD5}" = "Y" && ! -f "${FRAMEMD5FILE}" ]] ; then
+            EXTRAOUTPUTS+=(-an -f framemd5 "${FRAMEMD5FILE}")
+        fi
     fi
 
     if [[ "${AUDIOSTREAMCOUNT}" > 0 ]] ; then
@@ -326,7 +333,6 @@ while [ "${*}" != "" ] ; do
         MIDDLEOPTIONS+=(-acodec pcm_s24be)
         MIDDLEOPTIONS+=(-ar 48k)
     fi
-
     # set input options for ffmpeg
     _get_codectagstring "${SOURCEFILE}"
     INPUTOPTIONS+=(-y)
@@ -375,10 +381,11 @@ MIDDLEOPTIONS+=(-map "[with_slate_video]" -map "[with_slate_stereo1]" -map "[wit
 #MIDDLEOPTIONS: ${MIDDLEOPTIONS[@]}
 #OUTPUT: ${OUTPUT}")
 
-    _run_critical ffmpeg "${INPUTOPTIONS[@]}" -i "${FFMPEGINPUT}" "${MIDDLEOPTIONS[@]}" "${OUTPUT}"
+    _run_critical ffmpeg "${INPUTOPTIONS[@]}" -i "${FFMPEGINPUT}" "${MIDDLEOPTIONS[@]}" "${OUTPUT}" "${EXTRAOUTPUTS[@]}"
     echo
     _summarize_make
     _deliver_output "${MAKEBROADCAST_DELIVERY_EMAIL_TO}"
     _log -e
 done
 unset ADDSLATE
+

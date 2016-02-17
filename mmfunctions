@@ -838,6 +838,7 @@ _unset_variables(){
     unset MIDDLEOPTIONSXDCAM
     unset MIDDLEOPTIONSIMX
     unset INPUTOPTIONSFRAMEMD5
+    unset EXTRAOUTPUTS
 }
 
 _pashua_run() {
