@@ -1,0 +1,28 @@
+#!/bin/bash
+#microservice for moving files during migration, uses rsync to move files and write log, have to format to have source and target locations 
+
+_usage(){
+    echo "This script moves files from one location to another."
+    echo "  -o directory ( directory to write the resulting file to )"
+    echo "the structure of the script is as follows: migrateaip -o ${TARGET} ${INPUT}"
+}
+
+OPTIND=1
+while getopts ":o:" OPT ; do
+    case "${OPT}" in
+        o) OUTPUTDIR_FORCED="${OPTARG}" ;;
+        *) echo "bad option -${OPTARG}" ; usage ;;
+        :) echo "Option -${OPTARG} requires an argument" ; exit 1 ;;
+    esac
+done
+shift $(( ${OPTIND} - 1 ))
+
+TARGET="${OUTPUTDIR_FORCED}"
+
+while [ "${*}" != "" ] ; do
+    INPUT="${1}"
+    echo "The input is: ${INPUT}"
+    echo "The target is: ${TARGET}"
+    shift
+    rsync -rtvc --out-format="%C %f %t" --log-file="${HOME}/migrateaip.log" --log-file-format="%C %f %t" "${INPUT}" "${TARGET}"
+done
