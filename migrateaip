@@ -27,5 +27,5 @@ while [ "${*}" != "" ] ; do
     echo "The input is: ${INPUT}"
     echo "The target is: ${TARGET}"
     shift
-    rsync -rtvc --log-file="${HOME}/migrateaip.log" --log-file-format="(%C) '%f' %l '${TARGET}' ${DATE}" "${INPUT}" "${TARGET}"
+    rsync -rtvc --log-file="${HOME}/migrateaip.log" --log-file-format="(%C) ${DATE} '%f' %l '${TARGET}'" "${INPUT}" "${TARGET}"
 done
