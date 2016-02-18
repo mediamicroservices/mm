@@ -10,22 +10,28 @@ _usage(){
 }
 
 OPTIND=1
-while getopts ":o:" OPT ; do
+while getopts ":o:l:" OPT ; do
     case "${OPT}" in
         o) OUTPUTDIR_FORCED="${OPTARG}" ;;
+        l) LOGFILE="${OPTARG}" ;;
         *) echo "bad option -${OPTARG}" ; usage ;;
         :) echo "Option -${OPTARG} requires an argument" ; exit 1 ;;
     esac
 done
 shift $(( ${OPTIND} - 1 ))
 
-TARGET="${OUTPUTDIR_FORCED}"
+TARGET="${OUTPUTDIR_FORCED}/"
 DATE=$(_get_iso8601_c)
 
 while [ "${*}" != "" ] ; do
     INPUT="${1}"
     echo "The input is: ${INPUT}"
     echo "The target is: ${TARGET}"
+    echo "HEY! The log file is ${LOGFILE}"
     shift
-    rsync -rtvc --log-file="${HOME}/migrateaip.log" --log-file-format="(%C) ${DATE} '%f' %l '${TARGET}'" "${INPUT}" "${TARGET}"
+    if [ -z "${LOGFILE}" ] ; then
+        LOGFILE="${HOME}/migrate.log"
+        echo "HEY! The log file is ${LOGFILE}"
+    fi
+    rsync -rtvc --log-file="${LOGFILE}" --log-file-format="[%C] ${DATE} '%f' %l '${TARGET}'" "${INPUT}" "${TARGET}"
 done
