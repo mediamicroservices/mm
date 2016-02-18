@@ -1,5 +1,7 @@
 #!/bin/bash
 #microservice for moving files during migration, uses rsync to move files and write log, have to format to have source and target locations 
+SCRIPTDIR=$(dirname $(which "${0}"))
+. "${SCRIPTDIR}/mmfunctions" || { echo "Missing '${SCRIPTDIR}/mmfunctions'. Exiting." ; exit 1 ;};
 
 _usage(){
     echo "This script moves files from one location to another."
@@ -18,11 +20,12 @@ done
 shift $(( ${OPTIND} - 1 ))
 
 TARGET="${OUTPUTDIR_FORCED}"
+DATE=$(_get_iso8601_c)
 
 while [ "${*}" != "" ] ; do
     INPUT="${1}"
     echo "The input is: ${INPUT}"
     echo "The target is: ${TARGET}"
     shift
-    rsync -rtvc --out-format="%C %f %t" --log-file="${HOME}/migrateaip.log" --log-file-format="%C %f %t" "${INPUT}" "${TARGET}"
+    rsync -rtvc --log-file="${HOME}/migrateaip.log" --log-file-format="(%C) '%f' %l '${TARGET}' ${DATE}" "${INPUT}" "${TARGET}"
 done
