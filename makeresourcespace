@@ -5,7 +5,7 @@ SCRIPTDIR=$(dirname $(which "${0}"))
 . "${SCRIPTDIR}/mmfunctions" || { echo "Missing '${SCRIPTDIR}/mmfunctions'. Exiting." ; exit 1 ;};
 DEPENDENCIES=(ffmpeg ffprobe)
 _initialize_make
-SUFFIX="_rs"
+SUFFIX=""
 EXTENSION="mp4"
 RELATIVEPATH="access/resourcespace"
 
