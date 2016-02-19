@@ -10,9 +10,10 @@ _usage(){
 }
 
 OPTIND=1
-while getopts ":o:l:" OPT ; do
+while getopts ":o:l:r" OPT ; do
     case "${OPT}" in
         o) OUTPUTDIR_FORCED="${OPTARG}" ;;
+        r) REMOVESOURCEFILES="Y" ;;
         l) LOGFILE="${OPTARG}" ;;
         *) echo "bad option -${OPTARG}" ; usage ;;
         :) echo "Option -${OPTARG} requires an argument" ; exit 1 ;;
@@ -33,5 +34,8 @@ while [ "${*}" != "" ] ; do
         LOGFILE="${HOME}/migrate.log"
         echo "HEY! The log file is ${LOGFILE}"
     fi
-    rsync -rtvc --log-file="${LOGFILE}" --log-file-format="[%C] ${DATE} '%f' %l '${TARGET}'" "${INPUT}" "${TARGET}"
+    if [ "${REMOVESOURCEFILES}" == "Y" ] ; then
+        EXTRAOUTPUTS+=(--remove-source-files)
+    fi
+    rsync -rtvc "${EXTRAOUTPUTS[@]}" --log-file="${LOGFILE}" --log-file-format="[%C] ${DATE} '%f' %l '${TARGET}'" "${INPUT}" "${TARGET}" 
 done
