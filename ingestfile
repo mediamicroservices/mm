@@ -246,7 +246,7 @@ if [ "${FORMULA}" = "" ] ; then
 fi
 
 if [ "${CLEANUPDECISION}" = "" ] ; then
-    _report -q "Select an cleanup strategy? "
+    _report -q "Select a cleanup strategy? "
     PS3="Selection? "
     select CLEANUPDECISION in "Leave source file where it is." "Remove source file after successful ingest"
     do
@@ -261,7 +261,7 @@ if [ "${CLEANUPDECISION}" = "" ] ; then
 fi
 
 if [ "${PRIORITY}" = "" ] ; then
-    _report -q "Select an multitasking strategy? "
+    _report -q "Select a multitasking strategy? "
     PS3="Selection? "
     select PRIORITY in "put in queue" "start now"
     do
