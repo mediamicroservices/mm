@@ -703,8 +703,12 @@ _get_interlacement(){
     if [ "${TFF}" -gt "${BFF}" ] ; then
         echo "The frames in the input file are majority top field first."
     fi
+    if [ "${BFF}" -gt "${TFF}" ] ; then
+        echo "The frames in the input file are majority bottom field first."
+    fi
     echo "There are ${PROG} frames that are progressive!"
     echo "There are ${UNDET} frames that are undetermined!"
+    #if there are more frames that are tff than bff, encode the file as tff
 }
 
 
