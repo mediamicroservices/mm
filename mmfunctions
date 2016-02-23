@@ -690,6 +690,24 @@ else
     fi
 }
 
+_get_interlacement(){
+    INPUT_MOVIE="${1}"
+    INTERLACEMENT=$(ffprobe -f lavfi -i "movie=${INPUT_MOVIE},select=between(t\,10\,20),idet" -of compact=p=0:nk=1:s=',' -show_entries frame_tags=lavfi.idet.multiple.tff,lavfi.idet.multiple.bff,lavfi.idet.multiple.progressive,lavfi.idet.multiple.undetermined | grep -v "^$" | tail -n1)
+    TFF=$(echo "${INTERLACEMENT}" | cut -d, -f1 | cut -d. -f1)
+    BFF=$(echo "${INTERLACEMENT}" | cut -d, -f2 | cut -d. -f1)
+    PROG=$(echo "${INTERLACEMENT}" | cut -d, -f3 | cut -d. -f1)
+    UNDET=$(echo "${INTERLACEMENT}" | cut -d, -f4 | cut -d. -f1)
+    echo "This is the ${INTERLACEMENT}"
+    echo "There are ${TFF} frames that are top field first!"
+    echo "There are ${BFF} frames that are bottom field first!"
+    if [ "${TFF}" -gt "${BFF}" ] ; then
+        echo "The frames in the input file are majority top field first."
+    fi
+    echo "There are ${PROG} frames that are progressive!"
+    echo "There are ${UNDET} frames that are undetermined!"
+}
+
+
 _get_cropdetection(){
     INPUT_MOVIE="${1}"
     _report -dt "Getting cropping data for $(basename "${INPUT_MOVIE}") ..."
