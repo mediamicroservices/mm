@@ -235,6 +235,20 @@ if [ "${CROPDECISION}" = "" ] ; then
     done
 fi
 
+if [ "${INTERLACETEST}" = "" ] ; then
+    _report -q "Do you want to perform an interlacement test on the entire file?"
+    PS3="Selection? "
+    select INTERLACETEST in "Yes." "No."
+    do
+        break
+    done
+    if [ "${INTERLACETEST}" = "Yes." ] ; then
+        INTERLACE_CHOICE="Y"
+    else
+        INTERLACE_CHOICE="N"
+    fi
+fi
+
 if [ "${FORMULA}" = "" ] ; then
     _report -q "Select an optional formula for unusual cases? "
     _report -d "In most cases, select 'none'. To force the input file to be interpreted as top or bottom field first interlacement, select tff or bff. To stretch the input video to 1920x1080 HD frame size, select 'hds'. To squish into Standard Definition, select 'sds'."
@@ -355,6 +369,7 @@ _writeingestlog "datetime_start" "$(_get_iso8601)"
 _writeingestlog "Series Title" "${SERIESTITLE}"
 _writeingestlog "Episode Title" "${EPISODETITLE}"
 _writeingestlog "made this" "ingestfile"
+_writeingestlog "Interlacement test" "${INTERLACETEST}"
 
 if [ "${INTIME}" ] ; then
     _writeingestlog "intime" "${INTIME}"
@@ -421,6 +436,11 @@ if [ "${SLATE}" == "Y" ] ; then
     fi
     
 fi
+
+if [ "${INTERLACE_CHOICE}" = "Y" ] ; then
+    "${SCRIPTDIR}/makebroadcast" -i "${MAKEBROADCASTOPTS[@]}" "${OUTDIR_INGESTFILE}/${MEDIAID}"
+fi
+    
 
 "${SCRIPTDIR}/makebroadcast" "${MAKEBROADCASTOPTS[@]}" "${OUTDIR_INGESTFILE}/${MEDIAID}"
 

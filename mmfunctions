@@ -692,23 +692,34 @@ else
 
 _get_interlacement(){
     INPUT_MOVIE="${1}"
-    INTERLACEMENT=$(ffprobe -f lavfi -i "movie=${INPUT_MOVIE},select=between(t\,10\,20),idet" -of compact=p=0:nk=1:s=',' -show_entries frame_tags=lavfi.idet.multiple.tff,lavfi.idet.multiple.bff,lavfi.idet.multiple.progressive,lavfi.idet.multiple.undetermined | grep -v "^$" | tail -n1)
+    if [ "${INTERLACEMENTTEST}" = "Y" ] ; then
+        INTERLACEMENT=$(ffprobe -f lavfi -i "movie=${INPUT_MOVIE},idet" -of compact=p=0:nk=1:s=',' -show_entries frame_tags=lavfi.idet.multiple.tff,lavfi.idet.multiple.bff,lavfi.idet.multiple.progressive,lavfi.idet.multiple.undetermined | grep -v "^$" | tail -n1)
+        if [ "${TFF}" -gt "${BFF}" ] && [ "${TFF}" -gt "${PROG}" ] ; then
+            echo "The frames in the input file are majority top field first."
+            _add_video_filter "setfield=tff"
+        fi
+        if [ "${BFF}" -gt "${TFF}" ] && [ "${BFF}" -gt "${PROG}" ] ; then
+            echo "The frames in the input file are majority bottom field first."
+            _add_video_filter "setfield=bff"
+        fi
+        if [ "${PROG}" -gt "${TFF}" ] && [ "${PROG}" -gt "${BFF}" ] ; then
+            echo "The frames in the input file are majority progressive."
+            _add_video_filter "setfield=prog"
+        fi
+    else
+        #look up duration and decide where (middle) look in makeframes where it does that and divide by two 
+        INTERLACEMENT=$(ffprobe -f lavfi -i "movie=${INPUT_MOVIE},select=between(t\,10\,20),idet" -of compact=p=0:nk=1:s=',' -show_entries frame_tags=lavfi.idet.multiple.tff,lavfi.idet.multiple.bff,lavfi.idet.multiple.progressive,lavfi.idet.multiple.undetermined | grep -v "^$" | tail -n1)
+    fi
     TFF=$(echo "${INTERLACEMENT}" | cut -d, -f1 | cut -d. -f1)
     BFF=$(echo "${INTERLACEMENT}" | cut -d, -f2 | cut -d. -f1)
     PROG=$(echo "${INTERLACEMENT}" | cut -d, -f3 | cut -d. -f1)
     UNDET=$(echo "${INTERLACEMENT}" | cut -d, -f4 | cut -d. -f1)
     echo "This is the ${INTERLACEMENT}"
     echo "There are ${TFF} frames that are top field first!"
+    _writeingestlog 
     echo "There are ${BFF} frames that are bottom field first!"
-    if [ "${TFF}" -gt "${BFF}" ] ; then
-        echo "The frames in the input file are majority top field first."
-    fi
-    if [ "${BFF}" -gt "${TFF}" ] ; then
-        echo "The frames in the input file are majority bottom field first."
-    fi
     echo "There are ${PROG} frames that are progressive!"
     echo "There are ${UNDET} frames that are undetermined!"
-    #if there are more frames that are tff than bff, encode the file as tff
 }
 
 
