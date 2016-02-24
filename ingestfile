@@ -323,6 +323,10 @@ else
     fi
 fi
 
+if [ "${INTERLACE_CHOICE}" = "N" ] ; then
+    _get_interlacement "${INPUT}"
+fi
+
 # queue handling
 if [ "${PRIORITY}" = "put in queue" ] ; then
     _add_mediaid_to_queue

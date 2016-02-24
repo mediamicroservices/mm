@@ -694,6 +694,10 @@ _get_interlacement(){
     INPUT_MOVIE="${1}"
     if [ "${INTERLACEMENTTEST}" = "Y" ] ; then
         INTERLACEMENT=$(ffprobe -f lavfi -i "movie=${INPUT_MOVIE},idet" -of compact=p=0:nk=1:s=',' -show_entries frame_tags=lavfi.idet.multiple.tff,lavfi.idet.multiple.bff,lavfi.idet.multiple.progressive,lavfi.idet.multiple.undetermined | grep -v "^$" | tail -n1)
+        TFF=$(echo "${INTERLACEMENT}" | cut -d, -f1 | cut -d. -f1)
+        BFF=$(echo "${INTERLACEMENT}" | cut -d, -f2 | cut -d. -f1)
+        PROG=$(echo "${INTERLACEMENT}" | cut -d, -f3 | cut -d. -f1)
+        UNDET=$(echo "${INTERLACEMENT}" | cut -d, -f4 | cut -d. -f1)
         if [ "${TFF}" -gt "${BFF}" ] && [ "${TFF}" -gt "${PROG}" ] ; then
             echo "The frames in the input file are majority top field first."
             _add_video_filter "setfield=tff"
@@ -707,19 +711,43 @@ _get_interlacement(){
             _add_video_filter "setfield=prog"
         fi
     else
+        DURATION=$(ffprobe 2>/dev/null "${1}" -show_format | grep duration | cut -d= -f2)
+        MIDPOINT=$(echo "( ${DURATION} / 2 )" | bc )
+        TESTTIME=$(echo "( ${DURATION} + 10 )" | bc )
         #look up duration and decide where (middle) look in makeframes where it does that and divide by two 
-        INTERLACEMENT=$(ffprobe -f lavfi -i "movie=${INPUT_MOVIE},select=between(t\,10\,20),idet" -of compact=p=0:nk=1:s=',' -show_entries frame_tags=lavfi.idet.multiple.tff,lavfi.idet.multiple.bff,lavfi.idet.multiple.progressive,lavfi.idet.multiple.undetermined | grep -v "^$" | tail -n1)
+        INTERLACEMENT=$(ffprobe -f lavfi -i "movie=${INPUT_MOVIE},select=${TESTTIME},idet" -of compact=p=0:nk=1:s=',' -show_entries frame_tags=lavfi.idet.multiple.tff,lavfi.idet.multiple.bff,lavfi.idet.multiple.progressive,lavfi.idet.multiple.undetermined | grep -v "^$" | tail -n1)
+        TFF=$(echo "${INTERLACEMENT}" | cut -d, -f1 | cut -d. -f1)
+        BFF=$(echo "${INTERLACEMENT}" | cut -d, -f2 | cut -d. -f1)
+        PROG=$(echo "${INTERLACEMENT}" | cut -d, -f3 | cut -d. -f1)
+        UNDET=$(echo "${INTERLACEMENT}" | cut -d, -f4 | cut -d. -f1)
+        FORMULA=$(_readingestlog "FORMULA")
+        if [ "${FORMULA}" = "tff" ] && [ "${TFF}" -gt "${BFF}" ] && [ "${TFF}" -gt "${PROG}" ] ; then
+            echo "nice, your file metadata matches the interlacement test results."
+        fi
+        if [ "${FORMULA}" = "tff" ] && [ "${BFF}" -gt "${TFF}" ] && [ "${BFF}" -gt "${PROG}" ] ; then
+            _report -wt "uh oh, your file metadata does not match the interlacement test results. This file is not top field first, its bottom field first."
+            _report -qn "Enter q to quit, any other key to continue: "
+            #give warning and ask about proceeding 
+        fi
+        if [ "${FORMULA}" = "bff" ] && [ "${BFF}" -gt "${TFF}" ] && [ "${BFF}" -gt "${PROG}" ] ; then
+            _report -wt "nice, your file metadata matches with the interlacement test results."
+            _report -qn "Enter q to quit, any other key to continue: "
+            #give warning and ask about proceeding 
+        fi
+        if [ "${FORMULA}" = "bff" ] && [ "${TFF}" -gt "${BFF}" ] && [ "${TFF}" -gt "${PROG}" ] ; then
+            _report -wt "uh oh, your file metadata does not match the interlacement test results. This file is not bottom field first, its top field first."
+            _report -qn "Enter q to quit, any other key to continue: "
+        fi
     fi
-    TFF=$(echo "${INTERLACEMENT}" | cut -d, -f1 | cut -d. -f1)
-    BFF=$(echo "${INTERLACEMENT}" | cut -d, -f2 | cut -d. -f1)
-    PROG=$(echo "${INTERLACEMENT}" | cut -d, -f3 | cut -d. -f1)
-    UNDET=$(echo "${INTERLACEMENT}" | cut -d, -f4 | cut -d. -f1)
     echo "This is the ${INTERLACEMENT}"
     echo "There are ${TFF} frames that are top field first!"
-    _writeingestlog 
+    _writeingestlog "Top Field First frames" "${TFF}"
     echo "There are ${BFF} frames that are bottom field first!"
+    _writeingestlog "Bottom Field First frames" "${BFF}"
     echo "There are ${PROG} frames that are progressive!"
+    _writeingestlog "Progressive Frames" "${PROG}"
     echo "There are ${UNDET} frames that are undetermined!"
+    _writeingestlog "Undetermined Frames" "${UNDET}"
 }
 
 

@@ -97,7 +97,6 @@ while [ "${*}" != "" ] ; do
     _get_broadcastduration "${SOURCEFILE}"
     _get_videostreamcount "${SOURCEFILE}"
     _get_audiostreamcount "${SOURCEFILE}"
-    _get_interlacement "${SOURCEFILE}"
 
 
     if [[ "${VIDEOSTREAMCOUNT}" > 0 ]] ; then
