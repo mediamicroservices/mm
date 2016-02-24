@@ -713,14 +713,13 @@ _get_interlacement(){
     else
         DURATION=$(ffprobe 2>/dev/null "${1}" -show_format | grep duration | cut -d= -f2)
         MIDPOINT=$(echo "( ${DURATION} / 2 )" | bc )
-        TESTTIME=$(echo "( ${DURATION} + 10 )" | bc )
-        #look up duration and decide where (middle) look in makeframes where it does that and divide by two 
-        INTERLACEMENT=$(ffprobe -f lavfi -i "movie=${INPUT_MOVIE},select=${TESTTIME},idet" -of compact=p=0:nk=1:s=',' -show_entries frame_tags=lavfi.idet.multiple.tff,lavfi.idet.multiple.bff,lavfi.idet.multiple.progressive,lavfi.idet.multiple.undetermined | grep -v "^$" | tail -n1)
+        INTERLACEMENT=$(ffprobe -f lavfi -i "movie=${INPUT_MOVIE}:seek_point=${MIDPOINT},select=between(t\,0\,20),idet" -of compact=p=0:nk=1:s=',' -show_entries frame_tags=lavfi.idet.multiple.tff,lavfi.idet.multiple.bff,lavfi.idet.multiple.progressive,lavfi.idet.multiple.undetermined | grep -v "^$" | tail -n1)
         TFF=$(echo "${INTERLACEMENT}" | cut -d, -f1 | cut -d. -f1)
         BFF=$(echo "${INTERLACEMENT}" | cut -d, -f2 | cut -d. -f1)
         PROG=$(echo "${INTERLACEMENT}" | cut -d, -f3 | cut -d. -f1)
         UNDET=$(echo "${INTERLACEMENT}" | cut -d, -f4 | cut -d. -f1)
         FORMULA=$(_readingestlog "FORMULA")
+        #what about if the formula is none? 
         if [ "${FORMULA}" = "tff" ] && [ "${TFF}" -gt "${BFF}" ] && [ "${TFF}" -gt "${PROG}" ] ; then
             echo "nice, your file metadata matches the interlacement test results."
         fi

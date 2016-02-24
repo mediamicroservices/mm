@@ -323,10 +323,6 @@ else
     fi
 fi
 
-if [ "${INTERLACE_CHOICE}" = "N" ] ; then
-    _get_interlacement "${INPUT}"
-fi
-
 # queue handling
 if [ "${PRIORITY}" = "put in queue" ] ; then
     _add_mediaid_to_queue
@@ -387,6 +383,10 @@ if [ "${PRESERVATION_MODE}" == "Y" ] ; then
     _writeingestlog "package type" "Preservation-Video"
 else
     _writeingestlog "package type" "Production"
+fi
+
+if [ "${INTERLACE_CHOICE}" = "N" ] ; then
+    _get_interlacement "${INPUT}"
 fi
 
 # rsync
