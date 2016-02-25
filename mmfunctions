@@ -692,7 +692,7 @@ else
 
 _get_interlacement(){
     INPUT_MOVIE="${1}"
-    if [ "${INTERLACEMENTTEST}" = "Y" ] ; then
+    if [ "${INTERLACEMENTTEST}" == "Y" ] ; then
         INTERLACEMENT=$(ffprobe -f lavfi -i "movie=${INPUT_MOVIE},idet" -of compact=p=0:nk=1:s=',' -show_entries frame_tags=lavfi.idet.multiple.tff,lavfi.idet.multiple.bff,lavfi.idet.multiple.progressive,lavfi.idet.multiple.undetermined | grep -v "^$" | tail -n1)
         TFF=$(echo "${INTERLACEMENT}" | cut -d, -f1 | cut -d. -f1)
         BFF=$(echo "${INTERLACEMENT}" | cut -d, -f2 | cut -d. -f1)
@@ -712,28 +712,36 @@ _get_interlacement(){
         fi
     else
         DURATION=$(ffprobe 2>/dev/null "${1}" -show_format | grep duration | cut -d= -f2)
+        echo "${DURATION}"
         MIDPOINT=$(echo "( ${DURATION} / 2 )" | bc )
-        INTERLACEMENT=$(ffprobe -f lavfi -i "movie=${INPUT_MOVIE}:seek_point=${MIDPOINT},select=between(t\,0\,20),idet" -of compact=p=0:nk=1:s=',' -show_entries frame_tags=lavfi.idet.multiple.tff,lavfi.idet.multiple.bff,lavfi.idet.multiple.progressive,lavfi.idet.multiple.undetermined | grep -v "^$" | tail -n1)
-        TFF=$(echo "${INTERLACEMENT}" | cut -d, -f1 | cut -d. -f1)
-        BFF=$(echo "${INTERLACEMENT}" | cut -d, -f2 | cut -d. -f1)
-        PROG=$(echo "${INTERLACEMENT}" | cut -d, -f3 | cut -d. -f1)
-        UNDET=$(echo "${INTERLACEMENT}" | cut -d, -f4 | cut -d. -f1)
-        FORMULA=$(_readingestlog "FORMULA")
+        echo "${MIDPOINT}"
+        FFPROBEINPUT=$(_maketemp)
+        ffmpeg -ss "${MIDPOINT}" -i "${INPUT_MOVIE}" -c:v rawvideo -t 10 -f nut - | ffprobe -f lavfi -i "movie=pipe\:0,idet" -show_entries frame_tags=lavfi.idet.multiple.tff,lavfi.idet.multiple.bff,lavfi.idet.multiple.progressive,lavfi.idet.multiple.undetermined 
+        exit
+        TFF=$(cat "${FFPROBEINPUT}" | cut -d, -f1 | cut -d. -f1)
+        echo "There are ${TFF} frames that are top field first!"
+        BFF=$(cat "${FFPROBEINPUT}" | cut -d, -f2 | cut -d. -f1)
+        echo "There are ${BFF} frames that are bottom field first!"
+        PROG=$(cat "${FFPROBEINPUT}" | cut -d, -f3 | cut -d. -f1)
+        echo "There are ${PROG} frames that are progressive!"
+        UNDET=$(cat "${FFPROBEINPUT}" | cut -d, -f4 | cut -d. -f1)
+        echo "There are ${UNDET} frames that are undetermined!"
+        FORMULA=$(_readingestlog "formula")
         #what about if the formula is none? 
-        if [ "${FORMULA}" = "tff" ] && [ "${TFF}" -gt "${BFF}" ] && [ "${TFF}" -gt "${PROG}" ] ; then
+        if [[ "${FORMULA}" == "tff" ]] && [ "${TFF}" -gt "${BFF}" ] && [ "${TFF}" -gt "${PROG}" ] ; then
             echo "nice, your file metadata matches the interlacement test results."
         fi
-        if [ "${FORMULA}" = "tff" ] && [ "${BFF}" -gt "${TFF}" ] && [ "${BFF}" -gt "${PROG}" ] ; then
+        if [[ "${FORMULA}" == "tff" ]] && [ "${BFF}" -gt "${TFF}" ] && [ "${BFF}" -gt "${PROG}" ] ; then
             _report -wt "uh oh, your file metadata does not match the interlacement test results. This file is not top field first, its bottom field first."
             _report -qn "Enter q to quit, any other key to continue: "
             #give warning and ask about proceeding 
         fi
-        if [ "${FORMULA}" = "bff" ] && [ "${BFF}" -gt "${TFF}" ] && [ "${BFF}" -gt "${PROG}" ] ; then
+        if [[ "${FORMULA}" == "bff" ]] && [ "${BFF}" -gt "${TFF}" ] && [ "${BFF}" -gt "${PROG}" ] ; then
             _report -wt "nice, your file metadata matches with the interlacement test results."
             _report -qn "Enter q to quit, any other key to continue: "
             #give warning and ask about proceeding 
         fi
-        if [ "${FORMULA}" = "bff" ] && [ "${TFF}" -gt "${BFF}" ] && [ "${TFF}" -gt "${PROG}" ] ; then
+        if [[ "${FORMULA}" == "bff" ]] && [ "${TFF}" -gt "${BFF}" ] && [ "${TFF}" -gt "${PROG}" ] ; then
             _report -wt "uh oh, your file metadata does not match the interlacement test results. This file is not bottom field first, its top field first."
             _report -qn "Enter q to quit, any other key to continue: "
         fi

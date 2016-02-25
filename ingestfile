@@ -89,35 +89,35 @@ CONF="
 
 # intro text
 intro.x = 20
-intro.y = 500
+intro.y = 660
 intro.width = 500
 intro.type = text
 intro.text = Ingest file options. Leave the option blank to be prompted.
 
 # ask operator
 OP.x = 20
-OP.y = 440
+OP.y = 600
 OP.type = textfield
 OP.label = Please enter your name:
 OP.width = 270
 
 # Media ID
 MEDIAID.x = 20
-MEDIAID.y = 390
+MEDIAID.y = 540
 MEDIAID.type = textfield
 MEDIAID.label = Please enter a unique MEDIA ID:
 MEDIAID.width = 270
 
 # Input file
 INPUT.x = 20
-INPUT.y = 340
+INPUT.y = 480
 INPUT.type = openbrowser
 INPUT.label = Select your file:
 INPUT.width=400
 
 # Audio Strategy
 AUDIODECISION.x = 20
-AUDIODECISION.y = 280
+AUDIODECISION.y = 420
 AUDIODECISION.type = combobox
 AUDIODECISION.label = Select an audio strategy:
 AUDIODECISION.default = Default audio mapping [first audio track used for stereo output]
@@ -129,7 +129,7 @@ AUDIODECISION.width = 400
 
 # Cropping Strategy
 CROPDECISION.x = 20
-CROPDECISION.y = 220
+CROPDECISION.y = 360
 CROPDECISION.type = combobox
 CROPDECISION.label = Select a cropping strategy:
 CROPDECISION.default = Do not crop
@@ -138,9 +138,27 @@ CROPDECISION.option = Do not crop
 CROPDECISION.option = Examine the video and auto-crop out black borders (slower)
 CROPDECISION.width = 400
 
+# Interlacement Testing
+INTERLACETEST.x = 20
+INTERLACETEST.y = 300
+INTERLACETEST.type = combobox
+INTERLACETEST.label = Do you want to perform an interlacement test on the entire file?
+INTERLACETEST.option = Yes. 
+INTERLACETEST.option = No. 
+INTERLACETEST.width = 100
+
+# Adding Slate
+SLATE.x = 20
+SLATE.y = 240
+SLATE.type = combobox
+SLATE.label = Do you want to create a service copy with a slate?
+SLATE.option = Yes
+SLATE.option = No
+SLATE.width = 100
+
 # Optional Formula
 FORMULA.x = 20
-FORMULA.y = 160
+FORMULA.y = 180
 FORMULA.type = combobox
 FORMULA.label = Select an optional formula for unusual cases. In most cases select none.
 FORMULA.tooltip = To force the input file to be interpreted as top or bottom field first interlacement, select tff or bff. To stretch the input video to 1920x1080 HD frame size, select 'HDS'.
@@ -155,7 +173,7 @@ FORMULA.width = 100
 
 # Cleanup Strategy
 CLEANUPDECISION.x = 20
-CLEANUPDECISION.y = 100
+CLEANUPDECISION.y = 120
 CLEANUPDECISION.type = combobox
 CLEANUPDECISION.label = Select a cleanup strategy
 CLEANUPDECISION.default = Leave source file where it is
@@ -166,7 +184,7 @@ CLEANUPDECISION.width = 300
 
 # multitasking strategy
 PRIORITY.x = 20
-PRIORITY.y = 40
+PRIORITY.y = 60
 PRIORITY.type = combobox
 PRIORITY.label = Would you like to put it in the queue or start now?
 PRIORITY.default = put in queue
@@ -191,6 +209,8 @@ if [ "${EDIT_MODE}" == "Y" ] ; then
     echo "  MEDIAID = ${MEDIAID}"
     echo "  AUDIODECISION = ${AUDIODECISION}"
     echo "  CROPDECISION = ${CROPDECISION}"
+    echo "  INTERLACETEST = ${INTERLACETEST}"
+    echo "  SLATE = ${SLATE}"
     echo "  FORMULA = ${FORMULA}"
     echo "  CLEANUPDECISION = ${CLEANUPDECISION}"
     echo "  PRIORITY = ${PRIORITY}"
@@ -238,15 +258,15 @@ fi
 if [ "${INTERLACETEST}" = "" ] ; then
     _report -q "Do you want to perform an interlacement test on the entire file?"
     PS3="Selection? "
-    select INTERLACETEST in "Yes." "No."
+    select INTERLACETEST in "Yes" "No"
     do
         break
     done
-    if [ "${INTERLACETEST}" = "Yes." ] ; then
-        INTERLACE_CHOICE="Y"
-    else
-        INTERLACE_CHOICE="N"
-    fi
+fi
+if [ "${INTERLACETEST}" = "Yes" ] ; then
+    INTERLACE_CHOICE="Y"
+else
+    INTERLACE_CHOICE="N"
 fi
 
 if [ "${FORMULA}" = "" ] ; then
@@ -283,7 +303,22 @@ if [ "${PRIORITY}" = "" ] ; then
     done
 fi
 
-if [ "${SLATE}" == "Y" ] ; then
+if [ "${SLATE}" = "" ] ; then
+    _report -q "Do you want to create a service copy with a slate? "
+    PS3="Selection? "
+    select SLATE in "Yes." "No."
+    do
+        break
+    done
+fi
+    
+if [ "${SLATE}" = "Yes." ] ; then
+    SLATE_CHOICE="Y"
+else
+    SLATE_CHOICE="N"
+fi
+    
+if [ "${SLATE_CHOICE}" == "Y" ] ; then
 
     cowsay -t "Series Title?"
     echo -n ":: "
@@ -294,7 +329,6 @@ if [ "${SLATE}" == "Y" ] ; then
     read EPISODETITLE
 
     MEDIAID4SLATE="${MEDIAID}"
-
 fi
 
 # blackframe analysis or in/out requests
@@ -431,7 +465,7 @@ unset MAKEBROADCASTOPTS
 if [ ! -z "${FORMULA}" ] ; then
     MAKEBROADCASTOPTS+=(-F "${FORMULA}")
 fi
-if [ "${SLATE}" == "Y" ] ; then
+if [ "${SLATE_CHOICE}" = "Y" ] ; then
     "${SCRIPTDIR}/makebroadcast" -s "${MAKEBROADCASTOPTS[@]}" "${OUTDIR_INGESTFILE}/${MEDIAID}"
     if [ "${DELIVERYTOOMNEON}" == "Y" ] ; then
         _report -dt "STATUS Uploading ${OBJECTSDIR}/service/${MEDIAID%.*}_SLATE.mov to the OMNEON."
@@ -441,7 +475,7 @@ if [ "${SLATE}" == "Y" ] ; then
     
 fi
 
-if [ "${INTERLACE_CHOICE}" = "Y" ] ; then
+if [ "${INTERLACE_CHOICE}" == "Y" ] ; then
     "${SCRIPTDIR}/makebroadcast" -i "${MAKEBROADCASTOPTS[@]}" "${OUTDIR_INGESTFILE}/${MEDIAID}"
 fi
     
