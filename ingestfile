@@ -143,8 +143,8 @@ INTERLACETEST.x = 20
 INTERLACETEST.y = 300
 INTERLACETEST.type = combobox
 INTERLACETEST.label = Do you want to perform an interlacement test on the entire file?
-INTERLACETEST.option = Yes. 
-INTERLACETEST.option = No. 
+INTERLACETEST.option = Yes 
+INTERLACETEST.option = No 
 INTERLACETEST.width = 100
 
 # Adding Slate
@@ -306,13 +306,13 @@ fi
 if [ "${SLATE}" = "" ] ; then
     _report -q "Do you want to create a service copy with a slate? "
     PS3="Selection? "
-    select SLATE in "Yes." "No."
+    select SLATE in "Yes" "No"
     do
         break
     done
 fi
     
-if [ "${SLATE}" = "Yes." ] ; then
+if [ "${SLATE}" = "Yes" ] ; then
     SLATE_CHOICE="Y"
 else
     SLATE_CHOICE="N"
