@@ -445,7 +445,7 @@ if [ "${FROM}" == "${TO}" -a "${CLEANUP_CHOICE}" == "Y" ] ; then
 else
     _report -dt "STATUS Copying the original file to library storage at ${OBJECTSDIR}."
     LOGFILE="${LOGDIR}/rsync_$(_get_iso8601_c)_$(basename ${0})_${VERSION}.txt"
-    "${SCRIPTDIR}/migrateaip" -l "${LOGFILE}" -o "${OBJECTSDIR}" "${INPUT}" 
+    "${SCRIPTDIR}/migratefiles" -l "${LOGFILE}" -o "${OBJECTSDIR}" "${INPUT}" 
     if [ ! "${#FILES[@]}" = 0 ] ; then
         _run_critical rsync -rt --progress --log-file="${LOGDIR}/rsync_$(_get_iso8601_c)_$(basename $0)_${VERSION}.txt" "${FILES[@]}" "${LOGDIR}/"
     fi
@@ -537,9 +537,7 @@ _writeingestlog "datetime_end" "$(_get_iso8601)"
 
 # move and cleanup
 if [ "${DELIVERYTOAIPSTORAGE}" == "Y" ] ; then
-    "${SCRIPTDIR}/migrateaip" -r -o "${AIP_STORAGE}" "${OUTDIR_INGESTFILE}/${MEDIAID}"
-    #what to do about --remove-source-files???
-    #rsync -rt --progress --remove-source-files "${OUTDIR_INGESTFILE}/${MEDIAID}" "${AIP_STORAGE}/"
+    "${SCRIPTDIR}/migratefiles" -r -o "${AIP_STORAGE}" "${OUTDIR_INGESTFILE}/${MEDIAID}"
     RSYNC_ERR="${?}"
     [ $(du -s "${OUTDIR_INGESTFILE}/${MEDIAID}" | awk '{print $1}') = "0" ] && rm -r "${OUTDIR_INGESTFILE}/${MEDIAID}"
     _report -dt "STATUS Done. Final package has been delivered to ${AIP_STORAGE}/${MEDIAID}"

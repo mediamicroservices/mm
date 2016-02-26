@@ -1,15 +1,75 @@
 # assign variables
 SCRIPTNAME=$(basename "${0}")
 SCRIPTDIR=$(dirname "${0}")
-CONFIG_FILE="${SCRIPTDIR}/mm.conf"
+MM_CONFIG_FILE="${SCRIPTDIR}/mm.conf"
+LTO_CONFIG_FILE="${SCRIPTDIR}/ltoper.conf"
 WHAT_IS_THIS="mediamicroservices"
 # load configuration file
-if [ -f "${CONFIG_FILE}" ] ; then
-    . "${CONFIG_FILE}"
+if [ -f "${MM_CONFIG_FILE}" ] ; then
+    . "${MM_CONFIG_FILE}"
 elif [ ! "${CONFIG}" = "Y" -a "${REQUIRECONFIG}" = "Y" ] ; then
-    echo "The configuration file is not set. You amust first create ${CONFIG_FILE} by running mmconfig." 1>&2
+    echo "The configuration file is not set. You must first create ${MM_CONFIG_FILE} by running mmconfig." 1>&2
     exit 1
 fi
+
+if [ -f "${LTO_CONFIG_FILE}" ] ; then
+    . "${LTO_CONFIG_FILE}"
+elif [ ! "${CONFIG}" = "Y" -a "${REQUIRECONFIG}" = "Y" ] ; then
+    echo "The configuration file is not set. You amust first create ${LTO_CONFIG_FILE} by running ltoperconfig." 1>&2
+    exit 1
+fi
+
+_config_edit(){
+    [ -z "${1}" -o -z "${2}" ] && { _report -w "The config_edit function requires two arguments. Error." ; exit ;};
+    SEDTEMP=$(_maketemp)
+    sed "s:^$1=[^ ]*:$1=$2:" "${LTO_CONFIG_FILE}" > "${SEDTEMP}"
+    cp "${SEDTEMP}" "${LTO_CONFIG_FILE}"
+}
+
+_test_config(){
+    for DIRECTORYVARIABLE in OUTDIR_INGESTFILE OUTDIR_INGESTXDCAM OUTDIR_PAPER AIP_STORAGE PODCASTDELIVER YOUTUBEDELIVER TMPDIR CUSTOM_LOG_DIR LTO_INDEX_DIR ; do
+        if [ -d "${!DIRECTORYVARIABLE}" ] ; then
+            _report -d "${DIRECTORYVARIABLE} is a valid directory"
+        else
+            _report -w "${DIRECTORYVARIABLE} is NOT a valid directory"
+        fi
+    done
+}
+
+_add_key(){
+    KEY_TO_ADD="${1}"
+    grep -q "^$KEY_TO_ADD=" "${LTO_CONFIG_FILE}" ; GREP_CODE="$?"
+    if [[ ! "${GREP_CODE}" -eq "0" ]] ; then
+        _report -td "Adding NEW variable $key_to_add to ${LTO_CONFIG_FILE}"
+        echo "$KEY_TO_ADD=" >> "${LTO_CONFIG_FILE}"
+    fi
+}
+
+_cleanup_mount_dir(){
+    if [ -d "${MOUNT_DIR}" ] ; then
+        echo calling umount
+        umount "${MOUNT_DIR}"
+        rmdir "${MOUNT_DIR}"
+    fi
+}
+
+_version_schema(){
+    SCHEMA_FILE="$LTO_LOGS/${TAPE_SERIAL}.schema"
+    if [ -f "${SCHEMA_FILE}" ] ; then
+        echo "${GREEN}Creating a new version of the ltfs schema file.${NC}"
+        LASTSCHEMA="${SCHEMA_FILE%.*}_$(stat -t '%Y%m%d-%H%M%S' -l "${SCHEMA_FILE}" | awk '{print $6}').schema"
+        mv -v "${SCHEMA_FILE}" "${LASTSCHEMA}"
+        echo "${GREEN}$(basename ${0}): schema file is versioned - ${SCHEMA_FILE} -> ${LASTSCHEMA}.${NC}"
+    fi
+}
+
+_checkdir(){
+if [[ ! -d "${1}" ]] ; then
+    echo "${1}" is not a directory.
+    usage
+    exit 1
+fi
+}
 
 _get_iso8601(){
     date +%FT%T
@@ -716,7 +776,7 @@ _get_interlacement(){
         MIDPOINT=$(echo "( ${DURATION} / 2 )" | bc )
         echo "${MIDPOINT}"
         FFPROBEINPUT=$(_maketemp)
-        ffmpeg -ss "${MIDPOINT}" -i "${INPUT_MOVIE}" -c:v rawvideo -t 10 -f nut - | ffprobe -f lavfi -i "movie=pipe\:0,idet" -show_entries frame_tags=lavfi.idet.multiple.tff,lavfi.idet.multiple.bff,lavfi.idet.multiple.progressive,lavfi.idet.multiple.undetermined 
+        ffmpeg -ss "${MIDPOINT}" -i "${INPUT_MOVIE}" -c:v rawvideo -t 10 -f nut - | ffprobe -f lavfi -i "movie=pipe\\:0,idet" -show_entries frame_tags=lavfi.idet.multiple.tff,lavfi.idet.multiple.bff,lavfi.idet.multiple.progressive,lavfi.idet.multiple.undetermined 
         exit
         TFF=$(cat "${FFPROBEINPUT}" | cut -d, -f1 | cut -d. -f1)
         echo "There are ${TFF} frames that are top field first!"

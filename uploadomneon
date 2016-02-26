@@ -90,7 +90,7 @@ _report "The file named ${FILENAME} is not currently on the omneon, proceeding..
 
 if echo "${SOURCEFILE}" | grep -q "/Volumes/" ; then
     _report -dt "The file ${FILENAME} is coming from an external volume. It will first move the file to ${TMPDIR} and then upload to the omneon."
-    "${SCRIPTDIR}/migrateaip" -o "${TMPDIR}" "${SOURCEFILE}"
+    "${SCRIPTDIR}/migratefiles" -o "${TMPDIR}" "${SOURCEFILE}"
     #rsync -rtv --progress "${SOURCEFILE}" "${TMPDIR}"
     UPLOADFILE="${TMPDIR}/${FILENAME}"
     REMOVETMP="y"

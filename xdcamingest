@@ -19,7 +19,7 @@ _usage(){
     echo "$(basename "${0}") ${VERSION}"
     echo "This script may be run interactively by running it with no arguments or may be used with the following options."
     echo "_usage: $(basename ${0}) [ -c output_directory_for_xdcam ]"
-    echo "  -c output_directory_for_xdcam (else will default to ${CONFIG_FILE})"
+    echo "  -c output_directory_for_xdcam (else will default to ${MM_CONFIG_FILE})"
     exit
 }
 
