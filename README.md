@@ -61,6 +61,8 @@ to update the packages in homebrew, type: brew update into the command line. Thi
 
 to upgrade the packages in homebrew, type: brew upgrade into the command line. This command will update all packages to their most recent version.
 
+![brewupgrade gif](https://github.com/mediamicroservices/mm/blob/master/Resources/updateupgrade.gif)
+
 ### installing mediamicroservices and dependencies###
 once homebrew has been installed, you can install mediamicroservices. First, use the [tap](https://github.com/Homebrew/homebrew/blob/master/share/doc/homebrew/brew-tap.md) command. Then, you can install.
 
