@@ -96,7 +96,9 @@ If at any point you would like to uninstall mediamicroservices, type brew uninst
 in order for mediamicroservices to run, you must configure your variable settings. first, take a look at the list of variables below to get a sense of what each variable means. Then, create all of the delivery directories that you'll need, in the place you'd like them to be. you can name the directories themselves anything you'd like- the more important part is tying them to a variable in the configuration process. Not all variables are necessary for microservices to run, so look over which microservices you'd like to use to get a sense of whether or not you'll need to a specific variable.
 
 Type mmconfig -a into the terminal to access the configuration GUI, which will take information input and save a file as mm.conf. This file will store your system variables.
+
 ![Alt text](Resources/mmconfiggui.png "mmconfig GUI")
+![mmconfig gui gif](https://github.com/mediamicroservices/mm/blob/master/Resources/mmconfiggui.png)
 
 mmconfig only has to be run once to create the configuration file, and will rewrite over itself if run again.
 
@@ -229,6 +231,10 @@ To view the specific ffmpeg encoding options for each file, view the sourcecode 
 * if you are running ingestfile on digitized video files that have additional logs from digitization, and you need to set the in and out times for the file to be trimmed, you can use option -c. Your command will look like:  ingestfile -p [file]. This option does not have a GUI, so you will input information when prompted into the command line, including setting in and out times and dragging in any logs from digitization. Note that this option does not deliver to AIP storage, instead it keeps the AIP in the original directory.
 * if you would like to create an AIP but not have the file delivered to the omneon server or any of the access copies delivered, you can use option -n. Your command will look like:  ingestfile -n [file].
 * if you would like to only deliver the AIP to the omneon server and AIP storage, you can use -i. Your command will look like:  ingestfile -i [file].
+
+* here's two gifs of ingestfile 
+![ingestfile without gui](https://github.com/mediamicroservices/mm/blob/master/Resources/ingestfile.gif)
+![ingestfile with gui](https://github.com/mediamicroservices/mm/blob/master/Resources/ingestfilegui.gif)
 
 #### makebroadcast ####
 * makebroadcast creates a file suitable for broadcast or editing from the input of a file or package. Your command will look like this: makebroadcast [input].
