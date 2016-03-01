@@ -1,0 +1,28 @@
+#!/bin/bash
+#this script will test if the contents from a tape are packages or directories with single files in them, and then based on the results of that, perform checksum verification
+SCRIPTDIR=$(dirname "${0}")
+. "${SCRIPTDIR}/mmfunctions" || { echo "Missing '${SCRIPTDIR}/mmfunctions'. Exiting." ; exit 1 ;};
+
+#test to see if the input is a package or directory that has a bunch of files
+while [ "${*}" != "" ] ; do
+    INPUT="${1}"
+    MEDIAID=$(basename "${INPUT}" | cut -d. -f1)
+    OBJECTSDIR="${INPUT}/objects"
+    if [ -d "${OBJECTSDIR}" ] ; then
+        echo "Yeah, ${MEDIAID} has an objects folder so it is a package"
+        #if the input is a package, then just do a checksum verification
+        "${SCRIPTDIR}/checksumpackage" -v "${INPUT}"
+    else
+        echo "Nope, ${MEDIAID} is not a package"
+        #if the input is a directory with a bunch of files, then we'll have to compare the A tape and B tape by doing checksum package and comparing the checksum reports 
+        
+    fi
+    shift
+done
+
+
+
+
+
+
+
