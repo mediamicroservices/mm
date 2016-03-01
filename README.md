@@ -98,7 +98,7 @@ in order for mediamicroservices to run, you must configure your variable setting
 Type mmconfig -a into the terminal to access the configuration GUI, which will take information input and save a file as mm.conf. This file will store your system variables.
 
 ![Alt text](Resources/mmconfiggui.png "mmconfig GUI")
-![mmconfig gui gif](https://github.com/mediamicroservices/mm/blob/master/Resources/mmconfiggui.png)
+![mmconfig gui gif](https://github.com/mediamicroservices/mm/blob/master/Resources/mmconfig3.gif)
 
 mmconfig only has to be run once to create the configuration file, and will rewrite over itself if run again.
 
