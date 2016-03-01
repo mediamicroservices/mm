@@ -1,7 +1,7 @@
 #!/bin/bash
 # make metadata
 VERSION="0.2"
-SCRIPTDIR=$(dirname $(which "${0}"))
+SCRIPTDIR=$(dirname "${0}")
 . "${SCRIPTDIR}/mmfunctions" || { echo "Missing '${SCRIPTDIR}/mmfunctions'. Exiting." ; exit 1 ;};
 DEPENDENCIES=(ffprobe mediainfo exiftool)
 _initialize_make
@@ -32,7 +32,7 @@ OUTPUTDIR="./metadata/fileMeta"
 
 while [ "${*}" != "" ] ; do
     PACKAGE_PATH="${1}"
-    PWD=$(pwd)
+    MMPWD=$(pwd)
     cd "${PACKAGE_PATH}"
     FILELIST=$(_maketemp)
     find "./objects" -type f ! -name ".*" ! -path "*/access/images/*" > "${FILELIST}"
@@ -53,8 +53,8 @@ while [ "${*}" != "" ] ; do
         mediaconch -mi -mt -fx "${FILE}" | xml fo > "${MEDIAINFOTRACE}"
         exiftool -X "${FILE}" > "${EXIFTOOLXML}"
     done < "${FILELIST}"
-
-    cd "${PWD}"
+    cd "${MMPWD}"
+    "${SCRIPTDIR}/makemets" "${PACKAGE_PATH}"
     _run rm -r -f "${FILELIST}"
     shift
     _log -e
