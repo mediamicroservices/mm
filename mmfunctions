@@ -120,7 +120,7 @@ _readingestlog(){
     if [ -f "${INGESTLOG}" ] ; then
         KEY="${1}"
         # need to add yaml style escaping
-        grep "^${1}:" "${INGESTLOG}" | cut -d: -f2- | sed -e 's/^[[:space:]]*//' -e 's/[[:space:]]*$//'
+        grep "^${1}:" "${INGESTLOG}" | tail -n1 | cut -d: -f2- | sed -e 's/^[[:space:]]*//' -e 's/[[:space:]]*$//'
     fi
 }
 
