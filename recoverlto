@@ -4,17 +4,27 @@ SCRIPTDIR=$(dirname "${0}")
 . "${SCRIPTDIR}/mmfunctions" || { echo "Missing '${SCRIPTDIR}/mmfunctions'. Exiting." ; exit 1 ;};
 
 #test to see if the input is a package or directory that has a bunch of files
+#drag in the upper level directory from G Drive 61 and G Drive 62 - ex. A00009
 while [ "${*}" != "" ] ; do
-    INPUT="${1}"
+    INPUT1="${1}"
+    INPUT2="${2}"
     MEDIAID=$(basename "${INPUT}" | cut -d. -f1)
-    OBJECTSDIR="${INPUT}/objects"
+    OBJECTSDIR="${INPUT1}/${MEDIAID}/objects"
+    #find mx depth 
     if [ -d "${OBJECTSDIR}" ] ; then
         echo "Yeah, ${MEDIAID} has an objects folder so it is a package"
         #if the input is a package, then just do a checksum verification
-        "${SCRIPTDIR}/checksumpackage" -v "${INPUT}"
-    else
+        "${SCRIPTDIR}/checksumpackage" -v "${INPUT1}"
+    fi
+    if [ ! -d "${OBJECTSDIR}" ] ; then
         echo "Nope, ${MEDIAID} is not a package"
+        "${SCRIPTDIR}/checksumpackage" "${INPUT}"
+        GDRIVE61="/Volumes/GDRIVE_61"
+        GDRIVE62="/Volumes/GDRIVE_62"
+        CHECKSUMFILEA=
+        CHECKSUMFILEB=
         #if the input is a directory with a bunch of files, then we'll have to compare the A tape and B tape by doing checksum package and comparing the checksum reports 
+        diff <(sort "${GDRIVE61}"/A00002/EuroArts_expired/checksum.md5) <(sort "${GDRIVE62}"/A00002/EuroArts_expired/checksum_20130112-024051.md5)
         
     fi
     shift
