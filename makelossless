@@ -72,8 +72,6 @@ while [ "${*}" != "" ] ; do
             _add_video_filter "setfield=bff" # this is a presumption but much of the uncompressed input is bff but not probably labelled
         fi
         if [[ "${AUDIOSTREAMCOUNT}" > 0 ]] ; then
-            _get_audio_index "${SOURCEFILE}"
-            _get_audio_mapping "${SOURCEFILE}"
             MIDDLEOPTIONS+=(-c:a copy)
         fi
         _get_codectagstring "${SOURCEFILE}"
