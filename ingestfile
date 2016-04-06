@@ -138,15 +138,6 @@ CROPDECISION.option = Do not crop
 CROPDECISION.option = Examine the video and auto-crop out black borders (slower)
 CROPDECISION.width = 400
 
-# Interlacement Testing
-INTERLACETEST.x = 20
-INTERLACETEST.y = 300
-INTERLACETEST.type = combobox
-INTERLACETEST.label = Do you want to perform an interlacement test on the entire file?
-INTERLACETEST.option = Yes 
-INTERLACETEST.option = No 
-INTERLACETEST.width = 100
-
 # Adding Slate
 SLATE.x = 20
 SLATE.y = 240
@@ -209,7 +200,6 @@ if [ "${EDIT_MODE}" == "Y" ] ; then
     echo "  MEDIAID = ${MEDIAID}"
     echo "  AUDIODECISION = ${AUDIODECISION}"
     echo "  CROPDECISION = ${CROPDECISION}"
-    echo "  INTERLACETEST = ${INTERLACETEST}"
     echo "  SLATE = ${SLATE}"
     echo "  FORMULA = ${FORMULA}"
     echo "  CLEANUPDECISION = ${CLEANUPDECISION}"
