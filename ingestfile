@@ -89,35 +89,35 @@ CONF="
 
 # intro text
 intro.x = 20
-intro.y = 660
+intro.y = 600
 intro.width = 500
 intro.type = text
 intro.text = Ingest file options. Leave the option blank to be prompted.
 
 # ask operator
 OP.x = 20
-OP.y = 600
+OP.y = 540
 OP.type = textfield
 OP.label = Please enter your name:
 OP.width = 270
 
 # Media ID
 MEDIAID.x = 20
-MEDIAID.y = 540
+MEDIAID.y = 480
 MEDIAID.type = textfield
 MEDIAID.label = Please enter a unique MEDIA ID:
 MEDIAID.width = 270
 
 # Input file
 INPUT.x = 20
-INPUT.y = 480
+INPUT.y = 420
 INPUT.type = openbrowser
 INPUT.label = Select your file:
 INPUT.width=400
 
 # Audio Strategy
 AUDIODECISION.x = 20
-AUDIODECISION.y = 420
+AUDIODECISION.y = 360
 AUDIODECISION.type = combobox
 AUDIODECISION.label = Select an audio strategy:
 AUDIODECISION.default = Default audio mapping [first audio track used for stereo output]
@@ -129,7 +129,7 @@ AUDIODECISION.width = 400
 
 # Cropping Strategy
 CROPDECISION.x = 20
-CROPDECISION.y = 360
+CROPDECISION.y = 300
 CROPDECISION.type = combobox
 CROPDECISION.label = Select a cropping strategy:
 CROPDECISION.default = Do not crop
