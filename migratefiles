@@ -37,5 +37,5 @@ while [ "${*}" != "" ] ; do
     if [ "${REMOVESOURCEFILES}" == "Y" ] ; then
         EXTRAOUTPUTS+=(--remove-source-files)
     fi
-    rsync -rtvcP "${EXTRAOUTPUTS[@]}" --log-file="${LOGFILE}" --log-file-format="[%C] ${DATE} '%f' %l '${TARGET}'" "${INPUT}" "${TARGET}" 
+    rsync -rtvP "${EXTRAOUTPUTS[@]}" --log-file="${LOGFILE}" --log-file-format="${DATE} '%f' %l '${TARGET}'" "${INPUT}" "${TARGET}" 
 done
