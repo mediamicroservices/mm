@@ -34,6 +34,7 @@ _usage(){
     echo "  -e emailaddress ( send an email about the delivery, only valid if -d is used )"
     echo "  -E emailaddress ( send an email about process outcome )"
     echo "  -h ( display this help )"
+    echo "  -i (choose this option to test the interlacement of the entire file)"
     echo
     exit
 }
@@ -41,13 +42,14 @@ _usage(){
 
 # command-line options to set mediaid and original variables
 OPTIND=1
-while getopts ":F:slrcv:o:d:e:E:nh" OPT ; do
+while getopts ":F:slrciv:o:d:e:E:nh" OPT ; do
     case "${OPT}" in
         F) FORMULA="${OPTARG}";;
         s) ADDSLATE="Y";;
         l) AUDIOMAP="L";;
         r) AUDIOMAP="R";;
         c) CROPDETECT="Y" ;;
+        i) INTERLACEMENTTEST="Y" ;;
         v) VOLADJUST="${OPTARG}";;
         o) OUTPUTDIR_FORCED="${OPTARG}" && _check_outputdir_forced ;;
         d) DELIVERDIR="${OPTARG}" && _check_deliverdir ;;
@@ -181,11 +183,17 @@ while [ "${*}" != "" ] ; do
         else
             MIDDLEOPTIONS+=(-metadata:s:v:0 timecode=00:00:00.00)
         fi
-
+        if [ "${INTERLACEMENTTEST}" == "Y" ] ; then
+            _get_interlacement_full "${SOURCEFILE}"
+        else 
+            _get_interlacement_part "${SOURCEFILE}"
+        fi
         # set in and out times if used
         if [[ -f "${INGESTLOG}" && "${ISOBJECT}" = "Y" ]] ; then
-            if [ ! "${FORMULA}" ] ; then
-                FORMULA=$(_readingestlog "FORMULA")
+            if [ "${FORMULA}" = "none" ] ; then
+                FILTERCHOICE=$(_readingestlog "filter choice")
+                _add_video_filter "${FILTERCHOICE}"
+                echo  "${FILTERCHOICE}"
             fi
             INTIME=$(_readingestlog "intime")
             OUTTIME=$(_readingestlog "outtime")

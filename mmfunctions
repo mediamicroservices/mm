@@ -1,15 +1,75 @@
 # assign variables
 SCRIPTNAME=$(basename "${0}")
 SCRIPTDIR=$(dirname "${0}")
-CONFIG_FILE="${SCRIPTDIR}/mm.conf"
+MM_CONFIG_FILE="${SCRIPTDIR}/mm.conf"
+LTO_CONFIG_FILE="${SCRIPTDIR}/ltoper.conf"
 WHAT_IS_THIS="mediamicroservices"
 # load configuration file
-if [ -f "${CONFIG_FILE}" ] ; then
-    . "${CONFIG_FILE}"
+if [ -f "${MM_CONFIG_FILE}" ] ; then
+    . "${MM_CONFIG_FILE}"
 elif [ ! "${CONFIG}" = "Y" -a "${REQUIRECONFIG}" = "Y" ] ; then
-    echo "The configuration file is not set. You amust first create ${CONFIG_FILE} by running mmconfig." 1>&2
+    echo "The configuration file is not set. You must first create ${MM_CONFIG_FILE} by running mmconfig." 1>&2
     exit 1
 fi
+
+if [ -f "${LTO_CONFIG_FILE}" ] ; then
+    . "${LTO_CONFIG_FILE}"
+elif [ ! "${CONFIG}" = "Y" -a "${REQUIRECONFIG}" = "Y" ] ; then
+    echo "The configuration file is not set. You amust first create ${LTO_CONFIG_FILE} by running ltoperconfig." 1>&2
+    exit 1
+fi
+
+_config_edit(){
+    [ -z "${1}" -o -z "${2}" ] && { _report -w "The config_edit function requires two arguments. Error." ; exit ;};
+    SEDTEMP=$(_maketemp)
+    sed "s:^$1=[^ ]*:$1=$2:" "${LTO_CONFIG_FILE}" > "${SEDTEMP}"
+    cp "${SEDTEMP}" "${LTO_CONFIG_FILE}"
+}
+
+_test_config(){
+    for DIRECTORYVARIABLE in OUTDIR_INGESTFILE OUTDIR_INGESTXDCAM OUTDIR_PAPER AIP_STORAGE PODCASTDELIVER YOUTUBEDELIVER TMPDIR CUSTOM_LOG_DIR LTO_INDEX_DIR ; do
+        if [ -d "${!DIRECTORYVARIABLE}" ] ; then
+            _report -d "${DIRECTORYVARIABLE} is a valid directory"
+        else
+            _report -w "${DIRECTORYVARIABLE} is NOT a valid directory"
+        fi
+    done
+}
+
+_add_key(){
+    KEY_TO_ADD="${1}"
+    grep -q "^$KEY_TO_ADD=" "${LTO_CONFIG_FILE}" ; GREP_CODE="$?"
+    if [[ ! "${GREP_CODE}" -eq "0" ]] ; then
+        _report -td "Adding NEW variable $key_to_add to ${LTO_CONFIG_FILE}"
+        echo "$KEY_TO_ADD=" >> "${LTO_CONFIG_FILE}"
+    fi
+}
+
+_cleanup_mount_dir(){
+    if [ -d "${MOUNT_DIR}" ] ; then
+        echo calling umount
+        umount "${MOUNT_DIR}"
+        rmdir "${MOUNT_DIR}"
+    fi
+}
+
+_version_schema(){
+    SCHEMA_FILE="$LTO_LOGS/${TAPE_SERIAL}.schema"
+    if [ -f "${SCHEMA_FILE}" ] ; then
+        echo "${GREEN}Creating a new version of the ltfs schema file.${NC}"
+        LASTSCHEMA="${SCHEMA_FILE%.*}_$(stat -t '%Y%m%d-%H%M%S' -l "${SCHEMA_FILE}" | awk '{print $6}').schema"
+        mv -v "${SCHEMA_FILE}" "${LASTSCHEMA}"
+        echo "${GREEN}$(basename ${0}): schema file is versioned - ${SCHEMA_FILE} -> ${LASTSCHEMA}.${NC}"
+    fi
+}
+
+_checkdir(){
+if [[ ! -d "${1}" ]] ; then
+    echo "${1}" is not a directory.
+    usage
+    exit 1
+fi
+}
 
 _get_iso8601(){
     date +%FT%T
@@ -686,6 +746,108 @@ else
             _writeingestlog "r128_integrated_loudness" "${INTEGRATED_LOUDNESS}"
             _writeingestlog "voldet_mean_volume" "${VOLDET_MEAN_VOLUME}"
             _writeingestlog "voldet_max_volume" "${VOLDET_MAX_VOLUME}"
+        fi
+    fi
+}
+
+_get_interlacement_full(){
+    INPUT_MOVIE="${1}"
+    _get_mediainfo_interlacement(){
+       CONTAINER_INTERLACEMENT=$(mediainfo --inform="Video;%ScanOrder%" "${INPUT_MOVIE}")
+    }
+        IDET_INTERLACEMENT=$(ffmpeg -i ${INPUT_MOVIE} -vf idet -f null -an - 2>&1 | grep "Multi frame detection:")
+        echo "${IDET_INTERLACEMENT}"
+        IDET_SUMMARY=$(echo "${IDET_INTERLACEMENT}" | cut -d: -f2- | awk '{print $1 " " $2 "\n" $3 " " $4 "\n" $5 " " $6 "\n" $7 " " $8}')
+        echo "${IDET_SUMMARY}"
+        IDET_TOP=$(echo "${IDET_INTERLACEMENT}" | cut -d: -f2- | awk '{print $1 " " $2 "\n" $3 " " $4 "\n" $5 " " $6 "\n" $7 " " $8}' | sort -n -k2 | tail -n1 | cut -d: -f1)
+        echo "${IDET_TOP}"
+    _get_mediainfo_interlacement 
+    echo "Media Info says this file is ${CONTAINER_INTERLACEMENT}"
+    echo "Testing with ffmpeg says this file is ${IDET_TOP}"
+    if [[ "${CONTAINER_INTERLACEMENT}" == "${IDET_TOP}" ]] ; then
+        if [[ "${IDET_TOP}" == "TFF" ]] ; then
+            echo "The frames in the input file are majority top field first."
+            _writeingestlog "filter choice" "setfield=tff"
+        fi
+        if [[ "${IDET_TOP}" == "BFF" ]] ; then
+            echo "The frames in the input file are majority bottom field first."
+            _writeingestlog "filter choice" "setfield=bff"
+        fi
+        if [[ "${IDET_TOP}" == "Progressive" ]] ; then
+            echo "The frames in the input file are majority progressive."
+            _writeingestlog "filter choice" "setfield=prog"
+        fi
+    fi
+    if [[ "${CONTAINER_INTERLACEMENT}" != "${IDET_TOP}" ]] ; then
+        _report -q "Which video filter do you want to use? "
+        PS3="Selection? "
+        select FILTERCHOICE in "TFF" "BFF" "Progressive"
+        do
+            break
+        done
+        if [[ "${FILTERCHOICE}" == "TFF" ]] ; then
+            _writeingestlog "filter choice" "setfield=tff"
+        fi
+        if [[ "${FILTERCHOICE}" == "BFF" ]] ; then
+            _writeingestlog "filter choice" "setfield=bff"
+        fi
+        if [[ "${FILTERCHOICE}" == "Progressive" ]] ; then
+            _writeingestlog "filter choice" "setfield=prog"
+        fi
+    fi
+}
+
+_get_interlacement_part(){
+    INPUT_MOVIE="${1}"
+    _get_seconds(){
+       FILESECONDS=$(ffprobe "${INPUT_MOVIE}" -show_format 2>&1 | sed -n 's/duration=//p' )
+       echo "seconds are ${SECONDS}"
+    }
+    _get_mediainfo_interlacement(){
+       CONTAINER_INTERLACEMENT=$(mediainfo --inform="Video;%ScanOrder%" "${INPUT_MOVIE}")
+    }
+        FRAMES2SAMPLE=200
+        _get_seconds "${INPUT_MOVIE}"
+        echo "$(basename "${INPUT_MOVIE}") is ${FILESECONDS} seconds long."
+        HALFTIME=$(echo "scale=6; ${FILESECONDS} / 2" | bc)
+        echo "Going to run idet on ${FRAMES2SAMPLE} starting at ${HALFTIME} seconds."
+        IDET_INTERLACEMENT=$(ffmpeg -ss ${HALFTIME} -i ${INPUT_MOVIE} -vframes ${FRAMES2SAMPLE} -vf idet -f null -an - 2>&1 | grep "Multi frame detection:")
+        IDET_SUMMARY=$(echo "${IDET_INTERLACEMENT}" | cut -d: -f2- | awk '{print $1 " " $2 "\n" $3 " " $4 "\n" $5 " " $6 "\n" $7 " " $8}')
+        echo "${IDET_SUMMARY}"
+        IDET_TOP=$(echo "${IDET_INTERLACEMENT}" | cut -d: -f2- | awk '{print $1 " " $2 "\n" $3 " " $4 "\n" $5 " " $6 "\n" $7 " " $8}' | sort -n -k2 | tail -n1 | cut -d: -f1)
+        echo "${IDET_TOP}"
+    _get_mediainfo_interlacement 
+    echo "Media Info says this file is ${CONTAINER_INTERLACEMENT}"
+    echo "Testing with ffmpeg says this file is ${IDET_TOP}"
+    if [[ "${CONTAINER_INTERLACEMENT}" == "${IDET_TOP}" ]] ; then
+        if [[ "${IDET_TOP}" == "TFF" ]] ; then
+            echo "The frames in the input file are majority top field first."
+            _writeingestlog "filter choice" "setfield=tff"
+        fi
+        if [[ "${IDET_TOP}" == "BFF" ]] ; then
+            echo "The frames in the input file are majority bottom field first."
+            _writeingestlog "filter choice" "setfield=bff"
+        fi
+        if [[ "${IDET_TOP}" == "Progressive" ]] ; then
+            echo "The frames in the input file are majority progressive."
+            _writeingestlog "filter choice" "setfield=prog"
+        fi
+    fi
+    if [[ "${CONTAINER_INTERLACEMENT}" != "${IDET_TOP}" ]] ; then
+        _report -q "Which video filter do you want to use? "
+        PS3="Selection? "
+        select FILTERCHOICE in "TFF" "BFF" "Progressive"
+        do
+            break
+        done
+        if [[ "${FILTERCHOICE}" == "TFF" ]] ; then
+            _writeingestlog "filter choice" "setfield=tff"
+        fi
+        if [[ "${FILTERCHOICE}" == "BFF" ]] ; then
+            _writeingestlog "filter choice" "setfield=bff"
+        fi
+        if [[ "${FILTERCHOICE}" == "Progressive" ]] ; then
+            _writeingestlog "filter choice" "setfield=prog"
         fi
     fi
 }

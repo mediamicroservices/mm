@@ -24,8 +24,8 @@ done
 _config_edit(){
     [ -z "${1}" -o -z "${2}" ] && { _report -w "The config_edit function requires two arguments. Error." ; exit ;};
     SEDTEMP=$(_maketemp)
-    sed "s:^${1}=[^ ]*:$1=$2:" "${CONFIG_FILE}" > "${SEDTEMP}"
-    cp "${SEDTEMP}" "${CONFIG_FILE}"
+    sed "s:^${1}=[^ ]*:$1=$2:" "${MM_CONFIG_FILE}" > "${SEDTEMP}"
+    cp "${SEDTEMP}" "${MM_CONFIG_FILE}"
 }
 
 _test_config(){
@@ -43,10 +43,10 @@ _test_config(){
 
 _add_key(){
     KEY_TO_ADD="${1}"
-    grep -q "^${KEY_TO_ADD}=" "${CONFIG_FILE}" ; GREP_CODE="$?"
+    grep -q "^${KEY_TO_ADD}=" "${MM_CONFIG_FILE}" ; GREP_CODE="$?"
     if [[ ! "${GREP_CODE}" -eq "0" ]] ; then
-        _report -td "Adding NEW variable ${KEY_TO_ADD} to ${CONFIG_FILE}"
-        echo "${KEY_TO_ADD}=" >> "${CONFIG_FILE}"
+        _report -td "Adding NEW variable ${KEY_TO_ADD} to ${MM_CONFIG_FILE}"
+        echo "${KEY_TO_ADD}=" >> "${MM_CONFIG_FILE}"
     fi
 }
 
@@ -242,32 +242,32 @@ if [[ "${RUNPASHUA}" == "Y" ]] ; then
     echo ""
 
     #write to the config file
-    echo "OUTDIR_INGESTFILE=\"${OUTDIR_INGESTFILE}\"" > "${CONFIG_FILE}"
-    echo "OUTDIR_INGESTXDCAM=\"${OUTDIR_INGESTXDCAM}\"" >> "${CONFIG_FILE}"
-    echo "OUTDIR_PAPER=\"${OUTDIR_PAPER}\"" >> "${CONFIG_FILE}"
-    echo "AIP_STORAGE=\"${AIP_STORAGE}\"" >> "${CONFIG_FILE}"
-    echo "PODCASTDELIVER=\"${PODCASTDELIVER}\"" >> "${CONFIG_FILE}"
-    echo "YOUTUBEDELIVER=\"${YOUTUBEDELIVER}\"" >> "${CONFIG_FILE}"
-    echo "TMPDIR=\"${TMPDIR}\"" >> "${CONFIG_FILE}"
-    echo "REGEX4PODCAST=\"${REGEX4PODCAST}\"" >> "${CONFIG_FILE}"
-    echo "DVDLABELPREFIX=\"${DVDLABELPREFIX}\"" >> "${CONFIG_FILE}"
-    echo "OMNEONIP=\"${OMNEONIP}\"" >> "${CONFIG_FILE}"
-    echo "OMNEONPATH=\"${OMNEONPATH}\"" >> "${CONFIG_FILE}"
-    echo "CUSTOM_LOG_DIR=\"${CUSTOM_LOG_DIR}\"" >> "${CONFIG_FILE}"
-    echo "LTO_INDEX_DIR=\"${LTO_INDEX_DIR}\"" >> "${CONFIG_FILE}"
-    echo "LOCAL_MM_DIR=\"${LOCAL_MM_DIR}\"" >> "${CONFIG_FILE}"
-    echo "EMAIL_FROM=\"${EMAIL_FROM}\"" >> "${CONFIG_FILE}"
-    echo "MAKEYOUTUBE_DELIVERY_EMAIL_TO=\"${MAKEYOUTUBE_DELIVERY_EMAIL_TO}\"" >> "${CONFIG_FILE}"
-    echo "MAKEBROADCAST_DELIVERY_EMAIL_TO=\"${MAKEBROADCAST_DELIVERY_EMAIL_TO}\"" >> "${CONFIG_FILE}"
-    echo "FILEMAKER_DB=\"${FILEMAKER_DB}\"" >> "${CONFIG_FILE}"
-    echo "FILEMAKER_XML_URL=\"${FILEMAKER_XML_URL}\"" >> "${CONFIG_FILE}"
-    echo "VOLADJUST=\"${VOLADJUST}\"" >> "${CONFIG_FILE}"
+    echo "OUTDIR_INGESTFILE=\"${OUTDIR_INGESTFILE}\"" > "${MM_CONFIG_FILE}"
+    echo "OUTDIR_INGESTXDCAM=\"${OUTDIR_INGESTXDCAM}\"" >> "${MM_CONFIG_FILE}"
+    echo "OUTDIR_PAPER=\"${OUTDIR_PAPER}\"" >> "${MM_CONFIG_FILE}"
+    echo "AIP_STORAGE=\"${AIP_STORAGE}\"" >> "${MM_CONFIG_FILE}"
+    echo "PODCASTDELIVER=\"${PODCASTDELIVER}\"" >> "${MM_CONFIG_FILE}"
+    echo "YOUTUBEDELIVER=\"${YOUTUBEDELIVER}\"" >> "${MM_CONFIG_FILE}"
+    echo "TMPDIR=\"${TMPDIR}\"" >> "${MM_CONFIG_FILE}"
+    echo "REGEX4PODCAST=\"${REGEX4PODCAST}\"" >> "${MM_CONFIG_FILE}"
+    echo "DVDLABELPREFIX=\"${DVDLABELPREFIX}\"" >> "${MM_CONFIG_FILE}"
+    echo "OMNEONIP=\"${OMNEONIP}\"" >> "${MM_CONFIG_FILE}"
+    echo "OMNEONPATH=\"${OMNEONPATH}\"" >> "${MM_CONFIG_FILE}"
+    echo "CUSTOM_LOG_DIR=\"${CUSTOM_LOG_DIR}\"" >> "${MM_CONFIG_FILE}"
+    echo "LTO_INDEX_DIR=\"${LTO_INDEX_DIR}\"" >> "${MM_CONFIG_FILE}"
+    echo "LOCAL_MM_DIR=\"${LOCAL_MM_DIR}\"" >> "${MM_CONFIG_FILE}"
+    echo "EMAIL_FROM=\"${EMAIL_FROM}\"" >> "${MM_CONFIG_FILE}"
+    echo "MAKEYOUTUBE_DELIVERY_EMAIL_TO=\"${MAKEYOUTUBE_DELIVERY_EMAIL_TO}\"" >> "${MM_CONFIG_FILE}"
+    echo "MAKEBROADCAST_DELIVERY_EMAIL_TO=\"${MAKEBROADCAST_DELIVERY_EMAIL_TO}\"" >> "${MM_CONFIG_FILE}"
+    echo "FILEMAKER_DB=\"${FILEMAKER_DB}\"" >> "${MM_CONFIG_FILE}"
+    echo "FILEMAKER_XML_URL=\"${FILEMAKER_XML_URL}\"" >> "${MM_CONFIG_FILE}"
+    echo "VOLADJUST=\"${VOLADJUST}\"" >> "${MM_CONFIG_FILE}"
 else
     # set up configuration file using the command line
-    echo "# $(basename ${CONFIG_FILE})" > "${CONFIG_FILE}"
-    echo "# This configuration file contains variables used throughout ${WHAT_IS_THIS}." >> "${CONFIG_FILE}"
-    echo "# Edit the lines below to form KEY=VALUE. Please do not add or remove the existing KEYs. Do not edit CONFIG_FILE_VERSION." >> "${CONFIG_FILE}"
-    echo "CONFIG_FILE_VERSION=${CONFIG_VERSION}" >> "${CONFIG_FILE}"
+    echo "# $(basename ${MM_CONFIG_FILE})" > "${MM_CONFIG_FILE}"
+    echo "# This configuration file contains variables used throughout ${WHAT_IS_THIS}." >> "${MM_CONFIG_FILE}"
+    echo "# Edit the lines below to form KEY=VALUE. Please do not add or remove the existing KEYs. Do not edit MM_CONFIG_FILE_VERSION." >> "${MM_CONFIG_FILE}"
+    echo "MM_CONFIG_FILE_VERSION=${CONFIG_VERSION}" >> "${MM_CONFIG_FILE}"
 
     for KEY in "${REQUIRED_VARIABLES[@]}" ; do
         _add_key "${KEY}"
@@ -279,13 +279,13 @@ else
     _report -d "Notes:"
     _report -d "VOLADJUST must be set to 'Y' or 'N'"
     echo
-    _report -d "Testing ${CONFIG_FILE} validity"
+    _report -d "Testing ${MM_CONFIG_FILE} validity"
     _test_config
     echo
 
     _report -d "Table of existing variables:"
     for KEY in "${REQUIRED_VARIABLES[@]}" ; do
-        VALUE=$(grep "^${KEY}=" "${CONFIG_FILE}" | cut -d= -f2)
+        VALUE=$(grep "^${KEY}=" "${MM_CONFIG_FILE}" | cut -d= -f2)
         printf '\t%-40s %-40s\n' "${KEY}" "${VALUE}"
     done
     while true ; do
@@ -298,8 +298,8 @@ else
             break
         done
         [ "${CONFIG_KEY}" = "Quit" ] && { echo Goodbye. ; exit 1 ;};
-        [ "${CONFIG_KEY}" = "${EDITOPTION1}" ] && { nano "${CONFIG_FILE}" ; exit 1 ;};
-        [ "${CONFIG_KEY}" = "${EDITOPTION2}" ] && { mate "${CONFIG_FILE}" ; exit 1 ;};
+        [ "${CONFIG_KEY}" = "${EDITOPTION1}" ] && { nano "${MM_CONFIG_FILE}" ; exit 1 ;};
+        [ "${CONFIG_KEY}" = "${EDITOPTION2}" ] && { mate "${MM_CONFIG_FILE}" ; exit 1 ;};
         echo -n "Enter the value for ${CONFIG_KEY}: "
         read -e "CONFIG_VALUE"
         echo "${CONFIG_KEY} is now set to ${CONFIG_VALUE}"
