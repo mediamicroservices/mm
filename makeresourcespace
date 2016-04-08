@@ -58,11 +58,9 @@ while [ "${*}" != "" ] ; do
         [ ! "${OUTPUTDIR}" ] && { OUTPUTDIR="${INPUT}/objects/${RELATIVEPATH}" && LOGDIR="${INPUT}/metadata/logs" ;};
     else
         OUTPUTDIR="${OUTPUTDIR_FORCED}"
-        LOGDIR="${OUTPUTDIR}/logs"
     fi
     _find_input "${INPUT}"
     MEDIAID=$(basename "${INPUT}" | cut -d. -f1)
-    INGESTLOG="${LOGDIR}/capture.log"
 
     _set_up_output
 
@@ -116,7 +114,6 @@ while [ "${*}" != "" ] ; do
     fi
     MIDDLEOPTIONS+=(-f mp4)
 
-    _prep_ffmpeg_log
     if [ "${CONCATSOURCE}" != "" ] ; then
         FFMPEGINPUT="${CONCATSOURCE}"
     else
