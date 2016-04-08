@@ -522,15 +522,16 @@ fi
 _writeingestlog "datetime_end" "$(_get_iso8601)"
 
 # move and cleanup
-if [ "${DELIVERYTOAIPSTORAGE}" == "Y" ] ; then
+if [[ "${DELIVERYTOAIPSTORAGE}" == "Y" ]] ; then
     "${SCRIPTDIR}/migratefiles" -r -o "${AIP_STORAGE}" "${OUTDIR_INGESTFILE}/${MEDIAID}"
     RSYNC_ERR="${?}"
     [ $(du -s "${OUTDIR_INGESTFILE}/${MEDIAID}" | awk '{print $1}') = "0" ] && rm -r "${OUTDIR_INGESTFILE}/${MEDIAID}"
     _report -dt "STATUS Done. Final package has been delivered to ${AIP_STORAGE}/${MEDIAID}"
 fi
 
-if [ "${CLEANUP_CHOICE}" == "Y" ] ; then
+if [[ "${CLEANUP_CHOICE}" == "Y" ]] ; then
     if [ "${RSYNC_ERR}" -gt "0" ] ; then
+        echo "${RSYNC_ERR}"
         _report -wt "Cancelling requested deletion of source file, not looking safe."
     else
         _report -dt "Removing the source file from ${INPUT} as requested."
