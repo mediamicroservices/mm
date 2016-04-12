@@ -1,4 +1,60 @@
 #!/bin/bash
+#this script performs a series of quality assurance tests on an audio visual file or set of files
 
 SCRIPTDIR=$(dirname $(which "${0}"))
 . "${SCRIPTDIR}/mmfunctions" || { echo "Missing '${SCRIPTDIR}/mmfunctions'. Exiting." ; exit 1 ;};
+
+
+
+_black_at_ends #reports out information 
+
+_get_frame_count #may need to modify based on the exit statement written into the function or move the exit statement outside of the function. 
+
+_get_prettyduration 
+echo "${PRETTYDURATION}"
+
+_get_duration
+echo "${DURATION}"
+
+_get_broadcastduration
+echo "${BROADCASTDURATION}"
+
+_get_seconds
+echo "${SECONDS}"
+
+_get_width
+echo "${WIDTH}"
+
+_get_height
+echo "${HEIGHT}"
+
+_get_dar
+echo "${DAR}"
+
+_get_sar
+echo "${SAR}"
+
+_get_audio_index
+echo "${AUDIO_INDEX_1} and ${AUDIO_INDEX_2}"
+
+_get_audio_channels
+echo "${AUDIO_CHANNELS}"
+
+_get_audio_mapping #may need to modify based on the statements written into the fuction
+
+_get_fieldorder
+echo "${FIELDORDER}"
+
+_get_pix_fmt
+echo "${PIXFMT}"
+
+_get_videostreamcount
+echo "${VIDEOSTREAMCOUNT}"
+
+_get_audiostreamcount
+echo "${AUDIOSTREAMCOUNT}"
+
+_get_timecode
+echo "${TIMECODE}"
+
+_get_volume_adjustment #may need to modify based on the statments written into the function 
