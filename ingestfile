@@ -333,6 +333,8 @@ else
     fi
 fi
 
+_get_frame_count "${INPUT}"
+
 # set up package directories
 OBJECTSDIR="${OUTDIR_INGESTFILE}/${MEDIAID}/objects"
 _run_critical _mkdir2 "${OBJECTSDIR}"

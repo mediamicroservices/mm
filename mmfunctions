@@ -216,6 +216,22 @@ _black_at_ends(){
     _report -dt "Black frames in last  ${ANALYSIS_HEAD_SECONDS} seconds: ${TAIL_BLACK}."
 }
 
+_get_frame_count(){
+    INPUT_MOVIE="${1}"
+    CONTAINERFRAMECOUNT=$(mediainfo --inform="Video;%FrameCount%" "${INPUT_MOVIE}")
+    VIDEOTRACKFRAMECOUNT=$(mediainfo --inform="Video;%Source_FrameCount%" "${INPUT_MOVIE}") 
+    if [ ! -z "${VIDEOTRACKFRAMECOUNT}" ] ; then
+        if [ "${VIDEOTRACKFRAMECOUNT}" -ne "${CONTAINERFRAMECOUNT}" ] ; then
+            _report -dt "The frame count according to the container is: ${CONTAINERFRAMECOUNT}"
+            _report -dt "The frame count according to the video track is: ${VIDEOTRACKFRAMECOUNT}"
+            _report -wt "warning - there are discrepancies between the container frame count and video track frame count. This could result in the desynchronization of audio and video." 
+            echo "Enter q to quit, any other key to continue: "
+            read A2
+            [ "${A2}" == "q" ] && exit 0
+        fi
+    fi
+}
+
 _maketemp(){
     mktemp -q "/tmp/$(basename "${0}").XXXXXX"
     if [ "${?}" -ne 0 ]; then
@@ -755,15 +771,18 @@ _get_interlacement_full(){
     _get_mediainfo_interlacement(){
        CONTAINER_INTERLACEMENT=$(mediainfo --inform="Video;%ScanOrder%" "${INPUT_MOVIE}")
     }
-        IDET_INTERLACEMENT=$(ffmpeg -i ${INPUT_MOVIE} -vf idet -f null -an - 2>&1 | grep "Multi frame detection:")
+        IDET_INTERLACEMENT=$(ffmpeg -i "${INPUT_MOVIE}" -vf idet -f null -an - 2>&1 | grep "Multi frame detection:")
         echo "${IDET_INTERLACEMENT}"
         IDET_SUMMARY=$(echo "${IDET_INTERLACEMENT}" | cut -d: -f2- | awk '{print $1 " " $2 "\n" $3 " " $4 "\n" $5 " " $6 "\n" $7 " " $8}')
         echo "${IDET_SUMMARY}"
         IDET_TOP=$(echo "${IDET_INTERLACEMENT}" | cut -d: -f2- | awk '{print $1 " " $2 "\n" $3 " " $4 "\n" $5 " " $6 "\n" $7 " " $8}' | sort -n -k2 | tail -n1 | cut -d: -f1)
         echo "${IDET_TOP}"
+    echo "Testing with ffmpeg says this file is ${IDET_TOP}"
     _get_mediainfo_interlacement 
     echo "Media Info says this file is ${CONTAINER_INTERLACEMENT}"
-    echo "Testing with ffmpeg says this file is ${IDET_TOP}"
+    if [ -z "${CONTAINER_INTERLACEMENT}" ] ; then
+        _report -qn "MediaInfo can't test the interlacement of this file. Please consider using the results from the ffmpeg file test."
+    fi
     if [[ "${CONTAINER_INTERLACEMENT}" == "${IDET_TOP}" ]] ; then
         if [[ "${IDET_TOP}" == "TFF" ]] ; then
             echo "The frames in the input file are majority top field first."
@@ -811,14 +830,17 @@ _get_interlacement_part(){
         echo "$(basename "${INPUT_MOVIE}") is ${FILESECONDS} seconds long."
         HALFTIME=$(echo "scale=6; ${FILESECONDS} / 2" | bc)
         echo "Going to run idet on ${FRAMES2SAMPLE} starting at ${HALFTIME} seconds."
-        IDET_INTERLACEMENT=$(ffmpeg -ss ${HALFTIME} -i ${INPUT_MOVIE} -vframes ${FRAMES2SAMPLE} -vf idet -f null -an - 2>&1 | grep "Multi frame detection:")
+        IDET_INTERLACEMENT=$(ffmpeg -ss "${HALFTIME}" -i "${INPUT_MOVIE}" -vframes "${FRAMES2SAMPLE}" -vf idet -f null -an - 2>&1 | grep "Multi frame detection:")
         IDET_SUMMARY=$(echo "${IDET_INTERLACEMENT}" | cut -d: -f2- | awk '{print $1 " " $2 "\n" $3 " " $4 "\n" $5 " " $6 "\n" $7 " " $8}')
         echo "${IDET_SUMMARY}"
         IDET_TOP=$(echo "${IDET_INTERLACEMENT}" | cut -d: -f2- | awk '{print $1 " " $2 "\n" $3 " " $4 "\n" $5 " " $6 "\n" $7 " " $8}' | sort -n -k2 | tail -n1 | cut -d: -f1)
         echo "${IDET_TOP}"
-    _get_mediainfo_interlacement 
-    echo "Media Info says this file is ${CONTAINER_INTERLACEMENT}"
     echo "Testing with ffmpeg says this file is ${IDET_TOP}"
+    _get_mediainfo_interlacement
+    echo "Media Info says this file is ${CONTAINER_INTERLACEMENT}"
+    if [ -z "${CONTAINER_INTERLACEMENT}" ] ; then
+        _report -qn "MediaInfo can't test the interlacement of this file. Please consider using the results from the ffmpeg file test."
+    fi
     if [[ "${CONTAINER_INTERLACEMENT}" == "${IDET_TOP}" ]] ; then
         if [[ "${IDET_TOP}" == "TFF" ]] ; then
             echo "The frames in the input file are majority top field first."
