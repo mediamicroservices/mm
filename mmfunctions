@@ -392,7 +392,7 @@ _get_broadcastduration(){
     BROADCASTDURATION=$(mediainfo --inform="General;%Duration_String4%" "${1}")
 }
 _get_seconds(){
-    SECONDS=$(ffprobe "${1}" -show_format 2> /dev/null | grep "^duration=" | cut -d= -f2)
+    SECONDS1=$(ffprobe "${1}" -show_format 2> /dev/null | grep "^duration=" | cut -d= -f2)
 }
 
 _email_delivery(){
@@ -816,7 +816,7 @@ _get_interlacement_part(){
     INPUT_MOVIE="${1}"
     _get_seconds(){
        FILESECONDS=$(ffprobe "${INPUT_MOVIE}" -show_format 2>&1 | sed -n 's/duration=//p' )
-       echo "seconds are ${SECONDS}"
+       echo "seconds are ${FILESECONDS}"
     }
     _get_mediainfo_interlacement(){
        CONTAINER_INTERLACEMENT=$(mediainfo --inform="Video;%ScanOrder%" "${INPUT_MOVIE}")
