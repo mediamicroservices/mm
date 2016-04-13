@@ -255,10 +255,7 @@ while [ "${*}" != "" ] ; do
             elif [ "${FORMULA}" = "bff" ] ; then
                 _add_video_filter "setfield=bff"
             fi
-            _get_fieldorder "${SOURCEFILE}"
-            if [ "${FIELDORDER}" != "tff" ] ; then
-                _add_video_filter "fieldorder=tff"
-            fi
+            _add_video_filter "fieldorder=tff"
             if [ "${FORMULA}" = "hds" ] ; then
                 _add_video_filter "scale=size=hd1080:interl=1"
                 _add_video_filter "setsar=1/1"

@@ -681,10 +681,6 @@ _get_codectagstring(){
     fi
 }
 
-_get_fieldorder(){
-    FIELDORDER=$(ffprobe-bc "${1}" -show_streams 2> /dev/null | grep "\(progressive\|interlaced=\)" | cut -d = -f 2)
-}
-
 _get_pix_fmt(){
     PIXFMT=$(ffprobe "${1}" -show_streams -select_streams v:0 2> /dev/null | grep "^pix_fmt=" | cut -d = -f 2)
 }
