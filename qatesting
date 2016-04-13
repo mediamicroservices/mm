@@ -5,56 +5,134 @@ SCRIPTDIR=$(dirname $(which "${0}"))
 . "${SCRIPTDIR}/mmfunctions" || { echo "Missing '${SCRIPTDIR}/mmfunctions'. Exiting." ; exit 1 ;};
 
 
+while [ "${*}" != "" ] ; do
+    INPUT="${1}"
+    shift
+    MEDIAID=$(_readingestlog "media ID")
+    if [[ ! "${MEDIAID}" ]] ; then
+        MEDIAID=$(basename "${INPUT}" | cut -d. -f1)
+    fi
+    #reports out information 
+    _black_at_ends "${INPUT}" 
+    #modified original function to report only
+    _get_frame_count(){
+        INPUT_MOVIE="${1}"
+        CONTAINERFRAMECOUNT=$(mediainfo --inform="Video;%FrameCount%" "${INPUT_MOVIE}")
+        _report -dt "The frame count according to the container is: ${CONTAINERFRAMECOUNT}"
+        VIDEOTRACKFRAMECOUNT=$(mediainfo --inform="Video;%Source_FrameCount%" "${INPUT_MOVIE}") 
+        _report -dt "The frame count according to the video track is: ${VIDEOTRACKFRAMECOUNT}"
+        if [ ! -z "${VIDEOTRACKFRAMECOUNT}" ] ; then
+            if [ "${VIDEOTRACKFRAMECOUNT}" -ne "${CONTAINERFRAMECOUNT}" ] ; then
+                _report -wt "warning - there are discrepancies between the container frame count and video track frame count. This could result in the desynchronization of audio and video." 
+            fi
+        fi
+    }
 
-_black_at_ends #reports out information 
+    _get_frame_count "${INPUT}" 
 
-_get_frame_count #may need to modify based on the exit statement written into the function or move the exit statement outside of the function. 
+    _get_prettyduration "${INPUT}"
+    echo "The duration of ${MEDIAID} in HH:mm:ss is: ${PRETTYDURATION}"
 
-_get_prettyduration 
-echo "${PRETTYDURATION}"
+    _get_duration "${INPUT}"
+    echo "The duration of ${MEDIAID} in mm.sssss is: ${DURATION}"
 
-_get_duration
-echo "${DURATION}"
+    _get_broadcastduration "${INPUT}"
+    echo "The duration of ${MEDIAID} in HH:mm;ss is: ${BROADCASTDURATION}"
 
-_get_broadcastduration
-echo "${BROADCASTDURATION}"
+    _get_seconds "${INPUT}"
+    echo "The seconds in ${MEDIAID} are: ${SECONDS1}"
 
-_get_seconds
-echo "${SECONDS}"
+    _get_width "${INPUT}"
+    echo "The width of ${MEDIAID} is: ${WIDTH}"
 
-_get_width
-echo "${WIDTH}"
+    _get_height "${INPUT}"
+    echo "The height of ${MEDIAID} is: ${HEIGHT}"
 
-_get_height
-echo "${HEIGHT}"
+    _get_dar "${INPUT}"
+    echo "The display aspect ratio of ${MEDIAID} is: ${DAR}"
 
-_get_dar
-echo "${DAR}"
+    _get_sar "${INPUT}"
+    echo "The sample aspect ration of ${MEDIAID} is: ${SAR}"
 
-_get_sar
-echo "${SAR}"
+    _get_audio_index "${INPUT}"
+    echo "The index value of the first audio stream is: ${AUDIO_INDEX_1}"
+    echo "The index value of the second audio stream is: ${AUDIO_INDEX_2}"
 
-_get_audio_index
-echo "${AUDIO_INDEX_1} and ${AUDIO_INDEX_2}"
+    _get_audio_channels "${INPUT}"
+    echo "The number of audio channels in ${MEDIAID} is: ${AUDIO_CHANNELS}"
+    
+    _get_pix_fmt "${INPUT}"
+    echo "The pixel order of ${MEDIAID} is: ${PIXFMT}"
 
-_get_audio_channels
-echo "${AUDIO_CHANNELS}"
+    _get_videostreamcount "${INPUT}"
+    echo "The video stream count of ${MEDIAID} is: ${VIDEOSTREAMCOUNT}"
 
-_get_audio_mapping #may need to modify based on the statements written into the fuction
+    _get_audiostreamcount "${INPUT}"
+    echo "The audio stream count of ${MEDIAID} is: ${AUDIOSTREAMCOUNT}"
 
-_get_fieldorder
-echo "${FIELDORDER}"
+    _get_timecode "${INPUT}"
+    if [ -z "${TIMECODE}" ] ; then
+        echo "There is no time code associated with this file."
+    else
+        echo "The timecode of ${MEDIAID} is: ${TIMECODE}"
+    fi
+    
+    #function modified for script
+    _get_volume_adjustment(){
+        REFERENCE=-24
+        INTEGRATED_LOUDNESS=""
+        LOUDNESS_RANGE=""
+        VOLDET_MEAN_VOLUME=""
+        VOLDET_MAX_VOLUME=""
+        VOLADJ=""
+        INPUT_MOVIE="${1}"
+        _report -dt "Getting volume data for $(basename "${INPUT_MOVIE}") ..."
+        VOLDETTEMP=$(_maketemp)
+        VOLUME_DATA=$(ffprobe -of compact=p=0:nk=1:s=',' -show_entries frame_tags=lavfi.r128.I,lavfi.r128.LRA -f lavfi "amovie='${INPUT_MOVIE}',ebur128=metadata=1,volumedetect" 2>"${VOLDETTEMP}" | grep -v "^$" | tail -n1)
+        VOLUME_EXIT_CODE="${?}"
+        if [ "${VOLUME_EXIT_CODE}" -ne 0 ] ; then
+            _report -wt "Volume analysis for ${INPUT_MOVIE} exited with ${VOLUME_EXIT_CODE}."
+    else
+            AUDIOFRAME_I=$(echo "${VOLUME_DATA}" | cut -d, -f1)
+            AUDIOFRAME_LRA=$(echo "${VOLUME_DATA}" | cut -d, -f2)
+            [ "${AUDIOFRAME_I}"   != "" ] && INTEGRATED_LOUDNESS="${AUDIOFRAME_I}"
+            [ "${AUDIOFRAME_LRA}" != "" ] && LOUDNESS_RANGE="${AUDIOFRAME_LRA}"
+            VOLDET_MEAN_VOLUME=$(grep "mean_volume" "${VOLDETTEMP}" | cut -d: -f 2 | awk '{print $1}')
+            VOLDET_MAX_VOLUME=$(grep "max_volume" "${VOLDETTEMP}" | cut -d: -f 2 | awk '{print $1}')
+            VOLADJ=$(echo "${REFERENCE} - ${INTEGRATED_LOUDNESS}" | bc)
+            # test to see if adjustment is at least 2dB, else skip
+            _report -dt "Loudness range is ${LOUDNESS_RANGE}dB."
+                echo "audio_adjustment is: ${VOLADJ}"
+                echo "r128_loudness_reference is: ${REFERENCE}"
+                echo "r128_loudness_range is: ${LOUDNESS_RANGE}"
+                echo "r128_integrated_loudness is: ${INTEGRATED_LOUDNESS}"
+                echo "voldet_mean_volume is: ${VOLDET_MEAN_VOLUME}"
+                echo "voldet_max_volume is: ${VOLDET_MAX_VOLUME}"
+        fi
+    }
 
-_get_pix_fmt
-echo "${PIXFMT}"
-
-_get_videostreamcount
-echo "${VIDEOSTREAMCOUNT}"
-
-_get_audiostreamcount
-echo "${AUDIOSTREAMCOUNT}"
-
-_get_timecode
-echo "${TIMECODE}"
-
-_get_volume_adjustment #may need to modify based on the statments written into the function 
+    _get_volume_adjustment  "${INPUT}"  
+    
+    #function modified for script
+    _get_interlacement_full(){
+        INPUT_MOVIE="${1}"
+        _get_mediainfo_interlacement(){
+           CONTAINER_INTERLACEMENT=$(mediainfo --inform="Video;%ScanOrder%" "${INPUT_MOVIE}")
+        }
+            IDET_INTERLACEMENT=$(ffmpeg -i "${INPUT_MOVIE}" -vf idet -f null -an - 2>&1 | grep "Multi frame detection:")
+            IDET_SUMMARY=$(echo "${IDET_INTERLACEMENT}" | cut -d: -f2- | awk '{print $1 " " $2 "\n" $3 " " $4 "\n" $5 " " $6 "\n" $7 " " $8}')
+            IDET_TOP=$(echo "${IDET_INTERLACEMENT}" | cut -d: -f2- | awk '{print $1 " " $2 "\n" $3 " " $4 "\n" $5 " " $6 "\n" $7 " " $8}' | sort -n -k2 | tail -n1 | cut -d: -f1)
+        echo "Testing with ffmpeg says this file is ${IDET_TOP}"
+        _get_mediainfo_interlacement 
+        if [ -z "${CONTAINER_INTERLACEMENT}" ] ; then
+            _report -qn "MediaInfo can't test the interlacement of this file. Please consider using the results from the ffmpeg file test." 
+        else
+            echo "Media Info says this file is ${CONTAINER_INTERLACEMENT}"
+        fi
+    }
+    
+    _get_interlacement_full "${INPUT}" #modify based on statements written into function 
+    
+done
+    
+    
