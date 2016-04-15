@@ -38,6 +38,6 @@ while [ "${*}" != "" ] ; do
         fi
         _writeingestlog "package type" "${PACKAGETYPE}"
     fi
-    makemetadata "${INPUT}"
+    "${SCRIPTDIR}/makemetadata" -r "${INPUT}"
     echo "New metadata was created for your package."
 done

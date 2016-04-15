@@ -18,14 +18,25 @@ _usage(){
 
 # command-line options to set mediaid and original variables
 OPTIND=1
-while getopts ":h" OPT ; do
+while getopts ":rh" OPT ; do
     case "${OPT}" in
         h) _usage ;;
+        r) DELETEFILEMETA="Y" ;;
         *) echo "bad option -${OPTARG}" ; _usage ;;
         :) echo "Option -${OPTARG} requires an argument" ; _writeerrorlog "makemetadata" "The option selected required an argument and none was provided. The script had to exit." ; exit 1 ;;
     esac
 done
 shift $(( ${OPTIND} - 1 ))
+
+_set_up_filemeta(){
+    # set up output
+    _log -b
+    if [[ -d "${PACKAGE_PATH}/${OUTPUTDIR}" && "${DELETEFILEMETA}" != "Y" ]] ; then
+        _report -wt "WARNING ${PACKAGE_PATH}/${OUTPUTDIR} already exists, not making metadata."
+        continue
+    fi
+    _mkdir2 "${PACKAGE_PATH}/${OUTPUTDIR}"
+}
 
 _log -b
 OUTPUTDIR="./metadata/fileMeta"
@@ -33,6 +44,11 @@ OUTPUTDIR="./metadata/fileMeta"
 while [ "${*}" != "" ] ; do
     PACKAGE_PATH="${1}"
     MMPWD=$(pwd)
+	shift
+	_set_up_filemeta
+	if [[ "${DELETEFILEMETA}" = "Y" && -d "${PACKAGE_PATH}/${OUTPUTDIR}" ]] ; then
+		rm -rv "${PACKAGE_PATH}/${OUTPUTDIR}"
+	fi
     cd "${PACKAGE_PATH}"
     FILELIST=$(_maketemp)
     find "./objects" -type f ! -name ".*" ! -path "*/access/images/*" > "${FILELIST}"
@@ -56,6 +72,5 @@ while [ "${*}" != "" ] ; do
     cd "${MMPWD}"
     "${SCRIPTDIR}/makemets" "${PACKAGE_PATH}"
     _run rm -r -f "${FILELIST}"
-    shift
     _log -e
 done
