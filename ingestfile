@@ -359,8 +359,6 @@ fi
 
 if [[ "${INTERLACE_CHOICE}" == "Y" ]] ; then
     _get_interlacement_full "${INPUT}"
-elif [[ "${INTERLACE_CHOICE}" == "N" ]] ; then
-    _get_interlacement_part "${INPUT}"
 fi
 
 # queue handling

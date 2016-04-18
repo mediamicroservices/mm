@@ -812,64 +812,6 @@ _get_interlacement_full(){
     fi
 }
 
-_get_interlacement_part(){
-    INPUT_MOVIE="${1}"
-    _get_seconds(){
-       FILESECONDS=$(ffprobe "${INPUT_MOVIE}" -show_format 2>&1 | sed -n 's/duration=//p' )
-       echo "seconds are ${FILESECONDS}"
-    }
-    _get_mediainfo_interlacement(){
-       CONTAINER_INTERLACEMENT=$(mediainfo --inform="Video;%ScanOrder%" "${INPUT_MOVIE}")
-    }
-        FRAMES2SAMPLE=200
-        _get_seconds "${INPUT_MOVIE}"
-        echo "$(basename "${INPUT_MOVIE}") is ${FILESECONDS} seconds long."
-        HALFTIME=$(echo "scale=6; ${FILESECONDS} / 2" | bc)
-        echo "Going to run idet on ${FRAMES2SAMPLE} starting at ${HALFTIME} seconds."
-        IDET_INTERLACEMENT=$(ffmpeg -ss "${HALFTIME}" -i "${INPUT_MOVIE}" -vframes "${FRAMES2SAMPLE}" -vf idet -f null -an - 2>&1 | grep "Multi frame detection:")
-        IDET_SUMMARY=$(echo "${IDET_INTERLACEMENT}" | cut -d: -f2- | awk '{print $1 " " $2 "\n" $3 " " $4 "\n" $5 " " $6 "\n" $7 " " $8}')
-        echo "${IDET_SUMMARY}"
-        IDET_TOP=$(echo "${IDET_INTERLACEMENT}" | cut -d: -f2- | awk '{print $1 " " $2 "\n" $3 " " $4 "\n" $5 " " $6 "\n" $7 " " $8}' | sort -n -k2 | tail -n1 | cut -d: -f1)
-        echo "${IDET_TOP}"
-    echo "Testing with ffmpeg says this file is ${IDET_TOP}"
-    _get_mediainfo_interlacement
-    echo "Media Info says this file is ${CONTAINER_INTERLACEMENT}"
-    if [ -z "${CONTAINER_INTERLACEMENT}" ] ; then
-        _report -qn "MediaInfo can't test the interlacement of this file. Please consider using the results from the ffmpeg file test."
-    fi
-    if [[ "${CONTAINER_INTERLACEMENT}" == "${IDET_TOP}" ]] ; then
-        if [[ "${IDET_TOP}" == "TFF" ]] ; then
-            echo "The frames in the input file are majority top field first."
-            _writeingestlog "filter choice" "setfield=tff"
-        fi
-        if [[ "${IDET_TOP}" == "BFF" ]] ; then
-            echo "The frames in the input file are majority bottom field first."
-            _writeingestlog "filter choice" "setfield=bff"
-        fi
-        if [[ "${IDET_TOP}" == "Progressive" ]] ; then
-            echo "The frames in the input file are majority progressive."
-            _writeingestlog "filter choice" "setfield=prog"
-        fi
-    fi
-    if [[ "${CONTAINER_INTERLACEMENT}" != "${IDET_TOP}" ]] ; then
-        _report -q "Which video filter do you want to use? "
-        PS3="Selection? "
-        select FILTERCHOICE in "TFF" "BFF" "Progressive"
-        do
-            break
-        done
-        if [[ "${FILTERCHOICE}" == "TFF" ]] ; then
-            _writeingestlog "filter choice" "setfield=tff"
-        fi
-        if [[ "${FILTERCHOICE}" == "BFF" ]] ; then
-            _writeingestlog "filter choice" "setfield=bff"
-        fi
-        if [[ "${FILTERCHOICE}" == "Progressive" ]] ; then
-            _writeingestlog "filter choice" "setfield=prog"
-        fi
-    fi
-}
-
 _get_cropdetection(){
     INPUT_MOVIE="${1}"
     _report -dt "Getting cropping data for $(basename "${INPUT_MOVIE}") ..."
