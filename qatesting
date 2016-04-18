@@ -40,7 +40,7 @@ while [ "${*}" != "" ] ; do
     echo "The duration of ${MEDIAID} in HH:mm;ss is: ${BROADCASTDURATION}"
 
     _get_seconds "${INPUT}"
-    echo "The seconds in ${MEDIAID} are: ${SECONDS1}"
+    echo "The seconds in ${MEDIAID} are: ${FILESECONDS}"
 
     _get_width "${INPUT}"
     echo "The width of ${MEDIAID} is: ${WIDTH}"

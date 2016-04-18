@@ -86,9 +86,9 @@ while [ "${*}" != "" ] ; do
         MIDDLEOPTIONS+=(-pix_fmt yuv420p)
         MIDDLEOPTIONS+=(-c:v libx264)
         MIDDLEOPTIONS+=(-crf 23)
-        if [ "${SECONDS1%.*}" -gt "7200" ] ; then
+        if [ "${FILESECONDS%.*}" -gt "7200" ] ; then
             MIDDLEOPTIONS+=(-maxrate 800k)
-        elif [ "${SECONDS1%.*}" -gt "3600" ] ; then
+        elif [ "${FILESECONDS%.*}" -gt "3600" ] ; then
             MIDDLEOPTIONS+=(-maxrate 900k)
         else
             MIDDLEOPTIONS+=(-maxrate 2000k)
