@@ -21,34 +21,25 @@
 # @author Joseph Perry <joseph@artefactual.com>
 # @version svn: $Id: 9e1ecac84215aaafd740d15eb0cbdc4c17b7fa1e $
 
-SCRIPTDIR=$(dirname $(which "${0}"))
-. "${SCRIPTDIR}/mmfunctions" || { echo "Missing '${SCRIPTDIR}/mmfunctions'. Exiting." ; exit 1 ;};
-
-TARGET="${1}"
-
-if [ -d "${TARGET}" ]; then
-    mkdir "${TARGET}/objects"
-    mv $(find "${TARGET}" -mindepth 1 -maxdepth 1 ! -name "objects") "${TARGET}objects/"
-    mkdir -p "${TARGET}/metadata/fileMeta"
-    mkdir -p "${TARGET}/metadata/logs"
-elif [ -f "${TARGET}" -a ! -d "$(dirname "${TARGET}")/$(basename "${TARGET%.*}")" ]; then
-    _report -qn "Enter the Media ID: "
-    read MEDIAID
-    mkdir -p "$(dirname "${TARGET}")/${MEDIAID}/objects"
-    mv "${TARGET}" "$(dirname "${TARGET}")/${MEDIAID}/objects/"
-    mkdir -p "$(dirname "${TARGET}")/${MEDIAID}/metadata/fileMeta"
-    LOGDIR="$(dirname "${TARGET}")/${MEDIAID}/metadata/logs"
-    mkdir -p "${LOGDIR}"
-    _ask_intime
-    INGESTLOG="${LOGDIR}/capture.log"
-    if [ "${INTIME}" ] ; then
-        _writeingestlog "intime" "${INTIME}"
+while [ "${*}" != "" ] ; do
+    # get context about the input
+    TARGET="${1}"
+    shift
+    if [ -d "${TARGET}" ]; then
+        mkdir "${TARGET}/objects"
+        mv $(find "${TARGET}" -mindepth 1 -maxdepth 1 ! -name "objects") "${TARGET}objects/"
+        mkdir -p "${TARGET}/metadata/fileMeta"
+        mkdir -p "${TARGET}/metadata/logs"
+    elif [ -f "${TARGET}" -a ! -d "$(dirname "${TARGET}")/$(basename "${TARGET%.*}")" ] ; then
+        MEDIAID=$(basename "${TARGET}" | cut -d. -f1 )
+        mkdir -p "$(dirname "${TARGET}")/${MEDIAID}/objects"
+        mv "${TARGET}" "$(dirname "${TARGET}")/${MEDIAID}/objects/"
+        mkdir -p "$(dirname "${TARGET}")/${MEDIAID}/metadata/fileMeta"
+        LOGDIR="$(dirname "${TARGET}")/${MEDIAID}/metadata/logs"
+        mkdir -p "${LOGDIR}"
+    else
+        echo Error: Needs SIP directory or file as argument 1>&2
+        exit 1
     fi
-    _ask_outtime
-    if [ "${OUTTIME}" ] ; then
-        _writeingestlog "outtime" "${OUTTIME}"
-    fi
-else
-    echo Error: Needs SIP directory or file as argument 1>&2
-    exit 1
-fi
+done
+
