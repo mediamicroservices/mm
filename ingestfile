@@ -26,9 +26,10 @@ _usage(){
     echo "This script will run an interactive interview and then process an input file accordingly."
     echo "Dependencies: ${DEPENDENCIES[@]}"
     echo "Usage: $(basename ${0}) [ -options ]"
-    echo "  -p (do not make any deliveries, and create the package in the same directory as the input.)"
+    echo "  -e Edit mode- Uses a graphical user interface for interactive component of inputing file and Media ID, volume adjustment, formula, and slate creation."
+    echo "  -p Preservation mode- to be used when packaging digitized material and digitization logs. Does not make any deliveries, and creates the package in the same directory as the input."
     echo "  -n (do not make any deliveries except for sending the final package to ${AIP_STORAGE}.)"
-    echo "  -i (do not make any deliveries except for sending the final package to ${DELIVERYTOOMNEON}.)"
+    echo "  -i PSA Mode- to be used when packaging PSA files. Does not make any deliveries except for sending the final package to ${DELIVERYTOOMNEON}."
     echo "  -h display this help"
     echo
     exit
@@ -36,14 +37,13 @@ _usage(){
 
 OPTIND=1
 
-while getopts ":F:pnheis" OPT ; do
+while getopts ":F:pnhei" OPT ; do
     case "${OPT}" in
         F) FORMULA="${OPTARG}";;
         e) EDIT_MODE="Y" ;;
-        p) PRESERVATION_MODE="Y" ; DELIVERYTOOMNEON="N" ; DELIVERACCESSCOPIES="N" ; DELIVERYTOAIPSTORAGE="N" ; CLEANUP_CHOICE="Y" ; CLEANUPDECISION="Remove source file after successful ingest" ;;
+        p) PRESERVATION_MODE="Y" ; DELIVERYTOOMNEON="N" ; DELIVERACCESSCOPIES="N" ; DELIVERYTOAIPSTORAGE="N" ;;
         n) DELIVERYTOOMNEON="N" ; DELIVERACCESSCOPIES="N" ;;
         i) DELIVERYTOOMNEON="Y" ; DELIVERACCESSCOPIES="N" ; DELIVERYTOAIPSTORAGE="Y" ;;
-        s) SLATE="Y" ; DELIVERYTOOMNEON="Y" ;;
         h) _usage ;;
         *) echo "bad option -${OPTARG}" ; _usage ;;
         :) echo "Option -${OPTARG} requires an argument" ;  _writeerrorlog "ingestfile" "You used an invalid option and the script had to exit" ; exit 1 ;;
@@ -51,6 +51,7 @@ while getopts ":F:pnheis" OPT ; do
 done
 shift $(( ${OPTIND} - 1 ))
 
+#local functions
 _add_mediaid_to_queue(){
     [ -n "${MEDIAID}" ] || { _report -wt "Error: mediaid is undefined in add_media_to_queue function" ; _writeerrorlog "_add_mediaid_to_queue" "The media id is undefined in the _add_mediaid_to_queue function, and caused the script to exit." ; exit 1 ;};
     [ -n "${QUEUEFILE}" ] || { _report -wt "Error: queuefile is undefined in add_media_to_queue function" ; _writeerrorlog "_add_mediaid_to_queue" "The queuefile is undefined in the _add_mediaid_to_queue function, and caused the script to exit." ; exit 1 ;};
@@ -80,6 +81,7 @@ trap _cleanup SIGHUP SIGINT SIGTERM
 [ -z "${PODCASTDELIVER}" ] && { echo "A directory for podcast delivery must be set. Use [ -w /path/to/deliver/podcastfiles] or run mmconfig to set PODCASTDELIVER." ; exit 1 ;};
 [ -z "${YOUTUBEDELIVER}" ] && { echo "A directory for youtube delivery must be set. Use [ -y /path/to/deliver/youtubefiles] or run mmconfig to set YOUTUBEDELIVER." ; exit 1 ;};
 
+#pashua interface settings
 CONF="
 # Set transparency: 0 is transparent, 1 is opaque
 *.transparency=1.00
@@ -221,6 +223,7 @@ if [ -d "${AIP_STORAGE}/${MEDIAID}" ] ; then
     exit 1
 fi
 _ask_input
+
 #here is where we would insert an option for searching for  directory.
 if [ ! $(_is_video "${INPUT}") ] ; then
     _report -qnt "WARNING: ${INPUT} is not recognized as a video file. Please press q to quit, any other key to continue (if you know what you're doing): "
@@ -307,7 +310,7 @@ if [ "${SLATE_CHOICE}" == "Y" ] ; then
     MEDIAID4SLATE="${MEDIAID}"
 fi
 
-# blackframe analysis or in/out requests
+# blackframe analysis, in/out time settings requests, ask for digitization logs
 if [ "${PRESERVATION_MODE}" == "Y" ] ; then
     _reset_directory
     _ask_intime
@@ -333,6 +336,7 @@ else
     fi
 fi
 
+#frame count test- will ask operator for what to do if there is a discrepancy between the container frame count and the video track frame count.
 _get_frame_count "${INPUT}"
 
 # set up package directories
@@ -343,6 +347,7 @@ LOGDIR="${OUTDIR_INGESTFILE}/${MEDIAID}/metadata/logs"
 _run _mkdir2 "${LOGDIR}"
 INGESTLOG="${LOGDIR}/capture.log"
 
+#performing interlacement test if formula is none- only to be used in specific edge cases, answer should be no in most cases.
 if [[ "${FORMULA}" == "none" ]] ; then
     _report -q "You did not choose a formula, do you want to perform an interlacement test on the file to determine the correct formula?"
     PS3="Selection? "
@@ -357,6 +362,7 @@ if [[ "${FORMULA}" == "none" ]] ; then
     fi
 fi
 
+#perform interlacement test
 if [[ "${INTERLACE_CHOICE}" == "Y" ]] ; then
     _get_interlacement_full "${INPUT}"
 fi
@@ -380,6 +386,7 @@ fi
 
 _log -b
 
+#writing out variable values to the capture.log file
 echo -e "${LOG}" >> "${INGESTLOG}"
 _writeingestlog "media ID" "${MEDIAID}"
 _writeingestlog "media ID slate" "${MEDIAID4SLATE}"
@@ -443,7 +450,6 @@ else
     fi
 fi
 
-# make copy for broadcast
 unset MAKEBROADCASTOPTS
 [ "${AUDIODECISION}" == "Only use left of the first audio track [for 21st Century]" -o "${AUDIODECISION}" == "left" ] && MAKEBROADCASTOPTS+=(-l)
 [ "${AUDIODECISION}" == "Only use right of the first audio track" ] && MAKEBROADCASTOPTS+=(-r)
@@ -451,6 +457,7 @@ unset MAKEBROADCASTOPTS
 if [ ! -z "${FORMULA}" ] ; then
     MAKEBROADCASTOPTS+=(-F "${FORMULA}")
 fi
+#create slate version first and upload to omneon
 if [ "${SLATE_CHOICE}" = "Y" ] ; then
     "${SCRIPTDIR}/makebroadcast" -s "${MAKEBROADCASTOPTS[@]}" "${OUTDIR_INGESTFILE}/${MEDIAID}"
     if [ "${DELIVERYTOOMNEON}" == "Y" ] ; then
@@ -461,6 +468,7 @@ if [ "${SLATE_CHOICE}" = "Y" ] ; then
     
 fi
 
+# make copy for broadcast
 "${SCRIPTDIR}/makebroadcast" "${MAKEBROADCASTOPTS[@]}" "${OUTDIR_INGESTFILE}/${MEDIAID}"
 
 # upload broadcast copy
@@ -522,6 +530,7 @@ if [[ "${DELIVERYTOAIPSTORAGE}" == "Y" ]] ; then
     [ $(du -s "${OUTDIR_INGESTFILE}/${MEDIAID}" | awk '{print $1}') = "0" ] && rm -r "${OUTDIR_INGESTFILE}/${MEDIAID}"
     _report -dt "STATUS Done. Final package has been delivered to ${AIP_STORAGE}/${MEDIAID}"
 fi
+echo "${RSYNC_ERR}"
 
 if [[ "${CLEANUP_CHOICE}" == "Y" ]] ; then
     if [ "${RSYNC_ERR}" -gt "0" ] ; then

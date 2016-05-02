@@ -180,7 +180,7 @@ while [ "${*}" != "" ] ; do
         else
             MIDDLEOPTIONS+=(-metadata:s:v:0 timecode=00:00:00.00)
         fi
-        # set in and out times if used
+        # determine filter choice if set in capture.log and set in and out times if used
         if [[ -f "${INGESTLOG}" && "${ISOBJECT}" = "Y" ]] ; then
             if [ "${FORMULA}" = "none" ] ; then
                 FILTERCHOICE=$(_readingestlog "filter choice")
