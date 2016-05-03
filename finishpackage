@@ -1,4 +1,5 @@
 #!/bin/bash
+#finish package takes a directory input created by restructureforCompliance and creates derivative access copies, metadata documents, and a checksum file. 
 while [ "${*}" != "" ] ; do
     INPUT="${1}"
     makelossless "${INPUT}" && makebroadcast "${INPUT}" && makeyoutube "${INPUT}" && makemetadata "${INPUT}" && checksumpackage "${INPUT}" 

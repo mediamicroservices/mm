@@ -122,7 +122,9 @@ echo "<?xml version=\"1.0\"?>
 " > /tmp/makemets.xsl
 
 PWD=$(pwd)
-cd "$1"
+cd "${1}"
+#create directory structure of AIP using tree, excluding tree file itself
 tree -DaNXs --du --timefmt "%Y-%m-%dT%H:%M:%SZ" -I "tree.xml" -I "mets.xml" . > /tmp/tree.xml
+#use xslt to create mets document from tree.xml
 xsltproc --stringparam root "$(pwd)" /tmp/makemets.xsl /tmp/tree.xml | xml fo > "${1}/metadata/mets.xml"
-cd "$PWD"
+cd "${PWD}"

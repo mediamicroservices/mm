@@ -116,6 +116,7 @@ while [ "${*}" != "" ] ; do
             INDIR="."
             OUTDIR="."
         fi
+        #perform checking and verification
         if [ "${CHECK}" = "Y" ] ; then
             if [ -s "${PACKAGE}/${OUTDIR}/${DFXMLNAME}" ] ; then
                 _check_dfxml "${PACKAGE}"
@@ -152,6 +153,7 @@ while [ "${*}" != "" ] ; do
                 continue
             fi
         fi
+        #create digital forensics xml and checksum.md5 file
         _report -dt "making Digital Forensics XML (${DFXMLNAME}) and (${CHECKSUMNAME}) for ${PACKAGE}"
         cd "${PACKAGE}/${INDIR}"
         DFXMLTMP=$(_maketemp)
@@ -167,6 +169,7 @@ while [ "${*}" != "" ] ; do
             xml sel -T -t -m "/dfxml/fileobject" -v "hashdigest" -o "  " -v "filename" -n "${PACKAGE}/${OUTDIR}/${DFXMLNAME}" > "${PACKAGE}/${OUTDIR}/${CHECKSUMNAME}"
         fi
         echo "$(_get_iso8601): $(basename "${0}"):${VERSION}: ${CHECKSUMNAME} is generated" >> "${PACKAGE}/${OUTDIR}/${CHECKSUMPROCESSLOG}"
+        #verify checksums by creating tmp checksum file and comparing with previously created checksums
         if [ "${VERIFY}" = "Y" ] ; then
             CHECKSUMCMP1=$(_maketemp)
             sort -k2 "${PACKAGE}/${OUTDIR}/${CHECKSUMNAME}" > "${CHECKSUMCMP1}"

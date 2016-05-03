@@ -1,5 +1,5 @@
 #!/bin/bash
-# make metadata
+# make metadata creates a set of metadata reports for an archival information package on all files in the objects subdirectory.
 VERSION="0.2"
 SCRIPTDIR=$(dirname "${0}")
 . "${SCRIPTDIR}/mmfunctions" || { echo "Missing '${SCRIPTDIR}/mmfunctions'. Exiting." ; exit 1 ;};
@@ -11,12 +11,13 @@ _usage(){
     echo "$(basename "${0}") ${VERSION}"
     echo "Produces a set of metadata reports for an archival information package on all files in the objects subdirectory."
     echo "Usage: $(basename "${0}") [ -h ] package1 [ package2 ... ]"
-    echo "  -h (show _usage)"
+    echo "  -h (show usage)"
+    echo "  -r deletes existing metadata files"
     exit
 }
 [ "${#}" = 0 ] && _usage
 
-# command-line options to set mediaid and original variables
+# command-line option to remove existing metadata files
 OPTIND=1
 while getopts ":rh" OPT ; do
     case "${OPT}" in
@@ -29,7 +30,6 @@ done
 shift $(( ${OPTIND} - 1 ))
 
 _set_up_filemeta(){
-    # set up output
     _log -b
     if [[ -d "${PACKAGE_PATH}/${OUTPUTDIR}" && "${DELETEFILEMETA}" != "Y" ]] ; then
         _report -wt "WARNING ${PACKAGE_PATH}/${OUTPUTDIR} already exists, not making metadata."
