@@ -1,5 +1,5 @@
 #!/bin/bash
-#maketree creates an .xml from a directory structure
+#maketree creates an .xml of a directory structure
 SCRIPTDIR=$(dirname $(which "${0}"))
 . "${SCRIPTDIR}/mmfunctions" || { echo "Missing '${SCRIPTDIR}/mmfunctions'. Exiting." ; exit 1 ;};
 

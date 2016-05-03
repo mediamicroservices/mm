@@ -1,6 +1,6 @@
 #!/bin/bash
 while [ "${*}" != "" ] ; do
     INPUT="${1}"
-    makelossless "${INPUT}" && makebroadcast "${INPUT}" && makeyoutube "${INPUT}" && makemetadata "${INPUT}" && checksumpackage "${INPUT}" && maketree "${INPUT}"
+    makelossless "${INPUT}" && makebroadcast "${INPUT}" && makeyoutube "${INPUT}" && makemetadata "${INPUT}" && checksumpackage "${INPUT}" 
     shift
 done

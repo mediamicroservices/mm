@@ -32,7 +32,6 @@ table of contents
     * makeqctoolsreport
     * [makeresourcespace](https://github.com/mediamicroservices/mm#makeresourcespace)
     * [makeslate](https://github.com/mediamicroservices/mm#makeslate)
-    * [maketree](https://github.com/mediamicroservices/mm#maketree)
     * [makeyoutube](https://github.com/mediamicroservices/mm#makeyoutube)
     * [quickcompare](https://github.com/mediamicroservices/mm#quickcompare)
     * [uploadomneon](https://github.com/mediamicroservices/mm#uploadomneon)
@@ -207,7 +206,7 @@ To view the specific ffmpeg encoding options for each file, view the sourcecode 
 * Finally, use -v as an option if you want to fully verify two checksum files against one another. If no checksums exist, the script will create the initial ones. Verification will version existing checksums and make new ones, and log the difference to a checksumprocess log, which will be placed in the metadata directory of the package, or in the same directory as the file if the input is a directory. (need to check on how this option actually works). To use -v, type  checksumpackage -v [input]
 
 #### finishpackage ####
-* finishpackage is a combination of the microservices makelossless, makebroadcast, makeyoutube, makemetadata, checksumpackage, and maketree. The purpose is to losslessly transcode, create access copies, and create metadata and directory structure information for a file or package input. To use finishpackage, type finishpackage and drag your input into the command line, like this:  finishpackage [input].
+* finishpackage is a combination of the microservices makelossless, makebroadcast, makeyoutube, makemetadata, and checksumpackage. The purpose is to losslessly transcode, create access copies, and create metadata and directory structure information for a file or package input. To use finishpackage, type finishpackage and drag your input into the command line, like this:  finishpackage [input].
 
 #### fix_left2stereo ####
 * fix\_left2stereo takes an input video file or files and produces outputs that map the left channel of the input to a stereo mix in the output. The suffix "\_left2stereo" is added to the filename to distinguish it from the original. Your command will look like this: fix_left2stereo [file1] [file2]
@@ -287,9 +286,6 @@ To view the specific ffmpeg encoding options for each file, view the sourcecode 
 
 #### makeslate ####
 * makeslate creates a slate to be inserted before a broadcast program begins. To use makeslate at your own institution, you will have to manually edit the file based on your institutional needs. makeslate writes a short .mov file to your desktop. to run makeslate, your command will look like this: makeslate [input].
-
-#### maketree ####
-* maketree creates an xml document of the directory structure of a package input, and is to be used in conjunction with verifytree to validate the contents of an Archival Information Package (AIP). maketree is included in ingestfile and finishpackage, and outputs a file called tree.xml into the metadata directory of a package. If you want to run maketree on an individual package, your command will look like this: maketree [input].
 
 #### makeyoutube ####
 * makeyoutube creates a high quality h264 file from a video file or package input. Your command will look like this: makeyoutube [input].
