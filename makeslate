@@ -1,4 +1,5 @@
 #!/bin/bash
+#this script creates colorbars, a slate, and adds 30 seconds of black at the end of a video file input
 
 cowsay "MediaID?"
 echo -n ":: "

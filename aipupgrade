@@ -6,12 +6,12 @@ SCRIPTDIR=$(dirname $(which "${0}"))
 
 while [ "${*}" != "" ] ; do
     echo "Now I'm removing the SubmissionDocumentation directory and .DSStore files."
-    # get context about the input
     INPUT="${1}"
     SUBDOC="${INPUT}/metadata/submissionDocumentation/"
     METADOC="${INPUT}/metadata/"
     shift
     "${SCRIPTDIR}/removeDSStore" "${INPUT}"
+    #remove unecessary directory
     if [ -d "${SUBDOC}" ] ; then 
         mv -v -n "${SUBDOC}"* "${METADOC}"
         rmdir "${SUBDOC}"

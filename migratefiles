@@ -6,7 +6,8 @@ SCRIPTDIR=$(dirname $(which "${0}"))
 _usage(){
     echo "This script moves files from one location to another."
     echo "  -o directory ( directory to write the resulting file to )"
-    echo "the structure of the script is as follows: migratefiles -o ${TARGET} ${INPUT}"
+    echo "  -r option to remove source files upon transfer"
+    echo "the structure of the script is as follows: migratefiles -o ${TARGET} ${INPUT}, note that this is different than rsync commands"
 }
 
 OPTIND=1
