@@ -76,7 +76,7 @@ _mkdir2(){
 
 _writeerrorlog(){
     if [ ! -d "${ERRORLOGS}" ] ; then
-        mkdir ~/Desktop/ERRORLOGS/
+        _mkdir2 ~/Desktop/ERRORLOGS/
         touch ~/Desktop/ERRORLOGS/error.log
     fi
         ERRORLOG=~/Desktop/ERRORLOGS/error.log
