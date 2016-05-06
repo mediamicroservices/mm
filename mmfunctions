@@ -19,32 +19,6 @@ elif [ ! "${CONFIG}" = "Y" -a "${REQUIRECONFIG}" = "Y" ] ; then
     exit 1
 fi
 
-_config_edit(){
-    [ -z "${1}" -o -z "${2}" ] && { _report -w "The config_edit function requires two arguments. Error." ; exit ;};
-    SEDTEMP=$(_maketemp)
-    sed "s:^$1=[^ ]*:$1=$2:" "${LTO_CONFIG_FILE}" > "${SEDTEMP}"
-    cp "${SEDTEMP}" "${LTO_CONFIG_FILE}"
-}
-
-_test_config(){
-    for DIRECTORYVARIABLE in OUTDIR_INGESTFILE OUTDIR_INGESTXDCAM OUTDIR_PAPER AIP_STORAGE PODCASTDELIVER YOUTUBEDELIVER TMPDIR CUSTOM_LOG_DIR LTO_INDEX_DIR ; do
-        if [ -d "${!DIRECTORYVARIABLE}" ] ; then
-            _report -d "${DIRECTORYVARIABLE} is a valid directory"
-        else
-            _report -w "${DIRECTORYVARIABLE} is NOT a valid directory"
-        fi
-    done
-}
-
-_add_key(){
-    KEY_TO_ADD="${1}"
-    grep -q "^$KEY_TO_ADD=" "${LTO_CONFIG_FILE}" ; GREP_CODE="$?"
-    if [[ ! "${GREP_CODE}" -eq "0" ]] ; then
-        _report -td "Adding NEW variable $key_to_add to ${LTO_CONFIG_FILE}"
-        echo "$KEY_TO_ADD=" >> "${LTO_CONFIG_FILE}"
-    fi
-}
-
 _cleanup_mount_dir(){
     if [ -d "${MOUNT_DIR}" ] ; then
         echo calling umount
@@ -112,6 +86,15 @@ _writeerrorlog(){
         echo "${MEDIAID}, ${DATE}, ${KEY}: ${VALUE}" >> "${ERRORLOG}"
 }
 
+_maketemp(){
+    mktemp -q "/tmp/$(basename "${0}").XXXXXX"
+    if [ "${?}" -ne 0 ]; then
+        echo "${0}: Can't create temp file, exiting..."
+        _writeerrorlog "_maketemp" "was unable to create the temp file, so the script had to exit."
+        exit 1
+    fi
+}
+
 _log(){
     MMLOGNAME="mm.log"
     MMLOGDIR="${CUSTOM_LOG_DIR:-/tmp}"
@@ -163,6 +146,32 @@ _report(){
         MESSAGE="${1}"
         echo "${ECHOOPT}" "${COLOR}${STARTMESSAGE[@]}${MESSAGE}${NC}"
         [ "${LOG_MESSAGE}" = "Y" ] && _log -w "${MESSAGE}"
+}
+
+_config_edit(){
+    [ -z "${1}" -o -z "${2}" ] && { _report -w "The config_edit function requires two arguments. Error." ; exit ;};
+    SEDTEMP=$(_maketemp)
+    sed "s:^$1=[^ ]*:$1=$2:" "${LTO_CONFIG_FILE}" > "${SEDTEMP}"
+    cp "${SEDTEMP}" "${LTO_CONFIG_FILE}"
+}
+
+_test_config(){
+    for DIRECTORYVARIABLE in OUTDIR_INGESTFILE OUTDIR_INGESTXDCAM OUTDIR_PAPER AIP_STORAGE PODCASTDELIVER YOUTUBEDELIVER TMPDIR CUSTOM_LOG_DIR LTO_INDEX_DIR ; do
+        if [ -d "${!DIRECTORYVARIABLE}" ] ; then
+            _report -d "${DIRECTORYVARIABLE} is a valid directory"
+        else
+            _report -w "${DIRECTORYVARIABLE} is NOT a valid directory"
+        fi
+    done
+}
+
+_add_key(){
+    KEY_TO_ADD="${1}"
+    grep -q "^$KEY_TO_ADD=" "${LTO_CONFIG_FILE}" ; GREP_CODE="$?"
+    if [[ ! "${GREP_CODE}" -eq "0" ]] ; then
+        _report -td "Adding NEW variable $key_to_add to ${LTO_CONFIG_FILE}"
+        echo "$KEY_TO_ADD=" >> "${LTO_CONFIG_FILE}"
+    fi
 }
 
 _writeingestlog(){
@@ -229,15 +238,6 @@ _get_frame_count(){
             read A2
             [ "${A2}" == "q" ] && exit 0
         fi
-    fi
-}
-
-_maketemp(){
-    mktemp -q "/tmp/$(basename "${0}").XXXXXX"
-    if [ "${?}" -ne 0 ]; then
-        echo "${0}: Can't create temp file, exiting..."
-        _writeerrorlog "_maketemp" "was unable to create the temp file, so the script had to exit."
-        exit 1
     fi
 }
 
