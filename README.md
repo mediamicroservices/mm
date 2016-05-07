@@ -11,6 +11,7 @@ table of contents
     3. [configuring mediamicroservices](https://github.com/mediamicroservices/mm#configuring-mediamicroservices)
         1. [variable explanations](https://github.com/mediamicroservices/mm#variable-explanations)
 3. [mediamicroservices functions and instructions for use](https://github.com/mediamicroservices/mm#mediamicroservices-functions-and-instructions-for-use)
+	* [aipupgrade]()
     * [barcodeinterpret](https://github.com/mediamicroservices/mm#barcodeinterpret)
     * [blackatends](https://github.com/mediamicroservices/mm#blackatends)
     * [checksum2filemaker](https://github.com/mediamicroservices/mm#checksum2filemaker)
@@ -26,21 +27,26 @@ table of contents
     * [makeframes](https://github.com/mediamicroservices/mm#makeframes)
     * [makelossless](https://github.com/mediamicroservices/mm#makelossless)
     * [makemetadata](https://github.com/mediamicroservices/mm#makemetadata)
+	* [makemets]()
     * [makemp3](https://github.com/mediamicroservices/mm#makemp3)
     * [makepodcast](https://github.com/mediamicroservices/mm#makepodcast)
     * [makeprores](https://github.com/mediamicroservices/mm#makeprores)
-    * makeqctoolsreport
+    * [makeqctoolsreport]()
     * [makeresourcespace](https://github.com/mediamicroservices/mm#makeresourcespace)
     * [makeslate](https://github.com/mediamicroservices/mm#makeslate)
     * [makeyoutube](https://github.com/mediamicroservices/mm#makeyoutube)
+	* [migratefiles]()
+	* [qatesting]()
     * [quickcompare](https://github.com/mediamicroservices/mm#quickcompare)
+	* [removeDSStore]()
+	* [restructureForCompliance]()
     * [uploadomneon](https://github.com/mediamicroservices/mm#uploadomneon)
     * [verifytree](https://github.com/mediamicroservices/mm#verifytree)
     * [xdcamingest](https://github.com/mediamicroservices/mm#xdcamingest)
 
 ## summary ##
 
-mediamicroservices has been developed for the purpose of processing audiovisual collections at [CUNY Television](http://cuny.tv). This repository includes scripts to run ffmpeg to create access and service copies of audio visual assets, as well as to analyze, report, and deliver media as individual files or as Archive Information Packages. Mediamicroservices are developed and tested for a Mac OS X environment.
+mediamicroservices has been developed for the purpose of processing audiovisual collections at [CUNY Television](http://cuny.tv). This repository includes scripts to run ffmpeg to create access and service copies of audio visual assets, as well as to analyze, report, and deliver media as individual files or as Archive Information Packages. Mediamicroservices are written in bash, and developed and tested for a Mac OS X environment.
 
 Mediamicroservices are installed and run using the terminal application, so knowledge of the command line is necessary. For information on the command line, please see [The Command Line Crash Course](http://cli.learncodethehardway.org/book/) or the [Code Academy Course](https://www.codecademy.com/learn/learn-the-command-line).
 
@@ -91,6 +97,7 @@ mediamicroservices also uses Pashua to run a graphical user interface. It is rec
 
 If at any point you would like to uninstall mediamicroservices, type brew uninstall mediamicroservices/mm/mm into the command line.
 
+
 ### configuring mediamicroservices ###
 in order for mediamicroservices to run, you must configure your variable settings. first, take a look at the list of variables below to get a sense of what each variable means. Then, create all of the delivery directories that you'll need, in the place you'd like them to be. you can name the directories themselves anything you'd like- the more important part is tying them to a variable in the configuration process. Not all variables are necessary for microservices to run, so look over which microservices you'd like to use to get a sense of whether or not you'll need to a specific variable.
 
@@ -113,25 +120,25 @@ choose this option to edit the config file using [nano](http://www.nano-editor.o
 choose this option to edit the config file using [TextMate](http://macromates.com/)
 
 **3. OUTDIR_INGESTFILE**
-this variable is the processing directory. it is directory where your package will be created, and if you do not choose to deliver the package to AIP_STORAGE, this is where the completed package will remain. #make sure this is true!
+set this variable to the processing directory. it is directory where your package will be created, and if you do not choose to deliver the package to AIP_STORAGE, this is where the completed package will remain. 
 
 **4. OUTDIR_INGESTXDCAM**
-this variable is the processing directory for xdcam files that are processed using using the mediamicroservices xdcamingest.
+set this variable to the processing directory for xdcam files that are processed using using the mediamicroservices xdcamingest.
 
 **5. OUTDIR_PAPER**
-this variable is the processing directory when using the paperingest script.
+set this variable to the processing directory when using the paperingest script.
 
 **6. AIP_STORAGE**
-this variable is the directory where the archival information package is delivered.
+set this variable to the directory where the archival information package is delivered.
 
 **7. PODCASTDELIVER**
-this variable is the directory where your podcast access copy is delivered.
+set this variable to the directory where your podcast access copy is delivered.
 
 **8. YOUTUBEDELIVER**
-this variable is the directory where your youtube access copy is delivered.
+set this variable to the directory where your youtube access copy is delivered.
 
 **9. TMPDIR**
-this variable is a temporary directory. it is used in the uploadomneon microservice as a temporary place for a file to live before it is uploaded to the omneon server.
+set this variable to a temporary directory. it is used in the uploadomneon microservice as a temporary place for a file to live before it is uploaded to the omneon server.
 
 **10. REGEX4PODCAST**
 this varible holds regular expressions that are queried when makepodcast is run, in order to determine if a file qualifies for podcast creation. If you want all of your files to qualify for podcast creation, enter a "." which matches (almost) any character. Learn more about [regex](https://en.wikipedia.org/wiki/Regular_expression).
@@ -155,7 +162,7 @@ this variable is the directory that stores the .schema files created when LTOs a
 this variable is the directory that stores mediamicroservices scripts locally.
 
 **17. EMAIL_FROM**
-this variable is the email address that notifications will be sent from, once processes have been completed. You may leave this variable blank if you do not want any notification emails sent once actions have been performed on files.
+this variable is the email address that notifications will be sent from once processes have been completed. You may leave this variable blank if you do not want any notification emails sent once actions have been performed on files.
 
 **18. MAKEYOUTUBE_DELIVERY_EMAIL_TO**
 this variable is the email address (or addresses) that notifications will be sent to once makeyoutube has been run on a file.
@@ -177,20 +184,27 @@ if editing in the terminal, use this option to leave the configuration file edit
 
 ## mediamicroservices functions and instructions for use ##
 
-For all microservices, the structure of the command looks like this:  [microservice] -options [input], where the microservice is the particular command you want to execute (for example, checksumpackage), options are any non-default choices that the script may contain, and the input is the package, directory, or file that you are working with. A few of the microservices may also ask you to specify a directory, which would follow -options within the structure of the command.
+For all microservices, the structure of the command looks like this:    
+[microservice] -options [input]  
+the microservice is the particular command you want to execute (for example, checksumpackage)  
+options are any non-default choices that the script may contain  
+the input is the package, directory, or file that you are working with  
 
-Across all mediamicroservices, you can always receive the usage information by typing the microservice and -h. Your command will look like ths: [microservice] -h.
+Across all mediamicroservices, you can always receive the usage information by typing the microservice and -h. Your command will look like this: [microservice] -h.
 
 makepodcast, makebroadcast, makeflv, make prores, makeresourcespace, makeyoutube, and makedvd also share the following options:
 
 * if you want to specify a directory for the file to be delivered to, use the -d option, and follow -d with the directory path. Your command will look like this: [microservice] -d [directory/path] [input]. This option delivers a copy of the resulting file to a specific location, in addition to the default OUTPUTDIR.
 * if you want to specify a directory for the file to be written directly to, use option o. Your command will look like this: [microservice] -o [directory/path] [input].
-* if you want to run makebroadcast in "dry-run" mode, which means that the commands will be shown in the terminal but not run, use option n. Your command will look like this: [microservice] -n [input].
+* if you want to run makebroadcast in "dry-run" mode, which means that the commands will be shown in the terminal but not run, use option n. Your command will look like this: [makebroadcast] -n [input].
 * if you want to send email notifications about the delivery of a file, and you set the email variables, you can use option e or E. option e will send an email about the delivery but only if -d is also used. Your command will look like this: [microservice] -d [directory/path] -e [input]. If you want to send an email about the process outcomes, use E. Your command will look like this: [microservice] -E [input].
 
 To view the specific ffmpeg encoding options for each file, view the sourcecode of the microservice directly on GitHub or using a text editor on your computer.
 
-#### barcodeinterpret ####
+####aipupgrade
+* this script takes an archival information package created by earlier versions of ingestfile and removes the submissionDocumentation directory, removes DS__Store files, logs the package type to the capture log if there is none, and creates new technical metadata files that overwrite previously created metadata files.
+
+#### barcodeinterpret
 * barcodeinterpret works with xdcamingest to gather metadata about an XDCam disk by scanning the barcode on the disk case. this script is no longer in use and development is not supported.
 
 #### blackatends ####
@@ -200,13 +214,13 @@ To view the specific ffmpeg encoding options for each file, view the sourcecode 
 * checksum2filemaker delivers checksums from a package input into a predefined table in a FileMaker Database called checksums, using the dfxml format. this script requires the user to set up a FileMaker database and server URL, which are both variables stored in the configuration file. To use this script, type checksum2filemaker in your command line, followed by the package, like this:  checksum2filemaker [package]
 
 #### checksumpackage ####
-* checksum creates, checks, updates, and verifies checksums from an input of a directory or package. To use, type checksumpackage into the command line, followed by the input, like this:  checksumpackage [input].
-* If you only want to check that filenames and filesizes are the same as in existing files, use option -c. Type  checksumpackage -c [input] and if no existing checksum files exist, they will be created.
-* Another option is to use -c in conjunction with -u, which will create new checksums and version the previous ones if the check is unsuccessful, meaning your checksums have changed. Type  checksumpackage -cu [input] for this option. You should see something resembling this output in your terminal and in your directory: #photostocome
-* Finally, use -v as an option if you want to fully verify two checksum files against one another. If no checksums exist, the script will create the initial ones. Verification will version existing checksums and make new ones, and log the difference to a checksumprocess log, which will be placed in the metadata directory of the package, or in the same directory as the file if the input is a directory. (need to check on how this option actually works). To use -v, type  checksumpackage -v [input]
+* checksum creates, and verifies checksums from an input of a directory or archival informaion package. To use, type checksumpackage into the command line, followed by the input, like this:  checksumpackage [input].
+* If you only want to check that filenames and filesizes are the same as in existing files, use option -c. Type  checksumpackage -c [input] and if no existing checksum file exists, one will be created.
+* Another option is to use -c in conjunction with -u, which will create new checksums and version the previous ones if the check is unsuccessful, meaning your checksums have changed. Type  checksumpackage -cu [input] for this option. 
+* Finally, use -v as an option if you want to fully verify checksums. If no checksums exist, the script will create the initial ones. Verification will version existing checksums and make new ones, and log the difference to a checksumprocess log, which will be placed in the metadata directory of the package, or in the same directory as the file if the input is a directory. To use -v, type  checksumpackage -v [input]
 
 #### finishpackage ####
-* finishpackage is a combination of the microservices makelossless, makebroadcast, makeyoutube, makemetadata, and checksumpackage. The purpose is to losslessly transcode, create access copies, and create metadata and directory structure information for a file or package input. To use finishpackage, type finishpackage and drag your input into the command line, like this:  finishpackage [input].
+* finishpackage is a combination of the microservices makelossless, makebroadcast, makeyoutube, makemetadata, and checksumpackage. The purpose is to losslessly transcode, create access copies, and create metadata and directory structure information for a file or package input. To use finishpackage, type finishpackage and drag your input into the command line, like this:  finishpackage [input]. finish package is typically used in conjunction with restructureForCompliance.
 
 #### fix_left2stereo ####
 * fix\_left2stereo takes an input video file or files and produces outputs that map the left channel of the input to a stereo mix in the output. The suffix "\_left2stereo" is added to the filename to distinguish it from the original. Your command will look like this: fix_left2stereo [file1] [file2]
@@ -218,8 +232,9 @@ To view the specific ffmpeg encoding options for each file, view the sourcecode 
 * fix_volume uses an input video file to produce an output video file where the audio is adjusted to meet an integrated loudness of -23dB. If the integrated loudness of the input is already within 1dB of the target then no change will occur. The output file will be in the same directory as the input file, and the suffix "\_voladj" is added to the file name to distinguish it from the original. Your command will look like this: fix\_volume [file1] [file2]
 
 #### ingestfile ####
-* ingestfile is a combination of multiple microservices for the purposes of creating an Archival Information Package (AIP) from an input of a video file. Included in the AIP are the original file, access copies, and corresponding metadata. Running ingestfile also sets a unique identifier for a video file, and bases the directory and metadata naming on this unique identifier. to run ingestfile, you must have the following variables set: OUTDIR_INGESTFILE, AIP_STORAGE, PODCASTDELIVER, YOUTUBEDELIVER. the default use of ingestfile runs the following processes on a file:
-    * queries the user, via terminal prompt or command line, about audio mapping settings, cropping of the video, formula of the video, and whether or not the original file should be removed after successful ingest. ingestfile also has a queue function, which allows for the user to set up many files at a time.
+* ingestfile is a combination of multiple microservices for the purposes of creating an Archival Information Package (AIP) from an input of a video file. Included in the AIP are the original file, access copies, and corresponding technical metadata. Running ingestfile also sets a unique identifier for a video file, and bases the directory and metadata naming on this unique identifier. to run ingestfile, you must have the following variables set: OUTDIR\_INGESTFILE, AIP_STORAGE, PODCASTDELIVER, YOUTUBEDELIVER. the default use of ingestfile runs the following processes on a file:
+    * queries the user, via terminal prompt or command line, about audio mapping settings, cropping of the video, formula of the video, whether a slate should be created for the file, and whether the original file should be removed after successful ingest. ingestfile also has a queue function, which allows for the user to set up many files at a time.
+	* note that if you do not choose a formula, ingestfile will ask you if you want to perform an interlcement test on the file. this should only be done if you have a concern that the file may have interlacement issues. ingestfile will not proceed until you choose an option. ingestfile also tests for black frames at the beginning and end of the file and requests in and out times if needed. finally, ingestfile will also test for the frame count, and if there is a discrepancy between the reported and actual framecount, it will prompt the operator to quit or proceed.
     * then sets up the structure of the AIP, writes out the input from the user queries to a log file, and uses rsync to move the original file into the objects directory.
     * transcodes a file for broadcast and delivers it to the omneon server.
     * creates access copies using makemp3, makeframes, makeyoutube, and makepodcast, and delivers youtube and podcast files.
@@ -227,9 +242,10 @@ To view the specific ffmpeg encoding options for each file, view the sourcecode 
     * finishes by delivering the AIP to the specified AIP_STORAGE location.
 
 * To run ingestfle with a graphical user interface (GUI), use option -e. Your command will look like:  ingestfile -e [file]
-* if you are running ingestfile on digitized video files that have additional logs from digitization, and you need to set the in and out times for the file to be trimmed, you can use option -c. Your command will look like:  ingestfile -p [file]. This option does not have a GUI, so you will input information when prompted into the command line, including setting in and out times and dragging in any logs from digitization. Note that this option does not deliver to AIP storage, instead it keeps the AIP in the original directory.
+* if you are running ingestfile on digitized video files that have additional logs from digitization, and you need to set the in and out times for the file to be trimmed, you can use option -p. Your command will look like:  ingestfile -p [file]. This option does not have a GUI, so you will input information when prompted into the command line, including setting in and out times and dragging in any logs from digitization. Note that this option does not deliver to AIP storage, instead it keeps the AIP in the original directory.
 * if you would like to create an AIP but not have the file delivered to the omneon server or any of the access copies delivered, you can use option -n. Your command will look like:  ingestfile -n [file].
 * if you would like to only deliver the AIP to the omneon server and AIP storage, you can use -i. Your command will look like:  ingestfile -i [file].
+
 
 * here's two gifs of ingestfile 
 ![ingestfile without gui](https://github.com/mediamicroservices/mm/blob/master/Resources/ingestfile.gif)
@@ -264,7 +280,9 @@ To view the specific ffmpeg encoding options for each file, view the sourcecode 
 #### makemetadata ####
 * makemetadata produces a set of metadata reports, using ffprobe, mediainfo, and exiftool, for an archival information package on all files in the objects subdirectory. ffprobe reports are .xml and .json files, mediainfo reports are .xml and mediainfo trace reports are .txt, and exiftool reports are .xml and .txt. Your command will look like this: makemetadata [input].
 
-#### makemp3 ####
+####makemets
+
+####makemp3 ####
 * makemp3 creates an mp3 file from a video file or package input. Your command will look like this: makemp3 [input].
 * if you want to specify a directory for the file to be written directly to, use option o. Your command will look like this: makemp3 -o [directory/path] [input]
 
@@ -275,8 +293,6 @@ To view the specific ffmpeg encoding options for each file, view the sourcecode 
 ####  makeprores ####
 * makeprores creates a prores/quicktime file from a video file or package input. Your command will look like this: makeprores [input].
 * makeprores has options d, o, n, e, E. To reread what those options mean, return to [section header](https://github.com/mediamicroservices/mm#mediamicroservices-functions-and-instructions-for-use). If you use options o or d, your command will look like this: makeprores -o OR -d [path/to/directory] [input]. If you use option n, your command will look like this: makeprores -n [input]. If you use option e, your command will look like this: makeprores -e -d [path/to/directory] [input]. If you use option -E, your command will look like this: makeprores -E [input].
-
-#### makeqctoolsreport ####
 
 #### makeresourcespace ####
 * makeresourcespace creates a high quality h264 file from a video file or package input. Your commmand will look like this: uploadyoutube [input].
@@ -292,6 +308,14 @@ To view the specific ffmpeg encoding options for each file, view the sourcecode 
 * if you would like to use only the left or right channel of first audio track, use options r or l. Your command will look like this: makeyoutube -l [input] for left or makeyoutube -r [input] for right.
 * if you want to run the video through a volume adjustment filter, then adjust the volume accordingly during transcoding, use option v. This process will be slower. Defaults to ${VOLADJUST} variable set in mmconfig. Your command will look like this: makeyoutube -v Y OR N [input].
 * makeyoutube has options d, o, n, e, E. To reread what those options mean, return to [section header](https://github.com/mediamicroservices/mm#mediamicroservices-functions-and-instructions-for-use). If you use options o or d, your command will look like this: makeyoutube -o OR -d [path/to/directory] [input]. If you use option n, your command will look like this: makeyoutube -n [input]. If you use option e, your command will look like this: makeyoutube -e -d [path/to/directory] [input]. If you use option -E, your command will look like this: makeyoutube -E [input].
+
+####migratefiles
+
+####qatesting
+
+####removeDSStore
+
+####restructureForCompliance
 
 #### quickcompare ####
 * quickcompare takes two files and compares the checksums against one another, and outputs the results into the terminal. Your command will look like this: quickcompare [input1] [input2]
