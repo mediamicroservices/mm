@@ -4,11 +4,21 @@
 SCRIPTDIR=$(dirname $(which "${0}"))
 . "${SCRIPTDIR}/mmfunctions" || { echo "Missing '${SCRIPTDIR}/mmfunctions'. Exiting." ; exit 1 ;};
 
+_report -d "Select a package type:"
+PS3="Selection? "
+select PACKAGETYPE in "Production" "Preservation-Video" "Preservation-Document" "Preservation-Audio" "Unedited"
+do
+    break
+done
+echo "You've selected ${PACKAGETYPE} as your package type."
+
 while [ "${*}" != "" ] ; do
     echo "Now I'm removing the SubmissionDocumentation directory and .DSStore files."
     INPUT="${1}"
+    echo "The input is ${INPUT}"
     SUBDOC="${INPUT}/metadata/submissionDocumentation/"
     METADOC="${INPUT}/metadata/"
+    echo "${METADOC}"
     shift
     "${SCRIPTDIR}/removeDSStore" "${INPUT}"
     #remove unecessary directory
@@ -19,15 +29,9 @@ while [ "${*}" != "" ] ; do
     echo "Now I'm going to create a capture log (if needed) and record the package type."
     LOGDIR="${INPUT}/metadata/logs"
     INGESTLOG="${LOGDIR}/capture.log"
-    PACKAGETYPE=$(_readingestlog "package type")
-    if [[ ! "${PACKAGETYPE}" ]] ; then
-        _report -d "Select a package type:"
-        PS3="Selection? "
-        select PACKAGETYPE in "Production" "Preservation-Video" "Preservation-Document" "Preservation-Audio" "Unedited"
-        do
-            break
-        done
-        echo "You've selected ${PACKAGETYPE} as your package type."
+    echo "" >> "${INGESTLOG}"
+    INGESTPACKAGETYPE=$(_readingestlog "package type")
+    if [[ ! "${INGESTPACKAGETYPE}" ]] ; then
         echo "Creating capture log with package type."
         if [[ ! -f "${INGESTLOG}" ]] ; then
             _writeingestlog "made this" "aipupgrade"
