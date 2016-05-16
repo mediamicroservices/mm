@@ -399,6 +399,7 @@ _email_delivery(){
     EMAILTO="${1}"
     if [ "${EMAILTO}" ] ; then
         _get_prettyduration "${OUTPUT}"
+        temp_message=$(_maketemp)
         if [[ -f "${INGESTLOG}" ]] ; then
             FROMLOG="Operator: $(_readingestlog "operator")\n
 Processing Computer: $(_readingestlog "computer_name")
@@ -419,7 +420,16 @@ Encoding_options: ${MIDDLEOPTIONS[@]}\n
 Delivery Exit Status: ${DELIVER_EXIT_STATUS}\n
 ${FROMLOG}
 \n
-Enjoy!" | sendmail -f "${EMAIL_FROM}" -F "${EMAILTO}" "${EMAILTO}"
+Enjoy!\n\n" > "$temp_message"
+        waveform_image="${OUTDIR_INGESTFILE}/${MEDIAID}/metadata/depictions/${MEDIAID}_waveform.png"
+        if [ -f "${waveform_image}" ] ; then
+            _report -d "Adding a waveform to the email from ${waveform_image}"
+            uuencode "${waveform_image}" $(basename "${waveform_image}") >> "$temp_message"
+        fi
+        sendmail -f "${EMAIL_FROM}" -F "${EMAILTO}" "${EMAILTO}" < "$temp_message"
+        if [ -f "$temp_message" ] ; then
+            rm "$temp_message"
+        fi
     fi
 }
 
