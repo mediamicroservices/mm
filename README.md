@@ -11,7 +11,7 @@ table of contents
     3. [configuring mediamicroservices](https://github.com/mediamicroservices/mm#configuring-mediamicroservices)
         1. [variable explanations](https://github.com/mediamicroservices/mm#variable-explanations)
 3. [mediamicroservices functions and instructions for use](https://github.com/mediamicroservices/mm#mediamicroservices-functions-and-instructions-for-use)
-	* [aipupgrade]()
+	* [aipupgrade](https://github.com/mediamicroservices/mm#aipupgrade)
     * [barcodeinterpret](https://github.com/mediamicroservices/mm#barcodeinterpret)
     * [blackatends](https://github.com/mediamicroservices/mm#blackatends)
     * [checksum2filemaker](https://github.com/mediamicroservices/mm#checksum2filemaker)
@@ -27,7 +27,7 @@ table of contents
     * [makeframes](https://github.com/mediamicroservices/mm#makeframes)
     * [makelossless](https://github.com/mediamicroservices/mm#makelossless)
     * [makemetadata](https://github.com/mediamicroservices/mm#makemetadata)
-	* [makemets]()
+	* [makemets](https://github.com/mediamicroservices/mm#makemets)
     * [makemp3](https://github.com/mediamicroservices/mm#makemp3)
     * [makepodcast](https://github.com/mediamicroservices/mm#makepodcast)
     * [makeprores](https://github.com/mediamicroservices/mm#makeprores)
@@ -35,18 +35,18 @@ table of contents
     * [makeresourcespace](https://github.com/mediamicroservices/mm#makeresourcespace)
     * [makeslate](https://github.com/mediamicroservices/mm#makeslate)
     * [makeyoutube](https://github.com/mediamicroservices/mm#makeyoutube)
-	* [migratefiles]()
-	* [qatesting]()
+	* [migratefiles](https://github.com/mediamicroservices/mm#migratefiles)
+	* [qatesting](https://github.com/mediamicroservices/mm#qatesting)
     * [quickcompare](https://github.com/mediamicroservices/mm#quickcompare)
-	* [removeDSStore]()
-	* [restructureForCompliance]()
+	* [removeDSStore](https://github.com/mediamicroservices/mm#removedsstore)
+	* [restructureForCompliance](https://github.com/mediamicroservices/mm#restructureforcompliance)
     * [uploadomneon](https://github.com/mediamicroservices/mm#uploadomneon)
     * [verifytree](https://github.com/mediamicroservices/mm#verifytree)
     * [xdcamingest](https://github.com/mediamicroservices/mm#xdcamingest)
 
 ## summary ##
 
-mediamicroservices has been developed for the purpose of processing audiovisual collections at [CUNY Television](http://cuny.tv). This repository includes scripts to run ffmpeg to create access and service copies of audio visual assets, as well as to analyze, report, and deliver media as individual files or as Archive Information Packages. Mediamicroservices are written in bash, and developed and tested for a Mac OS X environment.
+mediamicroservices have been developed for the purpose of processing audiovisual collections at [CUNY Television](http://cuny.tv). This repository includes scripts to run ffmpeg to create access and service copies of audiovisual assets, as well as to analyze, report, and deliver media as individual files or as Archive Information Packages. Mediamicroservices are written in bash, and developed and tested for a Mac OS X environment.
 
 Mediamicroservices are installed and run using the terminal application, so knowledge of the command line is necessary. For information on the command line, please see [The Command Line Crash Course](http://cli.learncodethehardway.org/book/) or the [Code Academy Course](https://www.codecademy.com/learn/learn-the-command-line).
 
@@ -87,6 +87,7 @@ mediamicroservice dependencies:
 * sdl
 * ffmpeg
 * flac
+* ltopers
 * md5deep
 * mediainfo
 * normalize
@@ -95,8 +96,9 @@ mediamicroservice dependencies:
 
 mediamicroservices also uses Pashua to run a graphical user interface. It is recommended to install Pashua before running media microservices. Type brew install Pashua into the command line and press enter. You will be prompted for your password. Enter your password, and then you will be able to run mediamicroservices scripts and options that utilize a GUI.
 
-If at any point you would like to uninstall mediamicroservices, type brew uninstall mediamicroservices/mm/mm into the command line.
+mediamicroservices will require an ltoper.conf file to run. If you do not want to use ltopers, create a fake ltoper.conf file by typing the following command: touch /usr/local/bin/ltoper.conf
 
+If at any point you would like to uninstall mediamicroservices, type brew uninstall mediamicroservices/mm/mm into the command line.
 
 ### configuring mediamicroservices ###
 in order for mediamicroservices to run, you must configure your variable settings. first, take a look at the list of variables below to get a sense of what each variable means. Then, create all of the delivery directories that you'll need, in the place you'd like them to be. you can name the directories themselves anything you'd like- the more important part is tying them to a variable in the configuration process. Not all variables are necessary for microservices to run, so look over which microservices you'd like to use to get a sense of whether or not you'll need to a specific variable.
@@ -195,14 +197,14 @@ Across all mediamicroservices, you can always receive the usage information by t
 makepodcast, makebroadcast, makeflv, make prores, makeresourcespace, makeyoutube, and makedvd also share the following options:
 
 * if you want to specify a directory for the file to be delivered to, use the -d option, and follow -d with the directory path. Your command will look like this: [microservice] -d [directory/path] [input]. This option delivers a copy of the resulting file to a specific location, in addition to the default OUTPUTDIR.
-* if you want to specify a directory for the file to be written directly to, use option o. Your command will look like this: [microservice] -o [directory/path] [input].
-* if you want to run makebroadcast in "dry-run" mode, which means that the commands will be shown in the terminal but not run, use option n. Your command will look like this: [makebroadcast] -n [input].
+* if you want to specify a directory for the file to be written directly to, use -o. Your command will look like this: [microservice] -o [directory/path] [input].
+* if you want to run makebroadcast in "dry-run" mode, which means that the commands will be shown in the terminal but not run, use -n. Your command will look like this: [makebroadcast] -n [input].
 * if you want to send email notifications about the delivery of a file, and you set the email variables, you can use option e or E. option e will send an email about the delivery but only if -d is also used. Your command will look like this: [microservice] -d [directory/path] -e [input]. If you want to send an email about the process outcomes, use E. Your command will look like this: [microservice] -E [input].
 
 To view the specific ffmpeg encoding options for each file, view the sourcecode of the microservice directly on GitHub or using a text editor on your computer.
 
 ####aipupgrade
-* this script takes an archival information package created by earlier versions of ingestfile and removes the submissionDocumentation directory, removes DS__Store files, logs the package type to the capture log if there is none, and creates new technical metadata files that overwrite previously created metadata files.
+* this script takes an archival information package created by earlier versions of ingestfile and removes the submissionDocumentation directory, removes DS__Store files, logs the package type to the capture log if there is not one listed, and creates new technical metadata files that overwrite previously created metadata files. To use aipupgrade, type aipupgrade and drag in all the packages you wish to modify. Note that you will be asked to choose a package type and that will be assigned to all of the packages, so only drag in packages of one type of content. Your command will look like this: aipupgrade [package1] [package2] 
 
 #### barcodeinterpret
 * barcodeinterpret works with xdcamingest to gather metadata about an XDCam disk by scanning the barcode on the disk case. this script is no longer in use and development is not supported.
@@ -214,13 +216,13 @@ To view the specific ffmpeg encoding options for each file, view the sourcecode 
 * checksum2filemaker delivers checksums from a package input into a predefined table in a FileMaker Database called checksums, using the dfxml format. this script requires the user to set up a FileMaker database and server URL, which are both variables stored in the configuration file. To use this script, type checksum2filemaker in your command line, followed by the package, like this:  checksum2filemaker [package]
 
 #### checksumpackage ####
-* checksum creates, and verifies checksums from an input of a directory or archival informaion package. To use, type checksumpackage into the command line, followed by the input, like this:  checksumpackage [input].
+* checksum creates, and verifies checksums from an input of a directory or archival informaion package. To use, type checksumpackage into the command line, followed by the input:  checksumpackage [input].
 * If you only want to check that filenames and filesizes are the same as in existing files, use option -c. Type  checksumpackage -c [input] and if no existing checksum file exists, one will be created.
 * Another option is to use -c in conjunction with -u, which will create new checksums and version the previous ones if the check is unsuccessful, meaning your checksums have changed. Type  checksumpackage -cu [input] for this option. 
-* Finally, use -v as an option if you want to fully verify checksums. If no checksums exist, the script will create the initial ones. Verification will version existing checksums and make new ones, and log the difference to a checksumprocess log, which will be placed in the metadata directory of the package, or in the same directory as the file if the input is a directory. To use -v, type  checksumpackage -v [input]
+* Finally, use -v as an option if you want to fully verify checksums. If no checksums exist, the script will create the initial ones. Verification will version existing checksums by adding the date they were created to the filename and make new ones, and log the difference to a checksumprocess log, which will be placed in the metadata directory of the package. To use -v, type  checksumpackage -v [input]
 
 #### finishpackage ####
-* finishpackage is a combination of the microservices makelossless, makebroadcast, makeyoutube, makemetadata, and checksumpackage. The purpose is to losslessly transcode, create access copies, and create metadata and directory structure information for a file or package input. To use finishpackage, type finishpackage and drag your input into the command line, like this:  finishpackage [input]. finish package is typically used in conjunction with restructureForCompliance.
+* finishpackage is a combination of the microservices makelossless, makebroadcast, makeyoutube, makemetadata, and checksumpackage. The purpose is to losslessly transcode, create access copies, and create metadata and directory structure information for a file or package input. To use finishpackage, type finishpackage and drag your input into the command line: finishpackage [input]. finish package is typically used in conjunction with restructureForCompliance.
 
 #### fix_left2stereo ####
 * fix\_left2stereo takes an input video file or files and produces outputs that map the left channel of the input to a stereo mix in the output. The suffix "\_left2stereo" is added to the filename to distinguish it from the original. Your command will look like this: fix_left2stereo [file1] [file2]
