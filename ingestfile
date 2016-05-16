@@ -487,12 +487,15 @@ if [ "${MAKEACCESSCOPIES}" == "Y" ] ; then
     unset MAKEFRAMESOPTS
     [ "${DELIVERACCESSCOPIES}" = "Y" ] && MAKEFRAMESOPTS=(-d "${YOUTUBEDELIVER}")
     "${SCRIPTDIR}/makeframes" "${MAKEFRAMESOPTS[@]}" "${OUTDIR_INGESTFILE}/${MEDIAID}"
-    
+
+    # make waveform
+    "${SCRIPTDIR}/makewaveform" "${OUTDIR_INGESTFILE}/${MEDIAID}"
+
     # makeyoutube
     unset MAKEYOUTUBEOPTS
     [ "${DELIVERACCESSCOPIES}" = "Y" ] && MAKEYOUTUBEOPTS=(-Y -d "${YOUTUBEDELIVER}")
     "${SCRIPTDIR}/makeyoutube" "${MAKEYOUTUBEOPTS[@]}" "${OUTDIR_INGESTFILE}/${MEDIAID}"
-    
+
     # makepodcast
     if [ $(echo "${MEDIAID}" | grep -E "${REGEX4PODCAST}") ] ; then
         _report -dt "${MEDIAID} qualifies for podcast creation."
