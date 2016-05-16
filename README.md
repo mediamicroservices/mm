@@ -204,7 +204,7 @@ makepodcast, makebroadcast, makeflv, make prores, makeresourcespace, makeyoutube
 To view the specific ffmpeg encoding options for each file, view the sourcecode of the microservice directly on GitHub or using a text editor on your computer.
 
 ####aipupgrade
-* this script takes an archival information package created by earlier versions of ingestfile and removes the submissionDocumentation directory, removes DS__Store files, logs the package type to the capture log if there is not one listed, and creates new technical metadata files that overwrite previously created metadata files. To use aipupgrade, type aipupgrade and drag in all the packages you wish to modify. Note that you will be asked to choose a package type and that will be assigned to all of the packages, so only drag in packages of one type of content. Your command will look like this: aipupgrade [package1] [package2] 
+* this script takes an archival information package created by earlier versions of ingestfile and removes the submissionDocumentation directory, removes .DS__Store files, logs the package type to the capture log if there is not one listed, and creates new technical metadata files that overwrite previously created metadata files. To use aipupgrade, type aipupgrade and drag in all the packages you wish to modify. Note that you will be asked to choose a package type and that will be assigned to all of the packages, so only drag in packages of one type of content. Your command will look like this: aipupgrade [package1] [package2] 
 
 #### barcodeinterpret
 * barcodeinterpret works with xdcamingest to gather metadata about an XDCam disk by scanning the barcode on the disk case. this script is no longer in use and development is not supported.
@@ -219,7 +219,7 @@ To view the specific ffmpeg encoding options for each file, view the sourcecode 
 * checksum creates, and verifies checksums from an input of a directory or archival informaion package. To use, type checksumpackage into the command line, followed by the input:  checksumpackage [input].
 * If you only want to check that filenames and filesizes are the same as in existing files, use option -c. Type  checksumpackage -c [input] and if no existing checksum file exists, one will be created.
 * Another option is to use -c in conjunction with -u, which will create new checksums and version the previous ones if the check is unsuccessful, meaning your checksums have changed. Type  checksumpackage -cu [input] for this option. 
-* Finally, use -v as an option if you want to fully verify checksums. If no checksums exist, the script will create the initial ones. Verification will version existing checksums by adding the date they were created to the filename and make new ones, and log the difference to a checksumprocess log, which will be placed in the metadata directory of the package. To use -v, type  checksumpackage -v [input]
+* Finally, use -v as an option if you want to fully verify checksums. If no checksums exist, the script will create the initial ones. Verification will version existing checksums by adding the date they were created to the filename and create new ones, and log the difference to a checksumprocess log, which will be placed in the metadata directory of the package. To use -v, type  checksumpackage -v [input]
 
 #### finishpackage ####
 * finishpackage is a combination of the microservices makelossless, makebroadcast, makeyoutube, makemetadata, and checksumpackage. The purpose is to losslessly transcode, create access copies, and create metadata and directory structure information for a file or package input. To use finishpackage, type finishpackage and drag your input into the command line: finishpackage [input]. finish package is typically used in conjunction with restructureForCompliance.
@@ -283,6 +283,7 @@ To view the specific ffmpeg encoding options for each file, view the sourcecode 
 * makemetadata produces a set of metadata reports, using ffprobe, mediainfo, and exiftool, for an archival information package on all files in the objects subdirectory. ffprobe reports are .xml and .json files, mediainfo reports are .xml and mediainfo trace reports are .txt, and exiftool reports are .xml and .txt. Your command will look like this: makemetadata [input].
 
 ####makemets
+* makemets creates a mets.xml file that documents the structure of an archival information package created by ingestfile. The mets file also includes information from the dfxml file created in the makemetadata process. 
 
 ####makemp3 ####
 * makemp3 creates an mp3 file from a video file or package input. Your command will look like this: makemp3 [input].
@@ -290,17 +291,29 @@ To view the specific ffmpeg encoding options for each file, view the sourcecode 
 
 #### makepodcast ####
 * makepodcast creates a Quicktime file that is suitable for podcasting from a video file or package input. Your command will look like this: makepodcast [input].
-* makepodcast has options d, o, n, e, E. To reread what those options mean, return to [section header](https://github.com/mediamicroservices/mm#mediamicroservices-functions-and-instructions-for-use). If you use options o or d, your command will look like this: makepodcast -o OR -d [path/to/directory] [input]. If you use option n, your command will look like this: makepodcast -n [input]. If you use option e, your command will look like this: makepodcast -e -d [path/to/directory] [input]. If you use option -E, your command will look like this: makepodcast -E [input].
+* makepodcast has options d, o, n, e, E. To reread what those options mean, return to [section header](https://github.com/mediamicroservices/mm#mediamicroservices-functions-and-instructions-for-use). 
+* If you use options o or d, your command will look like this: makepodcast -o OR -d [path/to/directory] [input]. 
+* If you use option n, your command will look like this: makepodcast -n [input]. 
+* If you use option e, your command will look like this: makepodcast -e -d [path/to/directory] [input]. 
+* If you use option -E, your command will look like this: makepodcast -E [input].
 
 ####  makeprores ####
 * makeprores creates a prores/quicktime file from a video file or package input. Your command will look like this: makeprores [input].
-* makeprores has options d, o, n, e, E. To reread what those options mean, return to [section header](https://github.com/mediamicroservices/mm#mediamicroservices-functions-and-instructions-for-use). If you use options o or d, your command will look like this: makeprores -o OR -d [path/to/directory] [input]. If you use option n, your command will look like this: makeprores -n [input]. If you use option e, your command will look like this: makeprores -e -d [path/to/directory] [input]. If you use option -E, your command will look like this: makeprores -E [input].
+* makeprores has options d, o, n, e, E. To reread what those options mean, return to [section header](https://github.com/mediamicroservices/mm#mediamicroservices-functions-and-instructions-for-use). 
+* If you use options o or d, your command will look like this: makeprores -o OR -d [path/to/directory] [input]. 
+* If you use option n, your command will look like this: makeprores -n [input]. 
+* If you use option e, your command will look like this: makeprores -e -d [path/to/directory] [input]. 
+* If you use option -E, your command will look like this: makeprores -E [input].
 
 #### makeresourcespace ####
 * makeresourcespace creates a high quality h264 file from a video file or package input. Your commmand will look like this: uploadyoutube [input].
 * if you would like to use only the left or right channel of first audio track, use options r or l. Your command will look like this: makeresourcespace -l [input] for left or makeresourcespace -r [input] for right.
 * if you want to run the video through a volume adjustment filter, then adjust the volume accordingly during transcoding, use option v. This process will be slower. Defaults to ${VOLADJUST} variable set in mmconfig. Your command will look like this: makeresourcespace -v Y OR N [input].
-* makeresourcespace has options d, o, n, e, E. To reread what those options mean, return to [section header](https://github.com/mediamicroservices/mm#mediamicroservices-functions-and-instructions-for-use). If you use options o or d, your command will look like this: makeresourcespace -o OR -d [path/to/directory] [input]. If you use option n, your command will look like this: makeresourcespace -n [input]. If you use option e, your command will look like this: makeresourcespace -e -d [path/to/directory] [input]. If you use option -E, your command will look like this: makeresourcespace -E [input].
+* makeresourcespace has options d, o, n, e, E. To reread what those options mean, return to [section header](https://github.com/mediamicroservices/mm#mediamicroservices-functions-and-instructions-for-use). 
+* If you use options o or d, your command will look like this: makeresourcespace -o OR -d [path/to/directory] [input]. 
+* If you use option n, your command will look like this: makeresourcespace -n [input]. 
+* If you use option e, your command will look like this: makeresourcespace -e -d [path/to/directory] [input]. 
+* If you use option -E, your command will look like this: makeresourcespace -E [input].
 
 #### makeslate ####
 * makeslate creates a slate to be inserted before a broadcast program begins. To use makeslate at your own institution, you will have to manually edit the file based on your institutional needs. makeslate writes a short .mov file to your desktop. to run makeslate, your command will look like this: makeslate [input].
@@ -312,8 +325,10 @@ To view the specific ffmpeg encoding options for each file, view the sourcecode 
 * makeyoutube has options d, o, n, e, E. To reread what those options mean, return to [section header](https://github.com/mediamicroservices/mm#mediamicroservices-functions-and-instructions-for-use). If you use options o or d, your command will look like this: makeyoutube -o OR -d [path/to/directory] [input]. If you use option n, your command will look like this: makeyoutube -n [input]. If you use option e, your command will look like this: makeyoutube -e -d [path/to/directory] [input]. If you use option -E, your command will look like this: makeyoutube -E [input].
 
 ####migratefiles
+* migratefiles is a script that uses rsync to move files, and creates a log documenting the checksum, time, and file paths of files migrated. migratefiles expects a directory input. To use migrate files, type the command migratefiles -o [destination] [input or inputs]
 
 ####qatesting
+* QA testing performs a series on tests on one or multiple videofile inputs. It outputs the results into the terminal. 
 
 ####removeDSStore
 
