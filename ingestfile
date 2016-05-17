@@ -13,7 +13,7 @@ BLACKFRAMETEST="Y"         # use 'Y' for yes or any other character for no
 DELIVERYTOOMNEON="Y"       # use 'Y' for yes or any other character for no
 DELIVERACCESSCOPIES="Y"    # use 'Y' for yes or any other character for no
 DELIVERYTOAIPSTORAGE="Y"   # use 'Y' for yes or any other character for no
-
+EDIT_MODE="Y"
 
 QUEUEFILE="${HOME}/Desktop/queue.txt"
 SCRIPTDIR=$(dirname "${0}")
@@ -25,7 +25,8 @@ _usage(){
     echo "This script will run an interactive interview and then process an input file accordingly."
     echo "Dependencies: ${DEPENDENCIES[@]}"
     echo "Usage: $(basename ${0}) [ -options ]"
-    echo "  -e Edit mode- Uses a graphical user interface for interactive component of inputing file and Media ID, volume adjustment, formula, and slate creation."
+    echo "   default uses a graphical user interface for interactive component of inputing file and media ID, setting volume adjustment, formula, and slate creation."
+    echo "  -e Uses the terminal interface for interactive component of inputing file and Media ID, volume adjustment, formula, and slate creation."
     echo "  -p Preservation mode- to be used when packaging digitized material and digitization logs. Does not make any deliveries, and creates the package in the same directory as the input."
     echo "  -n (do not make any deliveries except for sending the final package to ${AIP_STORAGE}.)"
     echo "  -i PSA Mode- to be used when packaging PSA files. Does not make any deliveries except for sending the final package to ${DELIVERYTOOMNEON}."
@@ -39,7 +40,7 @@ OPTIND=1
 while getopts ":F:pnhei" OPT ; do
     case "${OPT}" in
         F) FORMULA="${OPTARG}";;
-        e) EDIT_MODE="Y" ;;
+        e) EDIT_MODE="N" ;;
         p) PRESERVATION_MODE="Y" ; DELIVERYTOOMNEON="N" ; DELIVERACCESSCOPIES="N" ; DELIVERYTOAIPSTORAGE="N" ;;
         n) DELIVERYTOOMNEON="N" ; DELIVERACCESSCOPIES="N" ;;
         i) DELIVERYTOOMNEON="Y" ; DELIVERACCESSCOPIES="N" ; DELIVERYTOAIPSTORAGE="Y" ;;
@@ -208,92 +209,94 @@ if [ "${EDIT_MODE}" == "Y" ] ; then
     echo ""
 fi
 
-# interview the operator
-_ask_operator
-_ask_mediaid
+if [ "${EDIT_MODE}" == "N" ] ; then 
+    # interview the operator
+    _ask_operator
+    _ask_mediaid
 
-## check for existing output
-if [ -d "${OUTDIR_INGESTFILE}/${MEDIAID}" ] ; then
-     _report -wt "It looks like ${MEDIAID} was already ingested. If you want to overwrite the existing one please delete ${OUTDIR_INGESTFILE}/${MEDIAID} first and then try again."
-     exit 1
-fi
-if [ -d "${AIP_STORAGE}/${MEDIAID}" ] ; then
-    _report -wt "It looks like ${MEDIAID} was already ingested. If you want to overwrite the existing one please delete ${AIP_STORAGE}/${MEDIAID} first and then try again."
-    exit 1
-fi
-_ask_input
-
-#here is where we would insert an option for searching for  directory.
-if [ ! $(_is_video "${INPUT}") ] ; then
-    _report -qnt "WARNING: ${INPUT} is not recognized as a video file. Please press q to quit, any other key to continue (if you know what you're doing): "
-    read NOTVIDRESPONSE
-    [ "${NOTVIDRESPONSE}" == "q" ] && exit 0
-fi
-if [ "${AUDIODECISION}" = "" ] ; then
-    _report -q "Select an audio strategy? "
-    PS3="Selection? "
-    select AUDIODECISION in "Default audio mapping [first audio track used for stereo output]" "Only use left of the first audio track [for 21st Century]" "Only use right of the first audio track"
-    do
-        break
-    done
-fi
-
-if [ "${CROPDECISION}" = "" ] ; then
-    _report -q "Select a cropping strategy? "
-    PS3="Selection? "
-    select CROPDECISION in "Do not crop." "Examine the video and auto-crop out black borders (slower)"
-    do
-        break
-    done
-fi
-
-if [ "${FORMULA}" = "" ] ; then
-    _report -q "Select an optional formula for unusual cases? "
-    _report -d "In most cases, select 'none'. To force the input file to be interpreted as top or bottom field first interlacement, select tff or bff. To stretch the input video to 1920x1080 HD frame size, select 'hds'. To squish into Standard Definition, select 'sds'."
-    PS3="Selection? "
-    select FORMULA in "none" "tff" "bff" "hds" "sds"
-    do
-        break
-    done
-fi
-
-if [ "${CLEANUPDECISION}" = "" ] ; then
-    _report -q "Select a cleanup strategy? "
-    PS3="Selection? "
-    select CLEANUPDECISION in "Leave source file where it is." "Remove source file after successful ingest"
-    do
-        break
-    done
-
-    if [ "${CLEANUPDECISION}" = "Remove source file after successful ingest" ] ; then
-        CLEANUP_CHOICE="Y"
-    else
-        CLEANUP_CHOICE="N"
+    ## check for existing output
+    if [ -d "${OUTDIR_INGESTFILE}/${MEDIAID}" ] ; then
+        _report -wt "It looks like ${MEDIAID} was already ingested. If you want to overwrite the existing one please delete ${OUTDIR_INGESTFILE}/${MEDIAID} first and then try again."
+        exit 1
     fi
-fi
+    if [ -d "${AIP_STORAGE}/${MEDIAID}" ] ; then
+        _report -wt "It looks like ${MEDIAID} was already ingested. If you want to overwrite the existing one please delete ${AIP_STORAGE}/${MEDIAID} first and then try again."
+        exit 1
+    fi
+    _ask_input
 
-if [ "${PRIORITY}" = "" ] ; then
-    _report -q "Select a multitasking strategy? "
-    PS3="Selection? "
-    select PRIORITY in "put in queue" "start now"
-    do
-        break
-    done
-fi
+    #here is where we would insert an option for searching for  directory.
+    if [ ! $(_is_video "${INPUT}") ] ; then
+        _report -qnt "WARNING: ${INPUT} is not recognized as a video file. Please press q to quit, any other key to continue (if you know what you're doing): "
+        read NOTVIDRESPONSE
+        [ "${NOTVIDRESPONSE}" == "q" ] && exit 0
+    fi
+    if [ "${AUDIODECISION}" = "" ] ; then
+        _report -q "Select an audio strategy? "
+        PS3="Selection? "
+        select AUDIODECISION in "Default audio mapping [first audio track used for stereo output]" "Only use left of the first audio track [for 21st Century]" "Only use right of the first audio track"
+        do
+            break
+        done
+    fi
 
-if [ "${SLATE}" = "" ] ; then
-    _report -q "Do you want to create a service copy with a slate? "
-    PS3="Selection? "
-    select SLATE in "Yes" "No"
-    do
-        break
-    done
-fi
+    if [ "${CROPDECISION}" = "" ] ; then
+        _report -q "Select a cropping strategy? "
+        PS3="Selection? "
+        select CROPDECISION in "Do not crop." "Examine the video and auto-crop out black borders (slower)"
+        do
+            break
+        done
+    fi
+
+    if [ "${FORMULA}" = "" ] ; then
+        _report -q "Select an optional formula for unusual cases? "
+        _report -d "In most cases, select 'none'. To force the input file to be interpreted as top or bottom field first interlacement, select tff or bff. To stretch the input video to 1920x1080 HD frame size, select 'hds'. To squish into Standard Definition, select 'sds'."
+        PS3="Selection? "
+        select FORMULA in "none" "tff" "bff" "hds" "sds"
+        do
+            break
+        done
+    fi
+
+    if [ "${CLEANUPDECISION}" = "" ] ; then
+        _report -q "Select a cleanup strategy? "
+        PS3="Selection? "
+        select CLEANUPDECISION in "Leave source file where it is." "Remove source file after successful ingest"
+        do
+            break
+        done
+
+        if [ "${CLEANUPDECISION}" = "Remove source file after successful ingest" ] ; then
+            CLEANUP_CHOICE="Y"
+        else
+            CLEANUP_CHOICE="N"
+        fi
+    fi
+
+    if [ "${PRIORITY}" = "" ] ; then
+        _report -q "Select a multitasking strategy? "
+        PS3="Selection? "
+        select PRIORITY in "put in queue" "start now"
+        do
+            break
+        done
+    fi
+
+    if [ "${SLATE}" = "" ] ; then
+        _report -q "Do you want to create a service copy with a slate? "
+        PS3="Selection? "
+        select SLATE in "Yes" "No"
+        do
+            break
+        done
+    fi
     
-if [ "${SLATE}" = "Yes" ] ; then
-    SLATE_CHOICE="Y"
-else
-    SLATE_CHOICE="N"
+    if [ "${SLATE}" = "Yes" ] ; then
+        SLATE_CHOICE="Y"
+    else
+        SLATE_CHOICE="N"
+    fi
 fi
     
 if [ "${SLATE_CHOICE}" == "Y" ] ; then
