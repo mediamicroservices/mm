@@ -343,11 +343,16 @@ To view the specific ffmpeg encoding options for each file, view the sourcecode 
 * migratefiles is a script that uses rsync to move files, and creates a log documenting the checksum, time, and file paths of files migrated. migratefiles expects a directory input. To use migrate files, type the command migratefiles -o [destination] [input]
 
 ####qatesting
-* QA testing performs a series on tests on one or multiple videofile inputs. It outputs the results into the terminal. 
+* QA testing performs a series on tests on one or multiple video inputs and outputs the results into the terminal. Your command will look like this: qatesting [input] [input1] [input2] 
 
 ####removeDSStore
+* removeDSStore is a script to remove hidden .DS_\_Store files from a package input. Your command will look like this: removeDSStore [input]
 
 ####restructureForCompliance
+* restructureForCompliance is a script that takes one or multiple directory or file input and creates an archival information directory structure. 
+* If the input is a file, the script creates an upper level directory named by the media ID, named with the same name as the input file, and within that an objects directory and a metadata directory. The metadata directory contains a fileMeta folder and a logs folder. The script also moves the input file into the objects directory. 
+* If the input is a directory, the script creates the objects and metadata directory within the input directory, as well as a fileMeta and logs directory within the metadata directory. The script also moves the input file into the objects directory. 
+* Your command will look like this: restructureForCompliance [file or directory input] [file or directory input 2]
 
 #### quickcompare ####
 * quickcompare takes two files and compares the checksums against one another, and outputs the results into the terminal. Your command will look like this: quickcompare [input1] [input2]
