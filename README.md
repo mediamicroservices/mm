@@ -259,20 +259,31 @@ To view the specific ffmpeg encoding options for each file, view the sourcecode 
 * if you want to apply a formula that will override the defualt ffmpeg settings, use option F. Your command will look like this: makebroadcast -F [formula] [input].
 * if you want to run the video through a crop detection filter and crop the video during transcoding, use option c. Your command will look like this: makebroadcast -c [input].
 * if you want to run the video through a volume adjustment filter, then adjust the volume accordingly during transcoding, use option v. This process will be slower. Defaults to ${VOLADJUST} variable set in mmconfig. Your command will look like this: makebroadcast -v Y OR N [input].
-* makebroadcast has options d, o, n, e, E. To reread what those options mean, return to [section header](https://github.com/mediamicroservices/mm#mediamicroservices-functions-and-instructions-for-use). If you use options o or d, your command will look like this: makebroadcast -o OR -d [path/to/directory] [input]. If you use option n, your command will look like this: makebroadcast -n [input]. If you use option e, your command will look like this: makebroadcast -e -d [path/to/directory] [input]. If you use option -E, your command will look like this: makebroadcast -E [input].
+* makebroadcast has options d, o, n, e, E. To reread what those options mean, return to [section header](https://github.com/mediamicroservices/mm#mediamicroservices-functions-and-instructions-for-use). 
+    * If you use options o or d, your command will look like this: makebroadcast -o OR -d [path/to/directory] [input]. 
+    * If you use option n, your command will look like this: makebroadcast -n [input]. 
+    * If you use option e, your command will look like this: makebroadcast -e -d [path/to/directory] [input]. If you use option -E, your command will look like this: makebroadcast -E [input].
 
 #### makedvd ####
 * makedvd creates a DVD .iso file from a video file or package input. Your command will look like makedvd [input]. A file run with no additional options will be a .iso file in a directory called access, which is created by the script in the same location as the file input. A package input run with no additional options will behave similarly, in that the access directory will be created inside the package (if it is not already there), and will hold the DVD .iso file.
 * if you would like to use only the left or right channel of first audio track, your command will look like this: makedvd -l [input] for left or makedvd -r [input] for right.
 * if you would like to add the DVDLABELPREFIX, which you set as a varible in mmconfig, you will want to use option v. Your command will look like this: makedvd -v [input].
-* makedvd has options d, o, n, e, E. To reread what those options mean, return to [section header](https://github.com/mediamicroservices/mm#mediamicroservices-functions-and-instructions-for-use). If you use options o or d, your command will look like this: makedvd -o OR -d [path/to/directory] [input]. If you use option n, your command will look like this: makedvd -n [input]. If you use option e, your command will look like this: makedvd -e -d [path/to/directory] [input]. If you use option -E, your command will look like this: makedvd -E [input].
+* makedvd has options d, o, n, e, E. To reread what those options mean, return to [section header](https://github.com/mediamicroservices/mm#mediamicroservices-functions-and-instructions-for-use). 
+    * If you use options o or d, your command will look like this: makedvd -o OR -d [path/to/directory] [input]. 
+    * If you use option n, your command will look like this: makedvd -n [input]. 
+    * If you use option e, your command will look like this: makedvd -e -d [path/to/directory] [input]. 
+    * If you use option -E, your command will look like this: makedvd -E [input].
 
 #### makeflv ####
 * makeflv creates a flash file from a video file or package input. Your command will look like this: makeflv [input].
-* makeflv has options d, o, n, e, E. To reread what those options mean, return to [section header](https://github.com/mediamicroservices/mm#mediamicroservices-functions-and-instructions-for-use). If you use options o or d, your command will look like this: makeflv -o OR -d [path/to/directory] [input]. If you use option n, your command will look like this: makeflv -n [input]. If you use option e, your command will look like this: makeflv -e -d [path/to/directory] [input]. If you use option -E, your command will look like this: makeflv -E [input].
+* makeflv has options d, o, n, e, E. To reread what those options mean, return to [section header](https://github.com/mediamicroservices/mm#mediamicroservices-functions-and-instructions-for-use). 
+    * If you use options o or d, your command will look like this: makeflv -o OR -d [path/to/directory] [input]. 
+    * If you use option n, your command will look like this: makeflv -n [input]. 
+    * If you use option e, your command will look like this: makeflv -e -d [path/to/directory] [input]. 
+    * If you use option -E, your command will look like this: makeflv -E [input].
 
 #### makeframes ####
-* makeframes creates 10 still images from a video file or package input. Your command will look like:  makeframes [input]. To deliver still images to a specific directory, use this command  ingestfile -d [path/to/directory] [input]. Example: #phototocome
+* makeframes creates 10 still images from a video file or package input. Your command will look like:  makeframes [input]. To deliver still images to a specific directory, use this command  ingestfile -d [path/to/directory] [input]. 
 
 #### makelossless ####
 * makelossless losslessly transcodes a video file or package input. Your command will look like this: makelossless [input].
@@ -292,28 +303,28 @@ To view the specific ffmpeg encoding options for each file, view the sourcecode 
 #### makepodcast ####
 * makepodcast creates a Quicktime file that is suitable for podcasting from a video file or package input. Your command will look like this: makepodcast [input].
 * makepodcast has options d, o, n, e, E. To reread what those options mean, return to [section header](https://github.com/mediamicroservices/mm#mediamicroservices-functions-and-instructions-for-use). 
-* If you use options o or d, your command will look like this: makepodcast -o OR -d [path/to/directory] [input]. 
-* If you use option n, your command will look like this: makepodcast -n [input]. 
-* If you use option e, your command will look like this: makepodcast -e -d [path/to/directory] [input]. 
-* If you use option -E, your command will look like this: makepodcast -E [input].
+    * If you use options o or d, your command will look like this: makepodcast -o OR -d [path/to/directory] [input]. 
+    * If you use option n, your command will look like this: makepodcast -n [input]. 
+    * If you use option e, your command will look like this: makepodcast -e -d [path/to/directory] [input]. 
+    * If you use option -E, your command will look like this: makepodcast -E [input].
 
 ####  makeprores ####
 * makeprores creates a prores/quicktime file from a video file or package input. Your command will look like this: makeprores [input].
 * makeprores has options d, o, n, e, E. To reread what those options mean, return to [section header](https://github.com/mediamicroservices/mm#mediamicroservices-functions-and-instructions-for-use). 
-* If you use options o or d, your command will look like this: makeprores -o OR -d [path/to/directory] [input]. 
-* If you use option n, your command will look like this: makeprores -n [input]. 
-* If you use option e, your command will look like this: makeprores -e -d [path/to/directory] [input]. 
-* If you use option -E, your command will look like this: makeprores -E [input].
+    * If you use options o or d, your command will look like this: makeprores -o OR -d [path/to/directory] [input]. 
+    * If you use option n, your command will look like this: makeprores -n [input]. 
+    * If you use option e, your command will look like this: makeprores -e -d [path/to/directory] [input]. 
+    * If you use option -E, your command will look like this: makeprores -E [input].
 
 #### makeresourcespace ####
 * makeresourcespace creates a high quality h264 file from a video file or package input. Your commmand will look like this: uploadyoutube [input].
 * if you would like to use only the left or right channel of first audio track, use options r or l. Your command will look like this: makeresourcespace -l [input] for left or makeresourcespace -r [input] for right.
 * if you want to run the video through a volume adjustment filter, then adjust the volume accordingly during transcoding, use option v. This process will be slower. Defaults to ${VOLADJUST} variable set in mmconfig. Your command will look like this: makeresourcespace -v Y OR N [input].
 * makeresourcespace has options d, o, n, e, E. To reread what those options mean, return to [section header](https://github.com/mediamicroservices/mm#mediamicroservices-functions-and-instructions-for-use). 
-* If you use options o or d, your command will look like this: makeresourcespace -o OR -d [path/to/directory] [input]. 
-* If you use option n, your command will look like this: makeresourcespace -n [input]. 
-* If you use option e, your command will look like this: makeresourcespace -e -d [path/to/directory] [input]. 
-* If you use option -E, your command will look like this: makeresourcespace -E [input].
+    * If you use options o or d, your command will look like this: makeresourcespace -o OR -d [path/to/directory] [input]. 
+    * If you use option n, your command will look like this: makeresourcespace -n [input]. 
+    * If you use option e, your command will look like this: makeresourcespace -e -d [path/to/directory] [input]. 
+    * If you use option -E, your command will look like this: makeresourcespace -E [input].
 
 #### makeslate ####
 * makeslate creates a slate to be inserted before a broadcast program begins. To use makeslate at your own institution, you will have to manually edit the file based on your institutional needs. makeslate writes a short .mov file to your desktop. to run makeslate, your command will look like this: makeslate [input].
@@ -322,10 +333,14 @@ To view the specific ffmpeg encoding options for each file, view the sourcecode 
 * makeyoutube creates a high quality h264 file from a video file or package input. Your command will look like this: makeyoutube [input].
 * if you would like to use only the left or right channel of first audio track, use options r or l. Your command will look like this: makeyoutube -l [input] for left or makeyoutube -r [input] for right.
 * if you want to run the video through a volume adjustment filter, then adjust the volume accordingly during transcoding, use option v. This process will be slower. Defaults to ${VOLADJUST} variable set in mmconfig. Your command will look like this: makeyoutube -v Y OR N [input].
-* makeyoutube has options d, o, n, e, E. To reread what those options mean, return to [section header](https://github.com/mediamicroservices/mm#mediamicroservices-functions-and-instructions-for-use). If you use options o or d, your command will look like this: makeyoutube -o OR -d [path/to/directory] [input]. If you use option n, your command will look like this: makeyoutube -n [input]. If you use option e, your command will look like this: makeyoutube -e -d [path/to/directory] [input]. If you use option -E, your command will look like this: makeyoutube -E [input].
+* makeyoutube has options d, o, n, e, E. To reread what those options mean, return to [section header](https://github.com/mediamicroservices/mm#mediamicroservices-functions-and-instructions-for-use). 
+    * If you use options o or d, your command will look like this: makeyoutube -o OR -d [path/to/directory] [input]. 
+    * If you use option n, your command will look like this: makeyoutube -n [input]. 
+    * If you use option e, your command will look like this: makeyoutube -e -d [path/to/directory] [input]. 
+    * If you use option -E, your command will look like this: makeyoutube -E [input].
 
 ####migratefiles
-* migratefiles is a script that uses rsync to move files, and creates a log documenting the checksum, time, and file paths of files migrated. migratefiles expects a directory input. To use migrate files, type the command migratefiles -o [destination] [input or inputs]
+* migratefiles is a script that uses rsync to move files, and creates a log documenting the checksum, time, and file paths of files migrated. migratefiles expects a directory input. To use migrate files, type the command migratefiles -o [destination] [input]
 
 ####qatesting
 * QA testing performs a series on tests on one or multiple videofile inputs. It outputs the results into the terminal. 
