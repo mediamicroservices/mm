@@ -81,6 +81,7 @@ trap _cleanup SIGHUP SIGINT SIGTERM
 [ -z "${PODCASTDELIVER}" ] && { echo "A directory for podcast delivery must be set. Use [ -w /path/to/deliver/podcastfiles] or run mmconfig to set PODCASTDELIVER." ; exit 1 ;};
 [ -z "${YOUTUBEDELIVER}" ] && { echo "A directory for youtube delivery must be set. Use [ -y /path/to/deliver/youtubefiles] or run mmconfig to set YOUTUBEDELIVER." ; exit 1 ;};
 
+
 #pashua interface settings
 CONF="
 # Set transparency: 0 is transparent, 1 is opaque
@@ -209,6 +210,10 @@ if [ "${EDIT_MODE}" == "Y" ] ; then
     echo ""
 fi
 
+if [ "${cb}" -eq 1 ] ; then
+    exit 1
+fi
+    
 if [ "${EDIT_MODE}" == "N" ] ; then 
     # interview the operator
     _ask_operator
