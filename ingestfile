@@ -76,6 +76,12 @@ _cleanup(){
 trap _cleanup SIGHUP SIGINT SIGTERM
 
 # check environment
+if [ -d "$(pwd)" ] ; then
+    echo "The directory you're in is a good directory to be in :)"
+else
+    echo "you're in a directory that actually doesn't exist, so I'm going to cd you back home! ¯\_(ツ)_/¯ "
+    cd
+fi
 [ -z "${OUTDIR_INGESTFILE}" ] && { echo "The processing directory must be set. Use [ -p /path/to/processing/directory ] or run mmconfig to set OUTDIR_INGESTFILE." ; exit 1 ;};
 [ -z "${AIP_STORAGE}" ] && { echo "The AIP Storage directory must be set. Use [ -a /path/to/AIP/storage/directory ] or run mmconfig to set AIP_STORAGE." ; exit 1 ;};
 [ -z "${PODCASTDELIVER}" ] && { echo "A directory for podcast delivery must be set. Use [ -w /path/to/deliver/podcastfiles] or run mmconfig to set PODCASTDELIVER." ; exit 1 ;};
