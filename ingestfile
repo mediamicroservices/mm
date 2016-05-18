@@ -79,8 +79,8 @@ trap _cleanup SIGHUP SIGINT SIGTERM
 if [ -d "$(pwd)" ] ; then
     echo "The directory you're in is a good directory to be in :)"
 else
-    echo "you're in a directory that actually doesn't exist, so I'm going to cd you back home! ¯\_(ツ)_/¯ "
-    cd
+    echo "you're in a directory that actually doesn't exist, I'm going to try and push d you home. ¯\_(ツ)_/¯ "
+    pushd "$HOME"
 fi
 [ -z "${OUTDIR_INGESTFILE}" ] && { echo "The processing directory must be set. Use [ -p /path/to/processing/directory ] or run mmconfig to set OUTDIR_INGESTFILE." ; exit 1 ;};
 [ -z "${AIP_STORAGE}" ] && { echo "The AIP Storage directory must be set. Use [ -a /path/to/AIP/storage/directory ] or run mmconfig to set AIP_STORAGE." ; exit 1 ;};
