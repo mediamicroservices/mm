@@ -216,7 +216,7 @@ if [ "${EDIT_MODE}" == "Y" ] ; then
     echo ""
 fi
 
-if [ "${cb}" -eq 1 ] ; then
+if [[ "${cb}" -eq 1 ]] ; then
     exit 1
 fi
     
