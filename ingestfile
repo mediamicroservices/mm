@@ -302,12 +302,12 @@ if [ "${EDIT_MODE}" == "N" ] ; then
             break
         done
     fi
-    
-    if [ "${SLATE}" = "Yes" ] ; then
-        SLATE_CHOICE="Y"
-    else
-        SLATE_CHOICE="N"
-    fi
+fi
+
+if [ "${SLATE}" = "Yes" ] ; then
+    SLATE_CHOICE="Y"
+else
+    SLATE_CHOICE="N"
 fi
     
 if [ "${SLATE_CHOICE}" == "Y" ] ; then
