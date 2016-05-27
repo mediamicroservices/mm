@@ -50,7 +50,7 @@ _get_iso8601(){
 }
 
 _get_iso8601_c(){
-    date +%Y%m%d-%I%M%S
+    date +%Y%m%d-%H%M%S
 }
 
 _unset_ffreport(){
