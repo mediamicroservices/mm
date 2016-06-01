@@ -507,9 +507,9 @@ _find_input (){
     ISOBJECT=""
     if [ -f "${1}" ]
         SOURCEFILE="${1}"
-    elif [[ -d "${1}/objects/service" && "${ADDSLATE}" != "Y" ]] ; then
+    elif [[ -f "${1}/objects/service/$(basename "${1}").mov" && "${ADDSLATE}" != "Y" ]] ; then
         ISOBJECT="N"
-        SOURCEFILE=$(find "${1}/objects/service" -maxdepth 1 -mindepth 1 -type f ! -iname "*_SLATE.mov" \( -iname "*.mov" -o -iname "*.mxf" -o -iname "*.mp4" -o -iname "*.dv" -o -iname "*.mpeg" -o -iname "*.iso" -o -iname "*.mkv" -o -iname "*.m2ts" -o -iname "*.ts" \) ! -name ".*" | head -n 1)
+        SOURCEFILE="${1}/objects/service/$(basename "${1}").mov"
     elif [ -d "${1}/objects" ] ; then
         ISOBJECT="Y"
         SOURCEFILE=$(find "${1}/objects" -maxdepth 1 -mindepth 1 -type f ! -iname "*_SLATE.mov" \( -iname "*.mov" -o -iname "*.mxf" -o -iname "*.mp4" -o -iname "*.dv" -o -iname "*.mpeg" -o -iname "*.iso" -o -iname "*.mkv" -o -iname "*.m2ts" -o -iname "*.ts" \) ! -name ".*" | head -n 1)
