@@ -505,10 +505,15 @@ _find_input (){
     CONCATSOURCE=""
     SOURCEFILE=""
     ISOBJECT=""
-    [ -d "${1}" ] && [[ -d "${1}/objects/service" && "${ADDSLATE}" != "Y" ]] && ISOBJECT="N" && SOURCEFILE=$(find "${1}/objects/service" -maxdepth 1 -mindepth 1 -type f ! -iname "*_SLATE.mov" \( -iname "*.mov" -o -iname "*.mxf" -o -iname "*.mp4" -o -iname "*.dv" -o -iname "*.mpeg" -o -iname "*.iso" -o -iname "*.mkv" -o -iname "*.m2ts" -o -iname "*.ts" \) ! -name ".*" | head -n 1)
-    [ -f "${1}" ] && SOURCEFILE="${1}"
-    [ ! "${SOURCEFILE}" ] && [ -d "${1}/objects" ] && ISOBJECT="Y" && SOURCEFILE=$(find "${1}/objects" -maxdepth 1 -mindepth 1 -type f ! -iname "*_SLATE.mov" \( -iname "*.mov" -o -iname "*.mxf" -o -iname "*.mp4" -o -iname "*.dv" -o -iname "*.mpeg" -o -iname "*.iso" -o -iname "*.mkv" -o -iname "*.m2ts" -o -iname "*.ts" \) ! -name ".*" | head -n 1)
-    if [ ! "${SOURCEFILE}" ] ; then
+    if [ -f "${1}" ]
+        SOURCEFILE="${1}"
+    elif [[ -d "${1}/objects/service" && "${ADDSLATE}" != "Y" ]] ; then
+        ISOBJECT="N"
+        SOURCEFILE=$(find "${1}/objects/service" -maxdepth 1 -mindepth 1 -type f ! -iname "*_SLATE.mov" \( -iname "*.mov" -o -iname "*.mxf" -o -iname "*.mp4" -o -iname "*.dv" -o -iname "*.mpeg" -o -iname "*.iso" -o -iname "*.mkv" -o -iname "*.m2ts" -o -iname "*.ts" \) ! -name ".*" | head -n 1)
+    elif [ -d "${1}/objects" ] ; then
+        ISOBJECT="Y"
+        SOURCEFILE=$(find "${1}/objects" -maxdepth 1 -mindepth 1 -type f ! -iname "*_SLATE.mov" \( -iname "*.mov" -o -iname "*.mxf" -o -iname "*.mp4" -o -iname "*.dv" -o -iname "*.mpeg" -o -iname "*.iso" -o -iname "*.mkv" -o -iname "*.m2ts" -o -iname "*.ts" \) ! -name ".*" | head -n 1)
+    else
         _report -wt "A valid source file isn't found."
         _writeerrorlog "_find_input" "A valid source file was not found, so the script could not proceed."
         exit 1
