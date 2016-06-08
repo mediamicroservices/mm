@@ -505,7 +505,7 @@ _find_input (){
     CONCATSOURCE=""
     SOURCEFILE=""
     ISOBJECT=""
-    if [ -f "${1}" ]
+    if [ -f "${1}" ] ; then
         SOURCEFILE="${1}"
     elif [[ -f "${1}/objects/service/$(basename "${1}").mov" && "${ADDSLATE}" != "Y" ]] ; then
         ISOBJECT="N"
