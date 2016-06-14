@@ -515,9 +515,17 @@ _add_video_filter(){
         if [[ -z "${VIDEOFILTERCHAIN}" ]] ; then
             VIDEOFILTERCHAIN="${FILTER2ADD}"
         elif [[ "${ADDASPREFIX}" == true ]] ; then
-            VIDEOFILTERCHAIN="${FILTER2ADD},${VIDEOFILTERCHAIN}"
+            if [[ "${FILTER2ADD: -1}" == ";" || "${FILTER2ADD: -1}" == "," ]] ; then
+                VIDEOFILTERCHAIN="${FILTER2ADD}${VIDEOFILTERCHAIN}"
+            else
+                VIDEOFILTERCHAIN="${FILTER2ADD},${VIDEOFILTERCHAIN}"
+            fi
         else
-            VIDEOFILTERCHAIN="${VIDEOFILTERCHAIN},${FILTER2ADD}"
+            if [[ "${VIDEOFILTERCHAIN: -1}" == ";" || "${VIDEOFILTERCHAIN: -1}" == "," ]] ; then
+                VIDEOFILTERCHAIN="${VIDEOFILTERCHAIN}${FILTER2ADD}"
+            else
+                VIDEOFILTERCHAIN="${VIDEOFILTERCHAIN},${FILTER2ADD}"
+            fi
         fi
     fi
 }
@@ -536,9 +544,17 @@ _add_audio_filter(){
         if [[ -z "${AUDIOFILTERCHAIN}" ]] ; then
             AUDIOFILTERCHAIN="${FILTER2ADD}"
         elif [[ "${ADDASPREFIX}" == true ]] ; then
-            AUDIOFILTERCHAIN="${FILTER2ADD},${AUDIOFILTERCHAIN}"
+            if [[ "${FILTER2ADD: -1}" == ";" || "${FILTER2ADD: -1}" == "," ]] ; then
+                AUDIOFILTERCHAIN="${FILTER2ADD}${AUDIOFILTERCHAIN}"
+            else
+                AUDIOFILTERCHAIN="${FILTER2ADD},${AUDIOFILTERCHAIN}"
+            fi
         else
-            AUDIOFILTERCHAIN="${AUDIOFILTERCHAIN},${FILTER2ADD}"
+            if [[ "${AUDIOFILTERCHAIN: -1}" == ";" || "${AUDIOFILTERCHAIN: -1}" == "," ]] ; then
+                AUDIOFILTERCHAIN="${AUDIOFILTERCHAIN}${FILTER2ADD}"
+            else
+                AUDIOFILTERCHAIN="${AUDIOFILTERCHAIN},${FILTER2ADD}"
+            fi
         fi
     fi
 }
