@@ -501,6 +501,27 @@ _make_mezz_for_xdcam(){
     popd
 }
 
+_add_video_filter(){
+    OPTIND=1
+    unset ADDASPREFIX
+    while getopts ":p" OPT; do
+        case "${OPT}" in
+            p) ADDASPREFIX=true ;;
+        esac
+    done
+    shift $(( ${OPTIND} - 1 ))
+    local FILTER2ADD="${1}"
+    if [[ -n "${FILTER2ADD}" ]] ; then
+        if [[ -z "${VIDEOFILTERCHAIN}" ]] ; then
+            VIDEOFILTERCHAIN="${FILTER2ADD}"
+        elif [[ "${ADDASPREFIX}" == true ]] ; then
+            VIDEOFILTERCHAIN="${FILTER2ADD},${VIDEOFILTERCHAIN}"
+        else
+            VIDEOFILTERCHAIN="${VIDEOFILTERCHAIN},${FILTER2ADD}"
+        fi
+    fi
+}
+
 _add_audio_filter(){
     OPTIND=1
     unset ADDASPREFIX
@@ -588,27 +609,6 @@ _get_sar(){
     SAR=$(ffprobe "${1}" -show_streams -select_streams v:0 2> /dev/null | grep "^sample_aspect_ratio=" | cut -d = -f 2 | sed 's|:|/|g')
     if [ "${SAR}" = "0/1" ] ; then
         SAR="1/1"
-    fi
-}
-
-_add_video_filter(){
-    OPTIND=1
-    unset ADDASPREFIX
-    while getopts ":p" OPT; do
-        case "${OPT}" in
-            p) ADDASPREFIX=true ;;
-        esac
-    done
-    shift $(( ${OPTIND} - 1 ))
-    local FILTER2ADD="${1}"
-    if [[ -n "${FILTER2ADD}" ]] ; then
-        if [[ -z "${VIDEOFILTERCHAIN}" ]] ; then
-            VIDEOFILTERCHAIN="${FILTER2ADD}"
-        elif [[ "${ADDASPREFIX}" == true ]] ; then
-            VIDEOFILTERCHAIN="${FILTER2ADD},${VIDEOFILTERCHAIN}"
-        else
-            VIDEOFILTERCHAIN="${VIDEOFILTERCHAIN},${FILTER2ADD}"
-        fi
     fi
 }
 
