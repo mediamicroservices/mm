@@ -512,6 +512,10 @@ _add_video_filter(){
     shift $(( ${OPTIND} - 1 ))
     local FILTER2ADD="${1}"
     if [[ -n "${FILTER2ADD}" ]] ; then
+        if [[ -n "${next_video_filter_prefix}" ]] ; then
+            FILTER2ADD="${next_video_filter_prefix}${FILTER2ADD}"
+            unset next_video_filter_prefix
+        fi
         if [[ -z "${VIDEOFILTERCHAIN}" ]] ; then
             VIDEOFILTERCHAIN="${FILTER2ADD}"
         elif [[ "${ADDASPREFIX}" == true ]] ; then
@@ -541,6 +545,10 @@ _add_audio_filter(){
     shift $(( ${OPTIND} - 1 ))
     local FILTER2ADD="${1}"
     if [[ -n "${FILTER2ADD}" ]] ; then
+        if [[ -n "${next_audio_filter_prefix}" ]] ; then
+            FILTER2ADD="${next_audio_filter_prefix}${FILTER2ADD}"
+            unset next_audio_filter_prefix
+        fi
         if [[ -z "${AUDIOFILTERCHAIN}" ]] ; then
             AUDIOFILTERCHAIN="${FILTER2ADD}"
         elif [[ "${ADDASPREFIX}" == true ]] ; then
