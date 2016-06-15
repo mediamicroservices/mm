@@ -84,8 +84,7 @@ while [ "${*}" != "" ] ; do
         INPUTOPTIONS+=(-v warning -stats)
     fi
     _report -dt "Working on $(basename "${OUTPUT}")."
-    _report -dt "Running: ffmpeg ${INPUTOPTIONS[@]} -i \"${SOURCEFILE}\" ${MIDDLEOPTIONS[@]} \"${OUTPUT}\""
-    ffmpeg "${INPUTOPTIONS[@]}" -i "${SOURCEFILE}" "${MIDDLEOPTIONS[@]}" "${OUTPUT}"
+    _run_critical ffmpeg "${INPUTOPTIONS[@]}" -i "${SOURCEFILE}" "${MIDDLEOPTIONS[@]}" "${OUTPUT}"
     _report -dt "Adjusting highest audio peak to full scale..."
     normalize --peak -v "${OUTPUT}"
     echo
