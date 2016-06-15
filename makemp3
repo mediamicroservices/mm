@@ -89,6 +89,6 @@ while [ "${*}" != "" ] ; do
     _report -dt "Adjusting highest audio peak to full scale..."
     normalize --peak -v "${OUTPUT}"
     echo
-    _report -dt "$(basename ${OUTPUT}) is done."
+    _report -dt "$(basename "${OUTPUT}") is done."
     _log -e
 done
