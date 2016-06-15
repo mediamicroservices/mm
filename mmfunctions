@@ -571,14 +571,37 @@ _find_input (){
     CONCATSOURCE=""
     SOURCEFILE=""
     ISOBJECT=""
+    unset FFMPEGINPUT
     if [ -f "${1}" ] ; then
         SOURCEFILE="${1}"
+        FFMPEGINPUT+=(-i)
+        FFMPEGINPUT+=("${SOURCEFILE}")
     elif [[ -f "${1}/objects/service/$(basename "${1}").mov" && "${ADDSLATE}" != "Y" ]] ; then
         ISOBJECT="N"
         SOURCEFILE="${1}/objects/service/$(basename "${1}").mov"
+        FFMPEGINPUT+=(-i)
+        FFMPEGINPUT+=("${SOURCEFILE}")
     elif [ -d "${1}/objects" ] ; then
         ISOBJECT="Y"
-        SOURCEFILE=$(find "${1}/objects" -maxdepth 1 -mindepth 1 -type f ! -iname "*_SLATE.mov" \( -iname "*.mov" -o -iname "*.mxf" -o -iname "*.mp4" -o -iname "*.dv" -o -iname "*.mpeg" -o -iname "*.iso" -o -iname "*.mkv" -o -iname "*.m2ts" -o -iname "*.ts" \) ! -name ".*" | head -n 1)
+        INPUTFILES=$(_maketemp)
+        # find av files in a directory and output to a temp list
+        find "${1}/objects" -type f ! -path "*/access/*" ! -path "*/service/*" ! -name ".DS_Store" | while read file ; do
+            streamcount=$(ffprobe -loglevel quiet "$file" -show_entries format=nb_streams -of default=nw=1:nk=1)
+            if [[ "$streamcount" > 0  ]] ; then
+                _report -d "Input file: $file"
+                echo "$file" >> "${INPUTFILES}"
+            fi
+        done
+        INPUTFILECOUNT=$(wc -l "${INPUTFILES}" | awk '{print $1}')
+        if [[ "${INPUTFILECOUNT}" = 0 ]] ; then
+            _report -w "Error no audiovisual input files were found."
+            _writeerrorlog "_find_input" "A valid source audiovisual file was not found, so the script could not proceed."
+            exit 1
+        elif [[ "${INPUTFILECOUNT}" = 1 ]] ; then
+            SOURCEFILE=$(cat "${INPUTFILES}" | head -n 1)
+            FFMPEGINPUT+=(-i)
+            FFMPEGINPUT+=("${SOURCEFILE}")
+        fi
     else
         _report -wt "A valid source file isn't found."
         _writeerrorlog "_find_input" "A valid source file was not found, so the script could not proceed."

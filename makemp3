@@ -59,6 +59,7 @@ while [ "${*}" != "" ] ; do
         LOGDIR="${OUTPUTDIR}/logs"
     fi
 
+    _unset_variables
     _find_input "${INPUT}"
 
     FILENAME=$(basename "${SOURCEFILE}")
@@ -67,8 +68,6 @@ while [ "${*}" != "" ] ; do
     _log -b
 
     _set_up_output
-
-    _unset_variables
 
     INPUTOPTIONS+=(-nostdin)
     MIDDLEOPTIONS+=(-map 0:a:0)
@@ -84,7 +83,7 @@ while [ "${*}" != "" ] ; do
         INPUTOPTIONS+=(-v warning -stats)
     fi
     _report -dt "Working on $(basename "${OUTPUT}")."
-    _run_critical ffmpeg "${INPUTOPTIONS[@]}" -i "${SOURCEFILE}" "${MIDDLEOPTIONS[@]}" "${OUTPUT}"
+    _run_critical ffmpeg "${INPUTOPTIONS[@]}" "${FFMPEGINPUT[@]}" "${MIDDLEOPTIONS[@]}" "${OUTPUT}"
     _report -dt "Adjusting highest audio peak to full scale..."
     normalize --peak -v "${OUTPUT}"
     echo

@@ -44,12 +44,10 @@ while [ "${*}" != "" ] ; do
     [ -d "${INPUT}" ] && { OUTPUTDIR="${INPUT}/objects/access/images" && LOGDIR="${INPUT}/metadata/logs" ;};
     [ -f "${INPUT}" ] && { OUTPUTDIR=$(dirname "${INPUT}")"/access/images" && LOGDIR="$(dirname "${INPUT}")/access/logs" ;};
     [ ! "$OUTPUTDIR" ] && { OUTPUTDIR="${INPUT}/objects/access/images" && LOGDIR="${INPUT}/metadata/logs" ;};
+    _unset_variables
     _find_input "${INPUT}"
 
     MEDIAID=$(basename "${1}" | cut -d. -f1)
-
-    # clear local arrays
-    _unset_variables
 
     # encoding options
     _get_codectagstring "${SOURCEFILE}"
@@ -75,11 +73,9 @@ while [ "${*}" != "" ] ; do
         _prep_ffmpeg_log -q
         if [ "${CONCATSOURCE}" != "" ] ; then
             FFMPEGINPUT="${CONCATSOURCE}"
-        else
-            FFMPEGINPUT="${SOURCEFILE}"
         fi
 
-        _run_critical ffmpeg -y ${INPUTOPTIONS[@]} -v warning -ss "$START" -i "${FFMPEGINPUT}" "${MIDDLEOPTIONS[@]}" "${OUTPUT}"
+        _run_critical ffmpeg -y ${INPUTOPTIONS[@]} -v warning -ss "$START" "${FFMPEGINPUT[@]}" "${MIDDLEOPTIONS[@]}" "${OUTPUT}"
     done
     echo
     if [ -d "${DELIVERDIR}" ] ; then
