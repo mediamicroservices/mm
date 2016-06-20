@@ -608,6 +608,7 @@ _find_input (){
             FFMPEGINPUT+=(-i)
             FFMPEGINPUT+=("${SOURCEFILE}")
         else
+            VOLADJUST="N"
             INPUTOPTIONS+=(-f concat)
             INPUTOPTIONS+=(-safe 0)
             FFCONCATFILE=$(_maketemp)
