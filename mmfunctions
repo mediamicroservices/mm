@@ -572,16 +572,22 @@ _find_input (){
     SOURCEFILE=""
     ISOBJECT=""
     unset FFMPEGINPUT
+    EXPECTEDSERVICEFILE="${1}/objects/service/$(basename "${1}").mov"
     if [ -f "${1}" ] ; then
         SOURCEFILE="${1}"
         FFMPEGINPUT+=(-i)
         FFMPEGINPUT+=("${SOURCEFILE}")
-    elif [[ -f "${1}/objects/service/$(basename "${1}").mov" && "${ADDSLATE}" != "Y" ]] ; then
+    elif [[ -s "${EXPECTEDSERVICEFILE}" && "${ADDSLATE}" != "Y" ]] ; then
         ISOBJECT="N"
-        SOURCEFILE="${1}/objects/service/$(basename "${1}").mov"
+        SOURCEFILE="${EXPECTEDSERVICEFILE}"
         FFMPEGINPUT+=(-i)
         FFMPEGINPUT+=("${SOURCEFILE}")
     elif [ -d "${1}/objects" ] ; then
+        if [[ -f "${EXPECTEDSERVICEFILE}" && ! -s "${EXPECTEDSERVICEFILE}" ]] ; then
+            _report -dt "Removing a zero-sized file: ${EXPECTEDSERVICEFILE}"
+            ls -l "${EXPECTEDSERVICEFILE}"
+            rm -v "${EXPECTEDSERVICEFILE}"
+        fi
         ISOBJECT="Y"
         INPUTFILES=$(_maketemp)
         # find av files in a directory and output to a temp list
