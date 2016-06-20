@@ -591,7 +591,7 @@ _find_input (){
         ISOBJECT="Y"
         INPUTFILES=$(_maketemp)
         # find av files in a directory and output to a temp list
-        find "${1}/objects" -type f ! -path "*/access/*" ! -path "*/service/*" ! -name ".DS_Store" | while read file ; do
+        find "${1}/objects" -type f -size +0 ! -path "*/access/*" ! -path "*/service/*" ! -name ".DS_Store" | while read file ; do
             streamcount=$(ffprobe -loglevel quiet "$file" -show_entries format=nb_streams -of default=nw=1:nk=1)
             if [[ "$streamcount" > 1  ]] ; then
                 _report -d "Input file: $file"
