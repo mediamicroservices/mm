@@ -936,7 +936,6 @@ _prep_ffmpeg_log(){
         esac
     done
     shift $(( ${OPTIND} - 1 ))
-    unset INPUTOPTIONS
     if [ "${LOGDIR}" != "" ] ; then
         _mkdir2 "${LOGDIR}"
         if [ "${NOLOG}" = "Y" ] ; then
