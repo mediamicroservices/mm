@@ -607,6 +607,18 @@ _find_input (){
             SOURCEFILE=$(cat "${INPUTFILES}" | head -n 1)
             FFMPEGINPUT+=(-i)
             FFMPEGINPUT+=("${SOURCEFILE}")
+        else
+            INPUTOPTIONS+=(-f concat)
+            INPUTOPTIONS+=(-safe 0)
+            FFCONCATFILE=$(_maketemp)
+            while read i ; do
+                printf " file " >> "${FFCONCATFILE}"
+                printf '%q' "${i}" >> "${FFCONCATFILE}"
+                echo >> "${FFCONCATFILE}"
+            done < "${INPUTFILES}"
+            SOURCEFILE=$(cat "${INPUTFILES}" | head -n 1)
+            FFMPEGINPUT+=(-i)
+            FFMPEGINPUT+=("${FFCONCATFILE}")
         fi
     else
         _report -wt "A valid source file isn't found."
