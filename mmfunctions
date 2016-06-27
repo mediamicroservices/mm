@@ -613,9 +613,11 @@ _find_input (){
             INPUTOPTIONS+=(-safe 0)
             FFCONCATFILE=$(_maketemp)
             while read i ; do
-                printf " file " >> "${FFCONCATFILE}"
+                duration4cat=$(ffprobe -loglevel quiet "${i}" -show_entries format=duration -of default=nw=1:nk=1)
+                printf "file " >> "${FFCONCATFILE}"
                 printf '%q' "${i}" >> "${FFCONCATFILE}"
                 echo >> "${FFCONCATFILE}"
+                echo "duration $duration4cat" >> "${FFCONCATFILE}"
             done < "${INPUTFILES}"
             SOURCEFILE=$(cat "${INPUTFILES}" | head -n 1)
             FFMPEGINPUT+=(-i)
