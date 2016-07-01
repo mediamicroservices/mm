@@ -29,11 +29,9 @@ while [ "${*}" != "" ] ; do
     INPUT="${1}"
     echo "The input is: ${INPUT}"
     echo "The target is: ${TARGET}"
-    echo "HEY! The log file is ${LOGFILE}"
     shift
     if [ -z "${LOGFILE}" ] ; then
         LOGFILE="${HOME}/migrate.log"
-        echo "HEY! The log file is ${LOGFILE}"
     fi
     if [ "${REMOVESOURCEFILES}" == "Y" ] ; then
         EXTRAOUTPUTS+=(--remove-source-files)
