@@ -1,0 +1,16 @@
+#!/bin/bash
+#this script performs a series of quality assurance tests on an audio visual file or set of files
+
+SCRIPTDIR=$(dirname $(which "${0}"))
+. "${SCRIPTDIR}/mmfunctions" || { echo "Missing '${SCRIPTDIR}/mmfunctions'. Exiting." ; exit 1 ;};
+
+
+while [ "${*}" != "" ] ; do
+    INPUT="${1}"
+    shift
+    MEDIAID=$(_readingestlog "media ID")
+    if [[ ! "${MEDIAID}" ]] ; then
+        MEDIAID=$(basename "${INPUT}" | cut -d. -f1)
+    fi
+    _get_phase_warning "${INPUT}"
+done
