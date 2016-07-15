@@ -62,6 +62,7 @@ while [ "${*}" != "" ] ; do
         OUTPUTDIR="${OUTPUTDIR_FORCED}"
         LOGDIR="${OUTPUTDIR}/logs"
     fi
+    _unset_variables
     _find_input "${INPUT}"
     MEDIAID=$(basename "${INPUT}" | cut -d. -f1)
     INGESTLOG="${LOGDIR}/capture.log"
@@ -72,9 +73,6 @@ while [ "${*}" != "" ] ; do
     _get_height "${SOURCEFILE}"
     _get_width "${SOURCEFILE}"
     _get_seconds "${SOURCEFILE}"
-
-    # clear local arrays
-    _unset_variables
 
     # encoding options
     _get_codectagstring "${SOURCEFILE}"
@@ -122,13 +120,11 @@ while [ "${*}" != "" ] ; do
 
     if [ "${CONCATSOURCE}" != "" ] ; then
         FFMPEGINPUT="${CONCATSOURCE}"
-    else
-        FFMPEGINPUT="${SOURCEFILE}"
     fi
 
     _filter_to_middle_option
 
-    _run_critical ffmpeg "${INPUTOPTIONS[@]}" -i "${FFMPEGINPUT}" "${MIDDLEOPTIONS[@]}" "${OUTPUT}"
+    _run_critical ffmpeg "${INPUTOPTIONS[@]}" "${FFMPEGINPUT[@]}" "${MIDDLEOPTIONS[@]}" "${OUTPUT}"
     echo
     _summarize_make
     _deliver_output "${MAKEYOUTUBE_DELIVERY_EMAIL_TO}"

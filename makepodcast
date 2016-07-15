@@ -54,13 +54,11 @@ while [ "${*}" != "" ] ; do
         OUTPUTDIR="${OUTPUTDIR_FORCED}"
         LOGDIR="${OUTPUTDIR}/logs"
     fi
+    _unset_variables
     _find_input "${INPUT}"
     MEDIAID=$(basename "${INPUT}" | cut -d. -f1)
 
     _set_up_output
-
-    # clear local arrays
-    _unset_variables
 
     # encoding options
     _get_codectagstring "${SOURCEFILE}"
@@ -90,13 +88,11 @@ while [ "${*}" != "" ] ; do
     _prep_ffmpeg_log
     if [ "${CONCATSOURCE}" != "" ] ; then
         FFMPEGINPUT="${CONCATSOURCE}"
-    else
-        FFMPEGINPUT="${SOURCEFILE}"
     fi
 
     _filter_to_middle_option
 
-    _run_critical ffmpeg "${INPUTOPTIONS[@]}" -i "${FFMPEGINPUT}" "${MIDDLEOPTIONS[@]}" "${OUTPUT}"
+    _run_critical ffmpeg "${INPUTOPTIONS[@]}" "${FFMPEGINPUT[@]}" "${MIDDLEOPTIONS[@]}" "${OUTPUT}"
     echo
     _summarize_make
     _deliver_output "${MAKEYOUTUBE_DELIVERY_EMAIL_TO}"
