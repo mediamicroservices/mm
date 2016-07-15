@@ -810,6 +810,45 @@ _is_video(){
     ffprobe "${1}" -show_streams -select_streams v:0 2> /dev/null | grep "^index="
 }
 
+_seconds_to_hhmmss(){
+    num=$1
+    h=`expr "$num" / 3600`
+    m=`expr "$num"  % 3600 / 60`
+    s=`expr "$num" % 60`
+    printf "%02d:%02d:%02d\n" $h $m $s
+}
+
+_get_phase_warning(){
+    INPUT="${1}"
+    if [[ "${INPUT##*.}" = "txt" ]] ; then
+        PHASETEMP="$INPUT"
+    else
+        PHASETEMP=$(_maketemp)
+        ffprobe 2>/dev/null -f lavfi -i amovie="${INPUT}",aphasemeter=r=0.2 -select_streams 0:a:0 -show_entries frame=pkt_dts_time:frame_tags=lavfi.aphasemeter.phase -of csv > "${PHASETEMP}"
+    fi
+    if [[ $(grep ",-" "${PHASETEMP}" | wc -l | sed "s/ //g") -gt 1 ]] ; then
+        PHASETEMPWARNINGS=$(_maketemp)
+        _report -wt "Warning: $(basename "${INPUT}") contains out of phase audio in these time ranges:"
+        grep ",-" "${PHASETEMP}" | cut -d "," -f 2 | cut -d "." -f 1 > "${PHASETEMPWARNINGS}"
+        echo "" >> "${PHASETEMPWARNINGS}"
+        cat "${PHASETEMPWARNINGS}"|  while read num ; do
+            if [[ -z $first ]]; then
+                first=$num; last=$num; continue;
+            fi
+            if [[ "$num" -ne $(($last + 5)) ]]; then
+                if [[ first -eq last ]]; then
+                    _report -w $(_seconds_to_hhmmss "${first}")
+                else
+                    _report -w "$(_seconds_to_hhmmss "${first}")-$(_seconds_to_hhmmss "${last}")"
+                fi
+                first=$num; last=$num
+            else
+                : $((last++)) $((last++)) $((last++)) $((last++)) $((last++))
+            fi
+        done
+            fi
+}
+
 _get_volume_adjustment(){
     REFERENCE=-24
     INTEGRATED_LOUDNESS=""
