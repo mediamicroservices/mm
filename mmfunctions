@@ -820,6 +820,7 @@ _seconds_to_hhmmss(){
 
 _get_phase_warning(){
     INPUT="${1}"
+    PHASE_ERROR="0"
     if [[ "${INPUT##*.}" = "txt" ]] ; then
         PHASETEMP="$INPUT"
     else
@@ -831,11 +832,12 @@ _get_phase_warning(){
         _report -wt "Warning: PLEASE REVIEW. $(basename "${INPUT}") contains out of phase audio in these time ranges:"
         awk -F "," '$3<-0.18 {print $0}' "${PHASETEMP}" | cut -d "," -f 2 | cut -d "." -f 1 > "${PHASETEMPWARNINGS}"
         echo "" >> "${PHASETEMPWARNINGS}"
-        cat "${PHASETEMPWARNINGS}"|  while read num ; do
+        while read num ; do
             if [[ -z $first ]]; then
                 first=$num; last=$num; continue;
             fi
             if [[ "$num" -ne $(($last + 5)) ]]; then
+                PHASE_ERROR="$(echo $PHASE_ERROR + 1 | bc)"
                 if [[ first -eq last ]]; then
                     _report -wn $(_seconds_to_hhmmss "${first}")
                     _report -wn " "
@@ -847,7 +849,7 @@ _get_phase_warning(){
             else
                 : $((last++)) $((last++)) $((last++)) $((last++)) $((last++))
             fi
-        done
+        done < "${PHASETEMPWARNINGS}"
         echo
     fi
 }
