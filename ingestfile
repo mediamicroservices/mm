@@ -10,6 +10,7 @@ OUTTIME=""
 CLEANUP_CHOICE="N"
 MAKEACCESSCOPIES="Y"       # use 'Y' for yes or any other character for no
 BLACKFRAMETEST="Y"         # use 'Y' for yes or any other character for no
+PHASECHECKTEST="Y"         # use 'Y' for yes or any other character for no
 DELIVERYTOOMNEON="Y"       # use 'Y' for yes or any other character for no
 DELIVERACCESSCOPIES="Y"    # use 'Y' for yes or any other character for no
 DELIVERYTOAIPSTORAGE="Y"   # use 'Y' for yes or any other character for no
@@ -346,6 +347,17 @@ else
             [ "${A2}" == "q" ] && exit 0
             _ask_outtime
         fi
+    fi
+fi
+
+if [ "${PHASECHECKTEST}" = "Y" ] ; then
+    _report -dt "Checking audio phase for $(basename "${INPUT}")"
+    _get_phase_warning "${INPUT}"
+    if [ "${PHASE_ERROR}" -gt "0" ] ; then
+        _report -w "There are ${PHASE_ERROR} sections of out-of-phase audio!"
+        _report -qn "Enter q to quit, any other key to continue: "
+        read A3
+        [ "${A3}" == "q" ] && exit 0
     fi
 fi
 
