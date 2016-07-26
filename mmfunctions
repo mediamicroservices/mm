@@ -828,7 +828,7 @@ _get_phase_warning(){
     fi
     if [[ $(awk -F "," '$3<-0.18 {print $0}' "${PHASETEMP}" | wc -l | sed "s/ //g") -gt 1 ]] ; then
         PHASETEMPWARNINGS=$(_maketemp)
-        _report -wt "Warning: $(basename "${INPUT}") contains out of phase audio in these time ranges:"
+        _report -wt "Warning: PLEASE REVIEW. $(basename "${INPUT}") contains out of phase audio in these time ranges:"
         awk -F "," '$3<-0.18 {print $0}' "${PHASETEMP}" | cut -d "," -f 2 | cut -d "." -f 1 > "${PHASETEMPWARNINGS}"
         echo "" >> "${PHASETEMPWARNINGS}"
         cat "${PHASETEMPWARNINGS}"|  while read num ; do
@@ -837,16 +837,19 @@ _get_phase_warning(){
             fi
             if [[ "$num" -ne $(($last + 5)) ]]; then
                 if [[ first -eq last ]]; then
-                    _report -w $(_seconds_to_hhmmss "${first}")
+                    _report -wn $(_seconds_to_hhmmss "${first}")
+                    _report -wn " "
                 else
-                    _report -w "$(_seconds_to_hhmmss "${first}")-$(_seconds_to_hhmmss "${last}")"
+                    _report -wn "$(_seconds_to_hhmmss "${first}")-$(_seconds_to_hhmmss "${last}")"
+                    _report -wn " "
                 fi
                 first=$num; last=$num
             else
                 : $((last++)) $((last++)) $((last++)) $((last++)) $((last++))
             fi
         done
-            fi
+        echo
+    fi
 }
 
 _get_volume_adjustment(){
