@@ -440,6 +440,9 @@ if [ "${OUTTIME}" ] ; then
     _writeingestlog "outtime" "${OUTTIME}"
 fi
 
+if [ "${PHASECHECKTEST}" = "Y" ] ; then
+_writeingestlog "${PHASE_ERROR} sections of out-of-phase audio"
+
 #log package type
 if [ "${PRESERVATION_MODE}" == "Y" ] ; then
     _writeingestlog "package type" "Preservation-Video"
