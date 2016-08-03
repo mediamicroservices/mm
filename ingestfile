@@ -330,6 +330,9 @@ if [ "${PRESERVATION_MODE}" == "Y" ] ; then
     _ask_intime
     _ask_outtime
     _ask_digitization_logs
+    PHASECHECKTEST="N" 
+fi
+    
 else
     if [ "${BLACKFRAMETEST}" = "Y" ] ; then
         _black_at_ends "${INPUT}"
