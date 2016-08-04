@@ -827,6 +827,7 @@ _get_phase_warning(){
         PHASETEMP=$(_maketemp)
         ffprobe 2>/dev/null -f lavfi -i amovie="${INPUT}",aphasemeter=r=0.2 -select_streams 0:a:0 -show_entries frame=pkt_dts_time:frame_tags=lavfi.aphasemeter.phase -of csv > "${PHASETEMP}"
     fi
+	PHASEREPORT=$(_maketemp)
     if [[ $(awk -F "," '$3<-0.18 {print $0}' "${PHASETEMP}" | wc -l | sed "s/ //g") -gt 1 ]] ; then
         PHASETEMPWARNINGS=$(_maketemp)
         _report -wt "Warning: PLEASE REVIEW. $(basename "${INPUT}") contains out of phase audio in these time ranges:"
@@ -840,16 +841,21 @@ _get_phase_warning(){
                 PHASE_ERROR="$(echo $PHASE_ERROR + 1 | bc)"
                 if [[ first -eq last ]]; then
                     _report -wn $(_seconds_to_hhmmss "${first}")
+					echo $(_seconds_to_hhmmss "${first}") >> "${PHASEREPORT}"
                     _report -wn " "
+				
                 else
                     _report -wn "$(_seconds_to_hhmmss "${first}")-$(_seconds_to_hhmmss "${last}")"
+					echo "$(_seconds_to_hhmmss "${first}")-$(_seconds_to_hhmmss "${last}")" >> "${PHASEREPORT}"
                     _report -wn " "
                 fi
                 first=$num; last=$num
             else
                 : $((last++)) $((last++)) $((last++)) $((last++)) $((last++))
             fi
+		
         done < "${PHASETEMPWARNINGS}"
+
         echo
     fi
 }
