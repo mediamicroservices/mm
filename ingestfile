@@ -221,7 +221,6 @@ if [[ "${cb}" -eq 1 ]] ; then
     exit 1
 fi
     
-if [ "${EDIT_MODE}" == "N" ] ; then 
     # interview the operator
     _ask_operator
     _ask_mediaid
@@ -278,12 +277,11 @@ if [ "${EDIT_MODE}" == "N" ] ; then
         do
             break
         done
-
-        if [ "${CLEANUPDECISION}" = "Remove source file after successful ingest" ] ; then
-            CLEANUP_CHOICE="Y"
-        else
-            CLEANUP_CHOICE="N"
-        fi
+    fi
+    if [ "${CLEANUPDECISION}" = "Remove source file after successful ingest" ] ; then
+        CLEANUP_CHOICE="Y"
+    else
+        CLEANUP_CHOICE="N"
     fi
 
     if [ "${PRIORITY}" = "" ] ; then
@@ -303,7 +301,6 @@ if [ "${EDIT_MODE}" == "N" ] ; then
             break
         done
     fi
-fi
 
 if [ "${SLATE}" = "Yes" ] ; then
     SLATE_CHOICE="Y"
