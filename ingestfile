@@ -433,6 +433,10 @@ _writeingestlog "Episode Title" "${EPISODETITLE}"
 _writeingestlog "made this" "ingestfile"
 _writeingestlog "Interlacement test" "${INTERLACETEST}"
 
+if [ -n "$(cat "${PHASEREPORT}" | xargs)" ] ; then
+	_writeingestlog "Out of phase audio exists in the following ranges" "$(cat "${PHASEREPORT}" | xargs)"
+fi
+
 if [ "${INTIME}" ] ; then
     _writeingestlog "intime" "${INTIME}"
 fi
