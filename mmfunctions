@@ -400,13 +400,20 @@ _email_delivery(){
     if [ "${EMAILTO}" ] ; then
         _get_prettyduration "${OUTPUT}"
         temp_message=$(_maketemp)
+        if [ -n "$(cat "${PHASEREPORT}" | xargs)" ] ; then
+            PHASE_EMAIL=$(_readingestlog "Out_of_phase_audio_ranges")
+        else
+            PHASE_EMAIL="None"
+        fi
+
         if [[ -f "${INGESTLOG}" ]] ; then
             FROMLOG="Operator: $(_readingestlog "operator")\n
 Processing Computer: $(_readingestlog "computer_name")
 Audio Peak (dB): $(_readingestlog "voldet_max_volume")
 Integrated Loudness: $(_readingestlog "r128_integrated_loudness")
 Audio Adjustment: $(_readingestlog "audio_adjustment")
-Loudness Range: $(_readingestlog "r128_loudness_range")"
+Loudness Range: $(_readingestlog "r128_loudness_range")
+Out of Phase Audio Ranges: ${PHASE_EMAIL}"
         fi
         echo -e "Subject: [delivery] $(basename "${OUTPUT}")\n
 A file has been delivered to ${DELIVERDIR}.\n
