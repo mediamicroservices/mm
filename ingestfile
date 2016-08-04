@@ -435,6 +435,8 @@ _writeingestlog "Interlacement test" "${INTERLACETEST}"
 
 if [ -n "$(cat "${PHASEREPORT}" | xargs)" ] ; then
 	_writeingestlog "Out_of_phase_audio_ranges" "$(cat "${PHASEREPORT}" | xargs)"
+else
+    _writeingestlog "Out_of_phase_audio_ranges" "None"
 fi
 
 if [ "${INTIME}" ] ; then
