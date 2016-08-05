@@ -175,6 +175,10 @@ _add_key(){
 }
 
 _writeingestlog(){
+    if [ -z "${INGESTLOG}" ] ; then
+        echo "Error, can not write to log, ingest log not yet created"
+        exit
+    fi
     if [ ! -f "${INGESTLOG}" ] ; then
         _mkdir2 $(dirname "${INGESTLOG}")
         touch "${INGESTLOG}"
