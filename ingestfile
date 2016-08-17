@@ -220,6 +220,14 @@ fi
 if [[ "${cb}" -eq 1 ]] ; then
     exit 1
 fi
+
+if
+    [ ! -z $(echo "${MEDIAID}" | grep -v "^[A-Z0-9_-]*$") ] ; then
+    echo "ERROR The MEDIA ID must only contain capital letters, numbers, hyphen and underscore"
+    echo "Please reenter valid ID"
+    MEDIAID=""
+    _ask_mediaid
+fi
     
     # interview the operator
     _ask_operator
