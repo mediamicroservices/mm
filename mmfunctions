@@ -797,7 +797,7 @@ _get_timecode_overlay(){
 
 _get_maxdvdbitrate(){
     _get_duration "${1}"
-    local DVDCAPACITY=33840000000  # in bits, minus 10%
+    local DVDCAPACITY=30794400000  # in bits, minus 10%
     local CAPDVDBITRATE=6000000    # in bits/second
     MAXDVDBITRATE=$(echo "(${DVDCAPACITY} - ( ${DURATION} * 224000 )) / ${DURATION}" | bc)
     _report -dt "Data rate could be up to ${MAXDVDBITRATE}"
