@@ -59,8 +59,15 @@ shift $(( ${OPTIND} - 1 ))
 
 trap _cleanup SIGHUP SIGINT SIGTERM
 
+#Find absolute path for input
+if [ -e "$1" ] ; then
+ABS_PATH=$(cd "$1"; pwd)
+else _report -wt "Directory is not valid. Please select a valid directory."
+exit 1
+fi
+
 _check_dfxml(){
-    PACKAGE="${1}"
+    PACKAGE="${ABS_PATH}"
     # make temp file that lists filenames and filesizes from dfxml.xml
     DFXML_FILELIST="$(_maketemp)"
     if [ ! -z "$(xml sel -T -t -m "/_:dfxml/_:fileobject" -v "_:filename" -o " " -v "_:filesize" -n "${PACKAGE}/${OUTDIR}/${DFXMLNAME}" 2>/dev/null)" ] ; then
@@ -93,7 +100,7 @@ _check_dfxml(){
 }
 
 _version_dfxml(){
-    PACKAGE="${1}"
+    PACKAGE="${ABS_PATH}"
     _report -wdt "Creating a new version of the checksum files."
     LASTMD5="${PACKAGE}/${OUTDIR}/${CHECKSUMNAME%.*}_$(stat -t '%Y%m%d-%H%M%S' -l "${PACKAGE}/${OUTDIR}/${CHECKSUMNAME}" | awk '{print $6}').md5"
     LASTDFXML="${PACKAGE}/${OUTDIR}/${DFXMLNAME%.*}_$(stat -t '%Y%m%d-%H%M%S' -l "${PACKAGE}/${OUTDIR}/${DFXMLNAME}" | awk '{print $6}').xml"
@@ -105,7 +112,7 @@ _version_dfxml(){
 
 while [ "${*}" != "" ] ; do
     _log -b
-    PACKAGE="${1}"
+    PACKAGE="${ABS_PATH}"
     if [ -d "${PACKAGE}" ] ; then
         PWD=$(pwd)
         "${SCRIPTDIR}/removeDSStore" "${PACKAGE}"
@@ -146,6 +153,8 @@ while [ "${*}" != "" ] ; do
                     shift
                     continue
                 fi
+        elif [ "${UPDATE}" = "Y" ] ; then
+            _report -dt "Preparing to update package"
         else
             if [ -s "${PACKAGE}/${OUTDIR}/${CHECKSUMNAME}" ] ; then
                 _report -dt "${CHECKSUMNAME} already exists, skipping for ${PACKAGE}"
@@ -161,7 +170,11 @@ while [ "${*}" != "" ] ; do
         cd "${PWD}"
         [ ! -d "${PACKAGE}/${OUTDIR}" ] && mkdir -p "${PACKAGE}/${OUTDIR}"
         echo "$(_get_iso8601): $(basename "${0}"):${VERSION}: ${DFXMLNAME} is generated" >> "${PACKAGE}/${OUTDIR}/${CHECKSUMPROCESSLOG}"
+        if [ "${VERIFY}" = "Y" ] ; then
         _version_dfxml "${PACKAGE}"
+        elif [ "${UPDATE}" = "Y" ] ; then
+        _version_dfxml "${PACKAGE}"
+        fi
         cat "${DFXMLTMP}" > "${PACKAGE}/${OUTDIR}/${DFXMLNAME}"
         if [ ! -z "$(xml sel -T -t -m "/_:dfxml/_:fileobject" -v "_:filename" -o " " -v "_:filesize" -n "${PACKAGE}/${OUTDIR}/${DFXMLNAME}" 2>/dev/null)" ] ; then
             xml sel -T -t -m "/_:dfxml/_:fileobject" -v "_:hashdigest" -o "  " -v "_:filename" -n "${PACKAGE}/${OUTDIR}/${DFXMLNAME}" > "${PACKAGE}/${OUTDIR}/${CHECKSUMNAME}"
@@ -169,8 +182,12 @@ while [ "${*}" != "" ] ; do
             xml sel -T -t -m "/dfxml/fileobject" -v "hashdigest" -o "  " -v "filename" -n "${PACKAGE}/${OUTDIR}/${DFXMLNAME}" > "${PACKAGE}/${OUTDIR}/${CHECKSUMNAME}"
         fi
         echo "$(_get_iso8601): $(basename "${0}"):${VERSION}: ${CHECKSUMNAME} is generated" >> "${PACKAGE}/${OUTDIR}/${CHECKSUMPROCESSLOG}"
-        #verify checksums by creating tmp checksum file and comparing with previously created checksums
+        if [ "${UPDATE}" = "Y" ] ; then
+            exit
+        fi
         if [ "${VERIFY}" = "Y" ] ; then
+        #verify checksums by creating tmp checksum file and comparing with previously created checksums
+    
             CHECKSUMCMP1=$(_maketemp)
             sort -k2 "${PACKAGE}/${OUTDIR}/${CHECKSUMNAME}" > "${CHECKSUMCMP1}"
             CHECKSUMCMP2=$(_maketemp)
