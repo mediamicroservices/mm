@@ -60,7 +60,11 @@ shift $(( ${OPTIND} - 1 ))
 trap _cleanup SIGHUP SIGINT SIGTERM
 
 #Find absolute path for input
+if [ -e "$1" ] ; then
 ABS_PATH=$(cd "$1"; pwd)
+else _report -wt "Directory is not valid. Please select a valid directory."
+exit 1
+fi
 
 _check_dfxml(){
     PACKAGE="${ABS_PATH}"
