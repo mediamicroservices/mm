@@ -166,6 +166,7 @@ FORMULA.tooltip = To force the input file to be interpreted as top or bottom fie
 FORMULA.default = none
 FORMULA.option =
 FORMULA.option = none
+FORMULA.option = Perform Test
 FORMULA.option = tff
 FORMULA.option = bff
 FORMULA.option = hds
@@ -272,7 +273,7 @@ fi
         _report -q "Select an optional formula for unusual cases? "
         _report -d "In most cases, select 'none'. To force the input file to be interpreted as top or bottom field first interlacement, select tff or bff. To stretch the input video to 1920x1080 HD frame size, select 'hds'. To squish into Standard Definition, select 'sds'."
         PS3="Selection? "
-        select FORMULA in "none" "tff" "bff" "hds" "sds"
+        select FORMULA in "none" "Perform Test" "tff" "bff" "hds" "sds"
         do
             break
         done
@@ -380,18 +381,10 @@ _run _mkdir2 "${LOGDIR}"
 INGESTLOG="${LOGDIR}/capture.log"
 
 #performing interlacement test if formula is none- only to be used in specific edge cases, answer should be no in most cases.
-if [[ "${FORMULA}" == "none" ]] ; then
-    _report -q "You did not choose a formula, do you want to perform an interlacement test on the file to determine the correct formula?"
-    PS3="Selection? "
-    select INTERLACETEST in "Yes" "No"
-        do
-            break
-        done
-    if [ "${INTERLACETEST}" = "Yes" ] ; then
+if [[ "${FORMULA}" == "Perform Test" ]] ; then
+
         INTERLACE_CHOICE="Y"
-    else
-        INTERLACE_CHOICE="N"
-    fi
+
 fi
 
 #perform interlacement test
