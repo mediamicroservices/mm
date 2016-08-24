@@ -27,6 +27,57 @@ _cleanup_mount_dir(){
     fi
 }
 
+
+
+_report_to_db(){
+    eventDetail=$(basename $0)
+    MEDIAID=$(basename "${INPUT}" | cut -d. -f1)
+    LOGDIR="${OUTDIR_INGESTFILE}/${MEDIAID}/metadata/logs"
+    INGESTLOG="${LOGDIR}/capture.log"
+    OP=$(cat ${INGESTLOG} | grep "operator" | cut -c 11-)
+    if [ -z "${OP}" ] ; then
+    OP="$USER"
+    fi
+    _premis_event_list
+    echo "INSERT IGNORE INTO object (objectIdentifierValue) VALUES ('$MEDIAID')" | mysql -h localhost -u media -pmedia  premis
+    if [ "$eventType" = "fixity" ] ; then
+    echo "INSERT INTO fixity (objectIdentifierValue,messageDigestAlgorithm,messageDigest) VALUES ('$MEDIAID','md5','$db_fixity')" | mysql -h localhost -u media -pmedia  premis
+    fi
+    echo "INSERT INTO event (objectIdentifierValue,eventType,eventDetail,eventDetailOPT,eventDetailCOMPNAME,linkingAgentIdentifierValue) VALUES ('$MEDIAID','$eventType','$eventDetail','$user_input','$HOSTNAME', '$OP')" | mysql -h localhost -u media -pmedia  premis
+}
+
+
+_premis_event_list(){
+    
+    eventDetail=$(basename $0)
+    eventType="$eventDetail"
+
+    if [ "$eventDetail" = "makebroadcast" ] ; then
+    eventType="creation"
+    fi
+    
+    if [ "$eventDetail" = "makeyoutube" ] ; then
+    eventType="creation"
+    fi
+    
+    if [ "$eventDetail" = "makemp3" ] ; then
+    eventType="creation"
+    fi
+    
+    if [ "$eventDetail" = "makeframes" ] ; then
+    eventType="creation"
+    fi
+    
+    if [ "$eventDetail" = "makewaveform" ] ; then
+    eventType="creation"
+    fi
+    if [ "$eventDetail" = "checksumpackage" ] ; then
+    eventType="fixity"
+    fi
+}
+
+
+
 _version_schema(){
     SCHEMA_FILE="$LTO_LOGS/${TAPE_SERIAL}.schema"
     if [ -f "${SCHEMA_FILE}" ] ; then
