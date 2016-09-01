@@ -199,7 +199,13 @@ while [ "${*}" != "" ] ; do
                 manifest_check=$(diff <(echo "$original_file_manifest") <(echo "$new_file_manifest"))
                 originalhash_list=$(grep "$original_file_manifest" "${CHECKSUMCMP1}")
                 originalhash_check=$(diff <(echo "$originalhash_list") "${CHECKSUMCMP2}")
-
+                deletecheck_1=$(echo "$originalhash_check" | grep "./" | cut -c 39-)
+                deletecheck_2=$(echo "${manifest_check}" | xargs | cut -c 7-)
+                
+                # Check if file path difference is because of a file being deleted and then warn.
+                if [ "$deletecheck_1" = "$deletecheck_2" ] ; then
+                     _report -wt "Warning: Files have been deleted. One (or more) of the following differences is due to missing files."
+                fi
                 
                 # Check if mismatch is result of checksum or file path differences
                 if [ -n "${manifest_check}" ] ; then
@@ -207,6 +213,7 @@ while [ "${*}" != "" ] ; do
                     diff "${CHECKSUMCMP1}" "${CHECKSUMCMP2}"
                     echo "$(_get_iso8601): $(basename "${0}"):${VERSION}: FAILED to VERIFY due to file path differences - compare ${CHECKSUMNAME} and $(basename "${LASTMD5}")" >> "${PACKAGE}/${OUTDIR}/${CHECKSUMPROCESSLOG}"
                 fi
+
                 if [ -n "${originalhash_check}" ] ; then
                 _report -wt "checksums are different for ${PACKAGE}"
                 diff "${CHECKSUMCMP1}" "${CHECKSUMCMP2}"
