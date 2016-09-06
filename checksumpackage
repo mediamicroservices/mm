@@ -201,9 +201,27 @@ while [ "${*}" != "" ] ; do
             CHECKSUMCMP2=$(_maketemp)
             sort -k2 "${LASTMD5}" > "${CHECKSUMCMP2}"
             if [[ $(diff "${CHECKSUMCMP1}" "${CHECKSUMCMP2}") ]] ; then
+                #setup check for file paths
+                original_file_manifest=$(cat "${CHECKSUMCMP2}" | cut -c 37-)
+                new_file_manifest=$(cat "${CHECKSUMCMP1}" | cut -c 37-)
+                manifest_check=$(diff <(echo "$original_file_manifest") <(echo "$new_file_manifest"))
+                originalhash_list=$(grep "$original_file_manifest" "${CHECKSUMCMP1}")
+                originalhash_check=$(diff <(echo "$originalhash_list") "${CHECKSUMCMP2}")
+                   
+                
+                # Check if mismatch is result of checksum or file path differences
+                if [ -n "${manifest_check}" ] ; then
+                    _report -wt "File paths are different for ${PACKAGE}. Files have either been added, renamed or removed."
+                    echo "The following files have been added: $(echo "$manifest_check" | grep ">" | cut -c 3-)"
+                     echo "The following files have been removed: $(echo "$manifest_check" | grep "<" | cut -c 3-)"
+                    echo "$(_get_iso8601): $(basename "${0}"):${VERSION}: FAILED to VERIFY due to file path differences - compare ${CHECKSUMNAME} and $(basename "${LASTMD5}")" >> "${PACKAGE}/${OUTDIR}/${CHECKSUMPROCESSLOG}"
+                fi
+
+                if [ -n "${originalhash_check}" ] ; then
                 _report -wt "checksums are different for ${PACKAGE}"
                 diff "${CHECKSUMCMP1}" "${CHECKSUMCMP2}"
                 echo "$(_get_iso8601): $(basename "${0}"):${VERSION}: FAILED to VERIFY by checksums - compare ${CHECKSUMNAME} and $(basename "${LASTMD5}")" >> "${PACKAGE}/${OUTDIR}/${CHECKSUMPROCESSLOG}"
+            fi
             else
                 _report -dt "checksums are still valid for ${PACKAGE}"
                 echo "$(_get_iso8601): $(basename "${0}"):${VERSION}: verified by checksums" >> "${PACKAGE}/${OUTDIR}/${CHECKSUMPROCESSLOG}"
