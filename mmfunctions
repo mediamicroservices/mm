@@ -30,6 +30,13 @@ _cleanup_mount_dir(){
 
 
 _report_to_db(){
+   #DB config- will be deleted once DB is integrated with MMConfig
+    dbhost="localhost"
+    dbuser="media"
+    dbpword="media"
+    dbname="premis"
+    #End DB config
+    
     eventDetail=$(basename $0)
     MEDIAID=$(basename "${INPUT}" | cut -d. -f1)
     LOGDIR="${OUTDIR_INGESTFILE}/${MEDIAID}/metadata/logs"
@@ -39,7 +46,7 @@ _report_to_db(){
     OP="$USER"
     fi
     _premis_event_list
-    echo "INSERT IGNORE INTO object (objectIdentifierValue) VALUES ('$MEDIAID')" | mysql -h localhost -u media -pmedia  premis
+    echo "INSERT IGNORE INTO object (objectIdentifierValue) VALUES ('$MEDIAID')" | mysql -h "$dbhost" -u "$dbuser" -p"$dbpword"  "$dbname"
     if [ "$eventType" = "fixity" ] ; then
         IFS=$(echo -en "\n\b")
         MEDIAID=$(basename "${INPUT}" | cut -d. -f1)
@@ -47,12 +54,12 @@ _report_to_db(){
         messageDigestHASH=$(echo "$LINE" | cut -c -32 )
         messageDigestPATH=$(echo "$LINE" | cut -c 35- )
         messageDigestFILENAME=$(basename ${messageDigestPATH})
-        echo "INSERT INTO fixity (objectIdentifierValue,messageDigestAlgorithm,messageDigestPATH,messageDigestFILENAME,messageDigestHASH) VALUES ('$MEDIAID','md5','$messageDigestPATH','$messageDigestFILENAME','$messageDigestHASH')" | mysql -h localhost -u media -pmedia  premis
+        echo "INSERT INTO fixity (objectIdentifierValue,messageDigestAlgorithm,messageDigestPATH,messageDigestFILENAME,messageDigestHASH) VALUES ('$MEDIAID','md5','$messageDigestPATH','$messageDigestFILENAME','$messageDigestHASH')" | mysql -h "$dbhost" -u "$dbuser" -p"$dbpword"  "$dbname"
         done
         unset IFS
     fi
     
-    echo "INSERT INTO event (objectIdentifierValue,eventType,eventDetail,eventDetailOPT,eventDetailCOMPNAME,linkingAgentIdentifierValue) VALUES ('$MEDIAID','$eventType','$eventDetail','$user_input','$HOSTNAME', '$OP')" | mysql -h localhost -u media -pmedia  premis
+    echo "INSERT INTO event (objectIdentifierValue,eventType,eventDetail,eventDetailOPT,eventDetailCOMPNAME,linkingAgentIdentifierValue) VALUES ('$MEDIAID','$eventType','$eventDetail','$user_input','$HOSTNAME', '$OP')" | mysql -h "$dbhost" -u "$dbuser" -p"$dbpword"  "$dbname"
 }
 
 
