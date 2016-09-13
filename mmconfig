@@ -236,6 +236,17 @@ VOLADJUST.option = N
 VOLADJUST.width = 125
 VOLADJUST.default = ${VOLADJUST}
 
+#PREMIS_DB
+PREMIS_DB.x = 600
+PREMIS_DB.y = 20
+PREMIS_DB.type = radiobutton
+PREMIS_DB.label = Please choose either Y or N to enable logging of PREMIS events into database:
+PREMIS_DB.option = Y
+PREMIS_DB.option = N
+PREMIS_DB.width = 125
+PREMIS_DB.default = ${PREMIS_DB}
+
+
 # Add a cancel button with default label
 cb.type=cancelbutton
 
@@ -267,6 +278,7 @@ if [[ "${RUNPASHUA}" == "Y" ]] ; then
     echo "  FILEMAKER_DB = ${FILEMAKER_DB}"
     echo "  FILEMAKER_XML_URL = ${FILEMAKER_XML_URL}"
     echo "  VOLADJUST = ${VOLADJUST}"
+    echo "  PREMIS_DB = ${PREMIS_DB}"
     echo ""
 
     #write to the config file
@@ -290,6 +302,7 @@ if [[ "${RUNPASHUA}" == "Y" ]] ; then
     echo "FILEMAKER_DB=\"${FILEMAKER_DB}\"" >> "${MM_CONFIG_FILE}"
     echo "FILEMAKER_XML_URL=\"${FILEMAKER_XML_URL}\"" >> "${MM_CONFIG_FILE}"
     echo "VOLADJUST=\"${VOLADJUST}\"" >> "${MM_CONFIG_FILE}"
+    echo "PREMIS_DB=\"${PREMIS_DB}\"" >> "${MM_CONFIG_FILE}"
 else
     # set up configuration file using the command line
     echo "# $(basename ${MM_CONFIG_FILE})" > "${MM_CONFIG_FILE}"
