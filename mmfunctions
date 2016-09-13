@@ -37,6 +37,8 @@ _report_to_db(){
     dbname="premis"
     #End DB config
     
+    if [ "${PREMIS_DB}" = "Y" ] ; then
+        
     eventDetail=$(basename $0)
     MEDIAID=$(basename "${INPUT}" | cut -d. -f1)
     LOGDIR="${OUTDIR_INGESTFILE}/${MEDIAID}/metadata/logs"
@@ -60,6 +62,7 @@ _report_to_db(){
     fi
     
     echo "INSERT INTO event (objectIdentifierValue,eventType,eventDetail,eventDetailOPT,eventDetailCOMPNAME,linkingAgentIdentifierValue) VALUES ('$MEDIAID','$eventType','$eventDetail','$user_input','$HOSTNAME', '$OP')" | mysql -h "$dbhost" -u "$dbuser" -p"$dbpword"  "$dbname"
+fi
 }
 
 
