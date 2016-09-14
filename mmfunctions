@@ -59,6 +59,7 @@ fi
 }
 
 
+
 _premis_event_list(){
     
     eventDetail=$(basename $0)
@@ -83,7 +84,13 @@ _premis_event_list(){
     if [ "$eventDetail" = "makewaveform" ] ; then
     eventType="creation"
     fi
+    if [ "$eventDetail" = "migratefiles" ] ; then
+    eventType="replication"
+    fi
     if [ "$eventDetail" = "checksumpackage" ] ; then
+    eventType="fixity"
+    fi
+    if [ "$eventDetail" = "collectionchecksum" ] ; then
     eventType="fixity"
     fi
 }
