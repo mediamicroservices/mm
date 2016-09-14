@@ -88,5 +88,6 @@ while [ "${*}" != "" ] ; do
     normalize --peak -v "${OUTPUT}"
     echo
     _report -dt "$(basename "${OUTPUT}") is done."
+    _report_to_db
     _log -e
 done

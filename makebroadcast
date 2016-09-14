@@ -378,6 +378,7 @@ MIDDLEOPTIONS+=(-map "[with_slate_video]" -map "[with_slate_stereo1]" -map "[wit
     _summarize_make
     _deliver_output "${MAKEBROADCAST_DELIVERY_EMAIL_TO}"
     _log -e
+    _report_to_db
 done
 unset ADDSLATE
 

@@ -138,5 +138,6 @@ while [ "${*}" != "" ] ; do
             _writeerrorlog "makeyoutube" "$(basename "${OUTPUT}") qualified for uploadyoutube but it is not installed, so the file could not be uploaded."
         fi
     fi
+    _report_to_db
     _log -e
 done
