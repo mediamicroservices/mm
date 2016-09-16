@@ -44,7 +44,6 @@ _report_to_db(){
     echo "INSERT IGNORE INTO object (objectIdentifierValue) VALUES ('$MEDIAID')" | mysql --login-path="$PREMIS_PROFILE"  "$PREMIS_NAME"
     if [ "$eventType" = "fixity" ] ; then
         IFS=$(echo -en "\n\b")
-        MEDIAID=$(basename "${INPUT}" | cut -d. -f1)
         for i in ${db_fixity}; do LINE=$i;
         messageDigestHASH=$(echo "$LINE" | cut -c -32 )
         messageDigestPATH=$(echo "$LINE" | cut -c 35- )
@@ -92,8 +91,15 @@ _premis_event_list(){
     fi
     if [ "$eventDetail" = "collectionchecksum" ] ; then
     eventType="fixity"
+    db_fixity=$(cat "${TAPECHECKSUMFILE}")
+    fi
+    if [ "$eventDetail" = "writelto" ] ; then
+    eventType="fixity"
+    MEDIAID="$TAPE_SERIAL"
+    db_fixity=$(cat "${READBACKDIR}/${TAPE_SERIAL}_ReadBack_checksum_${VERIFYTIME}.md5")
     fi
 }
+
 
 
 
