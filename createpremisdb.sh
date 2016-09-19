@@ -71,7 +71,7 @@ rm "${expect}"
 
 echo "Use the following settings in mmconfig"
 echo "Database Profile is "$USER_NAME"_config"
-echo "Database Name is DB_NAME"
+echo "Database Name is "$DB_NAME""
 
 mysql_config_editor remove --login-path=tempsetting
 fi
