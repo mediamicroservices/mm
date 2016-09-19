@@ -20,23 +20,26 @@ if [ "${*}" = "" ] ; then
     usage
 fi
 
-#create database
+#create database option
 if [ "$runtype" = "create" ] ; then
+#get input for database creation
 echo "please enter the location the database will be created"
 read DB_HOST
 echo "Please enter root password for mysql:"
 mysql_config_editor set --login-path=tempsetting --host="$DB_HOST" --user=root --password
 echo "Please enter name of DB to be created"
 read DB_NAME
-echo "CREATE DATABASE "$DB_NAME"" | mysql --login-path=testdbcreator
-echo "CREATE TABLE object (objectIdentifierValue varchar(1000) NOT NULL,contentLocationValue varchar (300),PRIMARY KEY (objectIdentifierValue))" | mysql --login-path=testdbcreator "$DB_NAME"
-echo "CREATE TABLE event (eventIdentifierValue bigint NOT NULL AUTO_INCREMENT,objectIdentifierValue varchar(1000) NOT NULL,eventType varchar(100) NOT NULL,eventDateTime datetime NOT NULL DEFAULT NOW(),eventDetail varchar(30) NOT NULL,eventDetailOPT varchar(1000),eventDetailCOMPNAME varchar(50) NOT NULL,linkingAgentIdentifierValue varchar(30) NOT NULL,PRIMARY KEY (eventIdentifierValue),FOREIGN KEY (objectIdentifierValue) REFERENCES object(objectIdentifierValue))" | mysql --login-path=testdbcreator "$DB_NAME"
-echo "CREATE TABLE fixity (fixityIdentifierValue bigint NOT NULL AUTO_INCREMENT,objectIdentifierValue varchar(1000),eventDateTime datetime NOT NULL DEFAULT NOW(),messageDigestAlgorithm varchar (20) NOT NULL,messageDigestPATH varchar (8000) NOT NULL,messageDigestFILENAME varchar (8000) NOT NULL,messageDigestHASH varchar (32) NOT NULL,PRIMARY KEY (fixityIdentifierValue),FOREIGN KEY (objectIdentifierValue) REFERENCES object(objectIdentifierValue))" | mysql --login-path=testdbcreator "$DB_NAME"
+#create database
+echo "CREATE DATABASE "$DB_NAME"" | mysql --login-path=tempsetting
+echo "CREATE TABLE object (objectIdentifierValue varchar(1000) NOT NULL,contentLocationValue varchar (300),PRIMARY KEY (objectIdentifierValue))" | mysql --login-path=tempsetting "$DB_NAME"
+echo "CREATE TABLE event (eventIdentifierValue bigint NOT NULL AUTO_INCREMENT,objectIdentifierValue varchar(1000) NOT NULL,eventType varchar(100) NOT NULL,eventDateTime datetime NOT NULL DEFAULT NOW(),eventDetail varchar(30) NOT NULL,eventDetailOPT varchar(1000),eventDetailCOMPNAME varchar(50) NOT NULL,linkingAgentIdentifierValue varchar(30) NOT NULL,PRIMARY KEY (eventIdentifierValue),FOREIGN KEY (objectIdentifierValue) REFERENCES object(objectIdentifierValue))" | mysql --login-path=tempsetting "$DB_NAME"
+echo "CREATE TABLE fixity (fixityIdentifierValue bigint NOT NULL AUTO_INCREMENT,objectIdentifierValue varchar(1000),eventDateTime datetime NOT NULL DEFAULT NOW(),messageDigestAlgorithm varchar (20) NOT NULL,messageDigestPATH varchar (8000) NOT NULL,messageDigestFILENAME varchar (8000) NOT NULL,messageDigestHASH varchar (32) NOT NULL,PRIMARY KEY (fixityIdentifierValue),FOREIGN KEY (objectIdentifierValue) REFERENCES object(objectIdentifierValue))" | mysql --login-path=tempsetting "$DB_NAME"
 mysql_config_editor remove --login-path=tempsetting
 fi
 
-#create user
+#create user option
 if [ "$runtype" = "user" ] ; then
+#get input for user creation
 echo "please enter the name of target database"
 read DB_NAME
 echo "please enter the location of target database"
@@ -49,6 +52,10 @@ echo "please enter the location of user to be created"
 read USER_HOST
 echo "please enter mysql root password"
 mysql_config_editor set --login-path=tempsetting --host="$DB_HOST" --user=root --password
+#create user
+echo "CREATE USER \""$USER_NAME"\"@\""$USER_HOST"\" IDENTIFIED BY \""$USER_PASSWORD"\"" | mysql --login-path=tempsetting
+echo "GRANT ALL PRIVILEGES ON "$DB_NAME".* TO \""$USER_NAME"\"@\""$USER_HOST"\"" | mysql --login-path=tempsetting
+echo "FLUSH PRIVILEGES" | mysql --login-path=tempsetting
 
 #set up and run expect script for creation of mysql login config
 expect="$HOME/.$(basename "${0}").exp"
