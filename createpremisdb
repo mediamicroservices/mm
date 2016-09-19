@@ -23,7 +23,7 @@ fi
 #create database option
 if [ "$runtype" = "create" ] ; then
 #get input for database creation
-echo "please enter the location the database will be created"
+echo "Please enter the location the database will be created"
 read DB_HOST
 echo "Please enter root password for mysql:"
 mysql_config_editor set --login-path=tempsetting --host="$DB_HOST" --user=root --password
@@ -34,23 +34,24 @@ echo "CREATE DATABASE "$DB_NAME"" | mysql --login-path=tempsetting
 echo "CREATE TABLE object (objectIdentifierValue varchar(1000) NOT NULL,contentLocationValue varchar (300),PRIMARY KEY (objectIdentifierValue))" | mysql --login-path=tempsetting "$DB_NAME"
 echo "CREATE TABLE event (eventIdentifierValue bigint NOT NULL AUTO_INCREMENT,objectIdentifierValue varchar(1000) NOT NULL,eventType varchar(100) NOT NULL,eventDateTime datetime NOT NULL DEFAULT NOW(),eventDetail varchar(30) NOT NULL,eventDetailOPT varchar(1000),eventDetailCOMPNAME varchar(50) NOT NULL,linkingAgentIdentifierValue varchar(30) NOT NULL,PRIMARY KEY (eventIdentifierValue),FOREIGN KEY (objectIdentifierValue) REFERENCES object(objectIdentifierValue))" | mysql --login-path=tempsetting "$DB_NAME"
 echo "CREATE TABLE fixity (fixityIdentifierValue bigint NOT NULL AUTO_INCREMENT,objectIdentifierValue varchar(1000),eventDateTime datetime NOT NULL DEFAULT NOW(),messageDigestAlgorithm varchar (20) NOT NULL,messageDigestPATH varchar (8000) NOT NULL,messageDigestFILENAME varchar (8000) NOT NULL,messageDigestHASH varchar (32) NOT NULL,PRIMARY KEY (fixityIdentifierValue),FOREIGN KEY (objectIdentifierValue) REFERENCES object(objectIdentifierValue))" | mysql --login-path=tempsetting "$DB_NAME"
+#remove root config
 mysql_config_editor remove --login-path=tempsetting
 fi
 
 #create user option
 if [ "$runtype" = "user" ] ; then
 #get input for user creation
-echo "please enter the name of target database"
+echo "Please enter the name of target database"
 read DB_NAME
-echo "please enter the location of target database"
+echo "Please enter the location of target database"
 read DB_HOST
-echo "please enter the name of user to be created"
+echo "Please enter the name of user to be created"
 read USER_NAME
-echo "please enter the password for the new user"
+echo "Please enter the password for the new user"
 read USER_PASSWORD
-echo "please enter the location of user to be created"
+echo "Please enter the location of user to be created"
 read USER_HOST
-echo "please enter mysql root password"
+echo "Please enter mysql root password"
 mysql_config_editor set --login-path=tempsetting --host="$DB_HOST" --user=root --password
 #create user
 echo "CREATE USER \""$USER_NAME"\"@\""$USER_HOST"\" IDENTIFIED BY \""$USER_PASSWORD"\"" | mysql --login-path=tempsetting
@@ -69,9 +70,9 @@ chmod 755 "${expect}"
 expect "${expect}"
 rm "${expect}"
 
-echo "Use the following settings in mmconfig"
-echo "Database Profile is "$USER_NAME"_config"
-echo "Database Name is "$DB_NAME""
-
+echo -e "\033[1;95mUse the following settings in mmconfig\033[0m"
+echo -e "\033[1;93mDatabase Profile is: "$USER_NAME"_config\033[0m"
+echo -e "\033[1;95mDatabase Name is: "$DB_NAME"\033[0m"
+#remove root config
 mysql_config_editor remove --login-path=tempsetting
 fi
