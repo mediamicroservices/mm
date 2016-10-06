@@ -42,6 +42,10 @@ _report_to_db(){
     fi
     _premis_event_list
     echo "INSERT IGNORE INTO object (objectIdentifierValue) VALUES ('$MEDIAID')" | mysql --login-path="$PREMIS_PROFILE"  "$PREMIS_NAME"
+    if [ "$?" != "0" ]; then
+    echo -e "\033[1;5;95mERROR:\033[0m \033[1;93mCould not access database.  Information was not added\033[0m"
+    else echo -e "\033[1;5;95mSuccess\033[0m" 
+    fi
     if [ "$eventType" = "fixity" ] ; then
         IFS=$(echo -en "\n\b")
         for i in ${db_fixity}; do LINE=$i;
@@ -102,7 +106,6 @@ _premis_event_list(){
 
 
 
-
 _version_schema(){
     SCHEMA_FILE="$LTO_LOGS/${TAPE_SERIAL}.schema"
     if [ -f "${SCHEMA_FILE}" ] ; then
@@ -116,7 +119,7 @@ _version_schema(){
 _checkdir(){
 if [[ ! -d "${1}" ]] ; then
     echo "${1}" is not a directory.
-    usage
+    _usage
     exit 1
 fi
 }
