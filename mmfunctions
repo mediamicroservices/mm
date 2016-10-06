@@ -36,7 +36,7 @@ _report_to_db(){
     MEDIAID=$(basename "${INPUT}" | cut -d. -f1)
     LOGDIR="${OUTDIR_INGESTFILE}/${MEDIAID}/metadata/logs"
     INGESTLOG="${LOGDIR}/capture.log"
-    OP=$(cat ${INGESTLOG} | grep "operator" | cut -c 11-)
+    OP=$(cat ${INGESTLOG} 2>/dev/null | grep "operator" | cut -c 11-)
     if [ -z "${OP}" ] ; then
     OP="$USER"
     fi
@@ -48,7 +48,7 @@ _report_to_db(){
         messageDigestHASH=$(echo "$LINE" | cut -c -32 )
         messageDigestPATH=$(echo "$LINE" | cut -c 35- )
         messageDigestFILENAME=$(basename ${messageDigestPATH})
-        echo "INSERT INTO fixity (objectIdentifierValue,messageDigestAlgorithm,messageDigestPATH,messageDigestFILENAME,messageDigestHASH) VALUES ('$MEDIAID','md5','$messageDigestPATH','$messageDigestFILENAME','$messageDigestHASH')" | mysql --login-path="$PREMIS_PROFILE"  "$PREMIS_NAME"
+        echo "INSERT INTO fixity (objectIdentifierValue,eventDetail,messageDigestAlgorithm,messageDigestPATH,messageDigestFILENAME,messageDigestHASH) VALUES ('$MEDIAID','$eventDetail','md5','$messageDigestPATH','$messageDigestFILENAME','$messageDigestHASH')" | mysql --login-path="$PREMIS_PROFILE"  "$PREMIS_NAME"
         done
         unset IFS
     fi
