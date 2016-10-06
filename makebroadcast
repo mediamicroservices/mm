@@ -111,6 +111,12 @@ while [ "${*}" != "" ] ; do
             _get_dar "${SOURCEFILE}"
         fi
 
+        #Set options for zeroing timecode if input is MXF
+        if [[ "$INPUT" == *.mxf ]] ; then
+            metadata_option="-metadata"
+        else metadata_option="-metadata:s:v:0"
+        fi
+
         # if adding a slate then request metadata
         MEDIAID4SLATE=$(_readingestlog "media ID slate")
         if [ "${ADDSLATE}" = "Y" ] ; then
@@ -176,9 +182,9 @@ while [ "${*}" != "" ] ; do
         -f lavfi -i "aevalsrc=0:d=${BLACK_SECS}:s=48000:c=stereo"\
         -f lavfi -i "color=black:s=1920x1080:r=30000/1001:sar=16/9:d=${END_BLACK_SECS}" \
         -f lavfi -i "aevalsrc=0:d=${END_BLACK_SECS}:s=48000:c=stereo")
-            MIDDLEOPTIONS+=(-metadata:s:v:0 timecode=00:58:30\;00)
+            MIDDLEOPTIONS+=("$metadata_option" timecode=00:58:30\;00)
         else
-            MIDDLEOPTIONS+=(-metadata:s:v:0 timecode=00:00:00.00)
+            MIDDLEOPTIONS+=("$metadata_option" timecode=00:00:00.00)
         fi
         # determine filter choice if set in capture.log and set in and out times if used, ignore out time if a slate is being created.
         if [[ -f "${INGESTLOG}" && "${ISOBJECT}" = "Y" ]] ; then
