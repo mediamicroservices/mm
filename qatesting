@@ -12,23 +12,23 @@ while [ "${*}" != "" ] ; do
     if [[ ! "${MEDIAID}" ]] ; then
         MEDIAID=$(basename "${INPUT}" | cut -d. -f1)
     fi
-    #reports out information 
-    _black_at_ends "${INPUT}" 
+    #reports out information
+    _black_at_ends "${INPUT}"
     #modified original function to report only
     _get_frame_count(){
         INPUT_MOVIE="${1}"
         CONTAINERFRAMECOUNT=$(mediainfo --inform="Video;%FrameCount%" "${INPUT_MOVIE}")
         _report -dt "The frame count according to the container is: ${CONTAINERFRAMECOUNT}"
-        VIDEOTRACKFRAMECOUNT=$(mediainfo --inform="Video;%Source_FrameCount%" "${INPUT_MOVIE}") 
+        VIDEOTRACKFRAMECOUNT=$(mediainfo --inform="Video;%Source_FrameCount%" "${INPUT_MOVIE}")
         _report -dt "The frame count according to the video track is: ${VIDEOTRACKFRAMECOUNT}"
         if [ ! -z "${VIDEOTRACKFRAMECOUNT}" ] ; then
             if [ "${VIDEOTRACKFRAMECOUNT}" -ne "${CONTAINERFRAMECOUNT}" ] ; then
-                _report -wt "warning - there are discrepancies between the container frame count and video track frame count. This could result in the desynchronization of audio and video." 
+                _report -wt "warning - there are discrepancies between the container frame count and video track frame count. This could result in the desynchronization of audio and video."
             fi
         fi
     }
 
-    _get_frame_count "${INPUT}" 
+    _get_frame_count "${INPUT}"
 
     _get_prettyduration "${INPUT}"
     echo "The duration of ${MEDIAID} in HH:mm:ss is: ${PRETTYDURATION}"
@@ -60,7 +60,7 @@ while [ "${*}" != "" ] ; do
 
     _get_audio_channels "${INPUT}"
     echo "The number of audio channels in ${MEDIAID} is: ${AUDIO_CHANNELS}"
-    
+
     _get_pix_fmt "${INPUT}"
     echo "The pixel order of ${MEDIAID} is: ${PIXFMT}"
 
@@ -76,7 +76,7 @@ while [ "${*}" != "" ] ; do
     else
         echo "The timecode of ${MEDIAID} is: ${TIMECODE}"
     fi
-    
+
     #function modified for script
     _get_volume_adjustment(){
         REFERENCE=-24
@@ -111,8 +111,8 @@ while [ "${*}" != "" ] ; do
         fi
     }
 
-    _get_volume_adjustment  "${INPUT}"  
-    
+    _get_volume_adjustment  "${INPUT}"
+
     #function modified for script
     _get_interlacement_full(){
         INPUT_MOVIE="${1}"
@@ -123,16 +123,14 @@ while [ "${*}" != "" ] ; do
             IDET_SUMMARY=$(echo "${IDET_INTERLACEMENT}" | cut -d: -f2- | awk '{print $1 " " $2 "\n" $3 " " $4 "\n" $5 " " $6 "\n" $7 " " $8}')
             IDET_TOP=$(echo "${IDET_INTERLACEMENT}" | cut -d: -f2- | awk '{print $1 " " $2 "\n" $3 " " $4 "\n" $5 " " $6 "\n" $7 " " $8}' | sort -n -k2 | tail -n1 | cut -d: -f1)
         echo "Testing with ffmpeg says this file is ${IDET_TOP}"
-        _get_mediainfo_interlacement 
+        _get_mediainfo_interlacement
         if [ -z "${CONTAINER_INTERLACEMENT}" ] ; then
-            _report -qn "MediaInfo can't test the interlacement of this file. Please consider using the results from the ffmpeg file test." 
+            _report -qn "MediaInfo can't test the interlacement of this file. Please consider using the results from the ffmpeg file test."
         else
             echo "Media Info says this file is ${CONTAINER_INTERLACEMENT}"
         fi
     }
-    
-    _get_interlacement_full "${INPUT}" #modify based on statements written into function 
-    
+
+    _get_interlacement_full "${INPUT}" #modify based on statements written into function
+
 done
-    
-    

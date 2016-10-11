@@ -1,5 +1,5 @@
 #!/bin/bash
-#aipupgrade is a script that removes the submissionDocumentation directory, removes DSStore files, asks and logs package type, and creates new metadata. 
+#aipupgrade is a script that removes the submissionDocumentation directory, removes DSStore files, asks and logs package type, and creates new metadata.
 
 SCRIPTDIR=$(dirname $(which "${0}"))
 . "${SCRIPTDIR}/mmfunctions" || { echo "Missing '${SCRIPTDIR}/mmfunctions'. Exiting." ; exit 1 ;};
@@ -22,7 +22,7 @@ while [ "${*}" != "" ] ; do
     shift
     "${SCRIPTDIR}/removeDSStore" "${INPUT}"
     #remove unecessary directory
-    if [ -d "${SUBDOC}" ] ; then 
+    if [ -d "${SUBDOC}" ] ; then
         mv -v -n "${SUBDOC}"* "${METADOC}"
         rmdir "${SUBDOC}"
     fi
