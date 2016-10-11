@@ -69,7 +69,7 @@ if [ "$?" != "0" ]; then
     echo -e "\033[1;5;95mERROR:\033[0m \033[1;93mCould not access database "$PREMIS_NAME".  Information was not added to table "$table_name". SQL command history has been written to "$MEDIAID"_dbreport.txt\033[0m"
     
     if [ "$table_name" = "object" ] ; then
-    echo "\"INSERT IGNORE INTO object (objectIdentifierValue) VALUES ('$MEDIAID')\" | mysql --login-path=\"$PREMIS_PROFILE\"  \"$PREMIS_NAME\"" > ~/Desktop/Trash_Me/"$MEDIAID"_dbreport.txt
+    echo "\"INSERT IGNORE INTO object (objectIdentifierValue) VALUES ('$MEDIAID')\" | mysql --login-path=\"$PREMIS_PROFILE\"  \"$PREMIS_NAME\"" > ~/Desktop/"$MEDIAID"_dbreport.txt
     fi
     
     if [ "$table_name" = "fixity" ] ; then
