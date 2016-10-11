@@ -125,25 +125,24 @@ while [ "${*}" != "" ] ; do
                 echo -n ":: "
                 read MEDIAID4SLATE
             fi
-            
+
             SERIESTITLE=$(_readingestlog "Series Title")
-            if [ -z "${SERIESTITLE}" ] ; then 
+            if [ -z "${SERIESTITLE}" ] ; then
                 cowsay -t "Series Title?"
                 echo -n ":: "
                 read SERIESTITLE
             fi
-            
+
             EPISODETITLE=$(_readingestlog "Episode Title")
             if [ -z "${EPISODETITLE}" ] ; then
                 cowsay -s "Episode Title?"
                 echo -n ":: "
                 read EPISODETITLE
             fi
-        
-    
+
                 SLATE_MEDIAID=$(_maketemp)
                 echo "${MEDIAID4SLATE}" > "${SLATE_MEDIAID}"
-                
+
                 SLATE_SERIES=$(_maketemp)
                 echo "${SERIESTITLE}" > "${SLATE_SERIES}"
 
@@ -152,16 +151,16 @@ while [ "${*}" != "" ] ; do
 
                 SLATE_DURATION=$(_maketemp)
                 echo "${BROADCASTDURATION}" > "${SLATE_DURATION}"
-                
+
                 SLATE_CH1=$(_maketemp)
                 echo "Ch. 1 Stereo L" > "${SLATE_CH1}"
 
                 SLATE_CH2=$(_maketemp)
                 echo "Ch. 2 Stereo R" > "${SLATE_CH2}"
-                
+
                 SLATE_CH3=$(_maketemp)
                 echo "Ch. 3 Mono Mix" > "${SLATE_CH3}"
-                
+
                 SLATE_CH4=$(_maketemp)
                 echo "Ch. 4 Mono Mix" > "${SLATE_CH4}"
 

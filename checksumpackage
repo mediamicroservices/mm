@@ -187,7 +187,7 @@ while [ "${*}" != "" ] ; do
         fi
         if [ "${VERIFY}" = "Y" ] ; then
         #verify checksums by creating tmp checksum file and comparing with previously created checksums
-    
+
             CHECKSUMCMP1=$(_maketemp)
             sort -k2 "${PACKAGE}/${OUTDIR}/${CHECKSUMNAME}" > "${CHECKSUMCMP1}"
             CHECKSUMCMP2=$(_maketemp)
@@ -199,8 +199,7 @@ while [ "${*}" != "" ] ; do
                 manifest_check=$(diff <(echo "$original_file_manifest") <(echo "$new_file_manifest"))
                 originalhash_list=$(grep "$original_file_manifest" "${CHECKSUMCMP1}")
                 originalhash_check=$(diff <(echo "$originalhash_list") "${CHECKSUMCMP2}")
-                   
-                
+
                 # Check if mismatch is result of checksum or file path differences
                 if [ -n "${manifest_check}" ] ; then
                     _report -wt "File paths are different for ${PACKAGE}. Files have either been added, renamed or removed."

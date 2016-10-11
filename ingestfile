@@ -228,7 +228,7 @@ if
     MEDIAID=""
     _ask_mediaid
 fi
-    
+
     # interview the operator
     _ask_operator
     _ask_mediaid
@@ -315,7 +315,7 @@ if [ "${SLATE}" = "Yes" ] ; then
 else
     SLATE_CHOICE="N"
 fi
-    
+
 if [ "${SLATE_CHOICE}" == "Y" ] ; then
 
     cowsay -t "Series Title?"
@@ -335,8 +335,8 @@ if [ "${PRESERVATION_MODE}" == "Y" ] ; then
     _ask_intime
     _ask_outtime
     _ask_digitization_logs
-    PHASECHECKTEST="N" 
-    
+    PHASECHECKTEST="N"
+
 else
     if [ "${BLACKFRAMETEST}" = "Y" ] ; then
         _black_at_ends "${INPUT}"
@@ -482,7 +482,7 @@ if [ "${FROM}" == "${TO}" -a "${CLEANUP_CHOICE}" == "Y" ] ; then
 else
     _report -dt "STATUS Copying the original file to library storage at ${OBJECTSDIR}."
     LOGFILE="${LOGDIR}/rsync_$(_get_iso8601_c)_$(basename ${0})_${VERSION}.txt"
-    "${SCRIPTDIR}/migratefiles" -l "${LOGFILE}" -o "${OBJECTSDIR}" "${INPUT}" 
+    "${SCRIPTDIR}/migratefiles" -l "${LOGFILE}" -o "${OBJECTSDIR}" "${INPUT}"
     if [ ! "${#FILES[@]}" = 0 ] ; then
         _run_critical rsync -rt --progress --log-file="${LOGDIR}/rsync_$(_get_iso8601_c)_$(basename $0)_${VERSION}.txt" "${FILES[@]}" "${LOGDIR}/"
     fi
@@ -503,7 +503,7 @@ if [ "${SLATE_CHOICE}" = "Y" ] ; then
         "${SCRIPTDIR}/uploadomneon" "${OBJECTSDIR}/service/${MEDIAID%.*}_SLATE.mov"
         _email_delivery "${MAKEBROADCAST_DELIVERY_EMAIL_TO}"
     fi
-    
+
 fi
 
 # make copy for broadcast
@@ -521,7 +521,7 @@ if [ "${MAKEACCESSCOPIES}" == "Y" ] ; then
     _report -dt "STATUS Making access copies."
     # makemp3
     "${SCRIPTDIR}/makemp3" "${OUTDIR_INGESTFILE}/${MEDIAID}"
-    
+
     # makeframes
     unset MAKEFRAMESOPTS
     [ "${DELIVERACCESSCOPIES}" = "Y" ] && MAKEFRAMESOPTS=(-d "${YOUTUBEDELIVER}")
@@ -541,7 +541,7 @@ if [ "${MAKEACCESSCOPIES}" == "Y" ] ; then
         unset MAKEPODCASTOPTS
         [ "${DELIVERACCESSCOPIES}" == "Y" ] && MAKEPODCASTOPTS=(-d "${PODCASTDELIVER}")
         "${SCRIPTDIR}/makepodcast" "${MAKEPODCASTOPTS[@]}" "${OUTDIR_INGESTFILE}/${MEDIAID}"
-        
+
     else
         _report -dt "${MEDIAID} does NOT qualify for podcast creation, skipping."
         _writeerrorlog "makepodcast" "${MEDIAID} did not qualify for podcast creation and was skipped."

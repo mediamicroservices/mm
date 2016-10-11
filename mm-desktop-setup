@@ -8,7 +8,7 @@ brew update
 
 brew cask install atom
 brew cask install audacity
-brew cask install cyberduck 
+brew cask install cyberduck
 brew cask install firefox
 brew cask install github-desktop
 brew cask install google-chrome

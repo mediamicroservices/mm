@@ -1,5 +1,5 @@
 #!/bin/bash
-#microservice for moving files during migration, uses rsync to move files and write log, have to format to have source and target locations 
+#microservice for moving files during migration, uses rsync to move files and write log, have to format to have source and target locations
 SCRIPTDIR=$(dirname $(which "${0}"))
 . "${SCRIPTDIR}/mmfunctions" || { echo "Missing '${SCRIPTDIR}/mmfunctions'. Exiting." ; exit 1 ;};
 
@@ -36,5 +36,5 @@ while [ "${*}" != "" ] ; do
     if [ "${REMOVESOURCEFILES}" == "Y" ] ; then
         EXTRAOUTPUTS+=(--remove-source-files)
     fi
-    rsync -rtvP "${EXTRAOUTPUTS[@]}" --log-file="${LOGFILE}" --log-file-format="${DATE} '%f' %l '${TARGET}'" "${INPUT}" "${TARGET}" 
+    rsync -rtvP "${EXTRAOUTPUTS[@]}" --log-file="${LOGFILE}" --log-file-format="${DATE} '%f' %l '${TARGET}'" "${INPUT}" "${TARGET}"
 done
