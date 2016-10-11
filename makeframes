@@ -84,5 +84,6 @@ while [ "${*}" != "" ] ; do
         _run cp -av "${OUTPUTDIR}/" "${DELIVERDIR}/${MEDIAID}_images/"
     fi
     shift
+    _report_to_db
     _log -e
 done

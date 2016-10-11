@@ -27,6 +27,82 @@ _cleanup_mount_dir(){
     fi
 }
 
+
+
+_report_to_db(){  
+    if [ "${PREMIS_DB}" = "Y" ] ; then
+        
+    eventDetail=$(basename $0)
+    MEDIAID=$(basename "${INPUT}" | cut -d. -f1)
+    LOGDIR="${OUTDIR_INGESTFILE}/${MEDIAID}/metadata/logs"
+    INGESTLOG="${LOGDIR}/capture.log"
+    OP=$(cat ${INGESTLOG} | grep "operator" | cut -c 11-)
+    if [ -z "${OP}" ] ; then
+    OP="$USER"
+    fi
+    _premis_event_list
+    echo "INSERT IGNORE INTO object (objectIdentifierValue) VALUES ('$MEDIAID')" | mysql --login-path="$PREMIS_PROFILE"  "$PREMIS_NAME"
+    if [ "$eventType" = "fixity" ] ; then
+        IFS=$(echo -en "\n\b")
+        for i in ${db_fixity}; do LINE=$i;
+        messageDigestHASH=$(echo "$LINE" | cut -c -32 )
+        messageDigestPATH=$(echo "$LINE" | cut -c 35- )
+        messageDigestFILENAME=$(basename ${messageDigestPATH})
+        echo "INSERT INTO fixity (objectIdentifierValue,messageDigestAlgorithm,messageDigestPATH,messageDigestFILENAME,messageDigestHASH) VALUES ('$MEDIAID','md5','$messageDigestPATH','$messageDigestFILENAME','$messageDigestHASH')" | mysql --login-path="$PREMIS_PROFILE"  "$PREMIS_NAME"
+        done
+        unset IFS
+    fi
+    
+    echo "INSERT INTO event (objectIdentifierValue,eventType,eventDetail,eventDetailOPT,eventDetailCOMPNAME,linkingAgentIdentifierValue) VALUES ('$MEDIAID','$eventType','$eventDetail','$user_input','$HOSTNAME', '$OP')" | mysql --login-path="$PREMIS_PROFILE"  "$PREMIS_NAME"
+fi
+}
+
+
+
+_premis_event_list(){
+    
+    eventDetail=$(basename $0)
+    eventType="$eventDetail"
+
+    if [ "$eventDetail" = "makebroadcast" ] ; then
+    eventType="creation"
+    fi
+    
+    if [ "$eventDetail" = "makeyoutube" ] ; then
+    eventType="creation"
+    fi
+    
+    if [ "$eventDetail" = "makemp3" ] ; then
+    eventType="creation"
+    fi
+    
+    if [ "$eventDetail" = "makeframes" ] ; then
+    eventType="creation"
+    fi
+    
+    if [ "$eventDetail" = "makewaveform" ] ; then
+    eventType="creation"
+    fi
+    if [ "$eventDetail" = "migratefiles" ] ; then
+    eventType="replication"
+    fi
+    if [ "$eventDetail" = "checksumpackage" ] ; then
+    eventType="fixity"
+    fi
+    if [ "$eventDetail" = "collectionchecksum" ] ; then
+    eventType="fixity"
+    db_fixity=$(cat "${TAPECHECKSUMFILE}")
+    fi
+    if [ "$eventDetail" = "writelto" ] ; then
+    eventType="fixity"
+    MEDIAID="$TAPE_SERIAL"
+    db_fixity=$(cat "${READBACKDIR}/${TAPE_SERIAL}_ReadBack_checksum_${VERIFYTIME}.md5")
+    fi
+}
+
+
+
+
 _version_schema(){
     SCHEMA_FILE="$LTO_LOGS/${TAPE_SERIAL}.schema"
     if [ -f "${SCHEMA_FILE}" ] ; then

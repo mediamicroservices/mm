@@ -81,5 +81,6 @@ while [ "${*}" != "" ] ; do
     echo
     _summarize_make
     _deliver_output "${MAKEYOUTUBE_DELIVERY_EMAIL_TO}"
+    _report_to_db
     _log -e
 done

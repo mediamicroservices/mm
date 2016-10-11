@@ -9,6 +9,7 @@ _usage(){
     echo "  -r option to remove source files upon transfer"
     echo "the structure of the script is as follows: migratefiles -o ${TARGET} ${INPUT}, note that this is different than rsync commands"
 }
+user_input=$(echo "options are: ${*}")
 
 OPTIND=1
 while getopts ":o:l:r" OPT ; do
@@ -37,4 +38,5 @@ while [ "${*}" != "" ] ; do
         EXTRAOUTPUTS+=(--remove-source-files)
     fi
     rsync -rtvP "${EXTRAOUTPUTS[@]}" --log-file="${LOGFILE}" --log-file-format="${DATE} '%f' %l '${TARGET}'" "${INPUT}" "${TARGET}"
+    _report_to_db 
 done

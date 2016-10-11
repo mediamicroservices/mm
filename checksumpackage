@@ -40,6 +40,8 @@ _cleanup(){
     exit 1
 }
 
+
+user_input=$(echo "options are: ${*}")
 # command-line options
 CHECK=""
 VERIFY=""
@@ -66,6 +68,8 @@ else _report -wt "Directory is not valid. Please select a valid directory."
 exit 1
 fi
 
+var=$(echo "$1")
+INPUT=$(basename "$var")
 _check_dfxml(){
     PACKAGE="${ABS_PATH}"
     # make temp file that lists filenames and filesizes from dfxml.xml
@@ -125,6 +129,7 @@ while [ "${*}" != "" ] ; do
         fi
         #perform checking and verification
         if [ "${CHECK}" = "Y" ] ; then
+            _report_to_db
             if [ -s "${PACKAGE}/${OUTDIR}/${DFXMLNAME}" ] ; then
                 _check_dfxml "${PACKAGE}"
                 if [ "${CHECKERR}" != "0" ] ; then
@@ -158,6 +163,7 @@ while [ "${*}" != "" ] ; do
         else
             if [ -s "${PACKAGE}/${OUTDIR}/${CHECKSUMNAME}" ] ; then
                 _report -dt "${CHECKSUMNAME} already exists, skipping for ${PACKAGE}"
+                _report_to_db
                 shift
                 continue
             fi
@@ -181,6 +187,8 @@ while [ "${*}" != "" ] ; do
         else
             xml sel -T -t -m "/dfxml/fileobject" -v "hashdigest" -o "  " -v "filename" -n "${PACKAGE}/${OUTDIR}/${DFXMLNAME}" > "${PACKAGE}/${OUTDIR}/${CHECKSUMNAME}"
         fi
+        db_fixity=$(cat "${PACKAGE}/${OUTDIR}/${CHECKSUMNAME}")
+        _report_to_db
         echo "$(_get_iso8601): $(basename "${0}"):${VERSION}: ${CHECKSUMNAME} is generated" >> "${PACKAGE}/${OUTDIR}/${CHECKSUMPROCESSLOG}"
         if [ "${UPDATE}" = "Y" ] ; then
             exit
