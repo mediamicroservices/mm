@@ -38,8 +38,5 @@ while [ "${*}" != "" ] ; do
         EXTRAOUTPUTS+=(--remove-source-files)
     fi
     rsync -rtvP "${EXTRAOUTPUTS[@]}" --log-file="${LOGFILE}" --log-file-format="${DATE} '%f' %l '${TARGET}'" "${INPUT}" "${TARGET}"
-<<<<<<< HEAD
     _report_to_db 
-=======
->>>>>>> master
 done
