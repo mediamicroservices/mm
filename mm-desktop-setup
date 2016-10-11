@@ -1,0 +1,20 @@
+#!/bin/bash
+# set up a Mac that might be helpful for audiovisual archiving
+
+brew tap caskroom/cask
+brew update
+
+# more apps
+
+brew cask install atom
+brew cask install audacity
+brew cask install cyberduck
+brew cask install firefox
+brew cask install github-desktop
+brew cask install google-chrome
+brew cask install mpeg-streamclip
+brew cask install qlvideo
+brew cask install slack
+brew cask install textmate
+brew cask install the-unarchiver
+brew cask install vlc
