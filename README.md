@@ -10,7 +10,7 @@ table of contents
     2. [installing mediamicroservices](https://github.com/mediamicroservices/mm#installing-mediamicroservices)
     3. [configuring mediamicroservices](https://github.com/mediamicroservices/mm#configuring-mediamicroservices)
         1. [variable explanations](https://github.com/mediamicroservices/mm#variable-explanations)
-3. [Database Configuration](https://github.com/mediamicroservices/mm#configuring-PREMIS/fixity-logging-database)
+3. [Database Configuration](#configuring-premisfixity-logging-database)
 4. [mediamicroservices functions and instructions for use](https://github.com/mediamicroservices/mm#mediamicroservices-functions-and-instructions-for-use)
 	* [aipupgrade](https://github.com/mediamicroservices/mm#aipupgrade)
     * [barcodeinterpret](https://github.com/mediamicroservices/mm#barcodeinterpret)
