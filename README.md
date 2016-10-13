@@ -10,7 +10,7 @@ table of contents
     2. [installing mediamicroservices](https://github.com/mediamicroservices/mm#installing-mediamicroservices)
     3. [configuring mediamicroservices](https://github.com/mediamicroservices/mm#configuring-mediamicroservices)
         1. [variable explanations](https://github.com/mediamicroservices/mm#variable-explanations)
-3. Database Configuration
+3. [Database Configuration](https://github.com/mediamicroservices/mm#configuring-PREMIS/fixity-logging-database)
 4. [mediamicroservices functions and instructions for use](https://github.com/mediamicroservices/mm#mediamicroservices-functions-and-instructions-for-use)
 	* [aipupgrade](https://github.com/mediamicroservices/mm#aipupgrade)
     * [barcodeinterpret](https://github.com/mediamicroservices/mm#barcodeinterpret)
@@ -109,7 +109,7 @@ Type mmconfig -a into the terminal to access the configuration GUI, which will t
 ![Alt text](Resources/mmconfiggui.png "mmconfig GUI")
 ![mmconfig gui gif](https://github.com/mediamicroservices/mm/blob/master/Resources/mmconfig3.gif)
 
-mmconfig only has to be run once to create the configuration file, and will rewrite over itself if run again.
+mmconfig only has to be run once to create the configuration file, variables will be stored.
 
 if you prefer to edit in the terminal, simply run mmconfig and follow the directions on screen. this option allows for you to also choose to edit the config file in nano or TextMate.
 ![Alt text](Resources/mmconfigterminal.png "mmconfig in terminal")
@@ -184,7 +184,9 @@ This variable must be set to yes (Y) or no (N). If set to yes, volume will be ru
 
 **23. Quit**
 if editing in the terminal, use this option to leave the configuration file editor.
-## Configuring PREMIS/Fixity logging database
+
+
+## configuring PREMIS/fixity logging database
 The microservice scripts are able to report to a central database information such as date and location run as well as generated fixity hashes.  To enable this function you will need a computer running mySQL to function as a server.  
 
 To configure the database, run the script `createpremisdb` on your __host__ computer and follow the prompts.  This will set up the database as well as facilitate user creation.  At the end of user creation, the script will supply a command to create a log in profile for the database.  It should look something like this: `mysql_config_editor set --login-path=your_user_config --host=xx.xx.xxx.xxx --user=your_user --password`. Run this command on your __user__ computer and enter the password for the user you created when prompted.  This will create the SQL log in profile that you will use when configuring the microservices.
