@@ -183,6 +183,10 @@ This variable must be set to yes (Y) or no (N). If set to yes, volume will be ru
 
 **23. Quit**
 if editing in the terminal, use this option to leave the configuration file editor.
+#### Configuring PREMIS/Fixity logging database
+The microservice scripts are able to report to a central database information such as date and location run as well as generated fixity hashes.  To enable this function you will need a computer running mySQL to function as a server.  
+
+To configure the database, run the script `createpremisdb` and follow the prompts.  This will set up the database as well as facilitate user creation.  At the end of user creation, the script will supply a command to create a log in profile for the database.  Run this command on your user computer (not host, unless they are the same) to create the information that will be used in the mmcongig menu.
 
 ## mediamicroservices functions and instructions for use ##
 
@@ -365,21 +369,3 @@ To view the specific ffmpeg encoding options for each file, view the sourcecode 
 
 #### xdcamingest ####
 * xdcamingest performs ingest of files read from an XDCam disk. the script will prompt the user via the command line for values, and write output to an operator log, and create access copies of xdcamfiles. this script is no longer in use and development is not supported.
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
