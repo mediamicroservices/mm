@@ -10,13 +10,14 @@ table of contents
     2. [installing mediamicroservices](https://github.com/mediamicroservices/mm#installing-mediamicroservices)
     3. [configuring mediamicroservices](https://github.com/mediamicroservices/mm#configuring-mediamicroservices)
         1. [variable explanations](https://github.com/mediamicroservices/mm#variable-explanations)
-3. [Database Configuration](#configuring-premisfixity-logging-database)
+3. [database Configuration](#configuring-premisfixity-logging-database)
 4. [mediamicroservices functions and instructions for use](https://github.com/mediamicroservices/mm#mediamicroservices-functions-and-instructions-for-use)
 	* [aipupgrade](https://github.com/mediamicroservices/mm#aipupgrade)
     * [barcodeinterpret](https://github.com/mediamicroservices/mm#barcodeinterpret)
     * [blackatends](https://github.com/mediamicroservices/mm#blackatends)
     * [checksum2filemaker](https://github.com/mediamicroservices/mm#checksum2filemaker)
     * [checksumpackage](https://github.com/mediamicroservices/mm#checksumpackage)
+    * [createpremisdb](#createpremisdb)
     * [finishpackage](https://github.com/mediamicroservices/mm#finishpackage)
     * [fix_left2stereo](https://github.com/mediamicroservices/mm#fix_left2stereo)
     * [fix_rewrap](https://github.com/mediamicroservices/mm#fix_rewrap)
@@ -227,10 +228,13 @@ To view the specific ffmpeg encoding options for each file, view the sourcecode 
 * checksum2filemaker delivers checksums from a package input into a predefined table in a FileMaker Database called checksums, using the dfxml format. this script requires the user to set up a FileMaker database and server URL, which are both variables stored in the configuration file. To use this script, type checksum2filemaker in your command line, followed by the package, like this:  checksum2filemaker [package]
 
 #### checksumpackage ####
-* checksum creates, and verifies checksums from an input of a directory or archival informaion package. To use, type checksumpackage into the command line, followed by the input:  checksumpackage [input].
+* checksumpackage creates, and verifies checksums from an input of a directory or archival informaion package. To use, type checksumpackage into the command line, followed by the input:  checksumpackage [input].
 * If you only want to check that filenames and filesizes are the same as in existing files, use option -c. Type  checksumpackage -c [input] and if no existing checksum file exists, one will be created.
 * Another option is to use -c in conjunction with -u, which will create new checksums and version the previous ones if the check is unsuccessful, meaning your checksums have changed. Type  checksumpackage -cu [input] for this option.
 * Finally, use -v as an option if you want to fully verify checksums. If no checksums exist, the script will create the initial ones. Verification will version existing checksums by adding the date they were created to the filename and create new ones, and log the difference to a checksumprocess log, which will be placed in the metadata directory of the package. To use -v, type  checksumpackage -v [input]
+
+#### createpremisdb ####
+* createpremisdb will create a database for the logging of microservices information as well as facilitate user creation.  For more information on use, see the [database configuration](#configuring-premisfixity-logging-database) section of this readme.
 
 #### finishpackage ####
 * finishpackage is a combination of the microservices makelossless, makebroadcast, makeyoutube, makemetadata, and checksumpackage. The purpose is to losslessly transcode, create access copies, and create metadata and directory structure information for a file or package input. To use finishpackage, type finishpackage and drag your input into the command line: finishpackage [input]. finish package is typically used in conjunction with restructureForCompliance.
