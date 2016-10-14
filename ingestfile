@@ -567,8 +567,8 @@ if [[ "${DELIVERYTOAIPSTORAGE}" == "Y" ]] ; then
     RSYNC_ERR="${?}"
     [ $(du -s "${OUTDIR_INGESTFILE}/${MEDIAID}" | awk '{print $1}') = "0" ] && rm -r "${OUTDIR_INGESTFILE}/${MEDIAID}"
     _report -dt "STATUS Done. Final package has been delivered to ${AIP_STORAGE}/${MEDIAID}"
-else echo "As Target directory is same as Input directory, files were not migrated."
-fi
+    else echo "As Target directory is same as Input directory, files were not migrated."
+    fi
 fi
 echo "${RSYNC_ERR}"
 
