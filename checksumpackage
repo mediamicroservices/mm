@@ -40,7 +40,6 @@ _cleanup(){
     exit 1
 }
 
-
 user_input=$(echo "options are: ${*}")
 # command-line options
 CHECK=""
@@ -63,9 +62,9 @@ trap _cleanup SIGHUP SIGINT SIGTERM
 
 #Find absolute path for input
 if [ -e "$1" ] ; then
-ABS_PATH=$(cd "$1"; pwd)
+    ABS_PATH=$(cd "$1"; pwd)
 else _report -wt "Directory is not valid. Please select a valid directory."
-exit 1
+    exit 1
 fi
 
 var=$(echo "$1")
@@ -150,14 +149,14 @@ while [ "${*}" != "" ] ; do
                 continue
             fi
         elif [ "${VERIFY}" = "Y" ] ; then
-                if [ -s "${PACKAGE}/${OUTDIR}/${CHECKSUMNAME}" ] ; then
-                    _report -dt "Prepping for dfxml.xml verification."
-                else
-                    _report -dt "There is no dfxml.xml to verify in ${PACKAGE}, skipping."
-                    _writeerrorlog "checksumpackage" "There was no dfxml.xml to verify in ${PACKAGE}, so it was skipped."
-                    shift
-                    continue
-                fi
+            if [ -s "${PACKAGE}/${OUTDIR}/${CHECKSUMNAME}" ] ; then
+                _report -dt "Prepping for dfxml.xml verification."
+            else
+                _report -dt "There is no dfxml.xml to verify in ${PACKAGE}, skipping."
+                _writeerrorlog "checksumpackage" "There was no dfxml.xml to verify in ${PACKAGE}, so it was skipped."
+                shift
+                continue
+            fi
         elif [ "${UPDATE}" = "Y" ] ; then
             _report -dt "Preparing to update package"
         else
@@ -177,9 +176,9 @@ while [ "${*}" != "" ] ; do
         [ ! -d "${PACKAGE}/${OUTDIR}" ] && mkdir -p "${PACKAGE}/${OUTDIR}"
         echo "$(_get_iso8601): $(basename "${0}"):${VERSION}: ${DFXMLNAME} is generated" >> "${PACKAGE}/${OUTDIR}/${CHECKSUMPROCESSLOG}"
         if [ "${VERIFY}" = "Y" ] ; then
-        _version_dfxml "${PACKAGE}"
+            _version_dfxml "${PACKAGE}"
         elif [ "${UPDATE}" = "Y" ] ; then
-        _version_dfxml "${PACKAGE}"
+            _version_dfxml "${PACKAGE}"
         fi
         cat "${DFXMLTMP}" > "${PACKAGE}/${OUTDIR}/${DFXMLNAME}"
         if [ ! -z "$(xml sel -T -t -m "/_:dfxml/_:fileobject" -v "_:filename" -o " " -v "_:filesize" -n "${PACKAGE}/${OUTDIR}/${DFXMLNAME}" 2>/dev/null)" ] ; then
@@ -194,8 +193,7 @@ while [ "${*}" != "" ] ; do
             exit
         fi
         if [ "${VERIFY}" = "Y" ] ; then
-        #verify checksums by creating tmp checksum file and comparing with previously created checksums
-
+            #verify checksums by creating tmp checksum file and comparing with previously created checksums
             CHECKSUMCMP1=$(_maketemp)
             sort -k2 "${PACKAGE}/${OUTDIR}/${CHECKSUMNAME}" > "${CHECKSUMCMP1}"
             CHECKSUMCMP2=$(_maketemp)
@@ -217,10 +215,10 @@ while [ "${*}" != "" ] ; do
                 fi
 
                 if [ -n "${originalhash_check}" ] ; then
-                _report -wt "checksums are different for ${PACKAGE}"
-                diff "${CHECKSUMCMP1}" "${CHECKSUMCMP2}"
-                echo "$(_get_iso8601): $(basename "${0}"):${VERSION}: FAILED to VERIFY by checksums - compare ${CHECKSUMNAME} and $(basename "${LASTMD5}")" >> "${PACKAGE}/${OUTDIR}/${CHECKSUMPROCESSLOG}"
-            fi
+                    _report -wt "checksums are different for ${PACKAGE}"
+                    diff "${CHECKSUMCMP1}" "${CHECKSUMCMP2}"
+                    echo "$(_get_iso8601): $(basename "${0}"):${VERSION}: FAILED to VERIFY by checksums - compare ${CHECKSUMNAME} and $(basename "${LASTMD5}")" >> "${PACKAGE}/${OUTDIR}/${CHECKSUMPROCESSLOG}"
+                fi
             else
                 _report -dt "checksums are still valid for ${PACKAGE}"
                 echo "$(_get_iso8601): $(basename "${0}"):${VERSION}: verified by checksums" >> "${PACKAGE}/${OUTDIR}/${CHECKSUMPROCESSLOG}"
