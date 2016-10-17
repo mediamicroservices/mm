@@ -3,7 +3,7 @@
 VERSION="0.2"
 SCRIPTDIR=$(dirname "${0}")
 . "${SCRIPTDIR}/mmfunctions" || { echo "Missing '${SCRIPTDIR}/mmfunctions'. Exiting." ; exit 1 ;};
-DEPENDENCIES=(ffprobe mediainfo exiftool)
+DEPENDENCIES=(ffprobe mediaconch exiftool)
 _initialize_make
 
 _usage(){
