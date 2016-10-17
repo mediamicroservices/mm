@@ -90,7 +90,7 @@ mediamicroservice dependencies:
 * ffmpeg
 * flac
 * ltopers
-* md5deep
+* hashdeep
 * mediainfo
 * normalize
 * xmlstarlet

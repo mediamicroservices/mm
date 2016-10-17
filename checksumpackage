@@ -1,6 +1,6 @@
 #!/bin/bash
 # checksumpackage
-# make checksum.md5 via md5deep for package
+# make checksum.md5 via hashdeep for package
 # version 1.1 adds use of dfxml
 # version 1.2 fixes + add options to check and verify existing checksums
 VERSION=1.2
@@ -8,7 +8,7 @@ VERSION=1.2
 SCRIPTDIR=$(dirname "${0}")
 . "${SCRIPTDIR}/mmfunctions" || { echo "Missing '${SCRIPTDIR}/mmfunctions'. Exiting." ; exit 1 ;};
 unset DEPENDENCIES
-DEPENDENCIES=(md5deep xml "${SCRIPTDIR}/removeDSStore")
+DEPENDENCIES=(hashdeep xml "${SCRIPTDIR}/removeDSStore")
 
 # local variables
 CHECKSUMNAME="checksum.md5"
@@ -30,9 +30,9 @@ _usage(){
 }
 [ "${#}" = 0 ] && _usage
 _check_dependencies "${DEPENDENCIES[@]}"
-if [[ $(echo "$(md5deep -v) >= 4.4" | bc) = 0 ]] ; then
-    _report -wt "$(basename "${0}") requires md5deep 4.4 or greater."
-    _writeerrorlog "checksumpackage" "checksumpackage was unable to run because md5deep 4.4 or greater is required."
+if [[ $(echo "$(hashdeep -V) >= 4.4" | bc) = 0 ]] ; then
+    _report -wt "$(basename "${0}") requires hashdeep 4.4 or greater."
+    _writeerrorlog "checksumpackage" "checksumpackage was unable to run because hashdeep 4.4 or greater is required."
     exit 1
 fi
 _cleanup(){
@@ -171,7 +171,7 @@ while [ "${*}" != "" ] ; do
         _report -dt "making Digital Forensics XML (${DFXMLNAME}) and (${CHECKSUMNAME}) for ${PACKAGE}"
         cd "${PACKAGE}/${INDIR}"
         DFXMLTMP=$(_maketemp)
-        md5deep -drl . > "${DFXMLTMP}"
+        hashdeep -c md5 -drl . > "${DFXMLTMP}"
         cd "${PWD}"
         [ ! -d "${PACKAGE}/${OUTDIR}" ] && mkdir -p "${PACKAGE}/${OUTDIR}"
         echo "$(_get_iso8601): $(basename "${0}"):${VERSION}: ${DFXMLNAME} is generated" >> "${PACKAGE}/${OUTDIR}/${CHECKSUMPROCESSLOG}"
