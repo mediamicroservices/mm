@@ -171,7 +171,7 @@ while [ "${*}" != "" ] ; do
         _report -dt "making Digital Forensics XML (${DFXMLNAME}) and (${CHECKSUMNAME}) for ${PACKAGE}"
         cd "${PACKAGE}/${INDIR}"
         DFXMLTMP=$(_maketemp)
-        hashdeep -c md5 -drl . > "${DFXMLTMP}"
+        hashdeep -c md5 -edrl . > "${DFXMLTMP}"
         cd "${PWD}"
         [ ! -d "${PACKAGE}/${OUTDIR}" ] && mkdir -p "${PACKAGE}/${OUTDIR}"
         echo "$(_get_iso8601): $(basename "${0}"):${VERSION}: ${DFXMLNAME} is generated" >> "${PACKAGE}/${OUTDIR}/${CHECKSUMPROCESSLOG}"
