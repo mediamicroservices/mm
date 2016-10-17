@@ -16,6 +16,7 @@ echo "<?xml version=\"1.0\"?>
           </xsl:for-each>
           <xsl:value-of select=\"@name\"/>
         </xsl:variable>
+        <xsl:if test=\"not(contains(\$RELATIVE_PATH,'metadata/')) and not(contains(\$RELATIVE_PATH,'/images/'))\">
         <xsl:if test=\"document(concat(\$root,'/metadata/fileMeta/',\$RELATIVE_PATH,'_mediainfo.xml'))/mi:MediaInfo/mi:media/mi:track[@type='General']/mi:Format\">
           <amdSec>
             <xsl:attribute name=\"ID\">
@@ -59,6 +60,7 @@ echo "<?xml version=\"1.0\"?>
               </mdWrap>
             </techMD>
           </amdSec>
+        </xsl:if>
         </xsl:if>
       </xsl:for-each>
       <fileSec>
