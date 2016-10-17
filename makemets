@@ -3,121 +3,121 @@
 # drop an xsl to use
 echo "<?xml version=\"1.0\"?>
 <xsl:stylesheet xmlns:xsl=\"http://www.w3.org/1999/XSL/Transform\" xmlns=\"http://www.loc.gov/METS/\" xmlns:xlink=\"http://www.w3.org/1999/xlink\" xmlns:mi=\"https://mediaarea.net/mediainfo\" xmlns:premis=\"http://www.loc.gov/premis/v3\" xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" version=\"1.0\" extension-element-prefixes=\"xsi\">
-    <xsl:output encoding=\"UTF-8\" method=\"xml\" version=\"1.0\" indent=\"yes\"/>
-    <xsl:template match=\"/\">
-        <mets>
-            <xsl:for-each select=\"/tree/directory[1]//file\">
-                <xsl:variable name=\"RELATIVE_PATH\">
-                    <xsl:for-each select=\"ancestor-or-self::directory\">
-                        <xsl:if test=\"name(parent::*)!='tree'\">
-                            <xsl:value-of select=\"@name\"/>
-                            <xsl:text>/</xsl:text>
-                        </xsl:if>
-                    </xsl:for-each>
-                    <xsl:value-of select=\"@name\"/>
-                </xsl:variable>
-                <xsl:if test=\"document(concat(\$root,'/metadata/fileMeta/',\$RELATIVE_PATH,'_mediainfo.xml'))/mi:MediaInfo/mi:media/mi:track[@type='General']/mi:Format\">
-                    <amdSec>
-                        <xsl:attribute name=\"ID\">
-                            <xsl:value-of select=\"concat('amdSec-',generate-id())\"/>
-                        </xsl:attribute>
-                        <techMD>
-                            <xsl:attribute name=\"ID\">
-                                <xsl:value-of select=\"concat('techMD-',generate-id())\"/>
-                            </xsl:attribute>
-                            <mdWrap MDTYPE=\"PREMIS:OBJECT\">
-                                <xsl:attribute name=\"MDTYPE\">
-                                    <xsl:text>PREMIS:OBJECT</xsl:text>
-                                </xsl:attribute>
-                                <xmlData>
-                                    <premis:object xmlns=\"http://www.loc.gov/premis/v3\" xsi:type=\"file\" xsi:schemaLocation=\"info:lc/xmlns/premis-v3 http://www.loc.gov/standards/premis/v2/premis-3-0-draft.xsd\" version=\"3.0\">
-                                        <objectIdentifier>
-                                            <objectIdentifierType>Relative AIP path</objectIdentifierType>
-                                            <objectIdentifierValue>
-                                                <xsl:value-of select=\"\$RELATIVE_PATH\"/>
-                                            </objectIdentifierValue>
-                                        </objectIdentifier>
-                                        <objectCharacteristics>
-                                            <format>
-                                                <formatDesignation>
-                                                    <formatName>
-                                                        <xsl:value-of select=\"document(concat(\$root,'/metadata/fileMeta/',\$RELATIVE_PATH,'_mediainfo.xml'))/mi:MediaInfo/mi:media/mi:track[@type='General']/mi:Format\"/>
-                                                    </formatName>
-                                                    <xsl:if test=\"document(concat(\$root,'/metadata/fileMeta/',\$RELATIVE_PATH,'_mediainfo.xml'))/mi:MediaInfo/mi:media/mi:track[@type='General']/mi:Format_Version\">
-                                                        <formatVersion>
-                                                            <xsl:value-of select=\"document(concat(\$root,'/metadata/fileMeta/',\$RELATIVE_PATH,'_mediainfo.xml'))/mi:MediaInfo/mi:media/mi:track[@type='General']/mi:Format_Version\"/>
-                                                        </formatVersion>
-                                                    </xsl:if>
-                                                </formatDesignation>
-                                            </format>
-                                            <objectCharacteristicsExtension>
-                                                <xsl:copy-of select=\"document(concat(\$root,'/metadata/fileMeta/',\$RELATIVE_PATH,'_mediainfo.xml'))\"/>
-                                            </objectCharacteristicsExtension>
-                                        </objectCharacteristics>
-                                    </premis:object>
-                                </xmlData>
-                            </mdWrap>
-                        </techMD>
-                    </amdSec>
-                </xsl:if>
-            </xsl:for-each>
-            <fileSec>
-                <fileGrp>
-                    <xsl:for-each select=\"/tree/directory[1]//file\">
-                        <file>
-                            <xsl:attribute name=\"ID\">
-                                <xsl:value-of select=\"generate-id()\"/>
-                            </xsl:attribute>
-                            <FLocat>
-                                <xsl:attribute name=\"xlink:href\">
-                                    <xsl:for-each select=\"ancestor-or-self::directory\">
-                                        <xsl:if test=\"name(parent::*)!='tree'\">
-                                            <xsl:value-of select=\"@name\"/>
-                                            <xsl:text>/</xsl:text>
-                                        </xsl:if>
-                                    </xsl:for-each>
-                                    <xsl:value-of select=\"@name\"/>
-                                </xsl:attribute>
-                                <xsl:attribute name=\"LOCTYPE\">
-                                    <xsl:text>OTHER</xsl:text>
-                                </xsl:attribute>
-                                <xsl:attribute name=\"OTHERLOCTYPE\">
-                                    <xsl:text>SYSTEM</xsl:text>
-                                </xsl:attribute>
-                            </FLocat>
-                        </file>
-                    </xsl:for-each>
-                </fileGrp>
-            </fileSec>
-            <structMap>
-                <xsl:apply-templates select=\"/tree/directory[1]\"/>
-            </structMap>
-        </mets>
-    </xsl:template>
-    <xsl:template match=\"directory\">
-        <div>
-            <xsl:attribute name=\"TYPE\">
-                <xsl:text>directory</xsl:text>
+  <xsl:output encoding=\"UTF-8\" method=\"xml\" version=\"1.0\" indent=\"yes\"/>
+  <xsl:template match=\"/\">
+    <mets>
+      <xsl:for-each select=\"/tree/directory[1]//file\">
+        <xsl:variable name=\"RELATIVE_PATH\">
+          <xsl:for-each select=\"ancestor-or-self::directory\">
+            <xsl:if test=\"name(parent::*)!='tree'\">
+              <xsl:value-of select=\"@name\"/>
+              <xsl:text>/</xsl:text>
+            </xsl:if>
+          </xsl:for-each>
+          <xsl:value-of select=\"@name\"/>
+        </xsl:variable>
+        <xsl:if test=\"document(concat(\$root,'/metadata/fileMeta/',\$RELATIVE_PATH,'_mediainfo.xml'))/mi:MediaInfo/mi:media/mi:track[@type='General']/mi:Format\">
+          <amdSec>
+            <xsl:attribute name=\"ID\">
+              <xsl:value-of select=\"concat('amdSec-',generate-id())\"/>
             </xsl:attribute>
-            <xsl:attribute name=\"LABEL\">
-                <xsl:value-of select=\"@name\"/>
-            </xsl:attribute>
-            <xsl:apply-templates select=\"file\"/>
-            <xsl:apply-templates select=\"directory\"/>
-        </div>
-    </xsl:template>
-    <xsl:template match=\"file\">
-        <div>
-            <xsl:attribute name=\"TYPE\">
-                <xsl:text>Item</xsl:text>
-            </xsl:attribute>
-            <fptr>
-                <xsl:attribute name=\"FILEID\">
-                    <xsl:value-of select=\"generate-id()\"/>
+            <techMD>
+              <xsl:attribute name=\"ID\">
+                <xsl:value-of select=\"concat('techMD-',generate-id())\"/>
+              </xsl:attribute>
+              <mdWrap MDTYPE=\"PREMIS:OBJECT\">
+                <xsl:attribute name=\"MDTYPE\">
+                  <xsl:text>PREMIS:OBJECT</xsl:text>
                 </xsl:attribute>
-            </fptr>
-        </div>
-    </xsl:template>
+                <xmlData>
+                  <premis:object xmlns=\"http://www.loc.gov/premis/v3\" xsi:type=\"file\" xsi:schemaLocation=\"info:lc/xmlns/premis-v3 http://www.loc.gov/standards/premis/v2/premis-3-0-draft.xsd\" version=\"3.0\">
+                    <objectIdentifier>
+                      <objectIdentifierType>Relative AIP path</objectIdentifierType>
+                      <objectIdentifierValue>
+                        <xsl:value-of select=\"\$RELATIVE_PATH\"/>
+                      </objectIdentifierValue>
+                    </objectIdentifier>
+                    <objectCharacteristics>
+                      <format>
+                        <formatDesignation>
+                          <formatName>
+                            <xsl:value-of select=\"document(concat(\$root,'/metadata/fileMeta/',\$RELATIVE_PATH,'_mediainfo.xml'))/mi:MediaInfo/mi:media/mi:track[@type='General']/mi:Format\"/>
+                          </formatName>
+                          <xsl:if test=\"document(concat(\$root,'/metadata/fileMeta/',\$RELATIVE_PATH,'_mediainfo.xml'))/mi:MediaInfo/mi:media/mi:track[@type='General']/mi:Format_Version\">
+                            <formatVersion>
+                              <xsl:value-of select=\"document(concat(\$root,'/metadata/fileMeta/',\$RELATIVE_PATH,'_mediainfo.xml'))/mi:MediaInfo/mi:media/mi:track[@type='General']/mi:Format_Version\"/>
+                            </formatVersion>
+                          </xsl:if>
+                        </formatDesignation>
+                      </format>
+                      <objectCharacteristicsExtension>
+                          <xsl:copy-of select=\"document(concat(\$root,'/metadata/fileMeta/',\$RELATIVE_PATH,'_mediainfo.xml'))\"/>
+                      </objectCharacteristicsExtension>
+                    </objectCharacteristics>
+                  </premis:object>
+                </xmlData>
+              </mdWrap>
+            </techMD>
+          </amdSec>
+        </xsl:if>
+      </xsl:for-each>
+      <fileSec>
+        <fileGrp>
+          <xsl:for-each select=\"/tree/directory[1]//file\">
+            <file>
+              <xsl:attribute name=\"ID\">
+                <xsl:value-of select=\"generate-id()\"/>
+              </xsl:attribute>
+              <FLocat>
+                <xsl:attribute name=\"xlink:href\">
+                  <xsl:for-each select=\"ancestor-or-self::directory\">
+                    <xsl:if test=\"name(parent::*)!='tree'\">
+                      <xsl:value-of select=\"@name\"/>
+                      <xsl:text>/</xsl:text>
+                    </xsl:if>
+                  </xsl:for-each>
+                  <xsl:value-of select=\"@name\"/>
+                </xsl:attribute>
+                <xsl:attribute name=\"LOCTYPE\">
+                  <xsl:text>OTHER</xsl:text>
+                </xsl:attribute>
+                <xsl:attribute name=\"OTHERLOCTYPE\">
+                  <xsl:text>SYSTEM</xsl:text>
+                </xsl:attribute>
+              </FLocat>
+            </file>
+          </xsl:for-each>
+        </fileGrp>
+      </fileSec>
+      <structMap>
+        <xsl:apply-templates select=\"/tree/directory[1]\"/>
+      </structMap>
+    </mets>
+  </xsl:template>
+  <xsl:template match=\"directory\">
+    <div>
+      <xsl:attribute name=\"TYPE\">
+        <xsl:text>directory</xsl:text>
+      </xsl:attribute>
+      <xsl:attribute name=\"LABEL\">
+        <xsl:value-of select=\"@name\"/>
+      </xsl:attribute>
+      <xsl:apply-templates select=\"file\"/>
+      <xsl:apply-templates select=\"directory\"/>
+    </div>
+  </xsl:template>
+  <xsl:template match=\"file\">
+      <div>
+        <xsl:attribute name=\"TYPE\">
+          <xsl:text>Item</xsl:text>
+        </xsl:attribute>
+        <fptr>
+          <xsl:attribute name=\"FILEID\">
+            <xsl:value-of select=\"generate-id()\"/>
+          </xsl:attribute>
+        </fptr>
+      </div>
+  </xsl:template>
 </xsl:stylesheet>
 " > /tmp/makemets.xsl
 
