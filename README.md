@@ -10,12 +10,14 @@ table of contents
     2. [installing mediamicroservices](https://github.com/mediamicroservices/mm#installing-mediamicroservices)
     3. [configuring mediamicroservices](https://github.com/mediamicroservices/mm#configuring-mediamicroservices)
         1. [variable explanations](https://github.com/mediamicroservices/mm#variable-explanations)
-3. [mediamicroservices functions and instructions for use](https://github.com/mediamicroservices/mm#mediamicroservices-functions-and-instructions-for-use)
+3. [database configuration](#configuring-premisfixity-logging-database)
+4. [mediamicroservices functions and instructions for use](https://github.com/mediamicroservices/mm#mediamicroservices-functions-and-instructions-for-use)
 	* [aipupgrade](https://github.com/mediamicroservices/mm#aipupgrade)
     * [barcodeinterpret](https://github.com/mediamicroservices/mm#barcodeinterpret)
     * [blackatends](https://github.com/mediamicroservices/mm#blackatends)
     * [checksum2filemaker](https://github.com/mediamicroservices/mm#checksum2filemaker)
     * [checksumpackage](https://github.com/mediamicroservices/mm#checksumpackage)
+    * [createpremisdb](#createpremisdb)
     * [finishpackage](https://github.com/mediamicroservices/mm#finishpackage)
     * [fix_left2stereo](https://github.com/mediamicroservices/mm#fix_left2stereo)
     * [fix_rewrap](https://github.com/mediamicroservices/mm#fix_rewrap)
@@ -101,14 +103,14 @@ mediamicroservices will require an ltoper.conf file to run. If you do not want t
 If at any point you would like to uninstall mediamicroservices, type brew uninstall mediamicroservices/mm/mm into the command line.
 
 ### configuring mediamicroservices ###
-in order for mediamicroservices to run, you must configure your variable settings. first, take a look at the list of variables below to get a sense of what each variable means. Then, create all of the delivery directories that you'll need, in the place you'd like them to be. you can name the directories themselves anything you'd like- the more important part is tying them to a variable in the configuration process. Not all variables are necessary for microservices to run, so look over which microservices you'd like to use to get a sense of whether or not you'll need to a specific variable.
+In order for mediamicroservices to run, you must configure your variable settings. First, take a look at the list of variables below to get a sense of what each variable means. Then, create all of the delivery directories that you'll need, in the place you'd like them to be. You can name the directories themselves anything you'd like- the more important part is tying them to a variable in the configuration process. Not all variables are necessary for microservices to run, so look over which microservices you'd like to use to get a sense of whether or not you'll need to a specific variable.
 
 Type mmconfig -a into the terminal to access the configuration GUI, which will take information input and save a file as mm.conf. This file will store your system variables.
 
 ![Alt text](Resources/mmconfiggui.png "mmconfig GUI")
 ![mmconfig gui gif](https://github.com/mediamicroservices/mm/blob/master/Resources/mmconfig3.gif)
 
-mmconfig only has to be run once to create the configuration file, and will rewrite over itself if run again.
+mmconfig only has to be run once to create the configuration file, variables will be stored and can be changed by re-running mmconfig.
 
 if you prefer to edit in the terminal, simply run mmconfig and follow the directions on screen. this option allows for you to also choose to edit the config file in nano or TextMate.
 ![Alt text](Resources/mmconfigterminal.png "mmconfig in terminal")
@@ -184,6 +186,16 @@ This variable must be set to yes (Y) or no (N). If set to yes, volume will be ru
 **23. Quit**
 if editing in the terminal, use this option to leave the configuration file editor.
 
+
+## configuring PREMIS/fixity logging database
+The microservice scripts are able to report to a central database information corresponding with PREMIS events such as date and location run as well as generated fixity hashes.  To enable this function you will need a computer running mySQL to function as a server.  
+
+To configure the database, run the command `createpremisdb -c` on your __host__ computer and follow the prompts.  This will set up the database as well as facilitate user creation. To create users without creating a new database, use the command `createpremisdb -u`.  At the end of user creation, the script will supply a command to create a log-in profile for the database.  It should look something like this: `mysql_config_editor set --login-path=your_user_config --host=xx.xx.xxx.xxx --user=your_user --password`. Run this command on your __user__ computer and enter the password for the user you created when prompted.  This will create the SQL log-in profile that you will use when configuring the microservices. NOTE: When supplying the suggested command, the script does its best to auto-fill the host IP address.  You may wish to verify that this is the correct IP.
+
+To finalize the database setup, run `mmconfig -a` click 'Y' to enable logging of PREMIS events, and enter the database name and log in profile you have created.
+
+![Database GUI Example](https://github.com/mediamicroservices/mm/blob/master/Resources/mmgui_dbsetup.png)
+
 ## mediamicroservices functions and instructions for use ##
 
 For all microservices, the structure of the command looks like this:
@@ -216,10 +228,14 @@ To view the specific ffmpeg encoding options for each file, view the sourcecode 
 * checksum2filemaker delivers checksums from a package input into a predefined table in a FileMaker Database called checksums, using the dfxml format. this script requires the user to set up a FileMaker database and server URL, which are both variables stored in the configuration file. To use this script, type checksum2filemaker in your command line, followed by the package, like this:  checksum2filemaker [package]
 
 #### checksumpackage ####
-* checksum creates, and verifies checksums from an input of a directory or archival informaion package. To use, type checksumpackage into the command line, followed by the input:  checksumpackage [input].
+* checksumpackage creates, and verifies checksums from an input of a directory or archival informaion package. To use, type checksumpackage into the command line, followed by the input:  checksumpackage [input].
 * If you only want to check that filenames and filesizes are the same as in existing files, use option -c. Type  checksumpackage -c [input] and if no existing checksum file exists, one will be created.
 * Another option is to use -c in conjunction with -u, which will create new checksums and version the previous ones if the check is unsuccessful, meaning your checksums have changed. Type  checksumpackage -cu [input] for this option.
 * Finally, use -v as an option if you want to fully verify checksums. If no checksums exist, the script will create the initial ones. Verification will version existing checksums by adding the date they were created to the filename and create new ones, and log the difference to a checksumprocess log, which will be placed in the metadata directory of the package. To use -v, type  checksumpackage -v [input]
+
+#### createpremisdb ####
+* createpremisdb will create a database for the logging of microservices information as well as facilitate user creation.  For more information on use, see the [database configuration](#configuring-premisfixity-logging-database) section of this readme.
+* commands are `createpremisdb -c` for database creation and `createpremisdb -u` for user creation.
 
 #### finishpackage ####
 * finishpackage is a combination of the microservices makelossless, makebroadcast, makeyoutube, makemetadata, and checksumpackage. The purpose is to losslessly transcode, create access copies, and create metadata and directory structure information for a file or package input. To use finishpackage, type finishpackage and drag your input into the command line: finishpackage [input]. finish package is typically used in conjunction with restructureForCompliance.
@@ -365,21 +381,3 @@ To view the specific ffmpeg encoding options for each file, view the sourcecode 
 
 #### xdcamingest ####
 * xdcamingest performs ingest of files read from an XDCam disk. the script will prompt the user via the command line for values, and write output to an operator log, and create access copies of xdcamfiles. this script is no longer in use and development is not supported.
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

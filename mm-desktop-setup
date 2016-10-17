@@ -13,6 +13,7 @@ brew cask install firefox
 brew cask install github-desktop
 brew cask install google-chrome
 brew cask install mpeg-streamclip
+brew cask install qctools
 brew cask install qlvideo
 brew cask install slack
 brew cask install textmate

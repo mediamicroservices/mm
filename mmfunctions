@@ -36,24 +36,60 @@ _report_to_db(){
     MEDIAID=$(basename "${INPUT}" | cut -d. -f1)
     LOGDIR="${OUTDIR_INGESTFILE}/${MEDIAID}/metadata/logs"
     INGESTLOG="${LOGDIR}/capture.log"
-    OP=$(cat ${INGESTLOG} | grep "operator" | cut -c 11-)
+    OP=$(cat ${INGESTLOG} 2>/dev/null | grep "operator" | cut -c 11-)
     if [ -z "${OP}" ] ; then
     OP="$USER"
     fi
     _premis_event_list
-    echo "INSERT IGNORE INTO object (objectIdentifierValue) VALUES ('$MEDIAID')" | mysql --login-path="$PREMIS_PROFILE"  "$PREMIS_NAME"
+    table_name="object"
+    echo "INSERT IGNORE INTO object (objectIdentifierValue) VALUES ('$MEDIAID')" | mysql --login-path="$PREMIS_PROFILE"  "$PREMIS_NAME" 2> /dev/null
+    _db_error_check
     if [ "$eventType" = "fixity" ] ; then
+        table_name="fixity"
+        IFS=$(echo -en "\n\b")
+        (for i in ${db_fixity}; do LINE=$i;
+        messageDigestHASH=$(echo "$LINE" | cut -c -32 )
+        messageDigestPATH=$(echo "$LINE" | cut -c 35- )
+        messageDigestFILENAME=$(basename ${messageDigestPATH})
+        echo "INSERT INTO fixity (objectIdentifierValue,eventDetail,messageDigestAlgorithm,messageDigestPATH,messageDigestFILENAME,messageDigestHASH) VALUES ('$MEDIAID','$eventDetail','md5','$messageDigestPATH','$messageDigestFILENAME','$messageDigestHASH')" | mysql --login-path="$PREMIS_PROFILE"  "$PREMIS_NAME" 2> /dev/null
+        if [ "$?" != "0" ]; then
+            exit 1
+        fi
+        done)
+        _db_error_check
+        unset IFS
+    fi
+    
+    table_name="event"
+    echo "INSERT INTO event (objectIdentifierValue,eventType,eventDetail,eventDetailOPT,eventDetailCOMPNAME,linkingAgentIdentifierValue) VALUES ('$MEDIAID','$eventType','$eventDetail','$user_input','$HOSTNAME', '$OP')" | mysql --login-path="$PREMIS_PROFILE"  "$PREMIS_NAME" 2> /dev/null
+    _db_error_check
+fi
+}
+
+_db_error_check(){
+
+if [ "$?" != "0" ]; then
+    echo -e "\033[1;5;95mERROR:\033[0m \033[1;93mCould not access database "$PREMIS_NAME".  Information was not added to the "$table_name" table. SQL command history has been written to ~/Desktop/"$MEDIAID"_dbreport.txt\033[0m"
+    
+    if [ "$table_name" = "object" ] ; then
+    echo "\"INSERT IGNORE INTO object (objectIdentifierValue) VALUES ('$MEDIAID')\" | mysql --login-path=\"$PREMIS_PROFILE\"  \"$PREMIS_NAME\"" >> ~/Desktop/"$MEDIAID"_dbreport.txt
+    fi
+    
+    if [ "$table_name" = "fixity" ] ; then
         IFS=$(echo -en "\n\b")
         for i in ${db_fixity}; do LINE=$i;
         messageDigestHASH=$(echo "$LINE" | cut -c -32 )
         messageDigestPATH=$(echo "$LINE" | cut -c 35- )
         messageDigestFILENAME=$(basename ${messageDigestPATH})
-        echo "INSERT INTO fixity (objectIdentifierValue,messageDigestAlgorithm,messageDigestPATH,messageDigestFILENAME,messageDigestHASH) VALUES ('$MEDIAID','md5','$messageDigestPATH','$messageDigestFILENAME','$messageDigestHASH')" | mysql --login-path="$PREMIS_PROFILE"  "$PREMIS_NAME"
+        echo "\"INSERT INTO fixity (objectIdentifierValue,eventDetail,messageDigestAlgorithm,messageDigestPATH,messageDigestFILENAME,messageDigestHASH) VALUES ('$MEDIAID','$eventDetail','md5','$messageDigestPATH','$messageDigestFILENAME','$messageDigestHASH')\" | mysql --login-path=\"$PREMIS_PROFILE\" \"$PREMIS_NAME\"" >> ~/Desktop/"$MEDIAID"_dbreport.txt
         done
         unset IFS
     fi
     
-    echo "INSERT INTO event (objectIdentifierValue,eventType,eventDetail,eventDetailOPT,eventDetailCOMPNAME,linkingAgentIdentifierValue) VALUES ('$MEDIAID','$eventType','$eventDetail','$user_input','$HOSTNAME', '$OP')" | mysql --login-path="$PREMIS_PROFILE"  "$PREMIS_NAME"
+    if [ "$table_name" = "event" ] ; then
+    echo "\"INSERT INTO event (objectIdentifierValue,eventType,eventDetail,eventDetailOPT,eventDetailCOMPNAME,linkingAgentIdentifierValue) VALUES ('$MEDIAID','$eventType','$eventDetail','$user_input','$HOSTNAME', '$OP')\" | mysql --login-path=\"$PREMIS_PROFILE\"  \"$PREMIS_NAME\"" >> ~/Desktop/"$MEDIAID"_dbreport.txt
+    fi
+else echo -e "\033[1;93mSuccessfully reported infomation to the "$table_name" table in the database "$PREMIS_NAME"\033[0m"
 fi
 }
 
@@ -102,7 +138,6 @@ _premis_event_list(){
 
 
 
-
 _version_schema(){
     SCHEMA_FILE="$LTO_LOGS/${TAPE_SERIAL}.schema"
     if [ -f "${SCHEMA_FILE}" ] ; then
@@ -116,7 +151,7 @@ _version_schema(){
 _checkdir(){
 if [[ ! -d "${1}" ]] ; then
     echo "${1}" is not a directory.
-    usage
+    _usage
     exit 1
 fi
 }
