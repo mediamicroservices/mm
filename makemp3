@@ -31,6 +31,7 @@ _cleanup(){
 
 trap _cleanup SIGHUP SIGINT SIGTERM
 
+user_input="${*}"
 OPTIND=1
 while getopts ":ho:" OPT; do
     case "${OPT}" in

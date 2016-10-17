@@ -24,6 +24,7 @@ _usage(){
 }
 [ "${#}" = 0 ] && _usage
 
+user_input="${*}"
 # command-line options to set mediaid and original variables
 OPTIND=1
 while getopts ":d:e:E:nh" OPT ; do

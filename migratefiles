@@ -9,7 +9,7 @@ _usage(){
     echo "  -r option to remove source files upon transfer"
     echo "the structure of the script is as follows: migratefiles -o ${TARGET} ${INPUT}, note that this is different than rsync commands"
 }
-user_input=$(echo "options are: ${*}")
+user_input="${*}"
 
 OPTIND=1
 while getopts ":o:l:r" OPT ; do

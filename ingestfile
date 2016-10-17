@@ -36,6 +36,7 @@ _usage(){
     exit
 }
 
+user_input="${*}"
 OPTIND=1
 
 while getopts ":F:pnhei" OPT ; do
