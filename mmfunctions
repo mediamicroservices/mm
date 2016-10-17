@@ -100,6 +100,10 @@ _premis_event_list(){
     eventDetail=$(basename $0)
     eventType="$eventDetail"
 
+    if [ "$eventDetail" = "ingestfile" ] ; then
+    eventType="creation"
+    fi
+    
     if [ "$eventDetail" = "makebroadcast" ] ; then
     eventType="creation"
     fi
