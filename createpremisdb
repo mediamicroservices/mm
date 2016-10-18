@@ -82,7 +82,11 @@ _error_check
 echo "FLUSH PRIVILEGES" | mysql --login-path=tempsetting
 
 #show commands to create sql login path
-db_host=$(ifconfig |grep inet | tail -n1 | cut -d ' ' -f2)
+if [ "$USER_HOST" = "localhost" ] ; then
+    db_host="localhost"
+else
+    db_host=$(ifconfig |grep inet | tail -n1 | cut -d ' ' -f2)
+fi
 echo -e "\033[1;93mTo finalize, run the following command on your user machine. NOTE You may wish to confirm your host IP address first!\033[0m"
 echo -e "\033[1;95mmysql_config_editor set --login-path="$USER_NAME"_config --host="$db_host" --user="$USER_NAME" --password\033[0m"
 echo -e "\033[1;93mFollowed by the user password: "$USER_PASSWORD"\033[0m"
