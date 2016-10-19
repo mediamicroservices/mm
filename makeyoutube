@@ -54,6 +54,7 @@ shift $(( ${OPTIND} - 1 ))
 while [ "${*}" != "" ] ; do
     # get context about the input
     INPUT="${1}"
+     _report_to_db
     shift
     if [ -z "${OUTPUTDIR_FORCED}" ] ; then
         [ -d "${INPUT}" ] && { OUTPUTDIR="${INPUT}/objects/${RELATIVEPATH}" && LOGDIR="${INPUT}/metadata/logs" ;};
@@ -139,6 +140,5 @@ while [ "${*}" != "" ] ; do
             _writeerrorlog "makeyoutube" "$(basename "${OUTPUT}") qualified for uploadyoutube but it is not installed, so the file could not be uploaded."
         fi
     fi
-    _report_to_db
     _log -e
 done
