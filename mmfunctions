@@ -67,10 +67,15 @@ fi
 }
 
 _eventoutcome_update(){
-    lastrecord=$(echo "SELECT eventIdentifierValue FROM event ORDER BY eventIdentifierValue DESC LIMIT 1" | mysql --login-path="$PREMIS_PROFILE"  "$PREMIS_NAME")
-    lastrecord_trim=$(echo $lastrecord | cut -d " " -f2)
-    echo "update event set eventOutcome='Success' WHERE eventIdentifierValue='$lastrecord_trim'"
-    echo "update event set eventOutcome='Success' WHERE eventIdentifierValue='$lastrecord_trim'" | mysql --login-path="$PREMIS_PROFILE"  "$PREMIS_NAME" 2> /dev/null
+    if [ "${PREMIS_DB}" = "Y" ] ; then
+        outcome="Success"
+        if [[ "${RUN_ERR}" != 0 ]] ; then
+            outcome="Fail"
+        fi
+        lastrecord=$(echo "SELECT eventIdentifierValue FROM event ORDER BY eventIdentifierValue DESC LIMIT 1" | mysql --login-path="$PREMIS_PROFILE"  "$PREMIS_NAME")
+        lastrecord_trim=$(echo $lastrecord | cut -d " " -f2)
+        echo "update event set eventOutcome='$outcome' WHERE eventIdentifierValue='$lastrecord_trim'" | mysql --login-path="$PREMIS_PROFILE"  "$PREMIS_NAME" 2> /dev/null
+    fi
 }
 
 _db_error_check(){
@@ -334,6 +339,7 @@ _run(){
 
 _run_critical(){
     _run "${@}"
+    _eventoutcome_update
     if [[ "${RUN_ERR}" != 0 ]] ; then
         _report -wts "The process ran into a critical error and can not proceed."
         exit 1
