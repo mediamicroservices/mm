@@ -41,7 +41,7 @@ _cleanup(){
 }
 
 
-user_input=$(echo "options are: ${*}")
+user_input="${*}"
 # command-line options
 CHECK=""
 VERIFY=""

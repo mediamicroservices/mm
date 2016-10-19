@@ -38,6 +38,7 @@ _usage(){
 }
 [ "${#}" = 0 ] && _usage
 
+user_input="${*}"
 # command-line options to adjust volume, delivery location, and slate creation
 OPTIND=1
 while getopts ":F:slrcv:o:d:e:E:nh" OPT ; do
