@@ -26,6 +26,7 @@ _usage(){
 }
 [ "${#}" = 0 ] && _usage
 
+user_input="${*}"
 # command-line options to set mediaid and original variables
 OPTIND=1
 while getopts ":o:d:e:E:nh" OPT ; do
@@ -45,6 +46,7 @@ shift $(( ${OPTIND} - 1 ))
 while [ "${*}" != "" ] ; do
     # get context about the input
     INPUT="${1}"
+    _report_to_db
     shift
     if [ -z "${OUTPUTDIR_FORCED}" ] ; then
         [ -d "${INPUT}" ] && { OUTPUTDIR="$INPUT/objects/${RELATIVEPATH}" && LOGDIR="${INPUT}/metadata/logs" ;};
@@ -92,7 +94,7 @@ while [ "${*}" != "" ] ; do
 
     _filter_to_middle_option
 
-    _run_critical ffmpeg "${INPUTOPTIONS[@]}" "${FFMPEGINPUT[@]}" "${MIDDLEOPTIONS[@]}" "${OUTPUT}"
+    _run_critical_event ffmpeg "${INPUTOPTIONS[@]}" "${FFMPEGINPUT[@]}" "${MIDDLEOPTIONS[@]}" "${OUTPUT}"
     echo
     _summarize_make
     _deliver_output "${MAKEYOUTUBE_DELIVERY_EMAIL_TO}"
