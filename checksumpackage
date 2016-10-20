@@ -190,7 +190,9 @@ while [ "${*}" != "" ] ; do
         db_fixity=$(cat "${PACKAGE}/${OUTDIR}/${CHECKSUMNAME}")
         _report_to_db
         echo "$(_get_iso8601): $(basename "${0}"):${VERSION}: ${CHECKSUMNAME} is generated" >> "${PACKAGE}/${OUTDIR}/${CHECKSUMPROCESSLOG}"
+
         if [ "${UPDATE}" = "Y" ] ; then
+            _eventoutcome_update
             exit
         fi
         if [ "${VERIFY}" = "Y" ] ; then
@@ -226,6 +228,7 @@ while [ "${*}" != "" ] ; do
                 echo "$(_get_iso8601): $(basename "${0}"):${VERSION}: verified by checksums" >> "${PACKAGE}/${OUTDIR}/${CHECKSUMPROCESSLOG}"
             fi
             rm "${CHECKSUMCMP1}" "${CHECKSUMCMP2}"
+            _eventoutcome_update
         fi
         #if [ "$FILEMAKER_XML_URL" ] ; then
             #"${SCRIPTDIR}/checksum2filemaker" "${PACKAGE}"
