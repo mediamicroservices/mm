@@ -68,15 +68,17 @@ fi
 
 _eventoutcome_update(){
     if [ "${PREMIS_DB}" = "Y" ] ; then
-        outcome="Success"
+        if [ -z "$event_outcome" ] ; then
+            event_outcome="Success"
+        fi
         if [ -n "$RUN_ERR" ] ; then
             if [[ "${RUN_ERR}" != 0 ]] ; then
-                outcome="Fail"
+                event_outcome="Fail"
             fi
         fi
         lastrecord=$(echo "SELECT eventIdentifierValue FROM event ORDER BY eventIdentifierValue DESC LIMIT 1" | mysql --login-path="$PREMIS_PROFILE"  "$PREMIS_NAME")
         lastrecord_trim=$(echo $lastrecord | cut -d " " -f2)
-        echo "update event set eventOutcome='$outcome' WHERE eventIdentifierValue='$lastrecord_trim'" | mysql --login-path="$PREMIS_PROFILE"  "$PREMIS_NAME" 2> /dev/null
+        echo "update event set eventOutcome='$event_outcome' WHERE eventIdentifierValue='$lastrecord_trim'" | mysql --login-path="$PREMIS_PROFILE"  "$PREMIS_NAME" 2> /dev/null
     fi
 }
 

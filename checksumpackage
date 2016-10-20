@@ -163,7 +163,6 @@ while [ "${*}" != "" ] ; do
         else
             if [ -s "${PACKAGE}/${OUTDIR}/${CHECKSUMNAME}" ] ; then
                 _report -dt "${CHECKSUMNAME} already exists, skipping for ${PACKAGE}"
-                _report_to_db
                 shift
                 continue
             fi
@@ -191,8 +190,10 @@ while [ "${*}" != "" ] ; do
         _report_to_db
         echo "$(_get_iso8601): $(basename "${0}"):${VERSION}: ${CHECKSUMNAME} is generated" >> "${PACKAGE}/${OUTDIR}/${CHECKSUMPROCESSLOG}"
 
+        event_outcome="Fixity Creation"
+        _eventoutcome_update
+        
         if [ "${UPDATE}" = "Y" ] ; then
-            _eventoutcome_update
             exit
         fi
         if [ "${VERIFY}" = "Y" ] ; then
@@ -216,19 +217,24 @@ while [ "${*}" != "" ] ; do
                     echo "The following files have been added: $(echo "$manifest_check" | grep ">" | cut -c 3-)"
                      echo "The following files have been removed: $(echo "$manifest_check" | grep "<" | cut -c 3-)"
                     echo "$(_get_iso8601): $(basename "${0}"):${VERSION}: FAILED to VERIFY due to file path differences - compare ${CHECKSUMNAME} and $(basename "${LASTMD5}")" >> "${PACKAGE}/${OUTDIR}/${CHECKSUMPROCESSLOG}"
+                    event_outcome="Fixity Mismatch"
+                    _eventoutcome_update
                 fi
 
                 if [ -n "${originalhash_check}" ] ; then
                 _report -wt "checksums are different for ${PACKAGE}"
                 diff "${CHECKSUMCMP1}" "${CHECKSUMCMP2}"
                 echo "$(_get_iso8601): $(basename "${0}"):${VERSION}: FAILED to VERIFY by checksums - compare ${CHECKSUMNAME} and $(basename "${LASTMD5}")" >> "${PACKAGE}/${OUTDIR}/${CHECKSUMPROCESSLOG}"
+                event_outcome="Fixity Mismatch"
+                _eventoutcome_update
             fi
             else
                 _report -dt "checksums are still valid for ${PACKAGE}"
                 echo "$(_get_iso8601): $(basename "${0}"):${VERSION}: verified by checksums" >> "${PACKAGE}/${OUTDIR}/${CHECKSUMPROCESSLOG}"
+                event_outcome="Fixity Match"
+                _eventoutcome_update
             fi
             rm "${CHECKSUMCMP1}" "${CHECKSUMCMP2}"
-            _eventoutcome_update
         fi
         #if [ "$FILEMAKER_XML_URL" ] ; then
             #"${SCRIPTDIR}/checksum2filemaker" "${PACKAGE}"
