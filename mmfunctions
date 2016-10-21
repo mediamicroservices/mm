@@ -44,6 +44,14 @@ _report_to_db(){
     table_name="object"
     echo "INSERT IGNORE INTO object (objectIdentifierValue,object_LastTouched) VALUES ('$MEDIAID',NOW()) ON DUPLICATE KEY UPDATE object_LastTouched = NOW()" | mysql --login-path="$PREMIS_PROFILE"  "$PREMIS_NAME" 2> /dev/null
     _db_error_check
+        
+    table_name="event"
+    echo "INSERT INTO event (objectIdentifierValue,eventType,eventDetail,eventDetailOPT,eventDetailCOMPNAME,linkingAgentIdentifierValue) VALUES ('$MEDIAID','$eventType','$eventDetail','$user_input','$HOSTNAME', '$OP')" | mysql --login-path="$PREMIS_PROFILE"  "$PREMIS_NAME" 2> /dev/null
+    _db_error_check
+fi
+}
+
+_report_fixity_db(){
     if [ "$eventType" = "fixity" ] ; then
         table_name="fixity"
         IFS=$(echo -en "\n\b")
@@ -59,11 +67,6 @@ _report_to_db(){
         _db_error_check
         unset IFS
     fi
-    
-    table_name="event"
-    echo "INSERT INTO event (objectIdentifierValue,eventType,eventDetail,eventDetailOPT,eventDetailCOMPNAME,linkingAgentIdentifierValue) VALUES ('$MEDIAID','$eventType','$eventDetail','$user_input','$HOSTNAME', '$OP')" | mysql --login-path="$PREMIS_PROFILE"  "$PREMIS_NAME" 2> /dev/null
-    _db_error_check
-fi
 }
 
 _eventoutcome_update(){
