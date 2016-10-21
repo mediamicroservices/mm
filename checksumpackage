@@ -68,8 +68,7 @@ else _report -wt "Directory is not valid. Please select a valid directory."
 exit 1
 fi
 
-var=$(echo "$1")
-INPUT=$(basename "$var")
+INPUT=$(basename "$1")
 _check_dfxml(){
     PACKAGE="${ABS_PATH}"
     # make temp file that lists filenames and filesizes from dfxml.xml
