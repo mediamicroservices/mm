@@ -188,9 +188,7 @@ while [ "${*}" != "" ] ; do
         db_fixity=$(cat "${PACKAGE}/${OUTDIR}/${CHECKSUMNAME}")
         _report_to_db
         echo "$(_get_iso8601): $(basename "${0}"):${VERSION}: ${CHECKSUMNAME} is generated" >> "${PACKAGE}/${OUTDIR}/${CHECKSUMPROCESSLOG}"
-
         event_outcome="Fixity Creation"
-        _eventoutcome_update
         
         if [ "${UPDATE}" = "Y" ] ; then
             exit
@@ -217,7 +215,6 @@ while [ "${*}" != "" ] ; do
                      echo "The following files have been removed: $(echo "$manifest_check" | grep "<" | cut -c 3-)"
                     echo "$(_get_iso8601): $(basename "${0}"):${VERSION}: FAILED to VERIFY due to file path differences - compare ${CHECKSUMNAME} and $(basename "${LASTMD5}")" >> "${PACKAGE}/${OUTDIR}/${CHECKSUMPROCESSLOG}"
                     event_outcome="Fixity Mismatch"
-                    _eventoutcome_update
                 fi
 
                 if [ -n "${originalhash_check}" ] ; then
@@ -225,14 +222,13 @@ while [ "${*}" != "" ] ; do
                 diff "${CHECKSUMCMP1}" "${CHECKSUMCMP2}"
                 echo "$(_get_iso8601): $(basename "${0}"):${VERSION}: FAILED to VERIFY by checksums - compare ${CHECKSUMNAME} and $(basename "${LASTMD5}")" >> "${PACKAGE}/${OUTDIR}/${CHECKSUMPROCESSLOG}"
                 event_outcome="Fixity Mismatch"
-                _eventoutcome_update
             fi
             else
                 _report -dt "checksums are still valid for ${PACKAGE}"
                 echo "$(_get_iso8601): $(basename "${0}"):${VERSION}: verified by checksums" >> "${PACKAGE}/${OUTDIR}/${CHECKSUMPROCESSLOG}"
                 event_outcome="Fixity Match"
-                _eventoutcome_update
             fi
+        
             rm "${CHECKSUMCMP1}" "${CHECKSUMCMP2}"
         fi
         #if [ "$FILEMAKER_XML_URL" ] ; then
@@ -241,6 +237,8 @@ while [ "${*}" != "" ] ; do
     else
         _report -dt "ERROR: ${0} requires directories as input and ${PACKAGE} is not a directory."
     fi
+    _eventoutcome_update
+    _report_fixity_db
     _log -e
     shift
 done
