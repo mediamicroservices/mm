@@ -3,6 +3,7 @@
 
 brew install mkvalidator
 brew install mkvtoolnix --with-qt5
+brew install amiaopensource/amiaos/ltopers
 brew install amiaopensource/amiaos/pbprotracktor
 brew install wget
 
