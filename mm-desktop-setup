@@ -1,6 +1,7 @@
 #!/bin/bash
 # set up a Mac that might be helpful for audiovisual archiving
 
+brew install mkvalidator
 brew install mkvtoolnix --with-qt5
 brew tap caskroom/cask
 brew update
@@ -15,7 +16,7 @@ brew cask install github-desktop
 brew cask install google-chrome
 brew cask install iterm2
 brew cask install libreoffice
-brew cask install mediaconch
+brew cask install mediaconch-app
 brew cask install mpeg-streamclip
 brew cask install qctools
 brew cask install qlvideo
