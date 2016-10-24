@@ -3,6 +3,8 @@
 
 brew install mkvalidator
 brew install mkvtoolnix --with-qt5
+brew install wget
+
 brew tap caskroom/cask
 brew update
 
