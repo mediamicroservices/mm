@@ -12,6 +12,8 @@ brew cask install cyberduck
 brew cask install firefox
 brew cask install github-desktop
 brew cask install google-chrome
+brew cask install iterm2
+brew cask install libreoffice
 brew cask install mpeg-streamclip
 brew cask install qctools
 brew cask install qlvideo
