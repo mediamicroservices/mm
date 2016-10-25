@@ -1,6 +1,12 @@
 #!/bin/bash
 # set up a Mac that might be helpful for audiovisual archiving
 
+brew install mkvalidator
+brew install mkvtoolnix --with-qt5
+brew install amiaopensource/amiaos/ltopers
+brew install amiaopensource/amiaos/pbprotracktor
+brew install wget
+
 brew tap caskroom/cask
 brew update
 
@@ -12,9 +18,13 @@ brew cask install cyberduck
 brew cask install firefox
 brew cask install github-desktop
 brew cask install google-chrome
+brew cask install iterm2
+brew cask install libreoffice
+brew cask install mediaconch-app
 brew cask install mpeg-streamclip
 brew cask install qctools
 brew cask install qlvideo
+brew cask install sequel-pro
 brew cask install slack
 brew cask install textmate
 brew cask install the-unarchiver
