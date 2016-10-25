@@ -52,8 +52,16 @@ fi
 }
 
 _report_fixity_db(){
-    if [ "$eventType" = "fixity" ] ; then
+    if [ "${PREMIS_DB}" = "Y" ] ; then
+    _premis_event_list
         table_name="fixity"
+        
+        if [ -z "$db_fixity" ] ; then
+            echo -e "\033[1;31mNo fixity data found!  Fixity information not reported to the database.\033[0m"
+            event_outcome="No fixity information"
+            exit 1
+        fi
+        
         IFS=$(echo -en "\n\b")
         (for i in ${db_fixity}; do LINE=$i;
         messageDigestHASH=$(echo "$LINE" | cut -c -32 )
@@ -155,7 +163,6 @@ _premis_event_list(){
     if [ "$eventDetail" = "writelto" ] ; then
     eventType="fixity"
     MEDIAID="$TAPE_SERIAL"
-    db_fixity=$(cat "${READBACKDIR}/${TAPE_SERIAL}_ReadBack_checksum_${VERIFYTIME}.md5")
     fi
 }
 
