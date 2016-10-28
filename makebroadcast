@@ -64,6 +64,7 @@ shift $(( ${OPTIND} - 1 ))
 while [ "${*}" != "" ] ; do
     # get context about the input
     INPUT="${1}"
+    _report_to_db
     shift
     if [ -z "${OUTPUTDIR_FORCED}" ] ; then
         [ -d "${INPUT}" ] && { OUTPUTDIR="${INPUT}/objects/${RELATIVEPATH}" && LOGDIR="${INPUT}/metadata/logs" ;};
@@ -379,12 +380,11 @@ MIDDLEOPTIONS+=(-map "[with_slate_video]" -map "[with_slate_stereo1]" -map "[wit
 #MIDDLEOPTIONS: ${MIDDLEOPTIONS[@]}
 #OUTPUT: ${OUTPUT}")
 
-    _run_critical ffmpeg "${INPUTOPTIONS[@]}" "${FFMPEGINPUT[@]}" "${MIDDLEOPTIONS[@]}" "${OUTPUT}"
+    _run_critical_event ffmpeg "${INPUTOPTIONS[@]}" "${FFMPEGINPUT[@]}" "${MIDDLEOPTIONS[@]}" "${OUTPUT}"
     echo
     _summarize_make
     _deliver_output "${MAKEBROADCAST_DELIVERY_EMAIL_TO}"
     _log -e
-    _report_to_db
 done
 unset ADDSLATE
 

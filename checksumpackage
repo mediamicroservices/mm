@@ -68,8 +68,7 @@ else _report -wt "Directory is not valid. Please select a valid directory."
 exit 1
 fi
 
-var=$(echo "$1")
-INPUT=$(basename "$var")
+INPUT=$(basename "$1")
 _check_dfxml(){
     PACKAGE="${ABS_PATH}"
     # make temp file that lists filenames and filesizes from dfxml.xml
@@ -163,7 +162,6 @@ while [ "${*}" != "" ] ; do
         else
             if [ -s "${PACKAGE}/${OUTDIR}/${CHECKSUMNAME}" ] ; then
                 _report -dt "${CHECKSUMNAME} already exists, skipping for ${PACKAGE}"
-                _report_to_db
                 shift
                 continue
             fi
@@ -190,6 +188,8 @@ while [ "${*}" != "" ] ; do
         db_fixity=$(cat "${PACKAGE}/${OUTDIR}/${CHECKSUMNAME}")
         _report_to_db
         echo "$(_get_iso8601): $(basename "${0}"):${VERSION}: ${CHECKSUMNAME} is generated" >> "${PACKAGE}/${OUTDIR}/${CHECKSUMPROCESSLOG}"
+        event_outcome="Fixity Creation"
+        
         if [ "${UPDATE}" = "Y" ] ; then
             exit
         fi
@@ -214,17 +214,21 @@ while [ "${*}" != "" ] ; do
                     echo "The following files have been added: $(echo "$manifest_check" | grep ">" | cut -c 3-)"
                      echo "The following files have been removed: $(echo "$manifest_check" | grep "<" | cut -c 3-)"
                     echo "$(_get_iso8601): $(basename "${0}"):${VERSION}: FAILED to VERIFY due to file path differences - compare ${CHECKSUMNAME} and $(basename "${LASTMD5}")" >> "${PACKAGE}/${OUTDIR}/${CHECKSUMPROCESSLOG}"
+                    event_outcome="Fixity Mismatch"
                 fi
 
                 if [ -n "${originalhash_check}" ] ; then
                 _report -wt "checksums are different for ${PACKAGE}"
                 diff "${CHECKSUMCMP1}" "${CHECKSUMCMP2}"
                 echo "$(_get_iso8601): $(basename "${0}"):${VERSION}: FAILED to VERIFY by checksums - compare ${CHECKSUMNAME} and $(basename "${LASTMD5}")" >> "${PACKAGE}/${OUTDIR}/${CHECKSUMPROCESSLOG}"
+                event_outcome="Fixity Mismatch"
             fi
             else
                 _report -dt "checksums are still valid for ${PACKAGE}"
                 echo "$(_get_iso8601): $(basename "${0}"):${VERSION}: verified by checksums" >> "${PACKAGE}/${OUTDIR}/${CHECKSUMPROCESSLOG}"
+                event_outcome="Fixity Match"
             fi
+        
             rm "${CHECKSUMCMP1}" "${CHECKSUMCMP2}"
         fi
         #if [ "$FILEMAKER_XML_URL" ] ; then
@@ -233,6 +237,8 @@ while [ "${*}" != "" ] ; do
     else
         _report -dt "ERROR: ${0} requires directories as input and ${PACKAGE} is not a directory."
     fi
+    _eventoutcome_update
+    _report_fixity_db
     _log -e
     shift
 done
