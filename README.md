@@ -11,6 +11,8 @@ table of contents
     3. [configuring mediamicroservices](https://github.com/mediamicroservices/mm#configuring-mediamicroservices)
         1. [variable explanations](https://github.com/mediamicroservices/mm#variable-explanations)
 3. [database configuration](#configuring-premisfixity-logging-database)
+	1. [Database Configuration](#database-configuration)
+	2. [Database Backup](#database-backup)
 4. [mediamicroservices functions and instructions for use](https://github.com/mediamicroservices/mm#mediamicroservices-functions-and-instructions-for-use)
 	* [aipupgrade](https://github.com/mediamicroservices/mm#aipupgrade)
     * [barcodeinterpret](https://github.com/mediamicroservices/mm#barcodeinterpret)
@@ -188,11 +190,17 @@ if editing in the terminal, use this option to leave the configuration file edit
 
 
 ## configuring PREMIS/fixity logging database
+### Database Configuration 
 The microservice scripts are able to report to a central database information corresponding with PREMIS events such as date and location run as well as generated fixity hashes.  To enable this function you will need a computer running mySQL to function as a server.  
 
 To configure the database, run the command `createpremisdb -c` on your __host__ computer and follow the prompts.  This will set up the database as well as facilitate user creation. To create users without creating a new database, use the command `createpremisdb -u`.  At the end of user creation, the script will supply a command to create a log-in profile for the database.  It should look something like this: `mysql_config_editor set --login-path=your_user_config --host=xx.xx.xxx.xxx --user=your_user --password`. Run this command on your __user__ computer and enter the password for the user you created when prompted.  This will create the SQL log-in profile that you will use when configuring the microservices. NOTE: When supplying the suggested command, the script does its best to auto-fill the host IP address.  You may wish to verify that this is the correct IP.
 
 To finalize the database setup, run `mmconfig -a` click 'Y' to enable logging of PREMIS events, and enter the database name and log in profile you have created.
+
+### Database Backup
+MM includes a script for database backup.  This can be either run manually or set up as an automated process.  After configuring the backup script, running `dbbackup` will create a zipped backup in the chosen location.  To automate this process use Brew Services.  Typing `brew services mm` will cause the db to be backed up automatically using the included plist file.  By default, backups will occur daily at 2:00 AM.
+
+To configure database backup, either open the script in a text editor, or use the command `dbbackup -e` to edit it in the terminal.  Set the neccessary variables to your desired values.
 
 ![Database GUI Example](https://github.com/mediamicroservices/mm/blob/master/Resources/mmgui_dbsetup.png)
 
