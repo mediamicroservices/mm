@@ -200,7 +200,7 @@ To finalize the database setup, run `mmconfig -a` click 'Y' to enable logging of
 ![Database GUI Example](https://github.com/mediamicroservices/mm/blob/master/Resources/mmgui_dbsetup.png)
 
 ### Database Backup
-MM includes a script for database backup.  This can be either run manually or set up as an automated process.  After configuring the backup script, running `dbbackup` will create a zipped backup in the chosen location.  To automate this process use Brew Services.  Typing `brew services mm` will cause the db to be backed up automatically using the included plist file.  By default, backups will occur daily at 2:00 AM.
+MM includes a script for database backup.  This can be either run manually or set up as an automated process.  After configuring the backup script, running `dbbackup` will create a zipped backup in the chosen location.  To automate this process use Brew Services.  Typing `brew services start mm` will cause the db to be backed up automatically using the included plist file.  By default, backups will occur daily at 2:00 AM.
 
 To configure database backup, either open the script in a text editor, or use the command `dbbackup -e` to edit it in the terminal.  Set the neccessary variables to your desired values.
 
