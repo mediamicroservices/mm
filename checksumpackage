@@ -61,16 +61,8 @@ shift $(( ${OPTIND} - 1 ))
 
 trap _cleanup SIGHUP SIGINT SIGTERM
 
-#Find absolute path for input
-if [ -e "$1" ] ; then
-ABS_PATH=$(cd "$1"; pwd)
-else _report -wt "Directory is not valid. Please select a valid directory."
-exit 1
-fi
-
-INPUT=$(basename "$1")
 _check_dfxml(){
-    PACKAGE="${ABS_PATH}"
+    PACKAGE="${1}"
     # make temp file that lists filenames and filesizes from dfxml.xml
     DFXML_FILELIST="$(_maketemp)"
     if [ ! -z "$(xml sel -T -t -m "/_:dfxml/_:fileobject" -v "_:filename" -o " " -v "_:filesize" -n "${PACKAGE}/${OUTDIR}/${DFXMLNAME}" 2>/dev/null)" ] ; then
@@ -103,7 +95,7 @@ _check_dfxml(){
 }
 
 _version_dfxml(){
-    PACKAGE="${ABS_PATH}"
+    PACKAGE="${1}"
     _report -wdt "Creating a new version of the checksum files."
     LASTMD5="${PACKAGE}/${OUTDIR}/${CHECKSUMNAME%.*}_$(stat -t '%Y%m%d-%H%M%S' -l "${PACKAGE}/${OUTDIR}/${CHECKSUMNAME}" | awk '{print $6}').md5"
     LASTDFXML="${PACKAGE}/${OUTDIR}/${DFXMLNAME%.*}_$(stat -t '%Y%m%d-%H%M%S' -l "${PACKAGE}/${OUTDIR}/${DFXMLNAME}" | awk '{print $6}').xml"
@@ -113,9 +105,12 @@ _version_dfxml(){
     echo "$(_get_iso8601): $(basename "${0}"):${VERSION}: checksums are versioned - ${CHECKSUMNAME} -> ${LASTMD5}" >> "${PACKAGE}/${OUTDIR}/${CHECKSUMPROCESSLOG}"
 }
 
+
+
 while [ "${*}" != "" ] ; do
+    INPUT=$(basename "$1")
     _log -b
-    PACKAGE="${ABS_PATH}"
+    PACKAGE="${1}"
     if [ -d "${PACKAGE}" ] ; then
         PWD=$(pwd)
         "${SCRIPTDIR}/removeDSStore" "${PACKAGE}"
