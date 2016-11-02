@@ -29,7 +29,7 @@ while getopts "he" opt ; do
 done
 
 if [ "$runtype" = "edit" ] ; then
-    nano "$0"
+    open -t "$0"
 fi
 
 
