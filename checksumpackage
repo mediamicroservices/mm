@@ -61,14 +61,6 @@ shift $(( ${OPTIND} - 1 ))
 
 trap _cleanup SIGHUP SIGINT SIGTERM
 
-#Find absolute path for input
-if [ -e "$1" ] ; then
-ABS_PATH=$(cd "$1"; pwd)
-else _report -wt "Directory is not valid. Please select a valid directory."
-exit 1
-fi
-
-INPUT=$(basename "$1")
 _check_dfxml(){
     PACKAGE="${ABS_PATH}"
     # make temp file that lists filenames and filesizes from dfxml.xml
@@ -114,6 +106,12 @@ _version_dfxml(){
 }
 
 while [ "${*}" != "" ] ; do
+    if [ ! -d "$1" ] ; then
+        _report -wt "$1 is not a valid directory. Exiting"
+        exit 1
+    fi
+    ABS_PATH=$(cd "$1"; pwd)
+    INPUT=$(basename "$1")
     _log -b
     PACKAGE="${ABS_PATH}"
     if [ -d "${PACKAGE}" ] ; then
