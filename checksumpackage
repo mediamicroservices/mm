@@ -106,6 +106,10 @@ _version_dfxml(){
 }
 
 while [ "${*}" != "" ] ; do
+    if [ ! -d "$1" ] ; then
+        _report -wt "$1 is not a valid directory. Exiting"
+        exit 1
+    fi
     ABS_PATH=$(cd "$1"; pwd)
     INPUT=$(basename "$1")
     _log -b
