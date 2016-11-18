@@ -1,16 +1,8 @@
 #!/bin/sh
 
-#Configuration Section
-#Select directory for backup
-SQL_BACKUP_DIR=""
-#Select database for backup
-DATABASE_NAME=""
-#Enter SQL log in path for database (This can be created with the command `mysql_config_editor set --login-path=[name your log in path here] --host=[enter database host here] --user=[enter user name here] --password)`
-SQL_LOGIN_PATH=""
-#Number of backup versions to retain
-COPIES_NUMBER=""
-
-#####
+config_file="$HOME/.$(basename "${0}").conf"
+touch "$config_file"
+. "$config_file"
 
 usage(){
     echo "This script will create backups of the selected database and retain the specified amount. Script can be run manually or set up as a recurring task."
@@ -28,12 +20,29 @@ while getopts "he" opt ; do
     esac
 done
 
+_edit_config(){
+    {
+    echo "#Configuration Section"
+    echo "#Select directory for backup"
+    echo "SQL_BACKUP_DIR=\"$SQL_BACKUP_DIR\""
+    echo "#Select database for backup"
+    echo "DATABASE_NAME=\"$DATABASE_NAME\""
+    echo "#Enter SQL log in path for database. This can be created with the command mysql_config_editor set --login-path=[name your login path here] --host=[enter database host here] --user=[enter user name here] --password"
+    echo "SQL_LOGIN_PATH=\"$SQL_LOGIN_PATH\""
+    echo "#Number of backup versions to retain"
+    echo "COPIES_NUMBER=\"$COPIES_NUMBER\""
+    } > "${config_file}"
+}
+
+
 if [ "$runtype" = "edit" ] ; then
-    open -t "$0"
+    _edit_config
+    nano "${config_file}"
+    exit
 fi
 
 
-FILES=$(ls "$SQL_BACKUP_DIR"/"$DATABASE_NAME"_backup_*| sort)
+FILES=$(ls "$SQL_BACKUP_DIR"/"$DATABASE_NAME"_backup_*.sql.gz| sort)
 FILE_COUNT=$(echo "$FILES" | wc -l)
 OLDEST_FILE=$(echo "$FILES" | head -n 1)
 BACKUP_FILE=${SQL_BACKUP_DIR}/"$DATABASE_NAME"_backup_`date +"%m-%d-%Y_%H-%M-%S"`.sql
