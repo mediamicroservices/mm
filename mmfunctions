@@ -254,7 +254,7 @@ _log(){
             e) STATUS="end"   ;;              # script is ending
             a) STATUS="abort" ;;              # script is aborted
             c) STATUS="comment" ;;            # comment about what script is doing
-            w) STATUS+"warning" ;;            # warning information
+            w) STATUS="warning" ;;            # warning information
         esac
     done
     shift $(( ${OPTIND} - 1 ))
