@@ -4,6 +4,7 @@ SCRIPTDIR=$(dirname "${0}")
 MM_CONFIG_FILE="${SCRIPTDIR}/mm.conf"
 LTO_CONFIG_FILE="${SCRIPTDIR}/ltoper.conf"
 WHAT_IS_THIS="mediamicroservices"
+
 # load configuration file
 if [ -f "${MM_CONFIG_FILE}" ] ; then
     . "${MM_CONFIG_FILE}"
@@ -27,26 +28,1255 @@ _cleanup_mount_dir(){
     fi
 }
 
-
-
 _report_to_db(){  
     if [ "${PREMIS_DB}" = "Y" ] ; then
-        
-    eventDetail=$(basename $0)
-    MEDIAID=$(basename "${INPUT}")
-    LOGDIR="${OUTDIR_INGESTFILE}/${MEDIAID}/metadata/logs"
-    INGESTLOG="${LOGDIR}/capture.log"
-    OP=$(cat ${INGESTLOG} 2>/dev/null | grep "operator" | cut -c 11-)
-    if [ -z "${OP}" ] ; then
-    OP="$USER"
+        eventDetail=$(basename $0)
+        MEDIAID=$(basename "${INPUT}")
+        LOGDIR="${OUTDIR_INGESTFILE}/${MEDIAID}/metadata/logs"
+        INGESTLOG="${LOGDIR}/capture.log"
+        OP=$(cat ${INGESTLOG} 2>/dev/null | grep "operator" | cut -c 11-)
+        if [ -z "${OP}" ] ; then
+            OP="$USER"
+        fi
+        _premis_event_list
+        table_name="object"
+        echo "INSERT IGNORE INTO object (objectIdentifierValue,object_LastTouched) VALUES ('$MEDIAID',NOW()) ON DUPLICATE KEY UPDATE object_LastTouched = NOW()" | mysql --login-path="$PREMIS_PROFILE"  "$PREMIS_NAME" 2> /dev/null
+        _db_error_check        
+        table_name="event"
+        echo "INSERT INTO event (objectIdentifierValue,eventType,eventDetail,eventDetailOPT,eventDetailCOMPNAME,linkingAgentIdentifierValue) VALUES ('$MEDIAID','$eventType','$eventDetail','$user_input','$HOSTNAME', '$OP')" | mysql --login-path="$PREMIS_PROFILE"  "$PREMIS_NAME" 2> /dev/null
+        _db_error_check
     fi
+}
+
+_report_fixity_db(){
+    if [ "${PREMIS_DB}" = "Y" ] ; then
     _premis_event_list
-    table_name="object"
-    echo "INSERT IGNORE INTO object (objectIdentifierValue,object_LastTouched) VALUES ('$MEDIAID',NOW()) ON DUPLICATE KEY UPDATE object_LastTouched = NOW()" | mysql --login-path="$PREMIS_PROFILE"  "$PREMIS_NAME" 2> /dev/null
-    _db_error_check
-        
-    table_name="event"
-    echo "INSERT INTO event (objectIdentifierValue,eventType,eventDetail,eventDetailOPT,eventDetailCOMPNAME,linkingAgentIdentifierValue) VALUES ('$MEDIAID','$eventType','$eventDetail','$user_input','$HOSTNAME', '$OP')" | mysql --login-path="$PREMIS_PROFILE"  "$PREMIS_NAME" 2> /dev/null
+        table_name="fixity"
+        if [ -z "$db_fixity" ] ; then
+            echo -e "\033[1;31mNo fixity data found! Fixity information not reported to the database.\033[0m"
+            event_outcome="No fixity information"
+            exit 1
+        fi
+        IFS=$(echo -en "\n\b")
+        (for i in ${db_fixity}; do LINE=$i;
+        messageDigestHASH=$(echo "$LINE" | cut -c -32 )
+        messageDigestPATH=$(echo "$LINE" | cut -c 35- )
+        messageDigestFILENAME=$(basename ${messageDigestPATH})
+        echo "INSERT INTO fixity (objectIdentifierValue,eventDetail,messageDigestAlgorithm,messageDigestPATH,messageDigestFILENAME,messageDigestHASH) VALUES ('$MEDIAID','$eventDetail','md5','$messageDigestPATH','$messageDigestFILENAME','$messageDigestHASH')" | mysql --login-path="$PREMIS_PROFILE"  "$PREMIS_NAME" 2> /dev/null
+        if [ "$?" != "0" ]; then
+            exit 1
+        fi
+        done)
+        _db_error_check
+        unset IFS
+    fi
+}
+
+_eventoutcome_update(){
+    if [ "${PREMIS_DB}" = "Y" ] ; then
+        if [ -z "$event_outcome" ] ; then
+            event_outcome="Success"
+        fi
+        if [ -n "$RUN_ERR" ] ; then
+            if [[ "${RUN_ERR}" != 0 ]] ; then
+                event_outcome="Fail"
+            fi
+        fi
+        lastrecord=$(echo "SELECT eventIdentifierValue FROM event ORDER BY eventIdentifierValue DESC LIMIT 1" | mysql --login-path="$PREMIS_PROFILE"  "$PREMIS_NAME")
+        lastrecord_trim=$(echo $lastrecord | cut -d " " -f2)
+        echo "update event set eventOutcome='$event_outcome' WHERE eventIdentifierValue='$lastrecord_trim'" | mysql --login-path="$PREMIS_PROFILE"  "$PREMIS_NAME" 2> /dev/null
+    fi
+}
+
+_db_error_check(){
+    if [ "$?" != "0" ]; then
+        echo -e "\033[1;5;95mERROR:\033[0m \033[1;93mCould not access database "$PREMIS_NAME".  Information was not added to the "$table_name" table. SQL command history has been written to ~/Desktop/"$MEDIAID"_dbreport.txt\033[0m"
+        if [ "$table_name" = "object" ] ; then
+            echo "echo \"INSERT IGNORE INTO object (objectIdentifierValue,object_LastTouched) VALUES ('$MEDIAID',NOW()) ON DUPLICATE KEY UPDATE object_LastTouched = NOW()\" | mysql --login-path=\"$PREMIS_PROFILE\"  \"$PREMIS_NAME\"" >> ~/Desktop/"$MEDIAID"_dbreport.txt
+        fi
+        if "$table_name" = "fixity" ] ; then
+            IFS=$(echo -en "\n\b")
+            for i in ${db_fixity}; do LINE=$i;
+            messageDigestHASH=$(echo "$LINE" | cut -c -32 )
+            messageDigestPATH=$(echo "$LINE" | cut -c 35- )
+            messageDigestFILENAME=$(basename ${messageDigestPATH})
+            echo "echo \"INSERT INTO fixity (objectIdentifierValue,eventDetail,messageDigestAlgorithm,messageDigestPATH,messageDigestFILENAME,messageDigestHASH) VALUES ('$MEDIAID','$eventDetail','md5','$messageDigestPATH','$messageDigestFILENAME','$messageDigestHASH')\" | mysql --login-path=\"$PREMIS_PROFILE\" \"$PREMIS_NAME\"" >> ~/Desktop/"$MEDIAID"_dbreport.txt
+            done
+            unset IFS
+        fi
+        if [ "$table_name" = "event" ] ; then
+            echo "echo \"INSERT INTO event (objectIdentifierValue,eventType,eventDetail,eventDetailOPT,eventDetailCOMPNAME,linkingAgentIdentifierValue) VALUES ('$MEDIAID','$eventType','$eventDetail','$user_input','$HOSTNAME', '$OP')\" | mysql --login-path=\"$PREMIS_PROFILE\"  \"$PREMIS_NAME\"" >> ~/Desktop/"$MEDIAID"_dbreport.txt
+        fi
+        else echo -e "\033[1;93mSuccessfully reported infomation to the "$table_name" table in the database "$PREMIS_NAME"\033[0m"
+    fi
+}
+
+_premis_event_list(){
+    eventDetail=$(basename "${0}")
+    eventType="$eventDetail"
+    if [ "$eventDetail" = "ingestfile" ] ; then
+        eventType="creation"
+    fi
+    if [ "$eventDetail" = "makebroadcast" ] ; then
+        eventType="creation"
+    fi
+    if [ "$eventDetail" = "makeyoutube" ] ; then
+        eventType="creation"
+    fi
+    if [ "$eventDetail" = "makemp3" ] ; then
+        eventType="creation"
+    fi
+    if [ "$eventDetail" = "makeframes" ] ; then
+        eventType="creation"
+    fi
+    if [ "$eventDetail" = "makewaveform" ] ; then
+        eventType="creation"
+    fi
+    if [ "$eventDetail" = "migratefiles" ] ; then
+        eventType="replication"
+    fi
+    if [ "$eventDetail" = "checksumpackage" ] ; then
+        eventType="fixity"
+    fi
+    if [ "$eventDetail" = "collectionchecksum" ] ; then
+        eventType="fixity"
+        db_fixity=$(cat "${TAPECHECKSUMFILE}")
+    fi
+    if [ "$eventDetail" = "writelto" ] ; then
+        eventType="fixity"
+        MEDIAID="$TAPE_SERIAL"
+    fi
+}
+
+
+
+_version_schema(){
+    SCHEMA_FILE="$LTO_LOGS/${TAPE_SERIAL}.schema"
+    if [ -f "${SCHEMA_FILE}" ] ; then
+        echo "${GREEN}Creating a new version of the ltfs schema file.${NC}"
+        LASTSCHEMA="${SCHEMA_FILE%.*}_$(stat -t '%Y%m%d-%H%M%S' -l "${SCHEMA_FILE}" | awk '{print $6}').schema"
+        mv -v "${SCHEMA_FILE}" "${LASTSCHEMA}"
+        echo "${GREEN}$(basename ${0}): schema file is versioned - ${SCHEMA_FILE} -> ${LASTSCHEMA}.${NC}"
+    fi
+}
+
+_checkdir(){
+    if [[ ! -d "${1}" ]] ; then
+        echo "${1}" is not a directory.
+        _usage
+        exit 1
+    fi
+}
+
+_get_iso8601(){
+    date +%FT%T
+}
+
+_get_iso8601_c(){
+    date +%Y%m%d-%H%M%S
+}
+
+_unset_ffreport(){
+    if [ "${FFREPORT}" ] ; then
+        unset FFREPORT
+    fi
+}
+
+_mkdir2(){
+    local DIR2MAKE=""
+    while [ "${*}" != "" ] ; do
+        DIR2MAKE="${1}"
+        if [ ! -d "${DIR2MAKE}" ] ; then
+            mkdir -p "${DIR2MAKE}"
+            if [ "${?}" -ne 0 ]; then
+                _report -wt "${0}: Can't create directory at ${DIR2MAKE}"
+                exit 1
+            fi
+        fi
+        shift
+    done
+}
+
+_writeerrorlog(){
+    if [ ! -d "${ERRORLOGS}" ] ; then
+        _mkdir2 ~/Desktop/ERRORLOGS/
+        touch ~/Desktop/ERRORLOGS/error.log
+    fi
+        ERRORLOG=~/Desktop/ERRORLOGS/error.log
+        KEY="${1}"
+        VALUE="${2}"
+        DATE=$(_get_iso8601_c)
+        echo "${MEDIAID}, ${DATE}, ${KEY}: ${VALUE}" >> "${ERRORLOG}"
+}
+
+_maketemp(){
+    mktemp -q "/tmp/$(basename "${0}").XXXXXX"
+    if [ "${?}" -ne 0 ]; then
+        echo "${0}: Can't create temp file, exiting..."
+        _writeerrorlog "_maketemp" "was unable to create the temp file, so the script had to exit."
+        exit 1
+    fi
+}
+
+_log(){
+    MMLOGNAME="mm.log"
+    MMLOGDIR="${CUSTOM_LOG_DIR:-/tmp}"
+    MMLOGFILE="${MMLOGDIR}/${MMLOGNAME}"
+    if [ ! -d "${MMLOGDIR}" ] ; then
+        _mkdir2 "${MMLOGDIR}"
+        if [ "${?}" -ne 0 ]; then
+            echo "${0}: Can't create log directory at ${MMLOGDIR}, exiting... Use mmconfig to change logging directory."
+            exit 1
+        fi
+    fi
+    OPTIND=1
+    while getopts ":beac" OPT; do
+        case "${OPT}" in
+            b) STATUS="start" ;;              # script is beginning
+            e) STATUS="end"   ;;              # script is ending
+            a) STATUS="abort" ;;              # script is aborted
+            c) STATUS="comment" ;;            # comment about what script is doing
+            w) STATUS+"warning" ;;            # warning information
+        esac
+    done
+    shift $(( ${OPTIND} - 1 ))
+    NOTE="${1}"
+    echo $(_get_iso8601)", $(basename "${0}"), ${STATUS}, ${OP}, ${MEDIAID}, ${NOTE}" >> "${MMLOGFILE}"
+}
+
+_report(){
+        local RED="$(tput setaf 1)"   # Red      - For Warnings
+        local GREEN="$(tput setaf 2)" # Green    - For Declarations
+        local BLUE="$(tput setaf 4)"  # Blue     - For Questions
+        local NC="$(tput sgr0)"       # No Color
+        local COLOR=""
+        local STARTMESSAGE=""
+        local ENDMESSAGE=""
+        local ECHOOPT=""
+        local LOG_MESSAGE=""
+        OPTIND=1
+        while getopts ":qdwstn" OPT; do
+            case "${OPT}" in
+                q) COLOR="${BLUE}" ;;                         # question mode, use color blue
+                d) COLOR="${GREEN}" ;;                        # declaration mode, use color green
+                w) COLOR="${RED}" ; LOG_MESSAGE="Y" ;;        # warning mode, use color red
+                s) STARTMESSAGE+=([$(basename "${0}")] ) ;;   # prepend scriptname to the message
+                t) STARTMESSAGE+=($(_get_iso8601) '- ' ) ;;   # prepend timestamp to the message
+                n) ECHOOPT="-n" ;;                            # to avoid line breaks after echo
+            esac
+        done
+        shift $(( ${OPTIND} - 1 ))
+        MESSAGE="${1}"
+        echo "${ECHOOPT}" "${COLOR}${STARTMESSAGE[@]}${MESSAGE}${NC}"
+        [ "${LOG_MESSAGE}" = "Y" ] && _log -w "${MESSAGE}"
+}
+
+_config_edit(){
+    [ -z "${1}" -o -z "${2}" ] && { _report -w "The config_edit function requires two arguments. Error." ; exit ;};
+    SEDTEMP=$(_maketemp)
+    sed "s:^$1=[^ ]*:$1=$2:" "${LTO_CONFIG_FILE}" > "${SEDTEMP}"
+    cp "${SEDTEMP}" "${LTO_CONFIG_FILE}"
+}
+
+_test_config(){
+    for DIRECTORYVARIABLE in OUTDIR_INGESTFILE OUTDIR_INGESTXDCAM OUTDIR_PAPER AIP_STORAGE PODCASTDELIVER YOUTUBEDELIVER TMPDIR CUSTOM_LOG_DIR LTO_INDEX_DIR ; do
+        if [ -d "${!DIRECTORYVARIABLE}" ] ; then
+            _report -d "${DIRECTORYVARIABLE} is a valid directory"
+        else
+            _report -w "${DIRECTORYVARIABLE} is NOT a valid directory"
+        fi
+    done
+}
+
+_add_key(){
+    KEY_TO_ADD="${1}"
+    grep -q "^$KEY_TO_ADD=" "${LTO_CONFIG_FILE}" ; GREP_CODE="$?"
+    if [[ ! "${GREP_CODE}" -eq "0" ]] ; then
+        _report -td "Adding NEW variable $key_to_add to ${LTO_CONFIG_FILE}"
+        echo "$KEY_TO_ADD=" >> "${LTO_CONFIG_FILE}"
+    fi
+}
+
+_writeingestlog(){
+    if [ -z "${INGESTLOG}" ] ; then
+        echo "Error, can not write to log, ingest log not yet created"
+        exit
+    fi
+    if [ ! -f "${INGESTLOG}" ] ; then
+        _mkdir2 $(dirname "${INGESTLOG}")
+        touch "${INGESTLOG}"
+    fi
+    KEY="${1}"
+    VALUE="${2}"
+    # need to add yaml style escaping
+    echo "${KEY}: ${VALUE}" >> "${INGESTLOG}"
+}
+
+_readingestlog(){
+    if [ -f "${INGESTLOG}" ] ; then
+        KEY="${1}"
+        # need to add yaml style escaping
+        grep "^${1}:" "${INGESTLOG}" | tail -n1 | cut -d: -f2- | sed -e 's/^[[:space:]]*//' -e 's/[[:space:]]*$//'
+    fi
+}
+
+_run(){
+    RUN_ERR=""
+    _report -sdt "Running: ${*}"
+    if [[ ! "${DRYRUN}" = true ]] ; then
+        "${@}"
+    fi
+    RUN_ERR="${?}"
+    if [[ "${RUN_ERR}" != 0 ]] ; then
+    _report -wts "Error: Running: \"${*}\" gave an Error Code - ${RUN_ERR}"
+    _writeerrorlog "_run" "Running: \"${*}\" gave an Error Code - ${RUN_ERR}"
+    fi
+}
+
+_run_critical(){
+    _run "${@}"
+    if [[ "${RUN_ERR}" != 0 ]] ; then
+        _report -wts "The process ran into a critical error and can not proceed."
+        exit 1
+    fi
+}
+
+_run_critical_event(){
+    _run "${@}"
+        _eventoutcome_update
+    if [[ "${RUN_ERR}" != 0 ]] ; then
+        _report -wts "The process ran into a critical error and can not proceed."
+        exit 1
+    fi
+}
+
+_black_at_ends(){
+    INPUT_MOVIE="${1}"
+    ANALYSIS_HEAD_SECONDS=10
+    ANALYSIS_TAIL_SECONDS=-10
+    _report -dt "Analyzing $(basename "${INPUT_MOVIE}") for excessive black at head or tail."
+    HEAD_BLACK=$(ffmpeg -t "${ANALYSIS_HEAD_SECONDS}" -i "${1}" -an -filter_complex blackdetect=pix_th=0.05 -loglevel debug -f null - 2>&1 | grep -c -o picture_black_ratio:1)
+    _report -dt "Black frames in first ${ANALYSIS_HEAD_SECONDS} seconds: ${HEAD_BLACK}."
+    TAIL_BLACK=$(ffmpeg -sseof "${ANALYSIS_TAIL_SECONDS}" -i "${1}" -an -filter_complex blackdetect=pix_th=0.05 -loglevel debug -f null - 2>&1 | grep -c -o picture_black_ratio:1)
+    _report -dt "Black frames in last  ${ANALYSIS_HEAD_SECONDS} seconds: ${TAIL_BLACK}."
+}
+
+_get_frame_count(){
+    INPUT_MOVIE="${1}"
+    CONTAINERFRAMECOUNT=$(mediainfo --inform="Video;%FrameCount%" "${INPUT_MOVIE}")
+    VIDEOTRACKFRAMECOUNT=$(mediainfo --inform="Video;%Source_FrameCount%" "${INPUT_MOVIE}")
+    if [ ! -z "${VIDEOTRACKFRAMECOUNT}" ] ; then
+        if [ "${VIDEOTRACKFRAMECOUNT}" -ne "${CONTAINERFRAMECOUNT}" ] ; then
+            _report -dt "The frame count according to the container is: ${CONTAINERFRAMECOUNT}"
+            _report -dt "The frame count according to the video track is: ${VIDEOTRACKFRAMECOUNT}"
+            _report -wt "warning - there are discrepancies between the container frame count and video track frame count. This could result in the desynchronization of audio and video."
+            echo "Enter q to quit, any other key to continue: "
+            read A2
+            [[ "${A2}" = "q" ]] && exit 0
+        fi
+    fi
+}
+
+_ask_operator(){
+    if [ -z "${OP}" ] ; then
+        _report -qn "Enter the name of the operator or 'q' to quit: "
+        read -e OP
+        [ -z "${OP}" ] && _ask_operator
+        [[ "${OP}" = "q" ]] && exit 0
+    fi
+}
+
+_ask_mediaid(){
+    if [ -z "${MEDIAID}" ] ; then
+        _report -qn "Enter a unique MEDIA ID: "
+        read -e MEDIAID
+        [ -z "${MEDIAID}" ] && _ask_mediaid
+        # option to quit
+        [[ "${MEDIAID}" = "q" ]] && exit 0
+        # validate id and perhaps fail with exit
+        [ -z "${MEDIAID}" ] && { _report -wt "ERROR You must enter a valid MEDIA ID" ; exit ;};
+        [ ! -z $(echo "${MEDIAID}" | grep -v "^[A-Z0-9_-]*$") ] && { _report -wt "ERROR The MEDIA ID must only contain capital letters, numbers, hyphen and underscore" ; exit 1 ;};
+    fi
+}
+
+_ask_input(){
+    if [ -z "${INPUT}" ] ; then
+        _report -qn "Drag in the file: "
+        read -e INPUT
+        [ -z "${INPUT}" ] && _ask_input
+        [[ "${INPUT}" = "q" ]] && exit 0
+        basename=$(basename "${INPUT}")
+    fi
+}
+
+_ask_digitization_logs(){
+        _report -qn "Drag in any logs from digitization: "
+        read -e -a FILES
+        [[ "$FILES[0]" = "q" ]] && exit 0
+        [ ! -z "${FILES}" ] && log+="digitization_logs: ${FILES}\n"
+}
+
+_reset_directory(){
+    if [[ "${PRESERVATION_MODE}" = "Y" ]] ; then
+        OUTDIR_INGESTFILE=$(dirname "${INPUT}")
+        _report -dt "I'm going to place the AIP in the same directory as the original input file."
+    fi
+}
+
+_ask_intime(){
+    # TIME_REGEX tests for either S.mmm or HH:MM:SS.mmm time formats where HH is two digit hour, MM is two digit minute, S is number of seconds, SS is two digit seconds, and .mmm is milliseconds from between 0 and 3 decimals
+    TIME_REGEX="^\([0-9]\+\(\.[0-9]\{1,3\}\)\?\|[0-9]\{2\}:[0-5][0-9]:[0-5][0-9]\(\.[0-9]\{1,3\}\)\?\)$"
+    while [[ ! $(echo "${INTIME}" | grep "${TIME_REGEX}") ]] ; do
+        _report -q "Enter point of time to start transcoding."
+        _report -q "Enter no value if no intime for transcoding is needed. Transcoding will then start from the beginning."
+        _report -q "Must be in HH:MM:SS.mmm or S.mmm format. Note mmm is milliseconds and not frames."
+        _report -qn "INTIME: "
+        read INTIME
+        if [[ "${INTIME}" = "" ]] ; then
+            break
+        elif [[ ! $(echo "${INTIME}" | grep "${TIME_REGEX}") ]] ; then
+            _report -w "In time must be in seconds or in HH:MM:SS.mmm format."
+        fi
+    done
+}
+
+_ask_outtime(){
+    # TIME_REGEX tests for either S.mmm or HH:MM:SS.mmm time formats where HH is two digit hour, MM is two digit minute, S is number of seconds, SS is two digit seconds, and .mmm is milliseconds from between 0 and 3 decimals
+    TIME_REGEX="^\([0-9]\+\(\.[0-9]\{1,3\}\)\?\|[0-9]\{2\}:[0-5][0-9]:[0-5][0-9]\(\.[0-9]\{1,3\}\)\?\)$"
+    while [[ ! $(echo "${OUTTIME}" | grep "${TIME_REGEX}") ]] ; do
+        _report -q "Enter point of time to stop transcoding."
+        _report -q "Enter no value if no outtime for transcoding is needed. Transcoding will proceed to the end."
+        _report -q "Must be in HH:MM:SS.mmm or S.mmm format. Note mmm is milliseconds and not frames."
+        _report -qn "OUTTIME: "
+        read OUTTIME
+        if [[ "${OUTTIME}" = "" ]] ; then
+            break
+        elif [[ ! $(echo "${OUTTIME}" | grep "${TIME_REGEX}") ]] ; then
+            _report -w "Out time must be in seconds or in HH:MM:SS.mmm format."
+        fi
+    done
+}
+
+_check_dependencies(){
+    DEPS_OK=YES
+    while [ "${*}" != "" ] ; do
+        DEPENDENCY="${1}"
+        if [ ! $(which "${DEPENDENCY}") ] ; then
+            _report -wt "This script requires ${DEPENDENCY} to run but it is not installed"
+            _report -wt "If you are running ubuntu or debian you might be able to install ${DEPENDENCY} with the following command"
+            _report -wt "sudo apt-get install ${DEPENDENCY}"
+            _report -wt "If you are running mac you might be able to install ${DEPENDENCY} with the following command"
+            _report -wt "brew install ${DEPENDENCY}"
+            DEPS_OK=NO
+        fi
+        shift
+    done
+    if [[ "${DEPS_OK}" = "NO" ]]; then
+        _report -wt "Unmet dependencies"
+        _report -wt "Aborting!"
+        exit 1
+    else
+        return 0
+    fi
+}
+
+_initialize_make(){
+    _check_dependencies "${DEPENDENCIES[@]}"
+    unset DEPENDENCIES
+    DELIVERDIR=""
+    DRYRUN=false
+    EMAILADDRESS=""
+    OUTPUTDIR_FORCED=""
+    _cleanup(){
+        _log -a "Process aborted"
+        echo
+        _report -wts "THE PROCESS WAS ABORTED"
+        exit 1
+    }
+    trap _cleanup SIGHUP SIGINT SIGTERM
+}
+
+_check_deliverdir(){
+    if [ ! -d "${DELIVERDIR}" ] ; then
+        _report -wt "The delivery directory, ${DELIVERDIR}, does not exist. Can not deliver the OUTPUT of $(basename "${0}")."
+        _writeerrorlog "_checkdeliverdir" "The specified delivery directory does not exist, and the output could not be delivered."
+    fi
+}
+
+_check_outputdir_forced(){
+    if [ ! -d "${OUTPUTDIR_FORCED}" ] ; then
+        _report -wt "The directory, ${OUTPUTDIR_FORCED}, does not exist. Can not write the output of $(basename "${0}")."
+        _writeerrorlog "_check_outputdir_forced" "The specified directory does not exist, and the output could not be delivered."
+    fi
+}
+
+_check_emailaddress(){
+    EMAILREGEX="^((\w+([-+.']\w+)*@\w+([-.]\w+)*\.\w+([-.]\w+)*)*([,])*)*$"
+    if ! $(echo "${1}" | grep -Eq "^((\w+([-+.']\w+)*@\w+([-.]\w+)*\.\w+([-.]\w+)*)*([,])*)*$") ; then
+        _report -wt "${1} is not a valid email address."
+        _writeerrorlog "_check_emailaddress" "The email address provided was not a valid email address."
+    fi
+}
+
+_get_prettyduration(){
+    PRETTYDURATION=$(ffprobe "${1}" -show_format -pretty 2> /dev/null | grep "^duration=" | cut -d= -f2)
+}
+_get_duration(){
+    DURATION=$(ffprobe "${1}" -show_format 2> /dev/null | grep "^duration=" | cut -d = -f 2)
+}
+_get_broadcastduration(){
+    BROADCASTDURATION=$(mediainfo --inform="General;%Duration_String4%" "${1}")
+}
+_get_seconds(){
+    FILESECONDS=$(ffprobe "${1}" -show_format 2> /dev/null | grep "^duration=" | cut -d= -f2)
+}
+
+_email_delivery(){
+    EMAILTO="${1}"
+    if [ "${EMAILTO}" ] ; then
+        _get_prettyduration "${OUTPUT}"
+        temp_message=$(_maketemp)
+        if [[ -f "${INGESTLOG}" ]] ; then
+            FROMLOG="Operator: $(_readingestlog "operator")\n
+Processing Computer: $(_readingestlog "computer_name")
+Audio Peak (dB): $(_readingestlog "voldet_max_volume")
+Integrated Loudness: $(_readingestlog "r128_integrated_loudness")
+Audio Adjustment: $(_readingestlog "audio_adjustment")
+Loudness Range: $(_readingestlog "r128_loudness_range")
+Out of Phase Audio Ranges: $(_readingestlog "Out_of_phase_audio_ranges")"
+        fi
+        echo -e "Subject: [delivery] $(basename "${OUTPUT}")\n
+A file has been delivered to ${DELIVERDIR}.\n
+Process: $(basename "${0}")
+MediaID: ${MEDIAID}\n
+Filename: ${OUTPUT}
+Sourcefile: ${SOURCEFILE}
+Duration: ${PRETTYDURATION}\n
+Decoding_options: ${INPUTOPTIONS[@]}
+Encoding_options: ${MIDDLEOPTIONS[@]}\n
+Delivery Exit Status: ${DELIVER_EXIT_STATUS}\n
+${FROMLOG}
+\n
+Enjoy!\n\n" > "$temp_message"
+        waveform_image="${OUTDIR_INGESTFILE}/${MEDIAID}/metadata/depictions/${MEDIAID}_waveform.png"
+        if [ -f "${waveform_image}" ] ; then
+            _report -d "Adding a waveform to the email from ${waveform_image}"
+            uuencode "${waveform_image}" $(basename "${waveform_image}") >> "$temp_message"
+        fi
+        sendmail -f "${EMAIL_FROM}" -F "${EMAILTO}" "${EMAILTO}" < "$temp_message"
+        if [ -f "$temp_message" ] ; then
+            rm "$temp_message"
+        fi
+    fi
+}
+
+_deliver_output(){
+    # argument 1 if used should be the email to report delivery to
+    EMAILTO="${1}"
+    if [ "${DELIVERDIR}" ] ; then
+        echo DELIVERING OUTPUT ACTIVITED with "${DELIVERDIR}"
+        _report -dt "Delivering ${OUTPUT} to ${DELIVERDIR}"
+        _run cp -av "${OUTPUT}" "${DELIVERDIR}/"
+        DELIVER_EXIT_STATUS="${?}"
+        _email_delivery "${EMAILTO}"
+    fi
+}
+
+_ask(){
+    # This function requires 2 arguments
+    # 1) A prompt
+    # 2) The label for the metadata value
+    read -e -p "${1}" RESPONSE
+    if [ -z "${RESPONSE}" ] ; then
+        _ask "${1}" "${2}"
+        else
+        LOG+="${2}: ${RESPONSE}\n"
+    fi
+    echo
+}
+
+_offerChoice(){
+    # This function requires 3 arguments
+    # 1) A prompt
+    # 2) The label for the metadata value
+    # 3) A vocabulary list
+    PS3="${1}"
+    LABEL="${2}"
+    eval set "${3}"
+    select OPTION in "${@}" ; do
+        break
+    done
+    LOG+="${LABEL}: ${OPTION}\n"
+    echo
+}
+
+_make_mezz_for_xdcam(){
+    SOM="${1}"
+    DUR="${2}"
+
+    TMC_MS=$(mediainfo --inform="Video;%Delay%" "${3}")
+    TMC_SMP=$(mediainfo --inform="Video;%Delay/String3%" "${3}")
+    TMC_SEC=$(echo "${TMC_MS} * 0.001" | bc)
+
+    SOM_H=$(echo "${SOM}" | cut -c 1-2)
+    SOM_M=$(echo "${SOM}" | cut -c 4-5)
+    SOM_S=$(echo "${SOM}" | cut -c 7-8)
+    SOM_F=$(echo "${SOM}" | cut -c 10-11)
+    SOM_FC=$(echo "scale=3; (((((3600 * ${SOM_H})+(60 * ${SOM_M})+ ${SOM_S} ) * 30)+ ${SOM_F} ) - ( 2 * (((60 * ${SOM_H})+ ${SOM_M} ) - (((60 * ${SOM_H})+ ${SOM_M} ) / 10 )))) / 29.97" | bc)
+
+    DUR_H=$(echo "${DUR}" | cut -c 1-2)
+    DUR_M=$(echo "${DUR}" | cut -c 4-5)
+    DUR_S=$(echo "${DUR}" | cut -c 7-8)
+    DUR_F=$(echo "${DUR}" | cut -c 10-11)
+    DUR_FC=$(echo "scale=3; (((((3600 * ${DUR_H})+(60 * ${DUR_M})+ ${DUR_S} ) * 30)+ ${DUR_F} ) - ( 2 * (((60 * ${DUR_H})+ ${DUR_M} ) - (((60 * $DUR_H)+ $DUR_M ) / 10 )))) / 29.97" | bc)
+
+    REL_START=$(echo "scale=3; ${SOM_FC} - ${TMC_SEC}" | bc)
+    pushd $(dirname "${4}")
+    _report -dt "Starting ffmpeg to trim mxf file at $(date) This will take a few minutes..."
+    ffmpeg 2</dev/null -report -y -ss "${REL_START}" -t "${DUR_FC}" -i "${3}" -map 0:v -map 0:a:0 -map 0:a:1 -c copy "${4}"
+    popd
+}
+
+_add_video_filter(){
+    OPTIND=1
+    unset ADDASPREFIX
+    while getopts ":p" OPT; do
+        case "${OPT}" in
+            p) ADDASPREFIX=true ;;
+        esac
+    done
+    shift $(( ${OPTIND} - 1 ))
+    local FILTER2ADD="${1}"
+    if [[ -n "${FILTER2ADD}" ]] ; then
+        if [[ -n "${next_video_filter_prefix}" ]] ; then
+            FILTER2ADD="${next_video_filter_prefix}${FILTER2ADD}"
+            unset next_video_filter_prefix
+        fi
+        if [[ -z "${VIDEOFILTERCHAIN}" ]] ; then
+            VIDEOFILTERCHAIN="${FILTER2ADD}"
+        elif [[ "${ADDASPREFIX}" = true ]] ; then
+            if [[ "${FILTER2ADD: -1}" = ";" || "${FILTER2ADD: -1}" = "," ]] ; then
+                VIDEOFILTERCHAIN="${FILTER2ADD}${VIDEOFILTERCHAIN}"
+            else
+                VIDEOFILTERCHAIN="${FILTER2ADD},${VIDEOFILTERCHAIN}"
+            fi
+        else
+            if [[ "${VIDEOFILTERCHAIN: -1}" = ";" || "${VIDEOFILTERCHAIN: -1}" = "," ]] ; then
+                VIDEOFILTERCHAIN="${VIDEOFILTERCHAIN}${FILTER2ADD}"
+            else
+                VIDEOFILTERCHAIN="${VIDEOFILTERCHAIN},${FILTER2ADD}"
+            fi
+        fi
+    fi
+}
+
+_add_audio_filter(){
+    OPTIND=1
+    unset ADDASPREFIX
+    while getopts ":p" OPT; do
+        case "${OPT}" in
+            p) ADDASPREFIX=true ;;
+        esac
+    done
+    shift $(( ${OPTIND} - 1 ))
+    local FILTER2ADD="${1}"
+    if [[ -n "${FILTER2ADD}" ]] ; then
+        if [[ -n "${next_audio_filter_prefix}" ]] ; then
+            FILTER2ADD="${next_audio_filter_prefix}${FILTER2ADD}"
+            unset next_audio_filter_prefix
+        fi
+        if [[ -z "${AUDIOFILTERCHAIN}" ]] ; then
+            AUDIOFILTERCHAIN="${FILTER2ADD}"
+        elif [[ "${ADDASPREFIX}" = true ]] ; then
+            if [[ "${FILTER2ADD: -1}" = ";" || "${FILTER2ADD: -1}" = "," ]] ; then
+                AUDIOFILTERCHAIN="${FILTER2ADD}${AUDIOFILTERCHAIN}"
+            else
+                AUDIOFILTERCHAIN="${FILTER2ADD},${AUDIOFILTERCHAIN}"
+            fi
+        else
+            if [[ "${AUDIOFILTERCHAIN: -1}" == ";" || "${AUDIOFILTERCHAIN: -1}" == "," ]] ; then
+                AUDIOFILTERCHAIN="${AUDIOFILTERCHAIN}${FILTER2ADD}"
+            else
+                AUDIOFILTERCHAIN="${AUDIOFILTERCHAIN},${FILTER2ADD}"
+            fi
+        fi
+    fi
+}
+
+_find_input (){
+    CONCATSOURCE=""
+    SOURCEFILE=""
+    ISOBJECT=""
+    unset FFMPEGINPUT
+    EXPECTEDSERVICEFILE="${1}/objects/service/$(basename "${1}").mov"
+    if [ -f "${1}" ] ; then
+        SOURCEFILE="${1}"
+        FFMPEGINPUT+=(-i)
+        FFMPEGINPUT+=("${SOURCEFILE}")
+    elif [[ -s "${EXPECTEDSERVICEFILE}" && "${ADDSLATE}" != "Y" ]] ; then
+        ISOBJECT="N"
+        SOURCEFILE="${EXPECTEDSERVICEFILE}"
+        FFMPEGINPUT+=(-i)
+        FFMPEGINPUT+=("${SOURCEFILE}")
+    elif [ -d "${1}/objects" ] ; then
+        if [[ -f "${EXPECTEDSERVICEFILE}" && ! -s "${EXPECTEDSERVICEFILE}" ]] ; then
+            _report -dt "Removing a zero-sized file: ${EXPECTEDSERVICEFILE}"
+            ls -l "${EXPECTEDSERVICEFILE}"
+            rm -v "${EXPECTEDSERVICEFILE}"
+        fi
+        ISOBJECT="Y"
+        INPUTFILES=$(_maketemp)
+        # find av files in a directory and output to a temp list
+        find "${1}/objects" -type f -size +0 ! -path "*/access/*" ! -path "*/service/*" ! -name ".DS_Store" | while read file ; do
+            streamcount=$(ffprobe -loglevel quiet "$file" -show_entries format=nb_streams -of default=nw=1:nk=1)
+            if [[ "$streamcount" > 1  ]] ; then
+                _report -d "Input file: $file"
+                echo "$file" >> "${INPUTFILES}"
+            fi
+        done
+        INPUTFILECOUNT=$(wc -l "${INPUTFILES}" | awk '{print $1}')
+        if [[ "${INPUTFILECOUNT}" = 0 ]] ; then
+            _report -w "Error no audiovisual input files were found."
+            _writeerrorlog "_find_input" "A valid source audiovisual file was not found, so the script could not proceed."
+            exit 1
+        elif [[ "${INPUTFILECOUNT}" = 1 ]] ; then
+            SOURCEFILE=$(cat "${INPUTFILES}" | head -n 1)
+            FFMPEGINPUT+=(-i)
+            FFMPEGINPUT+=("${SOURCEFILE}")
+        else
+            VOLADJUST="N"
+            INPUTOPTIONS+=(-f concat)
+            INPUTOPTIONS+=(-safe 0)
+            FFCONCATFILE=$(_maketemp)
+            while read i ; do
+                duration4cat=$(ffprobe -loglevel quiet "${i}" -show_entries format=duration -of default=nw=1:nk=1)
+                printf "file " >> "${FFCONCATFILE}"
+                printf '%q' "${i}" >> "${FFCONCATFILE}"
+                echo >> "${FFCONCATFILE}"
+                echo "duration $duration4cat" >> "${FFCONCATFILE}"
+            done < "${INPUTFILES}"
+            SOURCEFILE=$(cat "${INPUTFILES}" | head -n 1)
+            FFMPEGINPUT+=(-i)
+            FFMPEGINPUT+=("${FFCONCATFILE}")
+        fi
+    else
+        _report -wt "A valid source file isn't found."
+        _writeerrorlog "_find_input" "A valid source file was not found, so the script could not proceed."
+        exit 1
+    fi
+    LOG+="SOURCEFILE: ${SOURCEFILE}\n"
+    if [[ "${SOURCEFILE#*.}" = "iso" ]] ; then
+        _report -dt "Detecting iso input and hoping its a dvd image"
+        if [[ $(uname -s) = "Darwin" ]] ; then
+            MOUNTPATH=$(hdiutil mount "${SOURCEFILE}" | cut -d " " -f 2- | sed 's/^[ \t]*//' )
+            _report -dt "Mounting iso at ${MOUNTPATH}"
+        else
+            MOUNTPATH="/tmp/temporary_dvd_path"
+            rm -rfv "${MOUNTPATH}"
+            if [ ! -d "${MOUNTPATH}" ] ; then
+                mkdir -p "${MOUNTPATH}"
+            fi
+            7z e -r -o"${MOUNTPATH}" "${SOURCEFILE}"
+        fi
+        OLDSOURCEFILE="${SOURCEFILE}"
+        CONCATSOURCE="concat:$(find "${MOUNTPATH}" -iname "VTS*[1-9].VOB" | sort | sed -e :a -e '$!N;s/\n/|/;ta')"
+        SOURCEFILE=$(find "${MOUNTPATH}" -iname "VTS_*_1.VOB" | head -1)
+        _report -dt "Using ${CONCATSOURCE} for transcoding."
+        _report -dt "Using ${SOURCEFILE} for assessment."
+        _report -wt "Extracting to ${MOUNTPATH}. Please delete ${MOUNTPATH} later."
+        if [[ "${CONCATSOURCE}" = "" ]] ; then
+            _report -wt "ERROR: Can not mount iso or find vob files to concatenate within ${OLDSOURCEFILE}. Exiting."
+            _writeerrorlog "_find_input" "Could not mount iso or find vob files to concatenate within ${OLDSOURCEFILE}."
+            exit
+        fi
+    fi
+}
+
+_get_width(){
+    WIDTH=$(ffprobe "${1}" -show_streams -select_streams v:0 2> /dev/null | grep "^width=" | cut -d = -f 2)
+}
+
+_get_height(){
+    HEIGHT=$(ffprobe "${1}" -show_streams -select_streams v:0 2> /dev/null | grep "^height=" | cut -d = -f 2)
+}
+
+_get_dar(){
+    DAR=$(ffprobe "${1}" -show_streams -select_streams v:0 2> /dev/null | grep "^display_aspect_ratio=" | cut -d = -f 2 | sed 's|:|/|g')
+    if [ "${DAR}" = "0/1" ] ; then
+        _get_width "${1}"
+        _get_height "${1}"
+        DAR="${WIDTH}/${HEIGHT}"
+    fi
+}
+
+_get_sar(){
+    SAR=$(ffprobe "${1}" -show_streams -select_streams v:0 2> /dev/null | grep "^sample_aspect_ratio=" | cut -d = -f 2 | sed 's|:|/|g')
+    if [ "${SAR}" = "0/1" ] ; then
+        SAR="1/1"
+    fi
+}
+
+_has_first_two_tracks_mono(){
+    [ $(ffprobe 2>/dev/null "${1}" -show_streams | grep -c "codec_type=audio") -ge 2 ] && \
+    [ $(ffprobe 2>/dev/null "${1}" -show_streams -select_streams a:0 | grep "^channels=" | cut -d= -f2) = "1" ] && \
+    [ $(ffprobe 2>/dev/null "${1}" -show_streams -select_streams a:1 | grep "^channels=" | cut -d= -f2) = "1" ] && \
+    MULTIMONO=true
+    [ $(ffprobe 2>/dev/null "${1}" -show_streams | grep -c "codec_type=audio") -ge 2 ] && \
+    [ $(ffprobe 2>/dev/null "${1}" -show_streams -select_streams a:0 | grep "^channels=" | cut -d= -f2) = "1" ] && \
+    FIRSTMONO=true
+}
+
+_get_audio_index(){
+    # get ffmpeg's index value of the first audio stream. Useful for do custom channel mappings.
+    AUDIO_INDEX_1=$(ffprobe "${1}" -show_streams -select_streams a:0 2> /dev/null | grep "^index=" | cut -d = -f 2)
+    AUDIO_INDEX_2=$(ffprobe "${1}" -show_streams -select_streams a:1 2> /dev/null | grep "^index=" | cut -d = -f 2)
+}
+
+_get_audio_channels(){
+    # get ffmpeg's channel count of the first audio stream.
+    AUDIO_CHANNELS=$(ffprobe "${1}" -show_streams -select_streams a 2> /dev/null | grep "^channels=" | cut -d = -f 2 | head -n 1)
+}
+
+_get_channel_layout(){
+    # get ffmpeg's channel count of the first audio stream.
+    CHANNEL_LAYOUT=$(ffprobe "${1}" -show_streams -select_streams a 2> /dev/null | grep "^channel_layout=" | cut -d = -f 2 | head -n 1)
+}
+
+_get_audio_mapping(){
+    OPTIND=1
+    unset PBSMIX
+    unset ADD_VOLADJ
+    while getopts ":bvlr" OPT; do
+        case "${OPT}" in
+            b) PBSMIX="Y" ;;
+            v) ADD_VOLADJ="Y" ;;
+            l) AUDIOMAP="L" ;;
+            r) AUDIOMAP="R" ;;
+        esac
+    done
+    shift $(( ${OPTIND} - 1 ))
+    _get_audio_index "${1}"
+    _get_audio_channels "${1}"
+    _get_channel_layout "${1}"
+    _has_first_two_tracks_mono "${1}"
+    if [[ ( "${AUDIOMAP}" = "L" || "${AUDIOMAP}" = "R" ) && "${FIRSTMONO}" = true ]] ; then
+        _report -wt "Channel mapping was requested, but first track is mono. Request ignored."
+    fi
+    if [[ "${AUDIOMAP}" = "L" && "${FIRSTMONO}" != true ]] ; then
+        _report -wt "Use of left-channel only was requested."
+        _add_audio_filter -p "channelmap=0:mono"
+        _add_audio_filter "aformat=channel_layouts=stereo"
+    elif [[ "${AUDIOMAP}" = "R" && "${FIRSTMONO}" != true ]] ; then
+        _report -wt "Use of right-channel only was requested."
+        _add_audio_filter -p "channelmap=1:mono"
+        _add_audio_filter "aformat=channel_layouts=stereo"
+    elif [[ "${MULTIMONO}" = true ]] ; then
+        _report -wt "The first two audio tracks are both mono. Considering track 1 for left and track 2 for right."
+        _add_audio_filter -p "[0:a:0][0:a:1]amerge=inputs=2"
+        _add_audio_filter "aformat=channel_layouts=stereo"
+    elif [[ "${AUDIO_CHANNELS}" -gt 2 && "${CHANNEL_LAYOUT}" = "4.0" ]] ; then
+        _report -wt "The first audio track has more than 2 channels. Considering channel 1 for left and channel 2 for right and ignoring the rest."
+        _add_audio_filter -p "[0:a:0]channelmap=0|1:stereo"
+    else
+        _add_audio_filter "aformat=channel_layouts=stereo"
+    fi
+    if [[ "${ADD_VOLADJ}" = "Y" ]] ; then
+        _prep_volume_adjustment
+    fi
+    if [[ "${PBSMIX}" = "Y" ]] ; then
+         _add_audio_filter  "asplit[a][b];[a]aformat=channel_layouts=stereo[stereo1];[b]aformat=channel_layouts=mono,asplit[mono1][mono2]"
+         if [[ "${ADDSLATE}" != "Y" ]] ; then
+             MIDDLEOPTIONS+=(-map "[stereo1]" -map "[mono1]" -map "[mono2]")
+         fi
+    fi
+}
+
+_get_codectagstring(){
+    CODEC_TAG_STRING=$(ffprobe "${1}" -show_streams -select_streams v:0 2> /dev/null | grep "^codec_tag_string=" | cut -d = -f 2)
+    if [ "${CODEC_TAG_STRING}" = "FFV1" ] ; then
+        FFV1_VERSION=$(ffmpeg -debug 1 -i "${1}" -t 0.1 -f null - </dev/null 2>&1 | grep -o "ver:[0-9]*" | tail -n1 | cut -d: -f2)
+    else
+        FFV1_VERSION=""
+    fi
+}
+
+_get_pix_fmt(){
+    PIXFMT=$(ffprobe "${1}" -show_streams -select_streams v:0 2> /dev/null | grep "^pix_fmt=" | cut -d = -f 2)
+}
+
+_get_videostreamcount(){
+    VIDEOSTREAMCOUNT=$(ffprobe "${1}" -select_streams v -show_entries stream=index -of flat 2>/dev/null | awk 'END { print NR }')
+}
+
+_get_audiostreamcount(){
+    AUDIOSTREAMCOUNT=$(ffprobe "${1}" -select_streams a -show_entries stream=index -of flat 2>/dev/null | awk 'END { print NR }')
+}
+
+_get_timecode(){
+    TIMECODE=$(ffprobe "${1}" -select_streams v -show_streams -of flat 2>/dev/null | grep "timecode=[0-9]" | head -n 1 | cut -d = -f 2 | sed 's/"//g')
+}
+
+_get_timecode_overlay(){
+    _get_timecode "${1}"
+    if [[ "${TIMECODE}" ]] ; then
+        TIMECODEESACPE=$(echo "${TIMECODE}" | sed 's|:|\\:|g')
+    else
+        TIMECODEESACPE="01\\:00\\:00;00"
+    fi
+    TIMECODEOVERLAY=",drawtext=fontfile=/System/Library/Fonts/Monaco.dfont:timecode='${TIMECODEESACPE}':r=30000/1001:fontcolor=white:fontsize=24:shadowx=2:shadowy=2:box=1:boxcolor=gray@0.8:x=w/2-tw/2:y=h*0.8"
+}
+
+_get_maxdvdbitrate(){
+    _get_duration "${1}"
+    local DVDCAPACITY=30794400000  # in bits, minus 10%
+    local CAPDVDBITRATE=6000000    # in bits/second
+    MAXDVDBITRATE=$(echo "(${DVDCAPACITY} - ( ${DURATION} * 224000 )) / ${DURATION}" | bc)
+    _report -dt "Data rate could be up to ${MAXDVDBITRATE}"
+    if ! [[ "${MAXDVDBITRATE}" =~ ^[0-9]+$ ]] ; then
+        _report -wt "Calculation of dvd bitrate failed. Evaluated to ${MAXDVDBITRATE}. Using 4000000 as bitrate instead."
+        MAXDVDBITRATE=4000000
+    elif [ "${MAXDVDBITRATE}" -gt "${CAPDVDBITRATE}" ] ; then
+        MAXDVDBITRATE="${CAPDVDBITRATE}"
+    fi
+    _report -dt "Data rate for DVD is evaluated to ${MAXDVDBITRATE}"
+}
+
+_is_video(){
+    # use ffmpeg's index value and stream specifier to determine if the input is a recognized as a video file by ffmpeg
+    ffprobe "${1}" -show_streams -select_streams v:0 2> /dev/null | grep "^index="
+}
+
+_seconds_to_hhmmss(){
+    num=$1
+    h=`expr "$num" / 3600`
+    m=`expr "$num"  % 3600 / 60`
+    s=`expr "$num" % 60`
+    printf "%02d:%02d:%02d\n" $h $m $s
+}
+
+_get_phase_warning(){
+    INPUT="${1}"
+    PHASE_ERROR="0"
+    if [[ "${INPUT##*.}" = "txt" ]] ; then
+        PHASETEMP="$INPUT"
+    else
+        PHASETEMP=$(_maketemp)
+        ffprobe 2>/dev/null -f lavfi -i amovie="${INPUT}",aphasemeter=r=0.2 -select_streams 0:a:0 -show_entries frame=pkt_dts_time:frame_tags=lavfi.aphasemeter.phase -of csv > "${PHASETEMP}"
+    fi
+	PHASEREPORT=$(_maketemp)
+    if [[ $(awk -F "," '$3<-0.18 {print $0}' "${PHASETEMP}" | wc -l | sed "s/ //g") -gt 1 ]] ; then
+        PHASETEMPWARNINGS=$(_maketemp)
+        _report -wt "Warning: PLEASE REVIEW. $(basename "${INPUT}") contains out of phase audio in these time ranges:"
+        awk -F "," '$3<-0.18 {print $0}' "${PHASETEMP}" | cut -d "," -f 2 | cut -d "." -f 1 > "${PHASETEMPWARNINGS}"
+        echo "" >> "${PHASETEMPWARNINGS}"
+        while read num ; do
+            if [[ -z $first ]]; then
+                first=$num; last=$num; continue;
+            fi
+            if [[ "$num" -ne $(($last + 5)) ]]; then
+                PHASE_ERROR="$(echo $PHASE_ERROR + 1 | bc)"
+                if [[ first -eq last ]]; then
+                    _report -wn $(_seconds_to_hhmmss "${first}")
+                    echo $(_seconds_to_hhmmss "${first}") >> "${PHASEREPORT}"
+                    _report -wn " "
+				
+                else
+                    _report -wn "$(_seconds_to_hhmmss "${first}")-$(_seconds_to_hhmmss "${last}")"
+					echo "$(_seconds_to_hhmmss "${first}")-$(_seconds_to_hhmmss "${last}")" >> "${PHASEREPORT}"
+                    _report -wn " "
+                fi
+                first=$num; last=$num
+            else
+                : $((last++)) $((last++)) $((last++)) $((last++)) $((last++))
+            fi		
+        done < "${PHASETEMPWARNINGS}"
+        echo
+    fi
+}
+
+_get_volume_adjustment(){
+    REFERENCE=-24
+    INTEGRATED_LOUDNESS=""
+    LOUDNESS_RANGE=""
+    VOLDET_MEAN_VOLUME=""
+    VOLDET_MAX_VOLUME=""
+    VOLADJ=""
+    INPUT_MOVIE="${1}"
+    _report -dt "Getting volume data for $(basename "${INPUT_MOVIE}") ..."
+    VOLDETTEMP=$(_maketemp)
+    VOLUME_DATA=$(ffprobe -of compact=p=0:nk=1:s=',' -show_entries frame_tags=lavfi.r128.I,lavfi.r128.LRA -f lavfi "amovie='${INPUT_MOVIE}',ebur128=metadata=1,volumedetect" 2>"${VOLDETTEMP}" | grep -v "^$" | tail -n1)
+    VOLUME_EXIT_CODE="${?}"
+    if [ "${VOLUME_EXIT_CODE}" -ne 0 ] ; then
+        _report -wt "Volume analysis for ${INPUT_MOVIE} exited with ${VOLUME_EXIT_CODE}."
+else
+        AUDIOFRAME_I=$(echo "${VOLUME_DATA}" | cut -d, -f1)
+        AUDIOFRAME_LRA=$(echo "${VOLUME_DATA}" | cut -d, -f2)
+        [ "${AUDIOFRAME_I}"   != "" ] && INTEGRATED_LOUDNESS="${AUDIOFRAME_I}"
+        [ "${AUDIOFRAME_LRA}" != "" ] && LOUDNESS_RANGE="${AUDIOFRAME_LRA}"
+        VOLDET_MEAN_VOLUME=$(grep "mean_volume" "${VOLDETTEMP}" | cut -d: -f 2 | awk '{print $1}')
+        VOLDET_MAX_VOLUME=$(grep "max_volume" "${VOLDETTEMP}" | cut -d: -f 2 | awk '{print $1}')
+        VOLADJ=$(echo "${REFERENCE} - ${INTEGRATED_LOUDNESS}" | bc)
+        # test to see if adjustment is at least 2dB, else skip
+        _report -dt "Loudness range is ${LOUDNESS_RANGE}dB."
+        if [[ -f "${INGESTLOG}" ]] ; then
+            _writeingestlog "audio_adjustment" "${VOLADJ}"
+            _writeingestlog "r128_loudness_reference" "${REFERENCE}"
+            _writeingestlog "r128_loudness_range" "${LOUDNESS_RANGE}"
+            _writeingestlog "r128_integrated_loudness" "${INTEGRATED_LOUDNESS}"
+            _writeingestlog "voldet_mean_volume" "${VOLDET_MEAN_VOLUME}"
+            _writeingestlog "voldet_max_volume" "${VOLDET_MAX_VOLUME}"
+        fi
+    fi
+}
+
+_get_interlacement_full(){
+    INPUT_MOVIE="${1}"
+    _get_mediainfo_interlacement(){
+       CONTAINER_INTERLACEMENT=$(mediainfo --inform="Video;%ScanOrder%" "${INPUT_MOVIE}")
+    }
+    IDET_INTERLACEMENT=$(ffmpeg -i "${INPUT_MOVIE}" -vf idet -f null -an - 2>&1 | grep "Multi frame detection:")
+    echo "${IDET_INTERLACEMENT}"
+    IDET_SUMMARY=$(echo "${IDET_INTERLACEMENT}" | cut -d: -f2- | awk '{print $1 " " $2 "\n" $3 " " $4 "\n" $5 " " $6 "\n" $7 " " $8}')
+    echo "${IDET_SUMMARY}"
+    IDET_TOP=$(echo "${IDET_INTERLACEMENT}" | cut -d: -f2- | awk '{print $1 " " $2 "\n" $3 " " $4 "\n" $5 " " $6 "\n" $7 " " $8}' | sort -n -k2 | tail -n1 | cut -d: -f1)
+    echo "${IDET_TOP}"
+    echo "Testing with ffmpeg says this file is ${IDET_TOP}"
+    _get_mediainfo_interlacement
+    echo "MediaInfo says this file is ${CONTAINER_INTERLACEMENT}"
+    if [ -z "${CONTAINER_INTERLACEMENT}" ] ; then
+        _report -qn "MediaInfo can't test the interlacement of this file. Please consider using the results from the ffmpeg file test."
+    fi
+    if [[ "${CONTAINER_INTERLACEMENT}" = "${IDET_TOP}" ]] ; then
+        if [[ "${IDET_TOP}" = "TFF" ]] ; then
+            echo "The frames in the input file are majority top field first."
+            _writeingestlog "filter choice" "setfield=tff"
+        fi
+        if [[ "${IDET_TOP}" = "BFF" ]] ; then
+            echo "The frames in the input file are majority bottom field first."
+            _writeingestlog "filter choice" "setfield=bff"
+        fi
+        if [[ "${IDET_TOP}" = "Progressive" ]] ; then
+            echo "The frames in the input file are majority progressive."
+            _writeingestlog "filter choice" "setfield=prog"
+        fi
+    fi
+    if [[ "${CONTAINER_INTERLACEMENT}" != "${IDET_TOP}" ]] ; then
+        _report -q "Which video filter do you want to use? "
+        PS3="Selection? "
+        select FILTERCHOICE in "TFF" "BFF" "Progressive" ; do
+            break
+        done
+        if [[ "${FILTERCHOICE}" = "TFF" ]] ; then
+            _writeingestlog "filter choice" "setfield=tff"
+        fi
+        if [[ "${FILTERCHOICE}" = "BFF" ]] ; then
+            _writeingestlog "filter choice" "setfield=bff"
+        fi
+        if [[ "${FILTERCHOICE}" = "Progressive" ]] ; then
+            _writeingestlog "filter choice" "setfield=prog"
+        fi
+    fi
+}
+
+_get_cropdetection(){
+    INPUT_MOVIE="${1}"
+    _report -dt "Getting cropping data for $(basename "${INPUT_MOVIE}") ..."
+    CROP_DATA=$(ffmpeg -i "${INPUT_MOVIE}" -an -filter_complex cropdetect -f null - 2>&1 | grep -o "crop=[0-9:]*")
+    CROP_ERR="${?}"
+    [ "${CROP_ERR}" -ne 0 ] && { _report -wt "Crop detection analysis for ${INPUT_MOVIE} exited with ${CROP_ERR}." ; exit ;};
+    for i in $(echo "${CROP_DATA}") ; do
+        [ "$i" != "" ] && CROPADJ="$i"
+    done
+    _report -dt "Crop detection complete. Will crop by ${CROPADJ} (width,height,from_left,from_top) before scaling."
+}
+
+_free_space(){
+    #this should give the free space in gigabytes
+    local SPACE="${1}"  #This value represents the space in gigabytes required for the script to run
+    local OUTPUTDIR="${2}"
+    if [ ! -d "${OUTPUTDIR}" ] ; then
+        _report -wt "The output directory [${OUTPUTDIR}] that free-space function is seeking does not exist."
+        exit 1
+    fi
+    [[ ! "${SPACE}" =~ ^-?[0-9]+$ ]] && { _report -wt "Number is not an integer." ; exit 1 ;};
+    FREESPACE=$(df -g "${OUTPUTDIR}" | awk '{ print $4; }' | tail -n 1)
+    if [ "${FREESPACE}" -lt "${SPACE}" ] ; then
+      _report -wts "ERROR only ${FREESPACE} gb free in this directory. This script requires at least ${SPACE} gigabytes"
+      _writeerrorlog "_free_space" "There is only ${FREESPACE} gb free in this directory. This script requires at least ${SPACE} gigabytes to run."
+      exit 1
+    fi
+}
+
+_summarize_make(){
+    _report -dt "$(basename "${OUTPUT}") is done."
+}
+
+_prep_ffmpeg_log(){
+    OPTIND=1
+    while getopts ":q" OPT ; do
+        case "${OPT}" in
+            q) NOLOG="Y" ;;
+            *) echo "bad option -${OPTARG}" ; _usage ;;
+            :) echo "Option -${OPTARG} requires an argument" ; exit 1 ;;
+        esac
+    done
+    shift $(( ${OPTIND} - 1 ))
+    if [ "${LOGDIR}" != "" ] ; then
+        _mkdir2 "${LOGDIR}"
+        if [ "${NOLOG}" = "Y" ] ; then
+            _unset_ffreport
+        else
+            export FFREPORT="file=${LOGDIR}/%p_%t_$(basename "${0}")_${VERSION}.txt"
+        fi
+        INPUTOPTIONS+=(-v info)
+        INPUTOPTIONS+=(-hide_banner)
+        INPUTOPTIONS+=(-stats)
+    else
+        _unset_ffreport
+    fi
+}
+
+_emailoutcome(){
+    # fail only at the moment
+    MESSAGETEMPFILE=$(_maketemp)
+    echo -e "To: ${EMAIL_OUTCOME_TO}" > "${MESSAGETEMPFILE}"
+    echo -e "Subject: ${PACKAGE} failed during ${SCRIPTNAMESHORT}" >> "${MESSAGETEMPFILE}"
+    echo -e ":(" >> "${MESSAGETEMPFILE}"
+    sendmail -t < "${MESSAGETEMPFILE}"
+    rm -f "${MESSAGETEMPFILE}"
+}
+
+_get_filesystem(){
+    if [ -f "${1}" -o -d "${1}" ] ; then
+        df "${1}" | tail -n1 | cut -d " " -f1
+    else
+        _report -wt "_get_filesystem was expecting a file or directory but got a ${1}"
+    fi
+}
+
+_set_accesstimes(){
+    # set in and out times if used
+    if [[ -f "${INGESTLOG}" && "${ISOBJECT}" = "Y" ]] ; then
+        INTIME=$(_readingestlog "intime")
+        OUTTIME=$(_readingestlog "outtime")
+        if [[ "${INTIME}" ]] ; then
+            _report -dt "ATTENTION: Transcoding will use intime (${INTIME}) during transcoding."
+            INPUTOPTIONS+=(-seek_timestamp 1)
+            MIDDLEOPTIONS+=(-ss "${INTIME}")
+        fi
+        if [[ "${OUTTIME}" ]] ; then
+            _report -dt "ATTENTION: Transcoding will use outtime (${OUTTIME}) during transcoding."
+            MIDDLEOPTIONS+=(-to "${OUTTIME}")
+        fi
+    fi
+}
+
+_set_up_output(){
+    # set up output
+    _log -b
+    OUTPUT="${OUTPUTDIR}/${MEDIAID%.*}${SUFFIX}.${EXTENSION}"
+    if [ -s "${OUTPUT}" ] ; then
+        _report -wt "WARNING ${OUTPUT} already exists, skipping transcode"
+        continue
+    fi
+    _mkdir2 "${OUTPUTDIR}"
+}
+
+_prep_volume_adjustment(){
+    unset VOLADJ
+    if [[ "${VOLADJUST}" = "Y" ]] ; then
+        if [[ -f "${INGESTLOG}" ]] ; then
+            VOLADJ=$(_readingestlog "audio_adjustment")
+        fi
+        if [ "${VOLADJ}" ] ; then
+            _add_audio_filter "volume=${VOLADJ}dB"
+        else
+            _get_volume_adjustment "${SOURCEFILE}"
+            if [ "${VOLADJ}" ] ; then
+                if [ $(echo "${VOLADJ} < 2" |bc) -eq 1 -a $(echo "$VOLADJ > -2" |bc) -eq 1 ] ; then
+                    _report -dt "Integrated loudness for $(basename "${INPUT_MOVIE}") is ${INTEGRATED_LOUDNESS}dB. Reference is ${REFERENCE}dB. No adjustment is needed, skipping."
+                else
+                    _report -dt "Integrated loudness for $(basename "${INPUT_MOVIE}") is ${INTEGRATED_LOUDNESS}dB. Reference is ${REFERENCE}dB. Will adjust by ${VOLADJ}dB."
+                    _add_audio_filter "volume=${VOLADJ}dB"
+                fi
+            fi
+        fi
+    fi
+}
+
+_filter_to_middle_option(){
+    if [ -n  "${VIDEOFILTERCHAIN}" -a -n "${AUDIOFILTERCHAIN}" ] ; then
+        MIDDLEOPTIONS+=(-filter_complex ${VIDEOFILTERCHAIN}\;${AUDIOFILTERCHAIN})
+    elif [ -n  "${VIDEOFILTERCHAIN}" ] ; then
+        MIDDLEOPTIONS+=(-filter_complex ${VIDEOFILTERCHAIN})
+    elif [ -n  "${AUDIOFILTERCHAIN}" ] ; then
+        MIDDLEOPTIONS+=(-filter_complex ${AUDIOFILTERCHAIN})
+    fi
+}
+
+_unset_variables(){
+    unset INPUTOPTIONS
+    unset MIDDLEOPTIONS
+    unset AUDIOMAPPING_FFMPEG
+    unset MULTIMONO
+    unset FIRSTMONO
+    unset VIDEOFILTERCHAIN
+    unset AUDIOFILTERCHAIN
+    unset MIDDLEOPTIONSXDCAM
+    unset MIDDLEOPTIONSIMX
+    unset INPUTOPTIONSFRAMEMD5
+    unset EXTRAOUTPUTS
+}
+
+_pashua_run() {
+    # Wrapper function for interfacing to Pashua. Written by Carsten
+    # Bluem <carsten@bluem.net> in 10/2003, modified in 12/2003 (including
+    # a code snippet contributed by Tor Sigurdsson), 08/2004 and 12/2004.
+    # Write config file
+
+    # Find Pashua binary. We do search both . and dirname "${0}"
+    # , as in a doubleclickable application, cwd is /
+    # BTW, all these quotes below are necessary to handle paths
+    # containing spaces.
+    BUNDLEPATH="Pashua.app/Contents/MacOS/Pashua"
+    MYPATH=`dirname "${0}"`
+    for SEARCHPATH in "${MYPATH}/Pashua" "${MYPATH}/${BUNDLEPATH}" "./${BUNDLEPATH}" \
+                      "/Applications/${BUNDLEPATH}" "${HOME}/Applications/${BUNDLEPATH}"
+    do
+        if [ -f "${SEARCHPATH}" -a -x "${SEARCHPATH}" ] ; then
+            PASHUAPATH=${SEARCHPATH}
+            break
+        fi
+    done
+    if [ ! "${PASHUAPATH}" ] ; then
+        echo "Error: Pashua is used to edit but is not found."
+        if [[ "${PASHUAINSTALL}" = "" ]] ; then
+            echo "Attempting to run: brew cask install pashua"
+            if [[ "${PASHUAINSTALL}" != "Y" ]] ; then
+                brew cask install pashua
+                PASHUAINSTALL="Y"
+                _pashua_run
+            else
+                break 2
+            fi
+        fi
+    else
+        ENCODING=""
+
+        # Get result
+        RESULT=`"${PASHUAPATH}" ${ENCODING} ${PASHUA_CONFIGFILE} | sed 's/ /;;;/g'`
+
+        # Parse result
+        for LINE in ${RESULT} ; do
+            KEY=$(echo ${LINE} | sed 's/^\([^=]*\)=.*$/\1/')
+            VALUE=$(echo ${LINE} | sed 's/^[^=]*=\(.*\)$/\1/' | sed 's/;;;/ /g')
+            VARNAME="${KEY}"
+            VARVALUE="${VALUE}"
+            eval $VARNAME='$VARVALUE'
+        done
+    fi
+} # _pashua_run()
+
     _db_error_check
 fi
 }
