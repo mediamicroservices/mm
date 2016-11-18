@@ -130,6 +130,9 @@ _premis_event_list(){
     if [ "$eventDetail" = "makemp3" ] ; then
         eventType="creation"
     fi
+    if [ "$eventDetail" = "makedvd" ] ; then
+        eventType="creation"
+    fi
     if [ "$eventDetail" = "makeframes" ] ; then
         eventType="creation"
     fi
