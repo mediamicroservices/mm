@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 # mmconfig
 # set up variables for microservices, has option for a graphical user interface
 CONFIG="Y"
@@ -274,8 +274,8 @@ cb.type=cancelbutton
 ";
 
 # if a config file does not exist, create one using this GUI
-if [[ "${RUNPASHUA}" == "Y" ]] ; then
-    PASHUA_CONFIGFILE=`/usr/bin/mktemp /tmp/pashua_XXXXXXXXX`
+if [[ "${RUNPASHUA}" = "Y" ]] ; then
+    PASHUA_CONFIGFILE=$(/usr/bin/mktemp /tmp/pashua_XXXXXXXXX)
     echo "${CONF}" > "${PASHUA_CONFIGFILE}"
     _pashua_run
     rm "${PASHUA_CONFIGFILE}"
@@ -305,29 +305,31 @@ if [[ "${RUNPASHUA}" == "Y" ]] ; then
     echo ""
 
     #write to the config file
-    echo "OUTDIR_INGESTFILE=\"${OUTDIR_INGESTFILE}\"" > "${MM_CONFIG_FILE}"
-    echo "OUTDIR_INGESTXDCAM=\"${OUTDIR_INGESTXDCAM}\"" >> "${MM_CONFIG_FILE}"
-    echo "OUTDIR_PAPER=\"${OUTDIR_PAPER}\"" >> "${MM_CONFIG_FILE}"
-    echo "AIP_STORAGE=\"${AIP_STORAGE}\"" >> "${MM_CONFIG_FILE}"
-    echo "PODCASTDELIVER=\"${PODCASTDELIVER}\"" >> "${MM_CONFIG_FILE}"
-    echo "YOUTUBEDELIVER=\"${YOUTUBEDELIVER}\"" >> "${MM_CONFIG_FILE}"
-    echo "TMPDIR=\"${TMPDIR}\"" >> "${MM_CONFIG_FILE}"
-    echo "REGEX4PODCAST=\"${REGEX4PODCAST}\"" >> "${MM_CONFIG_FILE}"
-    echo "DVDLABELPREFIX=\"${DVDLABELPREFIX}\"" >> "${MM_CONFIG_FILE}"
-    echo "OMNEONIP=\"${OMNEONIP}\"" >> "${MM_CONFIG_FILE}"
-    echo "OMNEONPATH=\"${OMNEONPATH}\"" >> "${MM_CONFIG_FILE}"
-    echo "CUSTOM_LOG_DIR=\"${CUSTOM_LOG_DIR}\"" >> "${MM_CONFIG_FILE}"
-    echo "LTO_INDEX_DIR=\"${LTO_INDEX_DIR}\"" >> "${MM_CONFIG_FILE}"
-    echo "LOCAL_MM_DIR=\"${LOCAL_MM_DIR}\"" >> "${MM_CONFIG_FILE}"
-    echo "EMAIL_FROM=\"${EMAIL_FROM}\"" >> "${MM_CONFIG_FILE}"
-    echo "MAKEYOUTUBE_DELIVERY_EMAIL_TO=\"${MAKEYOUTUBE_DELIVERY_EMAIL_TO}\"" >> "${MM_CONFIG_FILE}"
-    echo "MAKEBROADCAST_DELIVERY_EMAIL_TO=\"${MAKEBROADCAST_DELIVERY_EMAIL_TO}\"" >> "${MM_CONFIG_FILE}"
-    echo "FILE_MAKER_DB=\"${FILE_MAKER_DB}\"" >> "${MM_CONFIG_FILE}"
-    echo "FILE_MAKER_XML_URL=\"${FILE_MAKER_XML_URL}\"" >> "${MM_CONFIG_FILE}"
-    echo "VOLADJUST=\"${VOLADJUST}\"" >> "${MM_CONFIG_FILE}"
-    echo "PREMIS_DB=\"${PREMIS_DB}\"" >> "${MM_CONFIG_FILE}"
-    echo "PREMIS_PROFILE=\"${PREMIS_PROFILE}\"" >> "${MM_CONFIG_FILE}"
-    echo "PREMIS_NAME=\"${PREMIS_NAME}\"" >> "${MM_CONFIG_FILE}"
+    {
+        echo "OUTDIR_INGESTFILE=\"${OUTDIR_INGESTFILE}\""
+        echo "OUTDIR_INGESTXDCAM=\"${OUTDIR_INGESTXDCAM}\""
+        echo "OUTDIR_PAPER=\"${OUTDIR_PAPER}\""
+        echo "AIP_STORAGE=\"${AIP_STORAGE}\""
+        echo "PODCASTDELIVER=\"${PODCASTDELIVER}\""
+        echo "YOUTUBEDELIVER=\"${YOUTUBEDELIVER}\""
+        echo "TMPDIR=\"${TMPDIR}\""
+        echo "REGEX4PODCAST=\"${REGEX4PODCAST}\""
+        echo "DVDLABELPREFIX=\"${DVDLABELPREFIX}\""
+        echo "OMNEONIP=\"${OMNEONIP}\""
+        echo "OMNEONPATH=\"${OMNEONPATH}\""
+        echo "CUSTOM_LOG_DIR=\"${CUSTOM_LOG_DIR}\""
+        echo "LTO_INDEX_DIR=\"${LTO_INDEX_DIR}\""
+        echo "LOCAL_MM_DIR=\"${LOCAL_MM_DIR}\""
+        echo "EMAIL_FROM=\"${EMAIL_FROM}\""
+        echo "MAKEYOUTUBE_DELIVERY_EMAIL_TO=\"${MAKEYOUTUBE_DELIVERY_EMAIL_TO}\""
+        echo "MAKEBROADCAST_DELIVERY_EMAIL_TO=\"${MAKEBROADCAST_DELIVERY_EMAIL_TO}\""
+        echo "FILE_MAKER_DB=\"${FILE_MAKER_DB}\""
+        echo "FILE_MAKER_XML_URL=\"${FILE_MAKER_XML_URL}\""
+        echo "VOLADJUST=\"${VOLADJUST}\""
+        echo "PREMIS_DB=\"${PREMIS_DB}\""
+        echo "PREMIS_PROFILE=\"${PREMIS_PROFILE}\""
+        echo "PREMIS_NAME=\"${PREMIS_NAME}\""
+    } > ${MM_CONFIG_FILE}"
 else
     # set up configuration file using the command line
     echo "# $(basename ${MM_CONFIG_FILE})" > "${MM_CONFIG_FILE}"
@@ -359,8 +361,7 @@ else
         EDITOPTION2="Edit config file in TextMate"
         _report -q "Edit a variable? "
         PS3="Selection (enter by number)? "
-        select CONFIG_KEY in "${EDITOPTION1}" "${EDITOPTION2}" "${REQUIRED_VARIABLES[@]}" "Quit"
-        do
+        select CONFIG_KEY in "${EDITOPTION1}" "${EDITOPTION2}" "${REQUIRED_VARIABLES[@]}" "Quit" ; do
             break
         done
         [ "${CONFIG_KEY}" = "Quit" ] && { echo Goodbye. ; exit 1 ;};
