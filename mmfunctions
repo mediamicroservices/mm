@@ -89,7 +89,7 @@ _eventoutcome_update(){
 
 _db_error_check(){
     if [ "$?" != "0" ]; then
-        echo -e "\033[1;5;95mERROR:\033[0m \033[1;93mCould not access database "$PREMIS_NAME". Information was not added to the "$table_name" table. SQL command history has been written to ~/Desktop/"$MEDIAID"_dbreport.txt\033[0m"
+         echo -e "\033[1;5;95mERROR:\033[0m \033[1;103;95mCould not access database "$PREMIS_NAME". Information was not added to the "$table_name" table. SQL command history has been written to ~/Desktop/"$MEDIAID"_dbreport.txt\033[0m"
         if [ "$table_name" = "object" ] ; then
             echo "echo \"INSERT IGNORE INTO object (objectIdentifierValue,object_LastTouched) VALUES ('$MEDIAID',NOW()) ON DUPLICATE KEY UPDATE object_LastTouched = NOW()\" | mysql --login-path=\"$PREMIS_PROFILE\"  \"$PREMIS_NAME\"" >> ~/Desktop/"$MEDIAID"_dbreport.txt
         fi
