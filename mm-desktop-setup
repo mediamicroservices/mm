@@ -22,6 +22,7 @@ brew cask install iterm2
 brew cask install libreoffice
 brew cask install mediaconch-app
 brew cask install mpeg-streamclip
+brew cask install psequel
 brew cask install qctools
 brew cask install qlvideo
 brew cask install sequel-pro
