@@ -329,7 +329,7 @@ if [[ "${RUNPASHUA}" = "Y" ]] ; then
         echo "PREMIS_DB=\"${PREMIS_DB}\""
         echo "PREMIS_PROFILE=\"${PREMIS_PROFILE}\""
         echo "PREMIS_NAME=\"${PREMIS_NAME}\""
-    } > ${MM_CONFIG_FILE}"
+    } > "${MM_CONFIG_FILE}"
 else
     # set up configuration file using the command line
     echo "# $(basename ${MM_CONFIG_FILE})" > "${MM_CONFIG_FILE}"
