@@ -110,7 +110,7 @@ _db_error_check(){
             echo "echo \"INSERT INTO event (objectIdentifierValue,eventType,eventDetail,eventDetailOPT,eventDetailCOMPNAME,linkingAgentIdentifierValue) VALUES ('$MEDIAID','$eventType','$eventDetail','$user_input','$HOSTNAME', '$OP')\" | mysql --login-path=\"$PREMIS_PROFILE\"  \"$PREMIS_NAME\"" >> ~/Desktop/"$MEDIAID"_dbreport.txt
         fi
     else
-        echo -e "\033[1;93mSuccessfully reported infomation to the "$table_name" table in the database "$PREMIS_NAME"\033[0m"
+        echo -e "\033[1;103;95mSuccessfully reported infomation to the "$table_name" table in the database "$PREMIS_NAME"\033[0m"
     fi
 }
 
