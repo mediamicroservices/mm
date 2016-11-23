@@ -158,6 +158,12 @@ _premis_event_list(){
     fi
 }
 
+_open_mysql_plist(){
+    plist_path=$(find /usr/local/Cellar/mysql -iname homebrew.mxcl.mysql.plist | sort | tail -n1)
+    ip_address=$(ifconfig |grep inet | tail -n1 | cut -d ' ' -f2)
+    sed -i '' "12s/.*/<string>--bind-address=$ip_address<\/string>/" "$plist_path"
+}
+
 _version_schema(){
     SCHEMA_FILE="$LTO_LOGS/${TAPE_SERIAL}.schema"
     if [ -f "${SCHEMA_FILE}" ] ; then
