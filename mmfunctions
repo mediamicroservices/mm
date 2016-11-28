@@ -30,7 +30,7 @@ _cleanup_mount_dir(){
 _report_to_db(){  
     if [ "${PREMIS_DB}" = "Y" ] ; then
         eventDetail=$(basename $0)
-        MEDIAID=$(basename "${INPUT}")
+        MEDIA_ID=$(basename "${INPUT}")
         LOGDIR="${OUTDIR_INGESTFILE}/${MEDIAID}/metadata/logs"
         INGESTLOG="${LOGDIR}/capture.log"
         OP=$(cat ${INGESTLOG} 2>/dev/null | grep "operator" | cut -c 11-)
@@ -39,10 +39,10 @@ _report_to_db(){
         fi
         _premis_event_list
         table_name="object"
-        echo "INSERT IGNORE INTO object (objectIdentifierValue,object_LastTouched) VALUES ('$MEDIAID',NOW()) ON DUPLICATE KEY UPDATE object_LastTouched = NOW()" | mysql --login-path="$PREMIS_PROFILE"  "$PREMIS_NAME" 2> /dev/null
+        echo "INSERT IGNORE INTO object (objectIdentifierValue,object_LastTouched) VALUES ('$MEDIA_ID',NOW()) ON DUPLICATE KEY UPDATE object_LastTouched = NOW()" | mysql --login-path="$PREMIS_PROFILE"  "$PREMIS_NAME" 2> /dev/null
         _db_error_check
         table_name="event"
-        echo "INSERT INTO event (objectIdentifierValue,eventType,eventDetail,eventDetailOPT,eventDetailCOMPNAME,linkingAgentIdentifierValue) VALUES ('$MEDIAID','$eventType','$eventDetail','$user_input','$HOSTNAME', '$OP')" | mysql --login-path="$PREMIS_PROFILE"  "$PREMIS_NAME" 2> /dev/null
+        echo "INSERT INTO event (objectIdentifierValue,eventType,eventDetail,eventDetailOPT,eventDetailCOMPNAME,linkingAgentIdentifierValue) VALUES ('$MEDIA_ID','$eventType','$eventDetail','$user_input','$HOSTNAME', '$OP')" | mysql --login-path="$PREMIS_PROFILE"  "$PREMIS_NAME" 2> /dev/null
         _db_error_check
     fi
 }
@@ -61,7 +61,7 @@ _report_fixity_db(){
             messageDigestHASH=$(echo "$LINE" | cut -c -32 )
             messageDigestPATH=$(echo "$LINE" | cut -c 35- )
             messageDigestFILENAME=$(basename ${messageDigestPATH})
-            echo "INSERT INTO fixity (objectIdentifierValue,eventDetail,messageDigestAlgorithm,messageDigestPATH,messageDigestFILENAME,messageDigestHASH) VALUES ('$MEDIAID','$eventDetail','md5','$messageDigestPATH','$messageDigestFILENAME','$messageDigestHASH')" | mysql --login-path="$PREMIS_PROFILE"  "$PREMIS_NAME" 2>/dev/null
+            echo "INSERT INTO fixity (objectIdentifierValue,eventDetail,messageDigestAlgorithm,messageDigestPATH,messageDigestFILENAME,messageDigestHASH) VALUES ('$MEDIA_ID','$eventDetail','md5','$messageDigestPATH','$messageDigestFILENAME','$messageDigestHASH')" | mysql --login-path="$PREMIS_PROFILE"  "$PREMIS_NAME" 2>/dev/null
             if [ "$?" != "0" ]; then
                 exit 1
             fi
@@ -89,9 +89,9 @@ _eventoutcome_update(){
 
 _db_error_check(){
     if [ "$?" != "0" ]; then
-        echo -e "\033[1;5;95mERROR:\033[0m \033[1;93mCould not access database "$PREMIS_NAME". Information was not added to the "$table_name" table. SQL command history has been written to ~/Desktop/"$MEDIAID"_dbreport.txt\033[0m"
+        echo -e "\033[1;5;95mERROR:\033[0m \033[1;103;95mCould not access database "$PREMIS_NAME". Information was not added to the "$table_name" table. SQL command history has been written to ~/Desktop/"$MEDIA_ID"_dbreport.txt\033[0m"
         if [ "$table_name" = "object" ] ; then
-            echo "echo \"INSERT IGNORE INTO object (objectIdentifierValue,object_LastTouched) VALUES ('$MEDIAID',NOW()) ON DUPLICATE KEY UPDATE object_LastTouched = NOW()\" | mysql --login-path=\"$PREMIS_PROFILE\"  \"$PREMIS_NAME\"" >> ~/Desktop/"$MEDIAID"_dbreport.txt
+            echo "echo \"INSERT IGNORE INTO object (objectIdentifierValue,object_LastTouched) VALUES ('$MEDIA_ID',NOW()) ON DUPLICATE KEY UPDATE object_LastTouched = NOW()\" | mysql --login-path=\"$PREMIS_PROFILE\"  \"$PREMIS_NAME\"" >> ~/Desktop/"$MEDIA_ID"_dbreport.txt
         fi
     
         if [ "$table_name" = "fixity" ] ; then
@@ -101,16 +101,16 @@ _db_error_check(){
                 messageDigestHASH=$(echo "$LINE" | cut -c -32 )
                 messageDigestPATH=$(echo "$LINE" | cut -c 35- )
                 messageDigestFILENAME=$(basename ${messageDigestPATH})
-                echo "echo \"INSERT INTO fixity (objectIdentifierValue,eventDetail,messageDigestAlgorithm,messageDigestPATH,messageDigestFILENAME,messageDigestHASH) VALUES ('$MEDIAID','$eventDetail','md5','$messageDigestPATH','$messageDigestFILENAME','$messageDigestHASH')\" | mysql --login-path=\"$PREMIS_PROFILE\" \"$PREMIS_NAME\"" >> ~/Desktop/"$MEDIAID"_dbreport.txt
+                echo "echo \"INSERT INTO fixity (objectIdentifierValue,eventDetail,messageDigestAlgorithm,messageDigestPATH,messageDigestFILENAME,messageDigestHASH) VALUES ('$MEDIAID','$eventDetail','md5','$messageDigestPATH','$messageDigestFILENAME','$messageDigestHASH')\" | mysql --login-path=\"$PREMIS_PROFILE\" \"$PREMIS_NAME\"" >> ~/Desktop/"$MEDIA_ID"_dbreport.txt
             done
             unset IFS
         fi
     
         if [ "$table_name" = "event" ] ; then
-            echo "echo \"INSERT INTO event (objectIdentifierValue,eventType,eventDetail,eventDetailOPT,eventDetailCOMPNAME,linkingAgentIdentifierValue) VALUES ('$MEDIAID','$eventType','$eventDetail','$user_input','$HOSTNAME', '$OP')\" | mysql --login-path=\"$PREMIS_PROFILE\"  \"$PREMIS_NAME\"" >> ~/Desktop/"$MEDIAID"_dbreport.txt
+            echo "echo \"INSERT INTO event (objectIdentifierValue,eventType,eventDetail,eventDetailOPT,eventDetailCOMPNAME,linkingAgentIdentifierValue) VALUES ('$MEDIAID','$eventType','$eventDetail','$user_input','$HOSTNAME', '$OP')\" | mysql --login-path=\"$PREMIS_PROFILE\"  \"$PREMIS_NAME\"" >> ~/Desktop/"$MEDIA_ID"_dbreport.txt
         fi
     else
-        echo -e "\033[1;93mSuccessfully reported infomation to the "$table_name" table in the database "$PREMIS_NAME"\033[0m"
+        echo -e "\033[1;103;95mSuccessfully reported infomation to the "$table_name" table in the database "$PREMIS_NAME"\033[0m"
     fi
 }
 
@@ -120,6 +120,7 @@ _premis_event_list(){
 
     if [ "$eventDetail" = "ingestfile" ] ; then
         eventType="creation"
+        MEDIA_ID="${MEDIAID}"
     fi
     if [ "$eventDetail" = "makebroadcast" ] ; then
         eventType="creation"
@@ -128,6 +129,9 @@ _premis_event_list(){
         eventType="creation"
     fi
     if [ "$eventDetail" = "makemp3" ] ; then
+        eventType="creation"
+    fi
+    if [ "$eventDetail" = "makedvd" ] ; then
         eventType="creation"
     fi
     if [ "$eventDetail" = "makeframes" ] ; then
@@ -150,7 +154,18 @@ _premis_event_list(){
     fi
     if [ "$eventDetail" = "writelto" ] ; then
         eventType="fixity"
-        MEDIAID="$TAPE_SERIAL"
+        MEDIA_ID="$TAPE_SERIAL"
+    fi
+}
+
+_open_mysql_plist(){
+    plist_path=$(find /usr/local/Cellar/mysql -iname homebrew.mxcl.mysql.plist | sort | tail -n1)
+    if [ -n "$plist_path" ] ; then
+        ip_address=$(ifconfig |grep inet | tail -n1 | cut -d ' ' -f2)
+        cat "$plist_path" | grep "$ip_address" > /dev/null
+        if [ "$?" != "0" ] ; then
+            sed -i '' "12s/.*/<string>--bind-address=$ip_address<\/string>/" "$plist_path"
+        fi
     fi
 }
 
