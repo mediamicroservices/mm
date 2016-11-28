@@ -90,17 +90,19 @@ mediamicroservices is dependent on other open source software to run. If you do 
 mediamicroservice dependencies:
 
 * cowsay
+* dvdrtools
 * dvdauthor
 * exiftool
 * sdl
-* ffmpeg
+* ffmpeg --with-sdl2 --with-freetype
 * flac
-* ltopers
 * md5deep
+* mediaconch
 * mediainfo
 * normalize
-* xmlstarlet
+* homebrew/dupes/rsync
 * tree
+* xmlstarlet
 
 mediamicroservices also uses Pashua to run a graphical user interface. It is recommended to install Pashua before running media microservices. Type brew install Pashua into the command line and press enter. You will be prompted for your password. Enter your password, and then you will be able to run mediamicroservices scripts and options that utilize a GUI.
 
