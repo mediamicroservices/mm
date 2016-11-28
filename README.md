@@ -5,6 +5,7 @@ table of contents
 -------------------
 
 1. [summary](https://github.com/mediamicroservices/mm#summary)
+	* [License](#license)
 2. [installing and configuring mediamicroservices](https://github.com/mediamicroservices/mm#installing-and-configuring-mediamicroservices)
     1. [installing homebrew](https://github.com/mediamicroservices/mm#installing-homebrew)
     2. [installing mediamicroservices](https://github.com/mediamicroservices/mm#installing-mediamicroservices)
@@ -57,6 +58,9 @@ Mediamicroservices are installed and run using the terminal application, so know
 Please use the [issue tracker](https://github.com/mediamicroservices/mm/issues) to report any issues with installation and usage of mediamicroservices.
 
 Please subscribe to this repository to receive updates about new releases and enhanced functionalities.
+
+###License
+This software and associated documentation is covered by the MIT license.  Details available [here](https://github.com/mediamicroservices/mm/blob/master/LICENSE.txt).
 
 ## installing and configuring mediamicroservices ##
 
