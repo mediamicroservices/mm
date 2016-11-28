@@ -266,6 +266,14 @@ PREMIS_NAME.option = N
 PREMIS_NAME.width = 125
 PREMIS_NAME.default = ${PREMIS_NAME}
 
+#PREMIS_PLIST
+PREMIS_PLIST.x = 1050
+PREMIS_PLIST.y = 60
+PREMIS_PLIST.type = checkbox
+PREMIS_PLIST.label = Auto update MySQL .plist?
+PREMIS_PLIST.tooltip = If activated this will try to to modify MySQL .plist file to enable outside connections when mm is updated.
+PREMIS_PLIST.default = ${PREMIS_PLIST}
+
 
 
 # Add a cancel button with default label
@@ -302,6 +310,7 @@ if [[ "${RUNPASHUA}" = "Y" ]] ; then
     echo "  PREMIS_DB = ${PREMIS_DB}"
     echo "  PREMIS_PROFILE = ${PREMIS_PROFILE}"
     echo "  PREMIS_NAME = ${PREMIS_NAME}"
+    echo "  PREMIS_PLIST = ${PREMIS_PLIST}"
     echo ""
 
     #write to the config file
@@ -329,6 +338,7 @@ if [[ "${RUNPASHUA}" = "Y" ]] ; then
         echo "PREMIS_DB=\"${PREMIS_DB}\""
         echo "PREMIS_PROFILE=\"${PREMIS_PROFILE}\""
         echo "PREMIS_NAME=\"${PREMIS_NAME}\""
+        echo "PREMIS_PLIST=\"${PREMIS_PLIST}\""
     } > "${MM_CONFIG_FILE}"
 else
     # set up configuration file using the command line
