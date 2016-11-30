@@ -81,7 +81,7 @@ _eventoutcome_update(){
                 event_outcome="Fail"
             fi
         fi
-        lastrecord=$(echo "SELECT eventIdentifierValue FROM event ORDER BY eventIdentifierValue DESC LIMIT 1" | mysql --login-path="$PREMIS_PROFILE"  "$PREMIS_NAME")
+        lastrecord=$(echo "SELECT eventIdentifierValue FROM event WHERE objectIdentifierValue = '$MEDIA_ID' AND eventDetail = '$eventDetail' ORDER BY eventIdentifierValue DESC LIMIT 1" | mysql --login-path="$PREMIS_PROFILE"  "$PREMIS_NAME")
         lastrecord_trim=$(echo $lastrecord | cut -d " " -f2)
         echo "update event set eventOutcome='$event_outcome' WHERE eventIdentifierValue='$lastrecord_trim'" | mysql --login-path="$PREMIS_PROFILE"  "$PREMIS_NAME" 2> /dev/null
     fi
