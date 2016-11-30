@@ -5,6 +5,7 @@ table of contents
 -------------------
 
 1. [summary](https://github.com/mediamicroservices/mm#summary)
+	* [License](#license)
 2. [installing and configuring mediamicroservices](https://github.com/mediamicroservices/mm#installing-and-configuring-mediamicroservices)
     1. [installing homebrew](https://github.com/mediamicroservices/mm#installing-homebrew)
     2. [installing mediamicroservices](https://github.com/mediamicroservices/mm#installing-mediamicroservices)
@@ -58,6 +59,9 @@ Please use the [issue tracker](https://github.com/mediamicroservices/mm/issues) 
 
 Please subscribe to this repository to receive updates about new releases and enhanced functionalities.
 
+###License
+This software and associated documentation is covered by the MIT license.  Details available [here](https://github.com/mediamicroservices/mm/blob/master/LICENSE.txt).
+
 ## installing and configuring mediamicroservices ##
 
 ### installing homebrew ###
@@ -86,17 +90,19 @@ mediamicroservices is dependent on other open source software to run. If you do 
 mediamicroservice dependencies:
 
 * cowsay
+* dvdrtools
 * dvdauthor
 * exiftool
 * sdl
-* ffmpeg
+* ffmpeg --with-sdl2 --with-freetype
 * flac
-* ltopers
 * md5deep
+* mediaconch
 * mediainfo
 * normalize
-* xmlstarlet
+* homebrew/dupes/rsync
 * tree
+* xmlstarlet
 
 mediamicroservices also uses Pashua to run a graphical user interface. It is recommended to install Pashua before running media microservices. Type brew install Pashua into the command line and press enter. You will be prompted for your password. Enter your password, and then you will be able to run mediamicroservices scripts and options that utilize a GUI.
 
