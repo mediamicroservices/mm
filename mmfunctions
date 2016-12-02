@@ -29,11 +29,13 @@ _cleanup_mount_dir(){
 
 _report_to_db(){  
     if [ "${PREMIS_DB}" = "Y" ] ; then
-        eventDetail=$(basename $0)
+        eventDetail=$(basename "$0")
         MEDIA_ID=$(basename "${INPUT}")
         LOGDIR="${OUTDIR_INGESTFILE}/${MEDIAID}/metadata/logs"
         INGESTLOG="${LOGDIR}/capture.log"
-        OP=$(cat ${INGESTLOG} 2>/dev/null | grep "operator" | cut -c 11-)
+        if [ -f "${INGESTLOG}" ] ; then
+            OP=$(grep "operator" "${INGESTLOG}" | cut -c 11-)
+        fi
         if [ -z "${OP}" ] ; then
             OP="$USER"
         fi
