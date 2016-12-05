@@ -105,7 +105,7 @@ _db_error_check(){
                 messageDigestHASH=$(echo "$LINE" | cut -c -32 )
                 messageDigestPATH=$(echo "$LINE" | cut -c 35- )
                 messageDigestFILENAME=$(basename ${messageDigestPATH})
-                echo "echo \"INSERT INTO fixity (objectIdentifierValue,eventDetail,messageDigestAlgorithm,messageDigestPATH,messageDigestFILENAME,messageDigestHASH) VALUES ('$MEDIAID','$eventDetail','md5','$messageDigestPATH','$messageDigestFILENAME','$messageDigestHASH')\" | mysql --login-path=\"$PREMIS_PROFILE\" \"$PREMIS_NAME\"" >> ~/Desktop/"$MEDIA_ID"_dbreport.txt
+                echo "echo \"INSERT INTO fixity (eventIdentifierValue,objectIdentifierValue,eventDetail,messageDigestAlgorithm,messageDigestPATH,messageDigestFILENAME,messageDigestHASH) VALUES ('$EVENT_ID_TRIM','$MEDIAID','md5','$messageDigestPATH','$messageDigestFILENAME','$messageDigestHASH')\" | mysql --login-path=\"$PREMIS_PROFILE\" \"$PREMIS_NAME\"" >> ~/Desktop/"$MEDIA_ID"_dbreport.txt
             done
             unset IFS
         fi
