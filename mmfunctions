@@ -47,6 +47,7 @@ _report_to_db(){
         echo "INSERT INTO event (objectIdentifierValue,eventType,eventDetail,eventDetailOPT,eventDetailCOMPNAME,linkingAgentIdentifierValue) VALUES ('$MEDIA_ID','$eventType','$eventDetail','$user_input','$HOSTNAME', '$OP')" | mysql --login-path="$PREMIS_PROFILE"  "$PREMIS_NAME" 2> /dev/null
         _db_error_check
         if [ -d "${METADIR}" ] ; then
+            table_name="objectCharacteristics"
             echo "INSERT IGNORE INTO objectCharacteristics (objectIdentifierValue,mediaInfo) VALUES ('${MEDIA_ID}','${MEDIAINFO}')" | mysql  --login-path="$PREMIS_PROFILE"  "$PREMIS_NAME" 2> /dev/null
         fi
     fi
@@ -116,6 +117,8 @@ _db_error_check(){
         if [ "$table_name" = "event" ] ; then
             echo "echo \"INSERT INTO event (objectIdentifierValue,eventType,eventDetail,eventDetailOPT,eventDetailCOMPNAME,linkingAgentIdentifierValue) VALUES ('$MEDIAID','$eventType','$eventDetail','$user_input','$HOSTNAME', '$OP')\" | mysql --login-path=\"$PREMIS_PROFILE\"  \"$PREMIS_NAME\"" >> ~/Desktop/"$MEDIA_ID"_dbreport.txt
         fi
+        if [ "${table_name}" = "objectCharacteristics" ] ; then
+            echo "echo \"INSERT IGNORE INTO objectCharacteristics (objectIdentifierValue,mediaInfo) VALUES ('${MEDIA_ID}','${MEDIAINFO}')\" | mysql --login-path=\"$PREMIS_PROFILE\"  \"$PREMIS_NAME\"" >> ~/Desktop/"$MEDIA_ID"_dbreport.txt
     else
         echo -e "\033[1;103;95mSuccessfully reported infomation to the "$table_name" table in the database "$PREMIS_NAME"\033[0m"
     fi
