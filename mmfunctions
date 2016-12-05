@@ -151,6 +151,14 @@ _premis_event_list(){
 
     if [ "$eventDetail" = "checksumpackage" ] ; then
         eventType="fixity"
+        LOGDIR="${ABS_PATH}/${MEDIAID}/metadata/logs"
+        INGESTLOG="${LOGDIR}/capture.log"
+        if [ -f "${INGESTLOG}" ] ; then
+            OP=$(grep "operator" "${INGESTLOG}" | cut -c 11-)
+        fi
+        if [ -z "${OP}" ] ; then
+            OP="$USER"
+        fi
     fi
     if [ "$eventDetail" = "collectionchecksum" ] ; then
         eventType="fixity"
