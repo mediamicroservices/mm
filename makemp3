@@ -51,7 +51,6 @@ shift $(( ${OPTIND} - 1 ))
 
 while [ "${*}" != "" ] ; do
     INPUT="${1}"
-    _report_to_db
     shift
     if [ -z "${OUTPUTDIR}" ] ; then
         [ -d "${INPUT}" ] && { OUTPUTDIR="${INPUT}/objects/${RELATIVEPATH}" && LOGDIR="${INPUT}/metadata/logs" ;};
@@ -66,6 +65,7 @@ while [ "${*}" != "" ] ; do
 
     FILENAME=$(basename "${SOURCEFILE}")
     MEDIAID=$(basename "${INPUT}" | cut -d. -f1)
+    _report_to_db
 
     _log -b
 
@@ -86,8 +86,7 @@ while [ "${*}" != "" ] ; do
     fi
     _report -dt "Working on $(basename "${OUTPUT}")."
     _run_critical_event ffmpeg "${INPUTOPTIONS[@]}" "${FFMPEGINPUT[@]}" "${MIDDLEOPTIONS[@]}" "${OUTPUT}"
-    _report -dt "Adjusting highest audio peak to full scale..."
-    normalize --peak -v "${OUTPUT}"
+
     echo
     _report -dt "$(basename "${OUTPUT}") is done."
     _log -e

@@ -64,7 +64,6 @@ shift $(( ${OPTIND} - 1 ))
 while [ "${*}" != "" ] ; do
     # get context about the input
     INPUT="${1}"
-    _report_to_db
     shift
     if [ -z "${OUTPUTDIR_FORCED}" ] ; then
         [ -d "${INPUT}" ] && { OUTPUTDIR="${INPUT}/objects/${RELATIVEPATH}" && LOGDIR="${INPUT}/metadata/logs" ;};
@@ -81,7 +80,7 @@ while [ "${*}" != "" ] ; do
         MEDIAID=$(basename "${INPUT}" | cut -d. -f1)
     fi
     INGESTLOG="${LOGDIR}/capture.log"
-
+    _report_to_db
     if [ "${ADDSLATE}" = "Y" ] ; then
         SUFFIX="_SLATE"
     fi

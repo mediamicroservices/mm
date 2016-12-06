@@ -52,7 +52,6 @@ shift $(( ${OPTIND} - 1 ))
 while [ "${*}" != "" ] ; do
     # get context about the input
     INPUT="${1}"
-    _report_to_db
     shift
     if [ -z "${OUTPUTDIR_FORCED}" ] ; then
         [ -d "${INPUT}" ] && { OUTPUTDIR="${INPUT}/objects/access/dvd" && LOGDIR="${INPUT}/metadata/logs" ;};
@@ -65,6 +64,7 @@ while [ "${*}" != "" ] ; do
     _unset_variables
     _find_input "${INPUT}"
     MEDIAID=$(basename "${INPUT}" | cut -d. -f1)
+    _report_to_db
 
     _set_up_output
 
