@@ -1,5 +1,5 @@
 #!/bin/bash
-#verifypackage checks the validity of files created with makebroadcast and makeyoutube
+#verifypackage checks the validity of files created with makebroadcast, makeyoutube, and makedvd
 SCRIPTDIR=$(dirname "${0}")
 . "${SCRIPTDIR}/mmfunctions" || { echo "Missing '${SCRIPTDIR}/mmfunctions'. Exiting." ; exit 1 ;};
 unset DEPENDENCIES
@@ -18,5 +18,9 @@ while [ "${*}" != "" ] ; do
 #verify the makeyoutube file
     if [ -f "${PACKAGE}/objects/access/youtube_up/${MEDIAID}.mp4" ] ; then
     mediaconch -fx -p "${SCRIPTDIR}/makeyoutube_policies.xml" "${PACKAGE}/objects/access/youtube_up/${MEDIAID}.mp4" | xml sel -N mc="https://mediaarea.net/mediaconch" -t -v mc:MediaConch/mc:media/mc:policy/@outcome -o " " -v mc:MediaConch/mc:media/@ref -n
+    fi
+#verify the makedvd file
+    if [ -f "${PACKAGE}/objects/access/dvd/${MEDIAID}.iso" ] ; then
+    mediaconch -fx -p "${SCRIPTDIR}/makedvd_policies.xml" "${PACKAGE}/objects/access/dvd/${MEDIAID}.iso" | xml sel -N mc="https://mediaarea.net/mediaconch" -t -v mc:MediaConch/mc:media/mc:policy/@outcome -o " " -v mc:MediaConch/mc:media/@ref -n
     fi
 done
