@@ -15,7 +15,7 @@ while [ "${*}" != "" ] ; do
     if [ -f "${PACKAGE}/objects/service/${MEDIAID}.mov" ] ; then 
       mediaconch -fx -p "${SCRIPTDIR}/makebroadcast_policies.xml" "${PACKAGE}/objects/service/${MEDIAID}.mov" | xml sel -N mc="https://mediaarea.net/mediaconch" -t -v mc:MediaConch/mc:media/mc:policy/@outcome -o " " -v mc:MediaConch/mc:media/@ref -n
     fi
-#verify the makeyoutubefile
+#verify the makeyoutube file
     if [ -f "${PACKAGE}/objects/access/youtube_up/${MEDIAID}.mp4" ] ; then
     mediaconch -fx -p "${SCRIPTDIR}/makeyoutube_policies.xml" "${PACKAGE}/objects/access/youtube_up/${MEDIAID}.mp4" | xml sel -N mc="https://mediaarea.net/mediaconch" -t -v mc:MediaConch/mc:media/mc:policy/@outcome -o " " -v mc:MediaConch/mc:media/@ref -n
     fi
