@@ -1,8 +1,8 @@
-#!/bin/bash
+#!/usr/bin/env bash
 # mmupdate
 # This script is only intended for use with computers that are not connceted to the internet to access github but need to efficiently install updates of mediamicroservices. A local path is setup via mmconfig and running 'mmupdate' will copy relavent files from that declared directory, $LOCAL_MM_DIR, to /usr/local/bin.
 
-SCRIPTDIR=`dirname "${0}"`
+SCRIPTDIR=$(dirname "${0}")
 . "${SCRIPTDIR}/mmfunctions" || { echo "Missing '${SCRIPTDIR}/mmfunctions'. Exiting." ; exit 1 ;};
 
 [ -z "${LOCAL_MM_DIR}" ] && { echo "A local directory of mediamicoservice must be declared. Run mmconfig to set LOCAL_MM_DIR." ; exit 1 ;};
