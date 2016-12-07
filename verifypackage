@@ -1,16 +1,22 @@
 #!/bin/bash
-#verifypackage creates checks the validity of files created with makebroadcast 
+#verifypackage creates checks the validity of files created with makebroadcast and makeyoutube
 SCRIPTDIR=$(dirname "${0}")
 . "${SCRIPTDIR}/mmfunctions" || { echo "Missing '${SCRIPTDIR}/mmfunctions'. Exiting." ; exit 1 ;};
 unset DEPENDENCIES
-DEPENDENCIES=(mediaconch xmlstarlet xml "${SCRIPTDIR}/makebroadcast_policies.xml")
+DEPENDENCIES=(mediaconch xmlstarlet)
 _initialize_make
 
 #input the package
 while [ "${*}" != "" ] ; do
-#verify makebroadcast file
     PACKAGE="${1}"
     MEDIAID=$(basename "${PACKAGE}")
     shift
-    mediaconch -fx -p "${SCRIPTDIR}/makebroadcast_policies.xml" "${PACKAGE}/objects/service/${MEDIAID}.mov" | xml sel -N mc="https://mediaarea.net/mediaconch" -t -v mc:MediaConch/mc:media/mc:policy/@outcome -o " " -v mc:MediaConch/mc:media/@ref -n
+#verify the makebroadcast file
+    if [ -f "${PACKAGE}/objects/service/${MEDIAID}.mov" ] ; then 
+      mediaconch -fx -p "${SCRIPTDIR}/makebroadcast_policies.xml" "${PACKAGE}/objects/service/${MEDIAID}.mov" | xml sel -N mc="https://mediaarea.net/mediaconch" -t -v mc:MediaConch/mc:media/mc:policy/@outcome -o " " -v mc:MediaConch/mc:media/@ref -n
+    fi
+#verify the makeyoutubefile
+    if [ -f "${PACKAGE}/objects/access/youtube_up/${MEDIAID}.mp4" ] ; then
+    mediaconch -fx -p "${SCRIPTDIR}/makeyoutube_policies.xml" "${PACKAGE}/objects/access/youtube_up/${MEDIAID}.mp4" | xml sel -N mc="https://mediaarea.net/mediaconch" -t -v mc:MediaConch/mc:media/mc:policy/@outcome -o " " -v mc:MediaConch/mc:media/@ref -n
+    fi
 done
