@@ -1,5 +1,5 @@
 #!/bin/bash
-#verifypackage creates checks the validity of files created with makebroadcast and makeyoutube
+#verifypackage checks the validity of files created with makebroadcast and makeyoutube
 SCRIPTDIR=$(dirname "${0}")
 . "${SCRIPTDIR}/mmfunctions" || { echo "Missing '${SCRIPTDIR}/mmfunctions'. Exiting." ; exit 1 ;};
 unset DEPENDENCIES
