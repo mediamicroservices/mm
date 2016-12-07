@@ -38,6 +38,7 @@ _usage(){
 }
 [ "${#}" = 0 ] && _usage
 
+user_input="${*}"
 # command-line options to adjust volume, delivery location, and slate creation
 OPTIND=1
 while getopts ":F:slrcv:o:d:e:E:nh" OPT ; do
@@ -79,7 +80,7 @@ while [ "${*}" != "" ] ; do
         MEDIAID=$(basename "${INPUT}" | cut -d. -f1)
     fi
     INGESTLOG="${LOGDIR}/capture.log"
-
+    _report_to_db
     if [ "${ADDSLATE}" = "Y" ] ; then
         SUFFIX="_SLATE"
     fi
@@ -378,12 +379,11 @@ MIDDLEOPTIONS+=(-map "[with_slate_video]" -map "[with_slate_stereo1]" -map "[wit
 #MIDDLEOPTIONS: ${MIDDLEOPTIONS[@]}
 #OUTPUT: ${OUTPUT}")
 
-    _run_critical ffmpeg "${INPUTOPTIONS[@]}" "${FFMPEGINPUT[@]}" "${MIDDLEOPTIONS[@]}" "${OUTPUT}"
+    _run_critical_event ffmpeg "${INPUTOPTIONS[@]}" "${FFMPEGINPUT[@]}" "${MIDDLEOPTIONS[@]}" "${OUTPUT}"
     echo
     _summarize_make
     _deliver_output "${MAKEBROADCAST_DELIVERY_EMAIL_TO}"
     _log -e
-    _report_to_db
 done
 unset ADDSLATE
 

@@ -24,6 +24,7 @@ _usage(){
 }
 [ "${#}" = 0 ] && _usage
 
+user_input="${*}"
 # command-line options to set mediaid and original variables
 OPTIND=1
 while getopts ":d:e:E:nh" OPT ; do
@@ -48,6 +49,7 @@ while [ "${*}" != "" ] ; do
     _find_input "${INPUT}"
 
     MEDIAID=$(basename "${1}" | cut -d. -f1)
+    _report_to_db
 
     # encoding options
     _get_codectagstring "${SOURCEFILE}"
@@ -75,7 +77,7 @@ while [ "${*}" != "" ] ; do
             FFMPEGINPUT="${CONCATSOURCE}"
         fi
 
-        _run_critical ffmpeg -y ${INPUTOPTIONS[@]} -v warning -ss "$START" "${FFMPEGINPUT[@]}" "${MIDDLEOPTIONS[@]}" "${OUTPUT}"
+        _run_critical_event ffmpeg -y ${INPUTOPTIONS[@]} -v warning -ss "$START" "${FFMPEGINPUT[@]}" "${MIDDLEOPTIONS[@]}" "${OUTPUT}"
     done
     echo
     if [ -d "${DELIVERDIR}" ] ; then
@@ -84,6 +86,5 @@ while [ "${*}" != "" ] ; do
         _run cp -av "${OUTPUTDIR}/" "${DELIVERDIR}/${MEDIAID}_images/"
     fi
     shift
-    _report_to_db
     _log -e
 done

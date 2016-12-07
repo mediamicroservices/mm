@@ -31,6 +31,7 @@ _cleanup(){
 
 trap _cleanup SIGHUP SIGINT SIGTERM
 
+user_input="${*}"
 OPTIND=1
 while getopts ":ho:" OPT; do
     case "${OPT}" in
@@ -64,6 +65,7 @@ while [ "${*}" != "" ] ; do
 
     FILENAME=$(basename "${SOURCEFILE}")
     MEDIAID=$(basename "${INPUT}" | cut -d. -f1)
+    _report_to_db
 
     _log -b
 
@@ -83,11 +85,9 @@ while [ "${*}" != "" ] ; do
         INPUTOPTIONS+=(-v warning -stats)
     fi
     _report -dt "Working on $(basename "${OUTPUT}")."
-    _run_critical ffmpeg "${INPUTOPTIONS[@]}" "${FFMPEGINPUT[@]}" "${MIDDLEOPTIONS[@]}" "${OUTPUT}"
-    _report -dt "Adjusting highest audio peak to full scale..."
-    normalize --peak -v "${OUTPUT}"
+    _run_critical_event ffmpeg "${INPUTOPTIONS[@]}" "${FFMPEGINPUT[@]}" "${MIDDLEOPTIONS[@]}" "${OUTPUT}"
+
     echo
     _report -dt "$(basename "${OUTPUT}") is done."
-    _report_to_db
     _log -e
 done

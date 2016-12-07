@@ -36,6 +36,7 @@ _usage(){
     exit
 }
 
+user_input="${*}"
 OPTIND=1
 
 while getopts ":F:pnhei" OPT ; do
@@ -562,10 +563,13 @@ _writeingestlog "datetime_end" "$(_get_iso8601)"
 
 # move and cleanup
 if [[ "${DELIVERYTOAIPSTORAGE}" == "Y" ]] ; then
+    if [ "${AIP_STORAGE}" != "${OUTDIR_INGESTFILE}" ] ; then
     "${SCRIPTDIR}/migratefiles" -r -o "${AIP_STORAGE}" "${OUTDIR_INGESTFILE}/${MEDIAID}"
     RSYNC_ERR="${?}"
     [ $(du -s "${OUTDIR_INGESTFILE}/${MEDIAID}" | awk '{print $1}') = "0" ] && rm -r "${OUTDIR_INGESTFILE}/${MEDIAID}"
     _report -dt "STATUS Done. Final package has been delivered to ${AIP_STORAGE}/${MEDIAID}"
+    else echo "As Target directory is same as Input directory, files were not migrated."
+    fi
 fi
 echo "${RSYNC_ERR}"
 
@@ -581,5 +585,5 @@ fi
 
 # clean up queue
 [ "${PRIORITY}" == "put in queue" ] && _remove_mediaid_from_queue
-
+_report_to_db
 _log -e

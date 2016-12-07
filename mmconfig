@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 # mmconfig
 # set up variables for microservices, has option for a graphical user interface
 CONFIG="Y"
@@ -14,7 +14,7 @@ _usage(){
 }
 
 # local variables
-REQUIRED_VARIABLES=("OUTDIR_INGESTFILE" "OUTDIR_INGESTXDCAM" "OUTDIR_PAPER" "AIP_STORAGE" "PODCASTDELIVER" "YOUTUBEDELIVER" "TMPDIR" "REGEX4PODCAST" "DVDLABELPREFIX" "OMNEONIP" "OMNEONPATH" "CUSTOM_LOG_DIR" "LTO_INDEX_DIR" "LOCAL_MM_DIR" "EMAIL_FROM" "MAKEYOUTUBE_DELIVERY_EMAIL_TO" "MAKEBROADCAST_DELIVERY_EMAIL_TO" "FILEMAKER_DB" "FILEMAKER_XML_URL" "VOLADJUST")
+REQUIRED_VARIABLES=("OUTDIR_INGESTFILE" "OUTDIR_INGESTXDCAM" "OUTDIR_PAPER" "AIP_STORAGE" "PODCASTDELIVER" "YOUTUBEDELIVER" "TMPDIR" "REGEX4PODCAST" "DVDLABELPREFIX" "OMNEONIP" "OMNEONPATH" "CUSTOM_LOG_DIR" "LTO_INDEX_DIR" "LOCAL_MM_DIR" "EMAIL_FROM" "MAKEYOUTUBE_DELIVERY_EMAIL_TO" "MAKEBROADCAST_DELIVERY_EMAIL_TO" "FILE_MAKER_DB" "FILE_MAKER_XML_URL" "VOLADJUST")
 
 OPTIND=1
 
@@ -210,21 +210,21 @@ MAKEBROADCAST_DELIVERY_EMAIL_TO.label = Please enter the email account (or multi
 MAKEBROADCAST_DELIVERY_EMAIL_TO.width = 125
 MAKEBROADCAST_DELIVERY_EMAIL_TO.default = ${MAKEBROADCAST_DELIVERY_EMAIL_TO}
 
-# FILEMAKER_DB
-FILEMAKER_DB.x = 600
-FILEMAKER_DB.y = 250
-FILEMAKER_DB.type = textfield
-FILEMAKER_DB.label = Please enter the name of the filemaker database:
-FILEMAKER_DB.width = 125
-FILEMAKER_DB.default = ${FILEMAKER_DB}
+# FILE_MAKER_DB
+FILE_MAKER_DB.x = 600
+FILE_MAKER_DB.y = 250
+FILE_MAKER_DB.type = textfield
+FILE_MAKER_DB.label = Please enter the name of the filemaker database:
+FILE_MAKER_DB.width = 125
+FILE_MAKER_DB.default = ${FILE_MAKER_DB}
 
-# FILEMAKER_XML_URL
-FILEMAKER_XML_URL.x = 600
-FILEMAKER_XML_URL.y = 150
-FILEMAKER_XML_URL.type = textfield
-FILEMAKER_XML_URL.label = Please enter the address for the delivery of metadata to the FileMaker API:
-FILEMAKER_XML_URL.width = 125
-FILEMAKER_XML_URL.default = ${FILEMAKER_XML_URL}
+# FILE_MAKER_XML_URL
+FILE_MAKER_XML_URL.x = 600
+FILE_MAKER_XML_URL.y = 150
+FILE_MAKER_XML_URL.type = textfield
+FILE_MAKER_XML_URL.label = Please enter the address for the delivery of metadata to the FileMaker API:
+FILE_MAKER_XML_URL.width = 125
+FILE_MAKER_XML_URL.default = ${FILE_MAKER_XML_URL}
 
 # VOLADJUST
 VOLADJUST.x = 600
@@ -266,6 +266,14 @@ PREMIS_NAME.option = N
 PREMIS_NAME.width = 125
 PREMIS_NAME.default = ${PREMIS_NAME}
 
+#PREMIS_PLIST
+PREMIS_PLIST.x = 1050
+PREMIS_PLIST.y = 60
+PREMIS_PLIST.type = checkbox
+PREMIS_PLIST.label = Auto update MySQL .plist?
+PREMIS_PLIST.tooltip = If activated this will try to to modify MySQL .plist file to enable outside connections when mm is updated.
+PREMIS_PLIST.default = ${PREMIS_PLIST}
+
 
 
 # Add a cancel button with default label
@@ -274,8 +282,8 @@ cb.type=cancelbutton
 ";
 
 # if a config file does not exist, create one using this GUI
-if [[ "${RUNPASHUA}" == "Y" ]] ; then
-    PASHUA_CONFIGFILE=`/usr/bin/mktemp /tmp/pashua_XXXXXXXXX`
+if [[ "${RUNPASHUA}" = "Y" ]] ; then
+    PASHUA_CONFIGFILE=$(/usr/bin/mktemp /tmp/pashua_XXXXXXXXX)
     echo "${CONF}" > "${PASHUA_CONFIGFILE}"
     _pashua_run
     rm "${PASHUA_CONFIGFILE}"
@@ -296,38 +304,42 @@ if [[ "${RUNPASHUA}" == "Y" ]] ; then
     echo "  EMAIL_FROM = ${EMAIL_FROM}"
     echo "  MAKEYOUTUBE_DELIVERY_EMAIL_TO = ${MAKEYOUTUBE_DELIVERY_EMAIL_TO}"
     echo "  MAKEBROADCAST_DELIVERY_EMAIL_TO = ${MAKEBROADCAST_DELIVERY_EMAIL_TO}"
-    echo "  FILEMAKER_DB = ${FILEMAKER_DB}"
-    echo "  FILEMAKER_XML_URL = ${FILEMAKER_XML_URL}"
+    echo "  FILE_MAKER_DB = ${FILE_MAKER_DB}"
+    echo "  FILE_MAKER_XML_URL = ${FILE_MAKER_XML_URL}"
     echo "  VOLADJUST = ${VOLADJUST}"
     echo "  PREMIS_DB = ${PREMIS_DB}"
     echo "  PREMIS_PROFILE = ${PREMIS_PROFILE}"
     echo "  PREMIS_NAME = ${PREMIS_NAME}"
+    echo "  PREMIS_PLIST = ${PREMIS_PLIST}"
     echo ""
 
     #write to the config file
-    echo "OUTDIR_INGESTFILE=\"${OUTDIR_INGESTFILE}\"" > "${MM_CONFIG_FILE}"
-    echo "OUTDIR_INGESTXDCAM=\"${OUTDIR_INGESTXDCAM}\"" >> "${MM_CONFIG_FILE}"
-    echo "OUTDIR_PAPER=\"${OUTDIR_PAPER}\"" >> "${MM_CONFIG_FILE}"
-    echo "AIP_STORAGE=\"${AIP_STORAGE}\"" >> "${MM_CONFIG_FILE}"
-    echo "PODCASTDELIVER=\"${PODCASTDELIVER}\"" >> "${MM_CONFIG_FILE}"
-    echo "YOUTUBEDELIVER=\"${YOUTUBEDELIVER}\"" >> "${MM_CONFIG_FILE}"
-    echo "TMPDIR=\"${TMPDIR}\"" >> "${MM_CONFIG_FILE}"
-    echo "REGEX4PODCAST=\"${REGEX4PODCAST}\"" >> "${MM_CONFIG_FILE}"
-    echo "DVDLABELPREFIX=\"${DVDLABELPREFIX}\"" >> "${MM_CONFIG_FILE}"
-    echo "OMNEONIP=\"${OMNEONIP}\"" >> "${MM_CONFIG_FILE}"
-    echo "OMNEONPATH=\"${OMNEONPATH}\"" >> "${MM_CONFIG_FILE}"
-    echo "CUSTOM_LOG_DIR=\"${CUSTOM_LOG_DIR}\"" >> "${MM_CONFIG_FILE}"
-    echo "LTO_INDEX_DIR=\"${LTO_INDEX_DIR}\"" >> "${MM_CONFIG_FILE}"
-    echo "LOCAL_MM_DIR=\"${LOCAL_MM_DIR}\"" >> "${MM_CONFIG_FILE}"
-    echo "EMAIL_FROM=\"${EMAIL_FROM}\"" >> "${MM_CONFIG_FILE}"
-    echo "MAKEYOUTUBE_DELIVERY_EMAIL_TO=\"${MAKEYOUTUBE_DELIVERY_EMAIL_TO}\"" >> "${MM_CONFIG_FILE}"
-    echo "MAKEBROADCAST_DELIVERY_EMAIL_TO=\"${MAKEBROADCAST_DELIVERY_EMAIL_TO}\"" >> "${MM_CONFIG_FILE}"
-    echo "FILEMAKER_DB=\"${FILEMAKER_DB}\"" >> "${MM_CONFIG_FILE}"
-    echo "FILEMAKER_XML_URL=\"${FILEMAKER_XML_URL}\"" >> "${MM_CONFIG_FILE}"
-    echo "VOLADJUST=\"${VOLADJUST}\"" >> "${MM_CONFIG_FILE}"
-    echo "PREMIS_DB=\"${PREMIS_DB}\"" >> "${MM_CONFIG_FILE}"
-    echo "PREMIS_PROFILE=\"${PREMIS_PROFILE}\"" >> "${MM_CONFIG_FILE}"
-    echo "PREMIS_NAME=\"${PREMIS_NAME}\"" >> "${MM_CONFIG_FILE}"
+    {
+        echo "OUTDIR_INGESTFILE=\"${OUTDIR_INGESTFILE}\""
+        echo "OUTDIR_INGESTXDCAM=\"${OUTDIR_INGESTXDCAM}\""
+        echo "OUTDIR_PAPER=\"${OUTDIR_PAPER}\""
+        echo "AIP_STORAGE=\"${AIP_STORAGE}\""
+        echo "PODCASTDELIVER=\"${PODCASTDELIVER}\""
+        echo "YOUTUBEDELIVER=\"${YOUTUBEDELIVER}\""
+        echo "TMPDIR=\"${TMPDIR}\""
+        echo "REGEX4PODCAST=\"${REGEX4PODCAST}\""
+        echo "DVDLABELPREFIX=\"${DVDLABELPREFIX}\""
+        echo "OMNEONIP=\"${OMNEONIP}\""
+        echo "OMNEONPATH=\"${OMNEONPATH}\""
+        echo "CUSTOM_LOG_DIR=\"${CUSTOM_LOG_DIR}\""
+        echo "LTO_INDEX_DIR=\"${LTO_INDEX_DIR}\""
+        echo "LOCAL_MM_DIR=\"${LOCAL_MM_DIR}\""
+        echo "EMAIL_FROM=\"${EMAIL_FROM}\""
+        echo "MAKEYOUTUBE_DELIVERY_EMAIL_TO=\"${MAKEYOUTUBE_DELIVERY_EMAIL_TO}\""
+        echo "MAKEBROADCAST_DELIVERY_EMAIL_TO=\"${MAKEBROADCAST_DELIVERY_EMAIL_TO}\""
+        echo "FILE_MAKER_DB=\"${FILE_MAKER_DB}\""
+        echo "FILE_MAKER_XML_URL=\"${FILE_MAKER_XML_URL}\""
+        echo "VOLADJUST=\"${VOLADJUST}\""
+        echo "PREMIS_DB=\"${PREMIS_DB}\""
+        echo "PREMIS_PROFILE=\"${PREMIS_PROFILE}\""
+        echo "PREMIS_NAME=\"${PREMIS_NAME}\""
+        echo "PREMIS_PLIST=\"${PREMIS_PLIST}\""
+    } > "${MM_CONFIG_FILE}"
 else
     # set up configuration file using the command line
     echo "# $(basename ${MM_CONFIG_FILE})" > "${MM_CONFIG_FILE}"
@@ -359,8 +371,7 @@ else
         EDITOPTION2="Edit config file in TextMate"
         _report -q "Edit a variable? "
         PS3="Selection (enter by number)? "
-        select CONFIG_KEY in "${EDITOPTION1}" "${EDITOPTION2}" "${REQUIRED_VARIABLES[@]}" "Quit"
-        do
+        select CONFIG_KEY in "${EDITOPTION1}" "${EDITOPTION2}" "${REQUIRED_VARIABLES[@]}" "Quit" ; do
             break
         done
         [ "${CONFIG_KEY}" = "Quit" ] && { echo Goodbye. ; exit 1 ;};
