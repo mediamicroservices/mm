@@ -84,15 +84,5 @@ while [ "${*}" != "" ] ; do
             #finally, find any files or directories that are empty - these don't work yet :(
             #_runtest "There are empty directories in your package!" xml sel -t -m "//ns:directory[not(ns:file | ns:directory]" -v "@name" -o "/" -b -n  "${TEMPTREE}"
             _runtest "There are empty files in your package!" xml sel -t -m "//file[@size='0']" -m "ancestor-or-self::directory" -v "@name" -o "/" -b -v "@name" -n  "${TEMPTREE}"
-
-            #verify the tree is up to date by comparing the temp tree to orig tree
-            if [[ $(diff "${TEMPTREE}" "${TEMPTREE}") ]] ; then
-                _report -wt "Files in ${PACKAGE} have been modified"
-                diff -y "${TEMPTREE}" "${TEMPTREE}"
-            fi
-            #else
-            #if tree.xml doesn't exist, make it and then compare it to the xpath expression
-            #tree -DaNXs --du --timefmt "%Y-%m-%dT%H:%M:%SZ" "${PACKAGE}" > "${TEMPTREE}"
-            continue
     fi
 done
