@@ -42,7 +42,7 @@ while [ "${*}" != "" ] ; do
 
         #looks for any directories that are not objects or metadata or tmp (for digitized materials)
         _runtest "There are directories that are not objects, metadata, or tmp in this package." xml sel -t -v "/tree/directory/directory[@name!='objects' and @name!='metadata' and @name!='tmp']/@name" -n "${TEMPTREE}"
-        #looks for any unexpected files in the upper level metadata directory
+        #looks for any unexpected files in the upper level metadata directory --.md5, .log, .xml
         _runtest "There are files in the metadata directory that do not belong!" xml sel -t -v "/tree/directory/directory[@name='metadata']/file[@name!='checksum.md5' and @name!='checksumchecks.log' and @name!='dfxml.xml' and @name!='mets.xml']/@name" -n "${TEMPTREE}"
         #begins search of metadata subdirectories, looks for directories that do not belong
         _runtest "There are directories in the metadata directory that do not belong!" xml sel -t -v "/tree/directory/directory[@name='metadata']/directory[@name!='depictions' and @name!='fileMeta' and @name!='logs']/@name" -n "${TEMPTREE}"
