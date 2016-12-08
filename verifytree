@@ -19,6 +19,7 @@ _runtest(){
     echo "${XMLRESULT}"
     fi
     if [ ! -z "${XMLRESULT}" ] ; then
+        _report -d "${PACKAGE}" #the name of the package being verified
         _report -w "${LABEL}" #the error message associated with each xpath query
         _report "${XMLRESULT}"
     fi
