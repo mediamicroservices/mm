@@ -44,7 +44,7 @@ while [ "${*}" != "" ] ; do
             #looks for any unexpected files in the upper level metadata directory
             _runtest "There are files that do not belong in the metadata directory!" xml sel -t -v "/tree/directory/directory[@name='metadata']/file[@name!='checksum.md5' and @name!='checksumchecks.log' and @name!='dfxml.xml']" -n "${TEMPTREE}"
             #begin search of metadata subdirectories, looks for directories that are not submissionDocumenation
-            _runtest "There are directories other than SubmissionDocumentation in the metadata directory!" xml sel -t -v "/tree/directory/directory[@name='metadata']/directory[@name!='submissionDocumentation']" -n "${TEMPTREE}"
+            _runtest "There are directories other than SubmissionDocumentation in the metadata directory!" xml sel -t -v "/tree/directory/directory[@name='metadata']/directory[@name!='submissionDocumentation']/@name" -n "${TEMPTREE}"
             #looks for any sub directories in submission Documentation that are not fileMeta or logs
             _runtest "There are directories other than fileMeta and logs in the SubmissionDocumentation directory!" xml sel -t -v "/tree/directory/directory[@name='metadata']/directory[@name='submissionDocumentation']/directory[@name!='fileMeta' and @name!='logs']" -n "${TEMPTREE}"
             #looks in logs directory for any files that aren't .log or .txt - is there a better way to do this? count?
