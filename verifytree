@@ -79,6 +79,8 @@ while [ "${*}" != "" ] ; do
         _runtest "There are unexpected files in the podcast directory!" xml sel -t -v "/tree/directory/directory[@name='objects']/directory[@name='access']/directory[@name='podcast']/file[@name!='${MEDIAID}_podcast.mov']/@name" -n  "${TEMPTREE}"
         #looks for unexpected files in service directory
         _runtest "There are unexpected files in the service directory!" xml sel -t -v "/tree/directory/directory[@name='objects']/directory[@name='service']/file[@name!='${MEDIAID}.mov' and @name!='${MEDIAID}_SLATE.mov']/@name" -n  "${TEMPTREE}"
+        #looks for unexpected files in captions directory
+        _runtest "There are unexpected files in the captions directory!" xml sel -t -v "/tree/directory/directory[@name='objects']/directory[@name='captions']/file[substring(@name,string-length(@name)-2)!='scc']/@name" -n "${TEMPTREE}"
 
         #finds any empty files
         _runtest "There are empty files in your package!" xml sel -t -v "//file[@size='0']/@name" -n  "${TEMPTREE}"
