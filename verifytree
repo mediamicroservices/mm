@@ -45,20 +45,20 @@ while [ "${*}" != "" ] ; do
             _runtest "There are files that do not belong in the metadata directory!" xml sel -t -v "/tree/directory/directory[@name='metadata']/file[@name!='checksum.md5' and @name!='checksumchecks.log' and @name!='dfxml.xml' and @name!='mets.xml']/@name" -n "${TEMPTREE}"
             #begin search of metadata subdirectories, looks for directories that do not belong
             _runtest "There are directories in the metadata directory that do not belong!" xml sel -t -v "/tree/directory/directory[@name='metadata']/directory[@name!='depictions' and @name!='fileMeta' and @name!='logs']/@name" -n "${TEMPTREE}"
-            #looks in logs directory for any files that aren't .log or .txt - is there a better way to do this? count?
-            _runtest "There are files in the logs directory that do not belong!" xml sel -t -v "/tree/directory/directory[@name='metadata']/directory[@name='logs']/file[@name!='*.log' and @name!='*.txt']/@name" -n "${TEMPTREE}"
+            #looks in logs directory for any files that aren't .log or .txt
+            _runtest "There are files in the logs directory that do not belong!" xml sel -t -v "/tree/directory/directory[@name='metadata']/directory[@name='logs']/file[substring(@name,string-length(@name)-2)!='log' and substring(@name,string-length(@name)-2)!='txt']/@name" -n "${TEMPTREE}"
             #looks for any directories in fileMeta that are not objects
             _runtest "There are directories in fileMeta that are not objects." xml sel -t -v "/tree/directory/directory[@name='metadata']/directory[@name='fileMeta']/directory[@name!='objects']/@name" -n "${TEMPTREE}"
-            #looks for any directories in Filemeta objects subdirectory that are not access and service
+            #looks for any directories in fileMeta objects subdirectory that are not access and service
             _runtest "There are directories in the fileMeta objects directory that are not access or service." xml sel -t -v "/tree/directory/directory[@name='metadata']/directory[@name='fileMeta']/directory[@name='objects']/directory[@name!='access' and @name!='service']/@name" -n "${TEMPTREE}"
             #and any files that aren't .txt, .xml, .json
-            _runtest "There are files in the objects directory that do not belong!" xml sel -t -v "/tree/directory/directory[@name='metadata']/directory[@name='fileMeta']/directory[@name='objects']/file[@name!='*.txt' and @name!='*.xml' and @name!='*.json']" -n "${TEMPTREE}"
-            #looks in service subdirectory for unexpected files
-            _runtest "There are files in the service directory that do not belong!" xml sel -t -v "/tree/directory/directory[@name='metadata']/directory[@name='fileMeta']/directory[@name='objects']/directory[@name='service']/file[@name!='*.txt' and @name!='*.xml' and @name!='*.json']" -n "${TEMPTREE}"
-            #looks in access for unexpected directories that are not dvd, mp3, podcast, and youtube_up
-            _runtest "There are directories in the access directory that do not belong!" xml sel -t -v "/tree/directory/directory[@name='metadata']/directory[@name='fileMeta']/directory[@name='objects']/directory[@name='access']/directory[@name!='dvd' and @name!='mp3' and @name!='podcast' and @name!='youtube_up']" -n "${TEMPTREE}"
-            #looks in all directories under access for unexpected metadata files
-            _runtest "There are unexpected metadata files in access subdirectories!" xml sel -t -v "/tree/directory/directory[@name='metadata']/directory[@name='fileMeta']/directory[@name='objects']/directory[@name='access']/directory/file[@name!='*.txt' and @name!='*.xml' and @name!='*.json']" -n "${TEMPTREE}"
+            _runtest "There are files in the fileMeta objects directory that do not belong!" xml sel -t -v "/tree/directory/directory[@name='metadata']/directory[@name='fileMeta']/directory[@name='objects']/file[substring(@name,string-length(@name)-2)!='xml' and substring(@name,string-length(@name)-2)!='txt' and substring(@name,string-length(@name)-3)!='json']/@name" -n "${TEMPTREE}"
+            #looks in fileMeta service subdirectory for that aren't .txt, .xml, .json
+            _runtest "There are files in the fileMeta service directory that do not belong!" xml sel -t -v "/tree/directory/directory[@name='metadata']/directory[@name='fileMeta']/directory[@name='objects']/directory[@name='service']/file[substring(@name,string-length(@name)-2)!='xml' and substring(@name,string-length(@name)-2)!='txt' and substring(@name,string-length(@name)-3)!='json']/@name" -n "${TEMPTREE}"
+            #looks in fileMeta access for unexpected directories that are not dvd, mp3, podcast, and youtube_up
+            _runtest "There are directories in the fileMeta access directory that do not belong!" xml sel -t -v "/tree/directory/directory[@name='metadata']/directory[@name='fileMeta']/directory[@name='objects']/directory[@name='access']/directory[@name!='dvd' and @name!='mp3' and @name!='podcast' and @name!='youtube_up']/@name" -n "${TEMPTREE}"
+            #looks in all directories under access for unexpected metadata files-- files that aren't .txt, .xml, .json
+            _runtest "There are unexpected metadata files in fileMeta access subdirectories!" xml sel -t -v "/tree/directory/directory[@name='metadata']/directory[@name='fileMeta']/directory[@name='objects']/directory[@name='access']/directory/file[substring(@name,string-length(@name)-2)!='xml' and substring(@name,string-length(@name)-2)!='txt' and substring(@name,string-length(@name)-3)!='json']/@name" -n "${TEMPTREE}"
 
             #begin search of objects
 
