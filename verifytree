@@ -45,22 +45,20 @@ while [ "${*}" != "" ] ; do
             _runtest "There are files that do not belong in the metadata directory!" xml sel -t -v "/tree/directory/directory[@name='metadata']/file[@name!='checksum.md5' and @name!='checksumchecks.log' and @name!='dfxml.xml' and @name!='mets.xml']/@name" -n "${TEMPTREE}"
             #begin search of metadata subdirectories, looks for directories that do not belong
             _runtest "There are directories in the metadata directory that do not belong!" xml sel -t -v "/tree/directory/directory[@name='metadata']/directory[@name!='depictions' and @name!='fileMeta' and @name!='logs']/@name" -n "${TEMPTREE}"
-            #looks for any sub directories in submission Documentation that are not fileMeta or logs
-            _runtest "There are directories other than fileMeta and logs in the SubmissionDocumentation directory!" xml sel -t -v "/tree/directory/directory[@name='metadata']/directory[@name='submissionDocumentation']/directory[@name!='fileMeta' and @name!='logs']" -n "${TEMPTREE}"
             #looks in logs directory for any files that aren't .log or .txt - is there a better way to do this? count?
-            _runtest "There are files in the logs directory that do not belong!" xml sel -t -v "/tree/directory/directory[@name='metadata']/directory[@name='submissionDocumentation']/directory[@name='logs']/file[@name!='*.log' and @name!='*.txt']" -n "${TEMPTREE}"
+            _runtest "There are files in the logs directory that do not belong!" xml sel -t -v "/tree/directory/directory[@name='metadata']/directory[@name='logs']/file[@name!='*.log' and @name!='*.txt']/@name" -n "${TEMPTREE}"
             #looks for any directories in fileMeta that are not objects
-            _runtest "There are directories in fileMeta that are not objects." xml sel -t -v "/tree/directory/directory[@name='metadata']/directory[@name='submissionDocumentation']/directory[@name='fileMeta']/directory[@name!='objects']" -n "${TEMPTREE}"
-            #looks for any directories that are not access and service
-            _runtest "There are directories in objects that are not access or service." xml sel -t -v "/tree/directory/directory[@name='metadata']/directory[@name='submissionDocumentation']/directory[@name='fileMeta']/directory[@name='objects']/directory[@name!='access' and @name!='service']" -n "${TEMPTREE}"
+            _runtest "There are directories in fileMeta that are not objects." xml sel -t -v "/tree/directory/directory[@name='metadata']/directory[@name='fileMeta']/directory[@name!='objects']/@name" -n "${TEMPTREE}"
+            #looks for any directories in Filemeta objects subdirectory that are not access and service
+            _runtest "There are directories in the fileMeta objects directory that are not access or service." xml sel -t -v "/tree/directory/directory[@name='metadata']/directory[@name='fileMeta']/directory[@name='objects']/directory[@name!='access' and @name!='service']/@name" -n "${TEMPTREE}"
             #and any files that aren't .txt, .xml, .json
-            _runtest "There are files in the objects directory that do not belong!" xml sel -t -v "/tree/directory/directory[@name='metadata']/directory[@name='submissionDocumentation']/directory[@name='fileMeta']/directory[@name='objects']/file[@name!='*.txt' and @name!='*.xml' and @name!='*.json']" -n "${TEMPTREE}"
+            _runtest "There are files in the objects directory that do not belong!" xml sel -t -v "/tree/directory/directory[@name='metadata']/directory[@name='fileMeta']/directory[@name='objects']/file[@name!='*.txt' and @name!='*.xml' and @name!='*.json']" -n "${TEMPTREE}"
             #looks in service subdirectory for unexpected files
-            _runtest "There are files in the service directory that do not belong!" xml sel -t -v "/tree/directory/directory[@name='metadata']/directory[@name='submissionDocumentation']/directory[@name='fileMeta']/directory[@name='objects']/directory[@name='service']/file[@name!='*.txt' and @name!='*.xml' and @name!='*.json']" -n "${TEMPTREE}"
+            _runtest "There are files in the service directory that do not belong!" xml sel -t -v "/tree/directory/directory[@name='metadata']/directory[@name='fileMeta']/directory[@name='objects']/directory[@name='service']/file[@name!='*.txt' and @name!='*.xml' and @name!='*.json']" -n "${TEMPTREE}"
             #looks in access for unexpected directories that are not dvd, mp3, podcast, and youtube_up
-            _runtest "There are directories in the access directory that do not belong!" xml sel -t -v "/tree/directory/directory[@name='metadata']/directory[@name='submissionDocumentation']/directory[@name='fileMeta']/directory[@name='objects']/directory[@name='access']/directory[@name!='dvd' and @name!='mp3' and @name!='podcast' and @name!='youtube_up']" -n "${TEMPTREE}"
+            _runtest "There are directories in the access directory that do not belong!" xml sel -t -v "/tree/directory/directory[@name='metadata']/directory[@name='fileMeta']/directory[@name='objects']/directory[@name='access']/directory[@name!='dvd' and @name!='mp3' and @name!='podcast' and @name!='youtube_up']" -n "${TEMPTREE}"
             #looks in all directories under access for unexpected metadata files
-            _runtest "There are unexpected metadata files in access subdirectories!" xml sel -t -v "/tree/directory/directory[@name='metadata']/directory[@name='submissionDocumentation']/directory[@name='fileMeta']/directory[@name='objects']/directory[@name='access']/directory/file[@name!='*.txt' and @name!='*.xml' and @name!='*.json']" -n "${TEMPTREE}"
+            _runtest "There are unexpected metadata files in access subdirectories!" xml sel -t -v "/tree/directory/directory[@name='metadata']/directory[@name='fileMeta']/directory[@name='objects']/directory[@name='access']/directory/file[@name!='*.txt' and @name!='*.xml' and @name!='*.json']" -n "${TEMPTREE}"
 
             #begin search of objects
 
@@ -81,8 +79,7 @@ while [ "${*}" != "" ] ; do
             #looks for unexpected files in service dir
             _runtest "There are unexpected files in the service directory." xml sel -t -v "/tree/directory/directory[@name='objects']/directory[@name='service']/file[@name!='${MEDIAID}.mov']/@name" -n  "${TEMPTREE}"
 
-            #finally, find any files or directories that are empty - these don't work yet :(
-            #_runtest "There are empty directories in your package!" xml sel -t -m "//ns:directory[not(ns:file | ns:directory]" -v "@name" -o "/" -b -n  "${TEMPTREE}"
-            _runtest "There are empty files in your package!" xml sel -t -m "//file[@size='0']" -m "ancestor-or-self::directory" -v "@name" -o "/" -b -v "@name" -n  "${TEMPTREE}"
+            #find any empty files
+            _runtest "There are empty files in your package!" xml sel -t -v "//file[@size='0']/@name" -n  "${TEMPTREE}"
     fi
 done
