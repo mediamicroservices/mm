@@ -63,14 +63,15 @@ while [ "${*}" != "" ] ; do
             #begin search of objects
 
             #looks for any directories that are not access or service within the objects directory
-            _runtest "There are directories other than access and service in the objects directory!" xml sel -t -v "/tree/directory/directory[@name='objects']/directory[@name!='access' and @name!='service']" -n "${TEMPTREE}"
+            _runtest "There are directories other than access and service in the objects directory!" xml sel -t -v "/tree/directory/directory[@name='objects']/directory[@name!='access' and @name!='service']/@name" -n "${TEMPTREE}"
             #looks for any directories within access directory that are not dvd, images, mp3, podcast, or youtube_up
-            _runtest "There are unexpected directories in the access directory." xml sel -t -v "/tree/directory/directory[@name='objects']/directory[@name='access']/directory[@name!='dvd' and @name!='images' and @name!='mp3' and @name!='podcast' and @name!='youtube_up']" -n "${TEMPTREE}"
-            #looks for unexpected files in youtube_up dir
+            _runtest "There are unexpected directories in the access directory." xml sel -t -v "/tree/directory/directory[@name='objects']/directory[@name='access']/directory[@name!='dvd' and @name!='images' and @name!='mp3' and @name!='podcast' and @name!='youtube_up']/@name" -n "${TEMPTREE}"
+            #looks for unexpected files in youtube_up directory
             _runtest "There are unexpected files in the youtube_up directory." xml sel -t -v "/tree/directory/directory[@name='objects']/directory[@name='access']/directory[@name='youtube_up']/file[@name!='${MEDIAID}.mp4']/@name" -n  "${TEMPTREE}"
-            #looks for unexpected files in dvd dir
+            #looks for unexpected files in dvd directory
             _runtest "There are unexpected files in the dvd directory." xml sel -t -v "/tree/directory/directory[@name='objects']/directory[@name='access']/directory[@name='dvd']/file[@name!='${MEDIAID}.iso']/@name" -n  "${TEMPTREE}"
-            #looks for unexpected files in images dir #how to deal with numbers after _ for tiffs - string/substring pattern matching
+            #looks for unexpected files in images directory-- files that aren't .tiff
+            _runtest "There are unexpected files in the images directory." xml sel -t -v "/tree/directory/directory[@name='objects']/directory[@name='access']/directory[@name='images']/file[substring(@name,string-length(@name)-3)!='tiff']/@name" -n  "${TEMPTREE}"
             #"Bad files here, yo!" xml sel -t -v "/tree/directory/directory[@name='objects']/directory[@name='access']/directory[@name='images']/file[@name!='${MEDIAID}_3.tiff']/@name" -n  "${TEMPTREE}"
             #looks for unexpected files in mp3 dir
             _runtest "There are unexpected files in the mp3 directory." xml sel -t -v "/tree/directory/directory[@name='objects']/directory[@name='access']/directory[@name='mp3']/file[@name!='${MEDIAID}.mp3']/@name" -n  "${TEMPTREE}"
