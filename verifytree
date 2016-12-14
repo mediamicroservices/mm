@@ -8,6 +8,14 @@ DEPENDENCIES=(xml "${SCRIPTDIR}/removeDSStore")
 
 #define _runtest function
 _runtest(){
+    OPTIND=1
+    INVERT_TEST="N"
+    while getopts ":i" OPT ; do
+        case "${OPT}" in
+            i) INVERT_TEST="Y";;
+        esac
+    done
+    shift $(( ${OPTIND} - 1 ))
     LABEL="${1}"
     shift
     RUN_ERR=""
@@ -18,9 +26,10 @@ _runtest(){
     _report -wts "Error: Running: \"${*}\" gave an Error Code - ${RUN_ERR}"
     echo "${XMLRESULT}"
     fi
-    if [ ! -z "${XMLRESULT}" ] ; then
+    if [[ ! -z "${XMLRESULT}" && "${INVERT_TEST}" != "Y" ]] || [[ -z "${XMLRESULT}" && "${INVERT_TEST}" == "Y" ]] ; then
         _report -w "${LABEL}" #the error message associated with each xpath query
-        _report "${XMLRESULT}"
+        if [[ ! -z "${XMLRESULT}" ]] ; then _report "${XMLRESULT}"
+        fi
     fi
 }
 #input the package
@@ -42,12 +51,20 @@ while [ "${*}" != "" ] ; do
 
         #looks for any directories that are not objects or metadata or tmp (for digitized materials)
         _runtest "There are directories that are not objects, metadata, or tmp in this package." xml sel -t -v "/tree/directory/directory[@name!='objects' and @name!='metadata' and @name!='tmp']/@name" -n "${TEMPTREE}"
-        #looks for any unexpected files in the upper level metadata directory --.md5, .log, .xml
+        #Makes sure there is an objects directory
+        _runtest -i "This package is missing an objects directory!" xml sel -t -v "/tree/directory/directory[@name='objects']/@name" -n "${TEMPTREE}"
+        #Makes sure there is a metadata directory
+        _runtest -i "This package is missing a metadata directory!" xml sel -t -v "/tree/directory/directory[@name='metadata']/@name" -n "${TEMPTREE}"
+        #looks for any unexpected files in the upper level metadata directory -- files that aren't .md5, .log, .xml
         _runtest "There are files in the metadata directory that do not belong!" xml sel -t -v "/tree/directory/directory[@name='metadata']/file[@name!='checksum.md5' and @name!='checksumchecks.log' and @name!='dfxml.xml' and @name!='mets.xml']/@name" -n "${TEMPTREE}"
+        #Makes sure a checksum.md5 is in the package
+        _runtest -i "This package needs a checksum.md5!" xml sel -t -v "/tree/directory/directory[@name='metadata']/file[@name='checksum.md5']/@name" -n "${TEMPTREE}"
         #begins search of metadata subdirectories, looks for directories that do not belong
         _runtest "There are directories in the metadata directory that do not belong!" xml sel -t -v "/tree/directory/directory[@name='metadata']/directory[@name!='depictions' and @name!='fileMeta' and @name!='logs']/@name" -n "${TEMPTREE}"
         #looks in logs directory for any files that aren't .log or .txt
         _runtest "There are files in the logs directory that do not belong!" xml sel -t -v "/tree/directory/directory[@name='metadata']/directory[@name='logs']/file[substring(@name,string-length(@name)-2)!='log' and substring(@name,string-length(@name)-2)!='txt']/@name" -n "${TEMPTREE}"
+        #Makes sure there is a capture.log in the log directory
+        _runtest -i "This package needs a capture.log!" xml sel -t -v "/tree/directory/directory[@name='metadata']/directory[@name='logs']/file[@name='capture.log']/@name" -n "${TEMPTREE}"
         #looks for any directories in fileMeta that are not objects
         _runtest "There are directories in fileMeta that are not objects." xml sel -t -v "/tree/directory/directory[@name='metadata']/directory[@name='fileMeta']/directory[@name!='objects']/@name" -n "${TEMPTREE}"
         #looks for any directories in fileMeta objects subdirectory that are not access or service
