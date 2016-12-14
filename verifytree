@@ -28,7 +28,8 @@ _runtest(){
     fi
     if [[ ! -z "${XMLRESULT}" && "${INVERT_TEST}" != "Y" ]] || [[ -z "${XMLRESULT}" && "${INVERT_TEST}" == "Y" ]] ; then
         _report -w "${LABEL}" #the error message associated with each xpath query
-        if [[ ! -z "${XMLRESULT}" ]] ; then _report "${XMLRESULT}"
+        if [[ ! -z "${XMLRESULT}" ]] ; then
+            _report "${XMLRESULT}"
         fi
     fi
 }
@@ -87,6 +88,8 @@ while [ "${*}" != "" ] ; do
 
         #looks for any directories that are not access, service, or captions within the objects directory
         _runtest "There are directories other than access and service in the objects directory!" xml sel -t -v "/tree/directory/directory[@name='objects']/directory[@name!='access' and @name!='service' and @name!='captions']/@name" -n "${TEMPTREE}"
+        #makes sure there is an object in the objects directory
+        _runtest -i "There isn't an object in the objects directory!" xml sel -t -v "/tree/directory/directory[@name='objects']/file[count(@name)>0]/@name" -n "${TEMPTREE}" 
         #looks for any directories within access directory that are not dvd, images, mp3, podcast, or youtube_up
         _runtest "There are unexpected directories in the access directory." xml sel -t -v "/tree/directory/directory[@name='objects']/directory[@name='access']/directory[@name!='dvd' and @name!='images' and @name!='mp3' and @name!='podcast' and @name!='youtube_up']/@name" -n "${TEMPTREE}"
         #looks for unexpected files in youtube_up directory
