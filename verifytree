@@ -51,19 +51,22 @@ while [ "${*}" != "" ] ; do
 
         #looks for any directories that are not objects or metadata or tmp (for digitized materials)
         _runtest "There are directories that are not objects, metadata, or tmp in this package." xml sel -t -v "/tree/directory/directory[@name!='objects' and @name!='metadata' and @name!='tmp']/@name" -n "${TEMPTREE}"
-        #Makes sure there is an objects directory
+        #makes sure there is an objects directory
         _runtest -i "This package is missing an objects directory!" xml sel -t -v "/tree/directory/directory[@name='objects']/@name" -n "${TEMPTREE}"
-        #Makes sure there is a metadata directory
+        #makes sure there is a metadata directory
         _runtest -i "This package is missing a metadata directory!" xml sel -t -v "/tree/directory/directory[@name='metadata']/@name" -n "${TEMPTREE}"
+        
+        #begin search of metadata
+        
         #looks for any unexpected files in the upper level metadata directory -- files that aren't .md5, .log, .xml
         _runtest "There are files in the metadata directory that do not belong!" xml sel -t -v "/tree/directory/directory[@name='metadata']/file[@name!='checksum.md5' and @name!='checksumchecks.log' and @name!='dfxml.xml' and @name!='mets.xml']/@name" -n "${TEMPTREE}"
-        #Makes sure a checksum.md5 is in the package
+        #makes sure a checksum.md5 is in the package
         _runtest -i "This package needs a checksum.md5!" xml sel -t -v "/tree/directory/directory[@name='metadata']/file[@name='checksum.md5']/@name" -n "${TEMPTREE}"
         #begins search of metadata subdirectories, looks for directories that do not belong
         _runtest "There are directories in the metadata directory that do not belong!" xml sel -t -v "/tree/directory/directory[@name='metadata']/directory[@name!='depictions' and @name!='fileMeta' and @name!='logs']/@name" -n "${TEMPTREE}"
         #looks in logs directory for any files that aren't .log or .txt
         _runtest "There are files in the logs directory that do not belong!" xml sel -t -v "/tree/directory/directory[@name='metadata']/directory[@name='logs']/file[substring(@name,string-length(@name)-2)!='log' and substring(@name,string-length(@name)-2)!='txt']/@name" -n "${TEMPTREE}"
-        #Makes sure there is a capture.log in the log directory
+        #makes sure there is a capture.log in the log directory
         _runtest -i "This package needs a capture.log!" xml sel -t -v "/tree/directory/directory[@name='metadata']/directory[@name='logs']/file[@name='capture.log']/@name" -n "${TEMPTREE}"
         #looks for any directories in fileMeta that are not objects
         _runtest "There are directories in fileMeta that are not objects." xml sel -t -v "/tree/directory/directory[@name='metadata']/directory[@name='fileMeta']/directory[@name!='objects']/@name" -n "${TEMPTREE}"
@@ -101,5 +104,8 @@ while [ "${*}" != "" ] ; do
 
         #finds any empty files
         _runtest "There are empty files in your package!" xml sel -t -v "//file[@size='0']/@name" -n  "${TEMPTREE}"
+        
+        #checks to see if there is a package within the package
+        _runtest "There is another package within this package!" xml sel -t -v "/tree/directory/directory[@name='objects']//directory[@name='objects']/@name" -n  "${TEMPTREE}"
     fi
 done
