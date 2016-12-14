@@ -94,14 +94,24 @@ while [ "${*}" != "" ] ; do
         _runtest "There are unexpected directories in the access directory." xml sel -t -v "/tree/directory/directory[@name='objects']/directory[@name='access']/directory[@name!='dvd' and @name!='images' and @name!='mp3' and @name!='podcast' and @name!='youtube_up']/@name" -n "${TEMPTREE}"
         #looks for unexpected files in youtube_up directory
         _runtest "There are unexpected files in the youtube_up directory!" xml sel -t -v "/tree/directory/directory[@name='objects']/directory[@name='access']/directory[@name='youtube_up']/file[@name!='${MEDIAID}.mp4']/@name" -n  "${TEMPTREE}"
+        #looks for unexpected directories in youtube_up directory
+        _runtest "There are unexpected directories in the youtube_up directory!" xml sel -t -v "/tree/directory/directory[@name='objects']/directory[@name='access']/directory[@name='youtube_up']/directory[count(@name)>0]/@name" -n "${TEMPTREE}"
         #looks for unexpected files in dvd directory
         _runtest "There are unexpected files in the dvd directory!" xml sel -t -v "/tree/directory/directory[@name='objects']/directory[@name='access']/directory[@name='dvd']/file[@name!='${MEDIAID}.iso']/@name" -n  "${TEMPTREE}"
+        #looks for unexpected directories in dvd directory
+        _runtest "There are unexpected directories in the dvd directory!" xml sel -t -v "/tree/directory/directory[@name='objects']/directory[@name='access']/directory[@name='dvd']/directory[count(@name)>0]/@name" -n "${TEMPTREE}"
         #looks for unexpected files in images directory-- files that aren't .tiff
         _runtest "There are unexpected files in the images directory!" xml sel -t -v "/tree/directory/directory[@name='objects']/directory[@name='access']/directory[@name='images']/file[substring(@name,string-length(@name)-3)!='tiff']/@name" -n  "${TEMPTREE}"
+        #looks for unexpected directories in images directory
+        _runtest "There are unexpected directories in the images directory!" xml sel -t -v "/tree/directory/directory[@name='objects']/directory[@name='access']/directory[@name='images']/directory[count(@name)>0]/@name" -n "${TEMPTREE}"
         #looks for unexpected files in mp3 directory
         _runtest "There are unexpected files in the mp3 directory!" xml sel -t -v "/tree/directory/directory[@name='objects']/directory[@name='access']/directory[@name='mp3']/file[@name!='${MEDIAID}.mp3']/@name" -n  "${TEMPTREE}"
+        #looks for unexpected directories in mp3 directory
+        _runtest "There are unexpected directories in the mp3 directory!" xml sel -t -v "/tree/directory/directory[@name='objects']/directory[@name='access']/directory[@name='mp3']/directory[count(@name)>0]/@name" -n "${TEMPTREE}"
         #looks for unexpected files in podcast directory
         _runtest "There are unexpected files in the podcast directory!" xml sel -t -v "/tree/directory/directory[@name='objects']/directory[@name='access']/directory[@name='podcast']/file[@name!='${MEDIAID}_podcast.mov']/@name" -n  "${TEMPTREE}"
+        #looks for unexpected directories in podcast directory
+        _runtest "There are unexpected directories in the podcast directory!" xml sel -t -v "/tree/directory/directory[@name='objects']/directory[@name='access']/directory[@name='podcast']/directory[count(@name)>0]/@name" -n "${TEMPTREE}"
         #looks for unexpected files in service directory
         _runtest "There are unexpected files in the service directory!" xml sel -t -v "/tree/directory/directory[@name='objects']/directory[@name='service']/file[@name!='${MEDIAID}.mov' and @name!='${MEDIAID}_SLATE.mov']/@name" -n  "${TEMPTREE}"
         #looks for unexpected files in captions directory
@@ -116,7 +126,7 @@ while [ "${*}" != "" ] ; do
         #makes sure no file names contain colons
         _runtest "There are improperly named files in this package!" xml sel -t -v "//file[contains(@name,':')]/@name" -n  "${TEMPTREE}"
         
-        #makes sure no file names begin with a period
+        #finds any hidden files
         _runtest "There are hidden files in this package!" xml sel -t -v "//file[starts-with(@name,'.')]/@name" -n  "${TEMPTREE}"
     fi
 done
