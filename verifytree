@@ -55,11 +55,11 @@ while [ "${*}" != "" ] ; do
         _runtest -i "This package is missing an objects directory!" xml sel -t -v "/tree/directory/directory[@name='objects']/@name" -n "${TEMPTREE}"
         #makes sure there is a metadata directory
         _runtest -i "This package is missing a metadata directory!" xml sel -t -v "/tree/directory/directory[@name='metadata']/@name" -n "${TEMPTREE}"
-        
+
         #begin search of metadata
-        
+
         #looks for any unexpected files in the upper level metadata directory -- files that aren't .md5, .log, .xml
-        _runtest "There are files in the metadata directory that do not belong!" xml sel -t -v "/tree/directory/directory[@name='metadata']/file[@name!='checksum.md5' and @name!='checksumchecks.log' and @name!='dfxml.xml' and @name!='mets.xml']/@name" -n "${TEMPTREE}"
+        _runtest "There are files in the metadata directory that do not belong!" xml sel -t -v "/tree/directory/directory[@name='metadata']/file[@name!='checksum.md5' and @name!='checksumchecks.log' and @name!='dfxml.xml' and @name!='mets.xml' and not(contains(@name,'checksum')) and not(contains(@name,'dfxml'))]/@name" -n "${TEMPTREE}"
         #makes sure a checksum.md5 is in the package
         _runtest -i "This package needs a checksum.md5!" xml sel -t -v "/tree/directory/directory[@name='metadata']/file[@name='checksum.md5']/@name" -n "${TEMPTREE}"
         #begins search of metadata subdirectories, looks for directories that do not belong
@@ -104,8 +104,14 @@ while [ "${*}" != "" ] ; do
 
         #finds any empty files
         _runtest "There are empty files in your package!" xml sel -t -v "//file[@size='0']/@name" -n  "${TEMPTREE}"
-        
+
         #checks to see if there is a package within the package
         _runtest "There is another package within this package!" xml sel -t -v "/tree/directory/directory[@name='objects']//directory[@name='objects']/@name" -n  "${TEMPTREE}"
+
+        #makes sure no file names contain colons
+        _runtest "There are improperly named files in this package!" xml sel -t -v "//file[contains(@name,':')]/@name" -n  "${TEMPTREE}"
+        
+        #makes sure no file names begin with a period
+        _runtest "There are hidden files in this package!" xml sel -t -v "//file[starts-with(@name,'.')]/@name" -n  "${TEMPTREE}"
     fi
 done
