@@ -302,8 +302,8 @@ while [ "${*}" != "" ] ; do
                 _add_video_filter "setdar=4/3"
                 MIDDLEOPTIONS+=("${MIDDLEOPTIONSIMX[@]}")
             elif [ "${HEIGHT}" -eq "486" -a "${WIDTH}" -eq "720" ] ; then
-                _add_video_filter "crop=720:480:0:4"
-                _add_video_filter "pad=720:512:0:24"
+                _add_video_filter "crop=720:484:0:0"
+                _add_video_filter "pad=720:512:0:28"
                 _add_video_filter "setsar=1/1"
                 _add_video_filter "setdar=4/3"
                 MIDDLEOPTIONS+=("${MIDDLEOPTIONSIMX[@]}")
