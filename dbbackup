@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/usr/bin/env bash
 
 config_file="$HOME/.$(basename "${0}").conf"
 touch "$config_file"
