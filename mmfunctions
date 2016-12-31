@@ -110,7 +110,7 @@ _db_error_check(){
         if [ "${table_name}" = "fixity" ] ; then
             IFS=$(echo -en "\n\b")
             for i in ${db_fixity} ; do
-            LINE=$i;
+                LINE=$i;
                 messageDigestHASH=$(echo "$LINE" | cut -c -32 )
                 messageDigestPATH=$(echo "$LINE" | cut -c 35- )
                 messageDigestFILENAME=$(basename ${messageDigestPATH})
