@@ -4,18 +4,22 @@ SCRIPTDIR=$(dirname "${0}")
 MM_CONFIG_FILE="${SCRIPTDIR}/mm.conf"
 LTO_CONFIG_FILE="${SCRIPTDIR}/ltoper.conf"
 WHAT_IS_THIS="mediamicroservices"
+RED="$(tput setaf 1)"   # Red      - For Warnings
+GREEN="$(tput setaf 2)" # Green    - For Declarations
+BLUE="$(tput setaf 4)"  # Blue     - For Questions
+NC="$(tput sgr0)"       # No Color
 
 # load configuration file
 if [ -f "${MM_CONFIG_FILE}" ] ; then
     . "${MM_CONFIG_FILE}"
 elif [ ! "${CONFIG}" = "Y" -a "${REQUIRECONFIG}" = "Y" ] ; then
-    echo "The configuration file is not set. You must first create ${MM_CONFIG_FILE} by running mmconfig." 1>&2
+    echo -e "${RED}The configuration file is not set. You must first create ${MM_CONFIG_FILE} by running mmconfig.${NC}" 1>&2
     exit 1
 fi
 if [ -f "${LTO_CONFIG_FILE}" ] ; then
     . "${LTO_CONFIG_FILE}"
 elif [ ! "${CONFIG}" = "Y" -a "${REQUIRECONFIG}" = "Y" ] ; then
-    echo "The configuration file is not set. You must first create ${LTO_CONFIG_FILE} by running ltoperconfig." 1>&2
+    echo -e "${RED}The configuration file is not set. You must first create ${LTO_CONFIG_FILE} by running ltoperconfig.${NC}" 1>&2
     exit 1
 fi
 
@@ -106,7 +110,7 @@ _db_error_check(){
         if [ "${table_name}" = "fixity" ] ; then
             IFS=$(echo -en "\n\b")
             for i in ${db_fixity} ; do
-	        LINE=$i;
+                LINE=$i;
                 messageDigestHASH=$(echo "$LINE" | cut -c -32 )
                 messageDigestPATH=$(echo "$LINE" | cut -c 35- )
                 messageDigestFILENAME=$(basename ${messageDigestPATH})
@@ -191,30 +195,53 @@ _open_mysql_plist(){
     fi
 }
 
-_version_schema(){
-    SCHEMA_FILE="$LTO_LOGS/${TAPE_SERIAL}.schema"
-    if [ -f "${SCHEMA_FILE}" ] ; then
-        echo "${GREEN}Creating a new version of the ltfs schema file.${NC}"
-        LASTSCHEMA="${SCHEMA_FILE%.*}_$(stat -t '%Y%m%d-%H%M%S' -l "${SCHEMA_FILE}" | awk '{print $6}').schema"
-        mv -v "${SCHEMA_FILE}" "${LASTSCHEMA}"
-        echo "${GREEN}$(basename ${0}): schema file is versioned - ${SCHEMA_FILE} -> ${LASTSCHEMA}.${NC}"
-    fi
-}
-
-_checkdir(){
-    if [[ ! -d "${1}" ]] ; then
-        echo "${1}" is not a directory.
-        _usage
-        exit 1
-    fi
-}
-
 _get_iso8601(){
     date +%FT%T
 }
 
 _get_iso8601_c(){
     date +%Y%m%d-%H%M%S
+}
+
+_report(){
+    local COLOR=""
+    local STARTMESSAGE=""
+    local ENDMESSAGE=""
+    local ECHOOPT=""
+    local LOG_MESSAGE=""
+    OPTIND=1
+    while getopts ":qdwstn" OPT; do
+        case "${OPT}" in
+            q) COLOR="${BLUE}" ;;                         # question mode, use color blue
+            d) COLOR="${GREEN}" ;;                        # declaration mode, use color green
+            w) COLOR="${RED}" ; LOG_MESSAGE="Y" ;;        # warning mode, use color red
+            s) STARTMESSAGE+=([$(basename "${0}")] ) ;;   # prepend scriptname to the message
+            t) STARTMESSAGE+=($(_get_iso8601) '- ' ) ;;   # prepend timestamp to the message
+            n) ECHOOPT="-n" ;;                            # to avoid line breaks after echo
+        esac
+    done
+    shift $(( ${OPTIND} - 1 ))
+    MESSAGE="${1}"
+    echo "${ECHOOPT}" "${COLOR}${STARTMESSAGE[@]}${MESSAGE}${NC}"
+    [ "${LOG_MESSAGE}" = "Y" ] && _log -w "${MESSAGE}"
+}
+
+_checkdir(){
+    if [[ ! -d "${1}" ]] ; then
+        _report -w "${1}" is not a directory.
+        _usage
+        exit 1
+    fi
+}
+
+_version_schema(){
+    SCHEMA_FILE="$LTO_LOGS/${TAPE_SERIAL}.schema"
+    if [ -f "${SCHEMA_FILE}" ] ; then
+        _report -d "Creating a new version of the ltfs schema file."
+        LASTSCHEMA="${SCHEMA_FILE%.*}_$(stat -t '%Y%m%d-%H%M%S' -l "${SCHEMA_FILE}" | awk '{print $6}').schema"
+        mv -v "${SCHEMA_FILE}" "${LASTSCHEMA}"
+        _report -d "$(basename ${0}): schema file is versioned - ${SCHEMA_FILE} -> ${LASTSCHEMA}."
+    fi
 }
 
 _unset_ffreport(){
@@ -283,33 +310,6 @@ _log(){
     shift $(( ${OPTIND} - 1 ))
     NOTE="${1}"
     echo $(_get_iso8601)", $(basename "${0}"), ${STATUS}, ${OP}, ${MEDIAID}, ${NOTE}" >> "${MMLOGFILE}"
-}
-
-_report(){
-    local RED="$(tput setaf 1)"   # Red      - For Warnings
-    local GREEN="$(tput setaf 2)" # Green    - For Declarations
-    local BLUE="$(tput setaf 4)"  # Blue     - For Questions
-    local NC="$(tput sgr0)"       # No Color
-    local COLOR=""
-    local STARTMESSAGE=""
-    local ENDMESSAGE=""
-    local ECHOOPT=""
-    local LOG_MESSAGE=""
-    OPTIND=1
-    while getopts ":qdwstn" OPT; do
-        case "${OPT}" in
-            q) COLOR="${BLUE}" ;;                         # question mode, use color blue
-            d) COLOR="${GREEN}" ;;                        # declaration mode, use color green
-            w) COLOR="${RED}" ; LOG_MESSAGE="Y" ;;        # warning mode, use color red
-            s) STARTMESSAGE+=([$(basename "${0}")] ) ;;   # prepend scriptname to the message
-            t) STARTMESSAGE+=($(_get_iso8601) '- ' ) ;;   # prepend timestamp to the message
-            n) ECHOOPT="-n" ;;                            # to avoid line breaks after echo
-        esac
-    done
-    shift $(( ${OPTIND} - 1 ))
-    MESSAGE="${1}"
-    echo "${ECHOOPT}" "${COLOR}${STARTMESSAGE[@]}${MESSAGE}${NC}"
-    [ "${LOG_MESSAGE}" = "Y" ] && _log -w "${MESSAGE}"
 }
 
 _config_edit(){
@@ -458,7 +458,7 @@ _ask_digitization_logs(){
 }
 
 _reset_directory(){
-    if [ "${PRESERVATION_MODE}" == "Y" ] ; then
+    if [[ "${PRESERVATION_MODE}" = "Y" ]] ; then
         OUTDIR_INGESTFILE=$(dirname "${INPUT}")
         _report -dt "I'm going to place the AIP in the same directory as the original input file."
     fi
@@ -928,10 +928,10 @@ _get_audio_mapping(){
         _prep_volume_adjustment
     fi
     if [[ "${PBSMIX}" = "Y" ]] ; then
-         _add_audio_filter "asplit[a][b];[a]aformat=channel_layouts=stereo[stereo1];[b]aformat=channel_layouts=mono,asplit[mono1][mono2]"
-         if [[ "${ADDSLATE}" != "Y" ]] ; then
-             MIDDLEOPTIONS+=(-map "[stereo1]" -map "[mono1]" -map "[mono2]")
-         fi
+        _add_audio_filter "asplit[a][b];[a]aformat=channel_layouts=stereo[stereo1];[b]aformat=channel_layouts=mono,asplit[mono1][mono2]"
+        if [[ "${ADDSLATE}" != "Y" ]] ; then
+            MIDDLEOPTIONS+=(-map "[stereo1]" -map "[mono1]" -map "[mono2]")
+        fi
     fi
 }
 
@@ -1162,8 +1162,8 @@ _prep_ffmpeg_log(){
     while getopts ":q" OPT ; do
         case "${OPT}" in
             q) NOLOG="Y";;
-            *) echo "bad option -${OPTARG}" ; _usage ;;
-            :) echo "Option -${OPTARG} requires an argument" ; exit 1 ;;
+            :) _report -w "Option -${OPTARG} requires an argument" ; exit 1 ;;
+            *) _report -w "Bad option -${OPTARG}" ; _usage ;;
         esac
     done
     shift $(( ${OPTIND} - 1 ))
