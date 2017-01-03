@@ -1162,8 +1162,8 @@ _prep_ffmpeg_log(){
     while getopts ":q" OPT ; do
         case "${OPT}" in
             q) NOLOG="Y";;
-            *) echo "bad option -${OPTARG}" ; _usage ;;
             :) echo "Option -${OPTARG} requires an argument" ; exit 1 ;;
+            *) echo "Bad option -${OPTARG}" ; _usage ;;
         esac
     done
     shift $(( ${OPTIND} - 1 ))
