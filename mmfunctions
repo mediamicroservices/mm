@@ -1243,7 +1243,7 @@ _prep_volume_adjustment(){
                     _report -dt "Integrated loudness for $(basename "${INPUT_MOVIE}") is ${INTEGRATED_LOUDNESS}dB. Reference is ${REFERENCE}dB. No adjustment is needed, skipping."
                 else
                     _report -dt "Integrated loudness for $(basename "${INPUT_MOVIE}") is ${INTEGRATED_LOUDNESS}dB. Reference is ${REFERENCE}dB. Will adjust by ${VOLADJ}dB."
-                    _add_audio_filter "volume=${VOLADJ}dB"
+                    _add_audio_filter "loudnorm=measured_I="${measured_I}":measured_LRA="${measured_LRA}":measured_TP="${measured_TP}":measured_thresh="${measured_thresh}":offset="${target_offset}":linear=true:print_format=summary
                 fi
             fi
         fi
