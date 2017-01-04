@@ -1039,6 +1039,11 @@ _get_phase_warning(){
 }
 
 _get_volume_adjustment(){
+    measured_I=""
+    measured_LRA=""
+    measured_TP=""
+    measured_thresh=""
+    target_offset=""
     REFERENCE=-24
     INTEGRATED_LOUDNESS=""
     LOUDNESS_RANGE=""
@@ -1046,22 +1051,18 @@ _get_volume_adjustment(){
     VOLDET_MAX_VOLUME=""
     VOLADJ=""
     INPUT_MOVIE="${1}"
-    _report -dt "Getting volume data for $(basename "${INPUT_MOVIE}") ..."
+    _report -dt "Getting loudness data for $(basename "${INPUT_MOVIE}") ..."
     VOLDETTEMP=$(_maketemp)
-    VOLUME_DATA=$(ffprobe -of compact=p=0:nk=1:s=',' -show_entries frame_tags=lavfi.r128.I,lavfi.r128.LRA -f lavfi "amovie='${INPUT_MOVIE}',ebur128=metadata=1,volumedetect" 2>"${VOLDETTEMP}" | grep -v "^$" | tail -n1)
+    LOUDNESS_DATA=$(ffmpeg -i "${1}" -af loudnorm=print_format=json -f null - 2>&1)
     VOLUME_EXIT_CODE="${?}"
     if [ "${VOLUME_EXIT_CODE}" -ne 0 ] ; then
         _report -wt "Volume analysis for ${INPUT_MOVIE} exited with ${VOLUME_EXIT_CODE}."
     else
-        AUDIOFRAME_I=$(echo "${VOLUME_DATA}" | cut -d, -f1)
-        AUDIOFRAME_LRA=$(echo "${VOLUME_DATA}" | cut -d, -f2)
-        [ "${AUDIOFRAME_I}"   != "" ] && INTEGRATED_LOUDNESS="${AUDIOFRAME_I}"
-        [ "${AUDIOFRAME_LRA}" != "" ] && LOUDNESS_RANGE="${AUDIOFRAME_LRA}"
-        VOLDET_MEAN_VOLUME=$(grep "mean_volume" "${VOLDETTEMP}" | cut -d: -f 2 | awk '{print $1}')
-        VOLDET_MAX_VOLUME=$(grep "max_volume" "${VOLDETTEMP}" | cut -d: -f 2 | awk '{print $1}')
-        VOLADJ=$(echo "${REFERENCE} - ${INTEGRATED_LOUDNESS}" | bc)
-        # test to see if adjustment is at least 2dB, else skip
-        _report -dt "Loudness range is ${LOUDNESS_RANGE}dB."
+        measured_I=$(echo "$LOUDNESS_DATA" | grep "input_i" | awk -F\" '{print $4}')
+        measured_LRA=$(echo "$LOUDNESS_DATA" | grep "input_lra" | awk -F\" '{print $4}')
+        measured_TP=$(echo "$LOUDNESS_DATA" | grep "input_tp" | awk -F\" '{print $4}')
+        measured_thresh=$(echo "$LOUDNESS_DATA" | grep "input_thresh" | awk -F\" '{print $4}')
+        target_offset=$(echo "$LOUDNESS_DATA" | grep "target_offset" | awk -F\" '{print $4}')
         if [[ -f "${INGESTLOG}" ]] ; then
             _writeingestlog "audio_adjustment" "${VOLADJ}"
             _writeingestlog "r128_loudness_reference" "${REFERENCE}"
@@ -1238,14 +1239,8 @@ _prep_volume_adjustment(){
             _add_audio_filter "volume=${VOLADJ}dB"
         else
             _get_volume_adjustment "${SOURCEFILE}"
-            if [ "${VOLADJ}" ] ; then
-                if [ $(echo "${VOLADJ} < 2" |bc) -eq 1 -a $(echo "$VOLADJ > -2" |bc) -eq 1 ] ; then
-                    _report -dt "Integrated loudness for $(basename "${INPUT_MOVIE}") is ${INTEGRATED_LOUDNESS}dB. Reference is ${REFERENCE}dB. No adjustment is needed, skipping."
-                else
                     _report -dt "Integrated loudness for $(basename "${INPUT_MOVIE}") is ${INTEGRATED_LOUDNESS}dB. Reference is ${REFERENCE}dB. Will adjust by ${VOLADJ}dB."
-                    _add_audio_filter "loudnorm=measured_I="${measured_I}":measured_LRA="${measured_LRA}":measured_TP="${measured_TP}":measured_thresh="${measured_thresh}":offset="${target_offset}":linear=true:print_format=summary
-                fi
-            fi
+                    _add_audio_filter "loudnorm=measured_I="${measured_I}":measured_LRA="${measured_LRA}":measured_TP="${measured_TP}":measured_thresh="${measured_thresh}":offset="${target_offset}":linear=true:print_format=summary"
         fi
     fi
 }
