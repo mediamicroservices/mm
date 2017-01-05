@@ -12,12 +12,6 @@ elif [ ! "${CONFIG}" = "Y" -a "${REQUIRECONFIG}" = "Y" ] ; then
     echo "The configuration file is not set. You must first create ${MM_CONFIG_FILE} by running mmconfig." 1>&2
     exit 1
 fi
-if [ -f "${LTO_CONFIG_FILE}" ] ; then
-    . "${LTO_CONFIG_FILE}"
-elif [ ! "${CONFIG}" = "Y" -a "${REQUIRECONFIG}" = "Y" ] ; then
-    echo "The configuration file is not set. You must first create ${LTO_CONFIG_FILE} by running ltoperconfig." 1>&2
-    exit 1
-fi
 
 _cleanup_mount_dir(){
     if [ -d "${MOUNT_DIR}" ] ; then
