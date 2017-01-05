@@ -1219,11 +1219,11 @@ _prep_volume_adjustment(){
     unset VOLADJ
     if [[ "${VOLADJUST}" = "Y" ]] ; then
         if [[ -f "${INGESTLOG}" ]] ; then
-            measured_I=$(_readingestlog "r128_integrated_loudness" "${measured_I}")
-            measured_LRA=$(_readingestlog "r128_loudness_range" "${measured_LRA}")
-            measured_TP=$(_readingestlog "measured_true_peak" "${measured_TP}")
-            measured_thresh=$(_readingestlog "measured_threshold" "${measured_thresh}")
-            target_offset=$(_readingestlog "target_offset" "${target_offset}")
+            measured_I=$(_readingestlog "r128_integrated_loudness")
+            measured_LRA=$(_readingestlog "r128_loudness_range")
+            measured_TP=$(_readingestlog "measured_true_peak")
+            measured_thresh=$(_readingestlog "measured_threshold")
+            target_offset=$(_readingestlog "target_offset")
         fi
         if [ "${measured_I}" ] ; then
             _add_audio_filter "loudnorm=measured_I="${measured_I}":measured_LRA="${measured_LRA}":measured_TP="${measured_TP}":measured_thresh="${measured_thresh}":offset="${target_offset}":linear=true:print_format=summary"
