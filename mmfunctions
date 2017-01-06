@@ -1232,8 +1232,8 @@ _prep_volume_adjustment(){
         fi
         if [ ! "${LOUD_ADJ}" ] ; then
             _get_volume_adjustment "${SOURCEFILE}"
-            _report -dt "Integrated loudness for $(basename "${INPUT_MOVIE}") is ${measured_I} LUFS. Reference is -24 LUFS. Will adjust by ${LOUD_ADJ} LUFS"
         fi
+        _report -dt "Integrated loudness for $(basename "${INPUT_MOVIE}") is ${measured_I} LUFS. Reference is -24 LUFS. Will adjust by ${LOUD_ADJ} LUFS"
         _add_audio_filter "loudnorm=measured_I=${measured_I}:measured_LRA=${measured_LRA}:measured_TP=${measured_TP}:measured_thresh=${measured_thresh}:offset=${target_offset}:linear=true:print_format=summary"
     fi
 }
