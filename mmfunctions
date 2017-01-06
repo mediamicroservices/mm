@@ -579,6 +579,7 @@ _email_delivery(){
 Processing Computer: $(_readingestlog "computer_name")
 Audio True Peak (dBTP): $(_readingestlog "measured_true_peak")
 Integrated Loudness (LUFS): $(_readingestlog "r128_integrated_loudness")
+Loudness Adjustment (LUFS): $(_readingestlog "loudness_adjustment")
 Loudness Range (LU): $(_readingestlog "r128_loudness_range")
 Threshold (LUFS) : $(_readingestlog "measured_threshold")
 Out of Phase Audio Ranges: $(_readingestlog "Out_of_phase_audio_ranges")"
@@ -1038,6 +1039,7 @@ _get_volume_adjustment(){
     measured_TP=""
     measured_thresh=""
     target_offset=""
+    LOUD_ADJ=""
     INPUT_MOVIE="${1}"
     _report -dt "Getting loudness data for $(basename "${INPUT_MOVIE}") ..."
     LOUDNESS_DATA=$(ffmpeg -i "${1}" -af loudnorm=print_format=json -f null - 2>&1)
@@ -1050,12 +1052,14 @@ _get_volume_adjustment(){
         measured_TP=$(echo "$LOUDNESS_DATA" | grep "input_tp" | awk -F\" '{print $4}')
         measured_thresh=$(echo "$LOUDNESS_DATA" | grep "input_thresh" | awk -F\" '{print $4}')
         target_offset=$(echo "$LOUDNESS_DATA" | grep "target_offset" | awk -F\" '{print $4}')
+        LOUD_ADJ=$(echo "($measured_I - -24)*-1" | bc)
         if [[ -f "${INGESTLOG}" ]] ; then
             _writeingestlog "measured_true_peak" "${measured_TP}"
             _writeingestlog "r128_loudness_range" "${measured_LRA}"
             _writeingestlog "r128_integrated_loudness" "${measured_I}"
             _writeingestlog "measured_threshold" "${measured_thresh}"
             _writeingestlog "target_offset" "${target_offset}"
+            _writeingestlog "loudness_adjustment" "${LOUD_ADJ}"
         fi
     fi
 }
@@ -1224,12 +1228,13 @@ _prep_volume_adjustment(){
             measured_TP=$(_readingestlog "measured_true_peak")
             measured_thresh=$(_readingestlog "measured_threshold")
             target_offset=$(_readingestlog "target_offset")
+            LOUD_ADJ=$(_readingestlog "loudness_adjustment")
         fi
-        if [ "${measured_I}" ] ; then
+        if [ "${LOUD_ADJ}" ] ; then
             _add_audio_filter "loudnorm=measured_I="${measured_I}":measured_LRA="${measured_LRA}":measured_TP="${measured_TP}":measured_thresh="${measured_thresh}":offset="${target_offset}":linear=true:print_format=summary"
         else
             _get_volume_adjustment "${SOURCEFILE}"
-                    _report -dt "Integrated loudness for $(basename "${INPUT_MOVIE}") is ${measured_I}dB."
+                    _report -dt "Integrated loudness for $(basename "${INPUT_MOVIE}") is ${measured_I} LUFS. Reference is -24 LUFS. Will adjust by ${LOUD_ADJ} LUFS"
                     _add_audio_filter "loudnorm=measured_I="${measured_I}":measured_LRA="${measured_LRA}":measured_TP="${measured_TP}":measured_thresh="${measured_thresh}":offset="${target_offset}":linear=true:print_format=summary"
         fi
     fi
