@@ -96,7 +96,8 @@ mediamicroservice dependencies:
 * sdl
 * ffmpeg --with-sdl2 --with-freetype
 * flac
-* md5deep
+* ltopers
+* hashdeep
 * mediaconch
 * mediainfo
 * normalize
