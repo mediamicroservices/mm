@@ -9,7 +9,7 @@ _usage(){
     echo "  -r option to remove source files upon transfer"
     echo "the structure of the script is as follows: migratefiles -o ${TARGET} ${INPUT}, note that this is different than rsync commands"
 }
-user_input=$(echo "options are: ${*}")
+user_input="${*}"
 
 OPTIND=1
 while getopts ":o:l:r" OPT ; do
@@ -28,6 +28,7 @@ DATE=$(_get_iso8601_c)
 
 while [ "${*}" != "" ] ; do
     INPUT="${1}"
+    _report_to_db
     echo "The input is: ${INPUT}"
     echo "The target is: ${TARGET}"
     
@@ -43,7 +44,6 @@ while [ "${*}" != "" ] ; do
     if [ "${REMOVESOURCEFILES}" == "Y" ] ; then
         EXTRAOUTPUTS+=(--remove-source-files)
     fi
-    
-    rsync -rtvP "${EXTRAOUTPUTS[@]}" --log-file="${LOGFILE}" --log-file-format="${DATE} '%f' %l '${TARGET}'" "${INPUT}" "${TARGET}"
-    _report_to_db 
+    _run_critical_event rsync -rtvP "${EXTRAOUTPUTS[@]}" --log-file="${LOGFILE}" --log-file-format="${DATE} '%f' %l '${TARGET}'" "${INPUT}" "${TARGET}"
+    _eventoutcome_update
 done

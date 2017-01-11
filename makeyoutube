@@ -30,6 +30,7 @@ _usage(){
 }
 [ "${#}" = 0 ] && _usage
 
+user_input="${*}"
 # command-line options to set mediaid and original variables
 OPTIND=1
 while getopts ":lrv:o:d:e:E:nhY" OPT ; do
@@ -66,7 +67,7 @@ while [ "${*}" != "" ] ; do
     _find_input "${INPUT}"
     MEDIAID=$(basename "${INPUT}" | cut -d. -f1)
     INGESTLOG="${LOGDIR}/capture.log"
-
+     _report_to_db
     _set_up_output
 
     # get information on the input
@@ -111,7 +112,11 @@ while [ "${*}" != "" ] ; do
         MIDDLEOPTIONS+=(-ac 2)
         MIDDLEOPTIONS+=(-b:a 128k)
         _get_audio_index "${SOURCEFILE}"
-        _get_audio_mapping -v "${SOURCEFILE}"
+        if [ "${ISOBJECT}" = "Y" ] ; then
+            _get_audio_mapping -v "${SOURCEFILE}"
+        else
+            _get_audio_mapping "${SOURCEFILE}"
+        fi
         MIDDLEOPTIONS+=("${AUDIOMAPPING_FFMPEG[@]}")
     fi
     MIDDLEOPTIONS+=(-f mp4)
@@ -124,7 +129,7 @@ while [ "${*}" != "" ] ; do
 
     _filter_to_middle_option
 
-    _run_critical ffmpeg "${INPUTOPTIONS[@]}" "${FFMPEGINPUT[@]}" "${MIDDLEOPTIONS[@]}" "${OUTPUT}"
+    _run_critical_event ffmpeg "${INPUTOPTIONS[@]}" "${FFMPEGINPUT[@]}" "${MIDDLEOPTIONS[@]}" "${OUTPUT}"
     echo
     _summarize_make
     _deliver_output "${MAKEYOUTUBE_DELIVERY_EMAIL_TO}"
@@ -138,6 +143,5 @@ while [ "${*}" != "" ] ; do
             _writeerrorlog "makeyoutube" "$(basename "${OUTPUT}") qualified for uploadyoutube but it is not installed, so the file could not be uploaded."
         fi
     fi
-    _report_to_db
     _log -e
 done

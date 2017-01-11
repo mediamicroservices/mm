@@ -8,7 +8,7 @@ usage(){
 _error_check(){
 #verify success of operation
 if [ "$?" != "0" ]; then
-echo -e "\033[1;5;95mERROR:\033[0m \033[1;93mPlease confirm inputs and try again.\033[0m"
+echo -e "\033[1;103;95mERROR:Please confirm inputs and try again.\033[0m"
 mysql_config_editor remove --login-path=tempsetting
 exit 1
 fi
@@ -40,16 +40,17 @@ read -r DB_NAME
 #create database
 echo "CREATE DATABASE "$DB_NAME"" | mysql --login-path=tempsetting
 _error_check
-echo "CREATE TABLE object (objectIdentifierValueID bigint NOT NULL AUTO_INCREMENT,objectIdentifierValue varchar(1000) NOT NULL UNIQUE,contentLocationValue varchar (300),PRIMARY KEY (objectIdentifierValueID))" | mysql --login-path=tempsetting "$DB_NAME"
-echo "CREATE TABLE event (eventIdentifierValue bigint NOT NULL AUTO_INCREMENT,objectIdentifierValue varchar(1000) NOT NULL,eventType varchar(100) NOT NULL,eventDateTime datetime NOT NULL DEFAULT NOW(),eventDetail varchar(30) NOT NULL,eventDetailOPT varchar(1000),eventDetailCOMPNAME varchar(50) NOT NULL,linkingAgentIdentifierValue varchar(30) NOT NULL,PRIMARY KEY (eventIdentifierValue),FOREIGN KEY (objectIdentifierValue) REFERENCES object(objectIdentifierValue))" | mysql --login-path=tempsetting "$DB_NAME"
-echo "CREATE TABLE fixity (fixityIdentifierValue bigint NOT NULL AUTO_INCREMENT,objectIdentifierValue varchar(1000),eventDateTime datetime NOT NULL DEFAULT NOW(),eventDetail varchar(30) NOT NULL,messageDigestAlgorithm varchar (20) NOT NULL,messageDigestPATH varchar (8000) NOT NULL,messageDigestFILENAME varchar (8000) NOT NULL,messageDigestHASH varchar (32) NOT NULL,PRIMARY KEY (fixityIdentifierValue),FOREIGN KEY (objectIdentifierValue) REFERENCES object(objectIdentifierValue))" | mysql --login-path=tempsetting "$DB_NAME"
+echo "CREATE TABLE object (objectIdentifierValueID bigint NOT NULL AUTO_INCREMENT,objectIdentifierValue varchar(1000) NOT NULL UNIQUE,objectDB_Insertion datetime NOT NULL DEFAULT NOW(),object_LastTouched datetime NOT NULL,PRIMARY KEY (objectIdentifierValueID))" | mysql --login-path=tempsetting "$DB_NAME"
+echo "CREATE TABLE event (eventIdentifierValue bigint NOT NULL AUTO_INCREMENT,objectIdentifierValue varchar(1000) NOT NULL,eventType varchar(100) NOT NULL,eventDateTime datetime NOT NULL DEFAULT NOW(),eventDetail varchar(30) NOT NULL,eventOutcome varchar(30),eventDetailOPT varchar(1000),eventDetailCOMPNAME varchar(50) NOT NULL,linkingAgentIdentifierValue varchar(30) NOT NULL,PRIMARY KEY (eventIdentifierValue),FOREIGN KEY (objectIdentifierValue) REFERENCES object(objectIdentifierValue))" | mysql --login-path=tempsetting "$DB_NAME"
+echo "CREATE TABLE fixity (fixityIdentifierValue bigint NOT NULL AUTO_INCREMENT,eventIdentifierValue bigint NOT NULL, objectIdentifierValue varchar(1000),eventDateTime datetime NOT NULL DEFAULT NOW(),eventDetail varchar(30) NOT NULL,messageDigestAlgorithm varchar (20) NOT NULL,messageDigestPATH varchar (8000) NOT NULL,messageDigestFILENAME varchar (8000) NOT NULL,messageDigestHASH varchar (32) NOT NULL,PRIMARY KEY (fixityIdentifierValue),FOREIGN KEY (eventIdentifierValue) REFERENCES event(eventIdentifierValue), FOREIGN KEY (objectIdentifierValue) REFERENCES object(objectIdentifierValue))" | mysql --login-path=tempsetting "$DB_NAME"
+echo "CREATE TABLE objectCharacteristics (objectCharacteristicValueID bigint NOT NULL AUTO_INCREMENT, objectIdentifierValue varchar(1000) NOT NULL,mediaInfo MEDIUMTEXT, PRIMARY KEY (objectCharacteristicValueID),FOREIGN KEY (objectIdentifierValue) REFERENCES object(objectIdentifierValue))" | mysql --login-path=tempsetting "$DB_NAME"
 _error_check
 #remove root config
 mysql_config_editor remove --login-path=tempsetting
 
 #Option to continue on to user creation
-echo -e "\033[1;95mDatabase has been created\033[0m"
-echo -e "\033[1;93mDo You wish to create a user? Y or N?\033[0m"
+echo -e "\033[1;103;95mDatabase has been created\033[0m"
+echo -e "\033[1;103;95mDo You wish to create a user? Y or N?\033[0m"
 read user_input
 continue=$(echo "$user_input" | tr '[:upper:]' '[:lower:]')
 if [ "$continue" = "y" ] ; then
@@ -82,15 +83,19 @@ _error_check
 echo "FLUSH PRIVILEGES" | mysql --login-path=tempsetting
 
 #show commands to create sql login path
-db_host=$(ifconfig |grep inet | tail -n1 | cut -d ' ' -f2)
-echo -e "\033[1;93mTo finalize, run the following command on your user machine. NOTE You may wish to confirm your host IP address first!\033[0m"
-echo -e "\033[1;95mmysql_config_editor set --login-path="$USER_NAME"_config --host="$db_host" --user="$USER_NAME" --password\033[0m"
-echo -e "\033[1;93mFollowed by the user password: "$USER_PASSWORD"\033[0m"
+if [ "$USER_HOST" = "localhost" ] ; then
+    db_host="localhost"
+else
+    db_host=$(ifconfig |grep inet | tail -n1 | cut -d ' ' -f2)
+fi
+echo -e "\033[1;103;95mTo finalize, run the following command on your user machine. NOTE You may wish to confirm your host IP address first!\033[0m"
+echo -e "\033[1;103;95mmysql_config_editor set --login-path="$USER_NAME"_config --host="$db_host" --user="$USER_NAME" --password\033[0m"
+echo -e "\033[1;103;95mFollowed by the user password: "$USER_PASSWORD"\033[0m"
 
 echo ""
-echo -e "\033[1;93mThen, use the following settings in mmconfig\033[0m"
-echo -e "\033[1;95mDatabase Profile is: "$USER_NAME"_config\033[0m"
-echo -e "\033[1;93mDatabase Name is: "$DB_NAME"\033[0m"
+echo -e "\033[1;103;95mThen, use the following settings in mmconfig\033[0m"
+echo -e "\033[1;103;95mDatabase Profile is: "$USER_NAME"_config\033[0m"
+echo -e "\033[1;103;95mDatabase Name is: "$DB_NAME"\033[0m"
 #remove root config
 mysql_config_editor remove --login-path=tempsetting
 fi

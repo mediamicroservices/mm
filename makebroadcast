@@ -38,6 +38,7 @@ _usage(){
 }
 [ "${#}" = 0 ] && _usage
 
+user_input="${*}"
 # command-line options to adjust volume, delivery location, and slate creation
 OPTIND=1
 while getopts ":F:slrcv:o:d:e:E:nh" OPT ; do
@@ -79,7 +80,7 @@ while [ "${*}" != "" ] ; do
         MEDIAID=$(basename "${INPUT}" | cut -d. -f1)
     fi
     INGESTLOG="${LOGDIR}/capture.log"
-
+    _report_to_db
     if [ "${ADDSLATE}" = "Y" ] ; then
         SUFFIX="_SLATE"
     fi
@@ -301,14 +302,12 @@ while [ "${*}" != "" ] ; do
                 _add_video_filter "setdar=4/3"
                 MIDDLEOPTIONS+=("${MIDDLEOPTIONSIMX[@]}")
             elif [ "${HEIGHT}" -eq "486" -a "${WIDTH}" -eq "720" ] ; then
-                _add_video_filter "crop=720:480:0:4"
-                _add_video_filter "pad=720:512:0:24"
+                _add_video_filter "crop=720:484:0:0"
+                _add_video_filter "pad=720:512:0:28"
                 _add_video_filter "setsar=1/1"
                 _add_video_filter "setdar=4/3"
                 MIDDLEOPTIONS+=("${MIDDLEOPTIONSIMX[@]}")
             elif  [ "${HEIGHT}" -eq "512" -a "${WIDTH}" -eq "720" ] ;then
-                _add_video_filter "crop=720:480:0:32"
-                _add_video_filter "pad=720:512:0:24"
                 _add_video_filter "setsar=1/1"
                 _add_video_filter "setdar=4/3"
                 MIDDLEOPTIONS+=("${MIDDLEOPTIONSIMX[@]}")
@@ -378,12 +377,11 @@ MIDDLEOPTIONS+=(-map "[with_slate_video]" -map "[with_slate_stereo1]" -map "[wit
 #MIDDLEOPTIONS: ${MIDDLEOPTIONS[@]}
 #OUTPUT: ${OUTPUT}")
 
-    _run_critical ffmpeg "${INPUTOPTIONS[@]}" "${FFMPEGINPUT[@]}" "${MIDDLEOPTIONS[@]}" "${OUTPUT}"
+    _run_critical_event ffmpeg "${INPUTOPTIONS[@]}" "${FFMPEGINPUT[@]}" "${MIDDLEOPTIONS[@]}" "${OUTPUT}"
     echo
     _summarize_make
     _deliver_output "${MAKEBROADCAST_DELIVERY_EMAIL_TO}"
     _log -e
-    _report_to_db
 done
 unset ADDSLATE
 

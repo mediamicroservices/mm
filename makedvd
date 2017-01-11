@@ -28,6 +28,7 @@ _usage(){
 }
 [ "${#}" = 0 ] && _usage
 
+user_input="${*}"
 # command-line options to set mediaid and original variables
 OPTIND=1
 while getopts ":lrv:o:d:e:E:nth" OPT ; do
@@ -63,6 +64,7 @@ while [ "${*}" != "" ] ; do
     _unset_variables
     _find_input "${INPUT}"
     MEDIAID=$(basename "${INPUT}" | cut -d. -f1)
+    _report_to_db
 
     _set_up_output
 
@@ -153,15 +155,15 @@ while [ "${*}" != "" ] ; do
 
     _filter_to_middle_option
 
-    _run_critical ffmpeg ${INPUTOPTIONS[@]} "${FFMPEGINPUT[@]}" ${MIDDLEOPTIONS[@]} "${OUTPUTDIR}/${MEDIAID%.*}.mpeg"
+    _run_critical_event ffmpeg ${INPUTOPTIONS[@]} "${FFMPEGINPUT[@]}" ${MIDDLEOPTIONS[@]} "${OUTPUTDIR}/${MEDIAID%.*}.mpeg"
     # Making DVD VIDEO_TS folder, chapters every 5 minutes, dvdauthor will ignore chapter markers greater than duration
     export VIDEO_FORMAT=NTSC
     _run_critical dvdauthor --title -v "ntsc+${DVDASPECT}" -a ac3+en -c 0,5:00,10:00,15:00,20:00,25:00,30:00,35:00,40:00,45:00,50:00,55:00,1:00:00,1:05:00,1:10:00,1:15:00,1:20:00,1:25:00,1:30:00,1:35:00,1:40:00,1:45:00,1:50:00,1:55:00,2:00:00,2:05:00,2:10:00,2:15:00,2:20:00,2:25:00,2:30:00,2:35:00,2:40:00,2:45:00,2:50:00,2:55:00,3:00:00,3:05:00,3:10:00,3:15:00,3:20:00,3:25:00,3:30:00,3:35:00,3:40:00,3:45:00,3:50:00,3:55:00 -f "${OUTPUTDIR}/${MEDIAID%.*}.mpeg" -o "${OUTPUTDIR}/${MEDIAID%.*}/" 2> "${LOGDIR}/dvdauthor_$(_get_iso8601_c)_$(basename ${0})_${VERSION}.txt"
     _run rm "${OUTPUTDIR}/${MEDIAID%.*}.mpeg"
-    _run_critical dvdauthor -T -o "${OUTPUTDIR}/${MEDIAID%.*}/"
+    _run_critical_event dvdauthor -T -o "${OUTPUTDIR}/${MEDIAID%.*}/"
     # Making DVD image file.
     volname=$(echo "${DVDLABELPREFIX}${MEDIAID}")
-    _run_critical mkisofs -f -dvd-video -udf -V "${volname:0:32}" -v -v -o "${OUTPUT}"  "${OUTPUTDIR}/${MEDIAID%.*}" 2> "${LOGDIR}/mkisofs_$(_get_iso8601_c)_$(basename ${0})_${VERSION}.txt"
+    _run_critical_event mkisofs -f -dvd-video -udf -V "${volname:0:32}" -v -v -o "${OUTPUT}"  "${OUTPUTDIR}/${MEDIAID%.*}" 2> "${LOGDIR}/mkisofs_$(_get_iso8601_c)_$(basename ${0})_${VERSION}.txt"
     _run rm -r "${OUTPUTDIR}/${MEDIAID%.*}/"
     echo
     _summarize_make
