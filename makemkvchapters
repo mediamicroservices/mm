@@ -1,0 +1,114 @@
+#!/bin/bash
+#makemkvchapters creates ordered chapters in a matroska file
+SCRIPTDIR=$(dirname "${0}")
+. "${SCRIPTDIR}/mmfunctions" || { echo "Missing '${SCRIPTDIR}/mmfunctions'. Exiting." ; exit 1 ;};
+unset DEPENDENCIES
+DEPENDENCIES=(mkvpropedit)
+_initialize_make
+
+while [ "${*}" != "" ] ; do
+    INPUT="${1}"
+    shift
+    if [ -f "${INPUT}" ] ; then
+        MKVCHAPTERS_XML=$(_maketemp)
+        MKVTAGS_XML=$(_maketemp)
+
+_report "For the Introduction"
+_report "Start and end times must be in HH:MM:SS.mmm or S.mmm format. Note mmm is milliseconds and not frames."
+_report -qn "Enter the start time or 'q' to quit: "
+read -e intimeI
+[[ "${intimeI}" = "q" ]] && exit 0
+_report -qn "Enter the end time or 'q' to quit: "
+read -e outtimeI
+[[ "${outtimeI}" = "q" ]] && exit 0
+labelI="Introduction"
+_report "For the Discussion"
+_report "Start and end times must be in HH:MM:SS.mmm or S.mmm format. Note mmm is milliseconds and not frames."
+_report -qn "Enter the start time or 'q' to quit: "
+read -e intimeD
+[[ "${intimeD}" = "q" ]] && exit 0
+_report -qn "Enter the end time or 'q' to quit: "
+read -e outtimeD
+[[ "${outtimeD}" = "q" ]] && exit 0
+labelD="Discussion"
+echo "$intimeI - $outtimeI: $labelI"
+echo "$intimeD - $outtimeD: $labelD"
+
+echo "<?xml version='1.0' encoding='UTF-8'?>
+<!-- <!DOCTYPE Tags SYSTEM 'matroskatags.dtd'> -->
+<Chapters>
+  <EditionEntry>
+    <EditionFlagOrdered>1</EditionFlagOrdered>
+    <EditionFlagHidden>0</EditionFlagHidden>
+    <EditionFlagDefault>1</EditionFlagDefault>
+    <EditionUID>12338659363134957115</EditionUID>
+    <ChapterAtom>
+      <ChapterTimeStart>00:00:00.000000000</ChapterTimeStart>
+      <ChapterFlagHidden>0</ChapterFlagHidden>
+      <ChapterFlagEnabled>1</ChapterFlagEnabled>
+      <ChapterDisplay>
+        <ChapterString>Full</ChapterString>
+        <ChapterLanguage>eng</ChapterLanguage>
+      </ChapterDisplay>
+    </ChapterAtom>
+  </EditionEntry>
+  <EditionEntry>
+    <EditionFlagOrdered>1</EditionFlagOrdered>
+    <EditionFlagHidden>0</EditionFlagHidden>
+    <EditionFlagDefault>0</EditionFlagDefault>
+    <EditionUID>3475548369</EditionUID>
+    <ChapterAtom>
+      <ChapterTimeStart>${intimeI}</ChapterTimeStart>
+      <ChapterTimeEnd>${outtimeI}</ChapterTimeEnd>
+      <ChapterFlagHidden>0</ChapterFlagHidden>
+      <ChapterFlagEnabled>1</ChapterFlagEnabled>
+      <ChapterDisplay>
+        <ChapterString>${labelI}</ChapterString>
+        <ChapterLanguage>eng</ChapterLanguage>
+      </ChapterDisplay>
+    </ChapterAtom>
+    <ChapterAtom>
+      <ChapterTimeStart>${intimeD}</ChapterTimeStart>
+      <ChapterTimeEnd>${outtimeD}</ChapterTimeEnd>
+      <ChapterFlagHidden>0</ChapterFlagHidden>
+      <ChapterFlagEnabled>1</ChapterFlagEnabled>
+      <ChapterDisplay>
+        <ChapterString>${labelD}</ChapterString>
+        <ChapterLanguage>eng</ChapterLanguage>
+      </ChapterDisplay>
+    </ChapterAtom>
+  </EditionEntry>
+</Chapters>" > "${MKVCHAPTERS_XML}"
+
+echo "<?xml version='1.0' encoding='UTF-8'?>
+<!-- <!DOCTYPE Tags SYSTEM 'matroskatags.dtd'> -->
+<Tags>
+  <Tag>
+    <Targets>
+      <EditionUID>12338659363134957115</EditionUID>
+      <TargetTypeValue>50</TargetTypeValue>
+    </Targets>
+    <Simple>
+      <Name>TITLE</Name>
+      <String>Full Transfer</String>
+      <TagLanguage>eng</TagLanguage>
+      <DefaultLanguage>1</DefaultLanguage>
+    </Simple>
+  </Tag>
+  <Tag>
+    <Targets>
+      <EditionUID>3475548369</EditionUID>
+      <TargetTypeValue>50</TargetTypeValue>
+    </Targets>
+    <Simple>
+      <Name>TITLE</Name>
+      <String>Presentation</String>
+      <TagLanguage>eng</TagLanguage>
+      <DefaultLanguage>1</DefaultLanguage>
+    </Simple>
+  </Tag>
+</Tags>" > "${MKVTAGS_XML}"
+
+mkvpropedit "${INPUT}" -c "${MKVCHAPTERS_XML}" -t all:"${MKVTAGS_XML}"
+    fi
+done
