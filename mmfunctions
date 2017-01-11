@@ -1042,7 +1042,7 @@ _get_volume_adjustment(){
     LOUD_ADJ=""
     INPUT_MOVIE="${1}"
     _report -dt "Getting loudness data for $(basename "${INPUT_MOVIE}") ..."
-    LOUDNESS_DATA=$(ffmpeg -i "${1}" -af loudnorm=print_format=json -f null - 2>&1)
+    LOUDNESS_DATA=$(ffmpeg -i "${1}" -vn -filter_complex "${AUDIOFILTERCHAIN},loudnorm=print_format=json" -f null - 2>&1)
     VOLUME_EXIT_CODE="${?}"
     if [ "${VOLUME_EXIT_CODE}" -ne 0 ] ; then
         _report -wt "Volume analysis for ${INPUT_MOVIE} exited with ${VOLUME_EXIT_CODE}."
