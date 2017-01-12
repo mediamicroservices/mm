@@ -127,6 +127,9 @@ _premis_event_list(){
     if [ "$eventDetail" = "ingestfile" ] ; then
         eventType="creation"
         METADIR="${OUTDIR_INGESTFILE}/${MEDIAID}/metadata/fileMeta/objects"
+        if [ -z "${METADIR}" ] ; then
+            METADIR="${AIPSTORAGE}/${MEDIAID}/metadata/fileMeta/objects"
+        fi
         MEDIAINFO=$(cat "${METADIR}/${MEDIA_ID}_mediainfo.xml")
         MEDIA_ID="${MEDIAID}"
     fi
