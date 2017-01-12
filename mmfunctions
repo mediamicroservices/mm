@@ -42,7 +42,7 @@ _report_to_db(){
         _db_error_check
         if [ -d "${METADIR}" ] ; then
             table_name="objectCharacteristics"
-            echo "INSERT IGNORE INTO objectCharacteristics (objectIdentifierValue,mediaInfo,videoFingerprint) VALUES ('${MEDIA_ID}','${MEDIAINFO}','${VIDEOFINGERPRINT}')" | mysql  --login-path="${PREMIS_PROFILE}"  "${PREMIS_NAME}" 2> /dev/null
+            echo "INSERT IGNORE INTO objectCharacteristics (objectIdentifierValue,mediaInfo,videoFingerprint,videoFingerprintSorted) VALUES ('${MEDIA_ID}','${MEDIAINFO}','${VIDEOFINGERPRINT}','${VIDEOFINGERPRINT_SORTED}')" | mysql  --login-path="${PREMIS_PROFILE}"  "${PREMIS_NAME}" 2> /dev/null
         _db_error_check
         fi
     fi
@@ -113,7 +113,7 @@ _db_error_check(){
             echo "echo \"INSERT INTO event (objectIdentifierValue,eventType,eventDetail,eventDetailOPT,eventDetailCOMPNAME,linkingAgentIdentifierValue) VALUES ('${MEDIAID}','${eventType}','${eventDetail}','${user_input}','${HOSTNAME}', '${OP}')\" | mysql --login-path=\"${PREMIS_PROFILE}\"  \"${PREMIS_NAME}\"" >> ~/Desktop/"${MEDIA_ID}"_dbreport.txt
         fi
         if [ "${table_name}" = "objectCharacteristics" ] ; then
-            echo "echo \"INSERT IGNORE INTO objectCharacteristics (objectIdentifierValue,mediaInfo,videoFingerprint) VALUES ('${MEDIA_ID}','${MEDIAINFO}','${VIDEOFINGERPRINT}')\" | mysql --login-path=\"${PREMIS_PROFILE}\"  \"$PREMIS_NAME\"" >> ~/Desktop/"$MEDIA_ID"_dbreport.txt
+            echo "echo \"INSERT IGNORE INTO objectCharacteristics (objectIdentifierValue,mediaInfo,videoFingerprint,videoFingerprintSorted) VALUES ('${MEDIA_ID}','${MEDIAINFO}','${VIDEOFINGERPRINT}','${VIDEOFINGERPRINT_SORTED}')\" | mysql --login-path=\"${PREMIS_PROFILE}\"  \"$PREMIS_NAME\"" >> ~/Desktop/"$MEDIA_ID"_dbreport.txt
         fi
     else
         echo -e "\033[1;103;95mSuccessfully reported infomation to the "${table_name}" table in the database "${PREMIS_NAME}"\033[0m"
@@ -126,10 +126,7 @@ _premis_event_list(){
 
     if [ "$eventDetail" = "ingestfile" ] ; then
         eventType="creation"
-        METADIR="${OUTDIR_INGESTFILE}/${MEDIAID}/metadata/fileMeta/objects"
-        if [ -z "${METADIR}" ] ; then
-            METADIR="${AIPSTORAGE}/${MEDIAID}/metadata/fileMeta/objects"
-        fi
+        METADIR="${AIP_STORAGE}/${MEDIAID}/metadata/fileMeta/objects"
         MEDIAINFO=$(cat "${METADIR}/${MEDIA_ID}_mediainfo.xml")
         MEDIA_ID="${MEDIAID}"
     fi
@@ -175,6 +172,13 @@ _premis_event_list(){
         eventType="fixity"
         MEDIA_ID="${TAPE_SERIAL}"
     fi
+}
+
+_generate_fingerprint(){
+    SIGNATURE="$(basename ${INPUT%.*})_signature.xml"
+    ~/ffmpeg/ffmpeg -i "${INPUT}" -vf signature=format=xml:filename="${OUTDIR_INGESTFILE}/${MEDIAID}/metadata/fileMeta/objects/${SIGNATURE}" -map 0:v -f null -
+    VIDEOFINGERPRINT=$(xml sel -N "m=urn:mpeg:mpeg7:schema:2001" -t -m m:Mpeg7/m:DescriptionUnit/m:Descriptor/m:VideoSignatureRegion/m:VideoFrame -v m:MediaTimeOfFrame -n -v "translate (normalize-space(m:FrameSignature), ' ', '')" -n "${OUTDIR_INGESTFILE}/${MEDIAID}/metadata/fileMeta/objects/${SIGNATURE}" | cut -c -30)
+    VIDEOFINGERPRINT_SORTED=$(xml sel -N "m=urn:mpeg:mpeg7:schema:2001" -t -m m:Mpeg7/m:DescriptionUnit/m:Descriptor/m:VideoSignatureRegion/m:VideoFrame -v m:MediaTimeOfFrame -n -v "translate (normalize-space(m:FrameSignature), ' ', '')" -n "${OUTDIR_INGESTFILE}/${MEDIAID}/metadata/fileMeta/objects/${SIGNATURE}" | cut -c -30)
 }
 
 _open_mysql_plist(){
