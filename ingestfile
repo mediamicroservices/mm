@@ -560,6 +560,7 @@ fi
 
 # more logging
 _writeingestlog "datetime_end" "$(_get_iso8601)"
+_generate_fingerprint
 
 # move and cleanup
 if [[ "${DELIVERYTOAIPSTORAGE}" == "Y" ]] ; then
