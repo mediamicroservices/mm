@@ -178,7 +178,7 @@ _generate_fingerprint(){
     SIGNATURE="$(basename ${INPUT%.*})_signature.xml"
     ~/ffmpeg/ffmpeg -i "${INPUT}" -vf signature=format=xml:filename="${OUTDIR_INGESTFILE}/${MEDIAID}/metadata/fileMeta/objects/${SIGNATURE}" -map 0:v -f null -
     VIDEOFINGERPRINT=$(xml sel -N "m=urn:mpeg:mpeg7:schema:2001" -t -m m:Mpeg7/m:DescriptionUnit/m:Descriptor/m:VideoSignatureRegion/m:VideoFrame -v m:MediaTimeOfFrame -n -v "translate (normalize-space(m:FrameSignature), ' ', '')" -n "${OUTDIR_INGESTFILE}/${MEDIAID}/metadata/fileMeta/objects/${SIGNATURE}" | cut -c -30)
-    VIDEOFINGERPRINT_SORTED=$(xml sel -N "m=urn:mpeg:mpeg7:schema:2001" -t -m m:Mpeg7/m:DescriptionUnit/m:Descriptor/m:VideoSignatureRegion/m:VideoFrame -v m:MediaTimeOfFrame -n -v "translate (normalize-space(m:FrameSignature), ' ', '')" -n "${OUTDIR_INGESTFILE}/${MEDIAID}/metadata/fileMeta/objects/${SIGNATURE}" | cut -c -30)
+    VIDEOFINGERPRINT_SORTED=$(xml sel -N "m=urn:mpeg:mpeg7:schema:2001" -t -m m:Mpeg7/m:DescriptionUnit/m:Descriptor/m:VideoSignatureRegion/m:VideoFrame -v "translate (normalize-space(m:FrameSignature), ' ', '')" -n "${OUTDIR_INGESTFILE}/${MEDIAID}/metadata/fileMeta/objects/${SIGNATURE}" | cut -c -30 | sort)
 }
 
 _open_mysql_plist(){
