@@ -117,7 +117,7 @@ while [ "${*}" != "" ] ; do
         if [[ ! -s "${TMP_PNG_DIR}/$(basename "${TIF%.*}").png" ]] ; then
             ffmpeg -i "${TIF}" -pix_fmt gray -y "${TMP_PNG_DIR}/$(basename "${TIF%.*}").png"
         fi
-        convert "${TMP_PNG_DIR}/$(basename "${TIF%.*}").png" -level 10%,80%,1 -blur 2 +dither -resize 2550x3300 -monochrome -flatten +repage -define png:bit-depth=8 -define png:color-type=0 "${TMP_CLEAN_DIR}/$(basename "${TIF%.*}").png"
+        convert "${TMP_PNG_DIR}/$(basename "${TIF%.*}").png" -level 10%,75%,1 -blur 2 +dither -resize 2550x3300 -monochrome -flatten +repage -define png:bit-depth=8 -define png:color-type=0 "${TMP_CLEAN_DIR}/$(basename "${TIF%.*}").png"
         tesseract "${TMP_CLEAN_DIR}/$(basename "${TIF%.*}").png" "${TMP_CLEAN_DIR}/$(basename "${TIF%.*}")" -l eng -psm 4 pdf "${SCRIPTDIR}/tesseract.conf"
         tesseract "${TMP_CLEAN_DIR}/$(basename "${TIF%.*}").png" "${TMP_CLEAN_DIR}/$(basename "${TIF%.*}")" -l eng -psm 4 "${SCRIPTDIR}/tesseract.conf"
     done
