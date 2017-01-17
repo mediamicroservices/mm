@@ -175,13 +175,6 @@ _premis_event_list(){
     fi
 }
 
-_generate_fingerprint(){
-    SIGNATURE="$(basename ${INPUT%.*})_signature.xml"
-    ~/ffmpeg/ffmpeg -i "${INPUT}" -vf signature=format=xml:filename="${OUTDIR_INGESTFILE}/${MEDIAID}/metadata/fileMeta/objects/${SIGNATURE}" -map 0:v -f null -
-    VIDEOFINGERPRINT=$(xml sel -N "m=urn:mpeg:mpeg7:schema:2001" -t -m m:Mpeg7/m:DescriptionUnit/m:Descriptor/m:VideoSignatureRegion/m:VideoFrame -v m:MediaTimeOfFrame -n -v "translate (normalize-space(m:FrameSignature), ' ', '')" -n "${OUTDIR_INGESTFILE}/${MEDIAID}/metadata/fileMeta/objects/${SIGNATURE}" | cut -c -30)
-    VIDEOFINGERPRINT_SORTED=$(xml sel -N "m=urn:mpeg:mpeg7:schema:2001" -t -m m:Mpeg7/m:DescriptionUnit/m:Descriptor/m:VideoSignatureRegion/m:VideoFrame -v m:MediaTimeOfFrame -n -v "translate (normalize-space(m:FrameSignature), ' ', '')" -n "${OUTDIR_INGESTFILE}/${MEDIAID}/metadata/fileMeta/objects/${SIGNATURE}" | cut -c -30)
-}
-
 _open_mysql_plist(){
     plist_path=$(find /usr/local/Cellar/mysql -iname homebrew.mxcl.mysql.plist | sort | tail -n1)
     if [ -n "$plist_path" ] ; then

@@ -274,6 +274,14 @@ PREMIS_PLIST.label = Auto update MySQL .plist?
 PREMIS_PLIST.tooltip = If activated this will try to to modify MySQL .plist file to enable outside connections when mm is updated.
 PREMIS_PLIST.default = ${PREMIS_PLIST}
 
+#PERCEPTUAL_HASH
+PERCEPTUAL_HASH.x = 1050
+PERCEPTUAL_HASH.y = 115
+PERCEPTUAL_HASH.type = checkbox
+PERCEPTUAL_HASH.label = Generate video fingerprint?
+PERCEPTUAL_HASH.tooltip = This will create perceptual fingerprints of the input video stream.
+PERCEPTUAL_HASH.default = ${PERCEPTUAL_HASH}
+
 
 
 # Add a cancel button with default label
@@ -311,6 +319,7 @@ if [[ "${RUNPASHUA}" = "Y" ]] ; then
     echo "  PREMIS_PROFILE = ${PREMIS_PROFILE}"
     echo "  PREMIS_NAME = ${PREMIS_NAME}"
     echo "  PREMIS_PLIST = ${PREMIS_PLIST}"
+    echo "  PERCEPTUAL_HASH = ${PERCEPTUAL_HASH}"
     echo ""
 
     #write to the config file
@@ -339,6 +348,7 @@ if [[ "${RUNPASHUA}" = "Y" ]] ; then
         echo "PREMIS_PROFILE=\"${PREMIS_PROFILE}\""
         echo "PREMIS_NAME=\"${PREMIS_NAME}\""
         echo "PREMIS_PLIST=\"${PREMIS_PLIST}\""
+        echo "PERCEPTUAL_HASH=\"${PERCEPTUAL_HASH}\""
     } > "${MM_CONFIG_FILE}"
 else
     # set up configuration file using the command line
