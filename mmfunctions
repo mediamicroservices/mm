@@ -120,6 +120,12 @@ _db_error_check(){
     fi
 }
 
+_fingerprint_to_db(){
+    VIDEOFINGERPRINT=$(xml sel -N "m=urn:mpeg:mpeg7:schema:2001" -t -m m:Mpeg7/m:DescriptionUnit/m:Descriptor/m:VideoSignatureRegion/m:VideoFrame -v m:MediaTimeOfFrame -n -v "translate (normalize-space(m:FrameSignature), ' ', '')" -n "${FINGERPRINT_XML}" | cut -c -30)
+    VIDEOFINGERPRINT_SORTED=$(xml sel -N "m=urn:mpeg:mpeg7:schema:2001" -t -m m:Mpeg7/m:DescriptionUnit/m:Descriptor/m:VideoSignatureRegion/m:VideoFrame -v "translate (normalize-space(m:FrameSignature), ' ', '')" -n "${FINGERPRINT_XML}/metadata/fileMeta/objects/${SIGNATURE}" | cut -c -30 | sort)
+    gzip "${FINGERPRINT_XML}"
+}
+
 _premis_event_list(){
     eventDetail=$(basename "${0}")
     eventType="${eventDetail}"
