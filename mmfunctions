@@ -40,11 +40,11 @@ _report_to_db(){
         table_name="event"
         echo "INSERT INTO event (objectIdentifierValue,eventType,eventDetail,eventDetailOPT,eventDetailCOMPNAME,linkingAgentIdentifierValue) VALUES ('${MEDIA_ID}','${eventType}','${eventDetail}','${user_input}','${HOSTNAME}', '${OP}')" | mysql --login-path="${PREMIS_PROFILE}"  "${PREMIS_NAME}" 2> /dev/null
         _db_error_check
-        if [ -d "${METADIR}" ] ; then
+        if [ -n "${MEDIAINFO}" ] || [ -n "${CAPTURELOG}" ] || [ -n "${VIDEOFINGERPRINT}" ] ; then
             table_name="objectCharacteristics"
             echo "INSERT IGNORE INTO objectCharacteristics (objectIdentifierValue,mediaInfo,captureLog,videoFingerprint,videoFingerprintSorted) VALUES ('${MEDIA_ID}','${MEDIAINFO}','${CAPTURELOG}','${VIDEOFINGERPRINT}','${VIDEOFINGERPRINT_SORTED}')" | mysql  --login-path="${PREMIS_PROFILE}"  "${PREMIS_NAME}" 2> /dev/null
         _db_error_check
-        fi
+    fi
     fi
 }
 
@@ -122,7 +122,7 @@ _db_error_check(){
 
 _fingerprint_to_db(){
     VIDEOFINGERPRINT=$(xml sel -N "m=urn:mpeg:mpeg7:schema:2001" -t -m m:Mpeg7/m:DescriptionUnit/m:Descriptor/m:VideoSignatureRegion/m:VideoFrame -v m:MediaTimeOfFrame -n -v "translate (normalize-space(m:FrameSignature), ' ', '')" -n "${FINGERPRINT_XML}" | cut -c -30)
-    VIDEOFINGERPRINT_SORTED=$(xml sel -N "m=urn:mpeg:mpeg7:schema:2001" -t -m m:Mpeg7/m:DescriptionUnit/m:Descriptor/m:VideoSignatureRegion/m:VideoFrame -v "translate (normalize-space(m:FrameSignature), ' ', '')" -n "${FINGERPRINT_XML}/metadata/fileMeta/objects/${SIGNATURE}" | cut -c -30 | sort)
+    VIDEOFINGERPRINT_SORTED=$(xml sel -N "m=urn:mpeg:mpeg7:schema:2001" -t -m m:Mpeg7/m:DescriptionUnit/m:Descriptor/m:VideoSignatureRegion/m:VideoFrame -v "translate (normalize-space(m:FrameSignature), ' ', '')" -n "${FINGERPRINT_XML}" | cut -c -30 | sort)
     gzip "${FINGERPRINT_XML}"
 }
 

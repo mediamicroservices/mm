@@ -553,6 +553,7 @@ fi
 # makemetadata
 "${SCRIPTDIR}/makemetadata" "${OUTDIR_INGESTFILE}/${MEDIAID}"
 
+
 # checksums
 if [ "${DOCHECKSUMS}" = "Y" ] ; then
     "${SCRIPTDIR}/checksumpackage" "${OUTDIR_INGESTFILE}/${MEDIAID}"
@@ -560,7 +561,9 @@ fi
 
 # more logging
 _writeingestlog "datetime_end" "$(_get_iso8601)"
-_generate_fingerprint
+
+# fingerprint
+"${SCRIPTDIR}/makefingerprint" "${OUTDIR_INGESTFILE}/${MEDIAID}"
 
 # move and cleanup
 if [[ "${DELIVERYTOAIPSTORAGE}" == "Y" ]] ; then
