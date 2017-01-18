@@ -1,10 +1,18 @@
 #!/bin/bash
-# makeyoutube, makes a file appropriate for uploading to youtube
+# makefingerprint generates a video perceptual hash for an input
 SCRIPTDIR=$(dirname $(which "${0}"))
 . "${SCRIPTDIR}/mmfunctions" || { echo "Missing '${SCRIPTDIR}/mmfunctions'. Exiting." ; exit 1 ;};
 SUFFIX="_signature"
 EXTENSION="xml"
 RELATIVEPATH="metadata"
+
+# Remove this section once 'signature' filter is integrated into official FFmpeg release.
+if [ ! -e ~/ffmpeg/ffmpeg ] ; then
+    echo "~/ffmpeg/ffmpeg not found"
+    echo "Skipping fingerprint generation"
+    exit
+fi
+# End of section to remove
 
 
 while [ "${*}" != "" ] ; do
@@ -23,15 +31,18 @@ while [ "${*}" != "" ] ; do
     _find_input "${INPUT}"
     MEDIAID=$(basename "${INPUT}" | cut -d. -f1)
 
-#    _set_up_output
     if [ "${FINGERDIR}" != "" ] ; then
         _mkdir2 "${FINGERDIR}"
     fi
+    #Generate Fingerprint
     SIGNATURE="${MEDIAID}""${SUFFIX}"."${EXTENSION}"
     _run_critical_event ~/ffmpeg/ffmpeg "${FFMPEGINPUT[@]}" -vf signature=format=xml:filename="${FINGERDIR}/${SIGNATURE}" -map 0:v -f null -
     FINGERPRINT_XML="${FINGERDIR}/${SIGNATURE}"
     
-    _fingerprint_to_db
-    _report_to_db
-    _eventoutcome_update
+    #Report to DB
+    if [ "${PERCEPTUAL_HASH}" = "1" ] ; then
+        _fingerprint_to_db
+        _report_to_db
+        _eventoutcome_update
+    fi
 done
