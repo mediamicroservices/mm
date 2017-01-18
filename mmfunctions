@@ -155,6 +155,10 @@ _premis_event_list(){
     if [ "$eventDetail" = "makewaveform" ] ; then
         eventType="creation"
     fi
+    
+    if [ "$eventDetail" = "makefingerprint" ] ; then
+        eventType="creation"
+    fi
 
     if [ "$eventDetail" = "migratefiles" ] ; then
         eventType="replication"
