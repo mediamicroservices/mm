@@ -7,9 +7,9 @@ EXTENSION="xml"
 RELATIVEPATH="metadata"
 
 # Remove this section once 'signature' filter is integrated into official FFmpeg release.
-if [ ! -e ~/ffmpeg/ffmpeg ] ; then
-    echo "~/ffmpeg/ffmpeg not found"
-    echo "Skipping fingerprint generation"
+if [ ! -e ~/ffmpegsignature/ffmpeg ] ; then
+    _report -w "~/ffmpeg/ffmpeg not found"
+    _report -w "Skipping fingerprint generation"
     exit
 fi
 # End of section to remove
@@ -36,7 +36,7 @@ while [ "${*}" != "" ] ; do
     fi
     #Generate Fingerprint
     SIGNATURE="${MEDIAID}""${SUFFIX}"."${EXTENSION}"
-    _run_critical_event ~/ffmpeg/ffmpeg "${FFMPEGINPUT[@]}" -vf signature=format=xml:filename="${FINGERDIR}/${SIGNATURE}" -map 0:v -f null -
+    _run_critical_event ~/ffmpegsignature/ffmpeg "${FFMPEGINPUT[@]}" -vf signature=format=xml:filename="${FINGERDIR}/${SIGNATURE}" -map 0:v -f null -
     FINGERPRINT_XML="${FINGERDIR}/${SIGNATURE}"
     
     #Report to DB

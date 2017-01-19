@@ -553,7 +553,6 @@ fi
 # makemetadata
 "${SCRIPTDIR}/makemetadata" "${OUTDIR_INGESTFILE}/${MEDIAID}"
 
-
 # checksums
 if [ "${DOCHECKSUMS}" = "Y" ] ; then
     "${SCRIPTDIR}/checksumpackage" "${OUTDIR_INGESTFILE}/${MEDIAID}"
