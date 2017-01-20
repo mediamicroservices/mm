@@ -919,7 +919,7 @@ _get_audio_mapping(){
     else
         _add_audio_filter "aformat=channel_layouts=stereo"
     fi
-    if [[ "${ADD_VOLADJ}" = "Y" ]] ; then
+    if [[ "${ADD_VOLADJ}" != "N" ]] ; then
         _prep_volume_adjustment
     fi
     if [[ "${PBSMIX}" = "Y" ]] ; then
@@ -1221,7 +1221,7 @@ _set_up_output(){
 
 _prep_volume_adjustment(){
     unset VOLADJ
-    if [[ "${VOLADJUST}" = "Y" ]] ; then
+    if [[ "${VOLADJUST}" != "N" ]] ; then
         if [[ -f "${INGESTLOG}" ]] ; then
             measured_I=$(_readingestlog "r128_integrated_loudness")
             measured_LRA=$(_readingestlog "r128_loudness_range")
