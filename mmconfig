@@ -344,11 +344,6 @@ if [[ "${RUNPASHUA}" = "Y" ]] ; then
     } > "${MM_CONFIG_FILE}"
 else
     # set up configuration file using the command line
-    echo "# $(basename ${MM_CONFIG_FILE})" > "${MM_CONFIG_FILE}"
-    echo "# This configuration file contains variables used throughout ${WHAT_IS_THIS}." >> "${MM_CONFIG_FILE}"
-    echo "# Edit the lines below to form KEY=VALUE. Please do not add or remove the existing KEYs. Do not edit MM_CONFIG_FILE_VERSION." >> "${MM_CONFIG_FILE}"
-    echo "MM_CONFIG_FILE_VERSION=${CONFIG_VERSION}" >> "${MM_CONFIG_FILE}"
-
     for KEY in "${REQUIRED_VARIABLES[@]}" ; do
         _add_key "${KEY}"
     done
