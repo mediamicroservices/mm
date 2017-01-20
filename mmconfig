@@ -5,11 +5,12 @@ CONFIG="Y"
 CONFIG_VERSION="1.0"
 SCRIPTDIR=$(dirname "${0}")
 . "${SCRIPTDIR}/mmfunctions" || { echo "Missing '${SCRIPTDIR}/mmfunctions'. Exiting." ; exit 1 ;};
+RUNPASHUA="Y"
 
 _usage(){
     echo
     echo "$(basename "${0}") ${VERSION}"
-    echo "  -a set configuration file using a graphical user interface"
+    echo "  -t set configuration file using the CLI"
     exit
 }
 
@@ -18,10 +19,11 @@ REQUIRED_VARIABLES=("OUTDIR_INGESTFILE" "OUTDIR_INGESTXDCAM" "OUTDIR_PAPER" "AIP
 
 OPTIND=1
 
-while getopts ":F:abh" OPT ; do
+while getopts ":F:abth" OPT ; do
     case "${OPT}" in
         F) FORMULA="${OPTARG}" ;;
         a) RUNPASHUA="Y" ;;
+        t) RUNPASHUA="N" ;;
         h) _usage ;;
         *) echo "bad option -${OPTARG}" ; _usage ;;
         :) echo "Option -${OPTARG} requires an argument" ; exit 1 ;;
