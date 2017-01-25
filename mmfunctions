@@ -176,9 +176,6 @@ _premis_event_list(){
         eventType="fixity"
         MEDIA_ID="${TAPE_SERIAL}"
         db_fixity=$(cat "${READBACKDIR}/${TAPE_SERIAL}_ReadBack_checksum_${VERIFYTIME}.md5")
-        if [ -z "$db_fixity" ] ; then
-            event_outcome="No fixity information"
-        fi
     fi
 }
 
