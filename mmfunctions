@@ -172,6 +172,11 @@ _premis_event_list(){
         eventType="fixity"
         MEDIA_ID="${TAPE_SERIAL}"
     fi
+    if [ "$eventDetail" = "verifylto" ] ; then
+        eventType="fixity"
+        MEDIA_ID="${TAPE_SERIAL}"
+        db_fixity=$(cat "${READBACKDIR}/${TAPE_SERIAL}_ReadBack_checksum_${VERIFYTIME}.md5")
+    fi
 }
 
 _open_mysql_plist(){
