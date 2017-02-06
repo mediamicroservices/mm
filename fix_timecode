@@ -1,0 +1,51 @@
+#!/bin/bash
+# left 2 stereo mix
+VERSION=1.1
+unset DEPENDENCIES
+DEPENDENCIES=(ffmpeg ffprobe)
+
+SCRIPTDIR=$(dirname "${0}")
+. "${SCRIPTDIR}/mmfunctions" || { echo "Missing '${SCRIPTDIR}/mmfunctions'. Exiting." ; exit 1 ;};
+
+_usage(){
+    echo
+    echo "$(basename "${0}") ${VERSION}"
+    echo "This application takes an input video file(s) and produces output that sets the timecode to 00:00:00;00"
+    echo "Dependencies: ${DEPENDENCIES[@]}"
+    echo "Usage: $(basename "${0}") file1 [ file2 ...]"
+    echo
+    exit
+}
+[ "${#}" = 0 ] && _usage
+_check_dependencies "${DEPENDENCIES[@]}"
+
+_cleanup(){
+    _log -a "Process quit"
+    exit 1
+}
+
+# local variables
+SUFFIX="_timecode0"
+
+trap _cleanup SIGHUP SIGINT SIGTERM
+
+while [ "${*}" != "" ] ; do
+    SOURCEFILE="${1}"
+    unset FFMPEG_OPTS
+    FFMPEG_OPTS+=(-c:v copy)
+    FFMPEG_OPTS+=(-c:a copy)
+    FFMPEG_OPTS+=(-map 0:v)
+    FFMPEG_OPTS+=(-map 0:a)
+    FFMPEG_OPTS+=(-metadata timecode='00:00:00;00')
+    EXTENSION=$(echo "${SOURCEFILE##*.}")
+    echo "s ${SOURCEFILE%.*} s ${SUFFIX} e ${EXTENSION}"
+    OUTPUT_MOVIE="${SOURCEFILE%.*}${SUFFIX}.${EXTENSION}"
+    if [ -f "${OUTPUT_MOVIE}" ] ; then
+        _report -wt "The intended output of $(basename "${0}") already exists. Skipping for now. Please delete ${OUTPUT_MOVIE} and rerun or figure out why you are trying to do this."
+    else
+        _report -dt "Generating ${OUTPUT_MOVIE} ... with these options ${FFMPEG_OPTS[*]}"
+        ffmpeg -i "${SOURCEFILE}" "${FFMPEG_OPTS[@]}" "${OUTPUT_MOVIE}"
+        _report -dt "$(basename "${0}") is done with $(basename "${SOURCEFILE}")."
+    fi
+    shift
+done

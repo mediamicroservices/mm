@@ -83,6 +83,7 @@ while [ "${*}" != "" ] ; do
         OUTPUTDIR="${OUTPUTDIR_FORCED}"
         LOGDIR="${OUTPUTDIR}/logs"
     fi
+    OUTPUTDIRTEXT="${INPUT}/objects/access/txt_1"
     _run mkdir -p "${LOGDIR}"
     exec > >(tee "${LOGDIR}/$(basename "${0}")_$(_get_iso8601_c)_$(basename ${0})_${VERSION}.txt")
     exec 2>&1
@@ -106,18 +107,22 @@ while [ "${*}" != "" ] ; do
     TMP_MAKEPDF_DIR="${INPUT}/tmp"
     TMP_PNG_DIR="${TMP_MAKEPDF_DIR}/pngs"
     TMP_CLEAN_DIR="${TMP_MAKEPDF_DIR}/pngs_cleaned"
-    _run mkdir -p "${TMP_MAKEPDF_DIR}" "${TMP_PNG_DIR}" "${TMP_CLEAN_DIR}"
+    _run mkdir -p "${TMP_MAKEPDF_DIR}" "${TMP_PNG_DIR}" "${TMP_CLEAN_DIR}" "${OUTPUTDIRTEXT}"
 
     for TIF in `find "${SOURCEDIR}" -maxdepth 1 -mindepth 1 -iname "*.tif" -type f` ; do
         check_tif_name "${TIF}"
         if [ "${NEW_TIF_NAME}" ] ; then
             TIF="${NEW_TIF_NAME}"
         fi
-        ffmpeg -i "${TIF}" -pix_fmt gray "${TMP_PNG_DIR}/$(basename "${TIF%.*}").png"
-        convert "${TMP_PNG_DIR}/$(basename "${TIF%.*}").png" -level 10%,90%,1 -blur 2 +dither -resize 2550x3300 -monochrome -flatten +repage -define png:bit-depth=8 -define png:color-type=0 "${TMP_CLEAN_DIR}/$(basename "${TIF%.*}").png"
+        if [[ ! -s "${TMP_PNG_DIR}/$(basename "${TIF%.*}").png" ]] ; then
+            ffmpeg -i "${TIF}" -pix_fmt gray -y "${TMP_PNG_DIR}/$(basename "${TIF%.*}").png"
+        fi
+        convert "${TMP_PNG_DIR}/$(basename "${TIF%.*}").png" -level 10%,75%,1 -blur 2 +dither -resize 2550x3300 -monochrome -flatten +repage -define png:bit-depth=8 -define png:color-type=0 "${TMP_CLEAN_DIR}/$(basename "${TIF%.*}").png"
         tesseract "${TMP_CLEAN_DIR}/$(basename "${TIF%.*}").png" "${TMP_CLEAN_DIR}/$(basename "${TIF%.*}")" -l eng -psm 4 pdf "${SCRIPTDIR}/tesseract.conf"
+        tesseract "${TMP_CLEAN_DIR}/$(basename "${TIF%.*}").png" "${TMP_CLEAN_DIR}/$(basename "${TIF%.*}")" -l eng -psm 4 "${SCRIPTDIR}/tesseract.conf"
     done
     pdfjoin --fitpaper 'false' --rotateoversize 'false' --paper letter $(find "${TMP_CLEAN_DIR}" -name "*.pdf" | sort | xargs) --outfile "${OUTPUTDIR}/${MEDIAID}.pdf"
+    cat $(find "${TMP_CLEAN_DIR}" -name "*.txt" | sort | xargs) > "${OUTPUTDIRTEXT}/${MEDIAID}.txt"
 
     #if [ -d "${TMP_MAKEPDF_DIR}" ] ; then
     #    _run rm -rvf "${TMP_MAKEPDF_DIR}"
