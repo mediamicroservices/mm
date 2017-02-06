@@ -29,6 +29,8 @@ _report_to_db(){
         INGESTLOG="${LOGDIR}/capture.log"
         if [ -f "${INGESTLOG}" ] ; then
             OP=$(grep "operator" "${INGESTLOG}" | cut -c 11-)
+        else
+            OP="${OP}"
         fi
         if [ -z "${OP}" ] ; then
             OP="${USER}"
