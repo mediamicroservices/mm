@@ -55,13 +55,13 @@ _report_schema_db(){
         table_name="ltoSchema"
         xmlschema="$LTO_LOGS/${TAPE_SERIAL}.schema"
         schema_sorted=$(xml sel -t -m "/ltfsindex/directory/contents/directory/contents/file" -v "concat(name,'|',length, '|', modifytime)" -n "${xmlschema}")
+        schema_tape=$(basename "${xmlschema}" | cut -d'.' -f1)
         IFS=$(echo -en "\n\b")
         (for i in ${schema_sorted}; do LINE=$i;
-        schema_tape=$(basename "${xmlschema}" | cut -d'.' -f1)
         schema_name=$(echo "${LINE}" | cut -d'|' -f1)
         schema_length=$(echo "${LINE}" | cut -d'|' -f2)
         schema_date=$(echo "${LINE}" | cut -d'|' -f3)
-        echo "INSERT INTO ltoSchema (ltoID,fileName,fileSize,fileDate) VALUES ('${schema_tape}','${schema_name}','${schema_length}','$schema_date')" | mysql  --login-path="${PREMIS_PROFILE}"  "${PREMIS_NAME}" 2> /dev/null
+        echo "INSERT IGNORE INTO ltoSchema (ltoID,fileName,fileSize,fileDate) VALUES ('${schema_tape}','${schema_name}','${schema_length}','$schema_date')" | mysql  --login-path="${PREMIS_PROFILE}"  "${PREMIS_NAME}" 2> /dev/null
         done)
         unset IFS
         _db_error_check
@@ -135,13 +135,12 @@ _db_error_check(){
         if [ "${table_name}" = "objectCharacteristics" ] ; then
             echo "echo \"INSERT IGNORE INTO objectCharacteristics (objectIdentifierValue,mediaInfo) VALUES ('${MEDIA_ID}','${MEDIAINFO}')\" | mysql --login-path=\"${PREMIS_PROFILE}\"  \"$PREMIS_NAME\"" >> ~/Desktop/"$MEDIA_ID"_dbreport.txt
         fi
+        if [ "${table_name}" = "ltoSchema" ] ; then
+            echo "echo \"INSERT INTO ltoSchema (ltoID,fileName,fileSize,fileDate) VALUES ('${schema_tape}','${schema_name}','${schema_length}','$schema_date')\" | mysql  --login-path=\"${PREMIS_PROFILE}\"  \"${PREMIS_NAME}\"" >> ~/Desktop/"$MEDIA_ID"_dbreport.txt
+        fi
     else
         echo -e "\033[1;103;95mSuccessfully reported infomation to the "${table_name}" table in the database "${PREMIS_NAME}"\033[0m"
-    fi
-    if [ "${table_name}" = "ltoSchema" ] ; then
-        echo "echo \"INSERT INTO ltoSchema (ltoID,fileName,fileSize,fileDate) VALUES ('${schema_tape}','${schema_name}','${schema_length}','$schema_date')\" | mysql  --login-path=\"${PREMIS_PROFILE}\"  \"${PREMIS_NAME}\"" >> ~/Desktop/"$MEDIA_ID"_dbreport.txt
-    fi
-        
+    fi  
 }
 
 _premis_event_list(){
