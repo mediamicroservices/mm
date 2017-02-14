@@ -58,7 +58,7 @@ _report_schema_db(){
         if [ -z "${xmlschema}" ] ; then
             xmlschema="$LTO_LOGS/${TAPE_SERIAL}.schema"
         fi
-        schema_sorted=$(xml sel -t -m "/ltfsindex/directory/contents/directory/contents/file" -v "concat(name,'|',length, '|', modifytime)" -o "|" -m "ancestor-or-self::directory" -v "name" -o "/" -b -n "${xmlschema}")
+        schema_sorted=$(xml sel -t -m ".//file" -v "concat(name,'|',length, '|', modifytime)" -o "|" -m "ancestor-or-self::directory" -v "name" -o "/" -b -n "${xmlschema}")
         schema_tape=$(basename "${xmlschema}" | cut -d'.' -f1)
         IFS=$(echo -en "\n\b")
         (for i in ${schema_sorted}; do LINE=$i;
