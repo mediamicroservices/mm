@@ -812,12 +812,13 @@ _find_input (){
         SOURCEFILE="${1}"
         FFMPEGINPUT+=(-i)
         FFMPEGINPUT+=("${SOURCEFILE}")
-    elif [[ -s "${EXPECTEDSERVICEFILE}" && "${ADDSLATE}" != "Y" ]] ; then
+    elif [ -d "${1}/objects" ] ; then
+    if [[ -s "${EXPECTEDSERVICEFILE}" && "${ADDSLATE}" != "Y" ]] ; then
         ISOBJECT="N"
         SOURCEFILE="${EXPECTEDSERVICEFILE}"
         FFMPEGINPUT+=(-i)
         FFMPEGINPUT+=("${SOURCEFILE}")
-    elif [ -d "${1}/objects" ] ; then
+    else
         if [[ -f "${EXPECTEDSERVICEFILE}" && ! -s "${EXPECTEDSERVICEFILE}" ]] ; then
             _report -dt "Removing a zero-sized file: ${EXPECTEDSERVICEFILE}"
             ls -l "${EXPECTEDSERVICEFILE}"
@@ -858,6 +859,7 @@ _find_input (){
             FFMPEGINPUT+=(-i)
             FFMPEGINPUT+=("${FFCONCATFILE}")
         fi
+    fi
     else
         _report -wt "A valid source file isn't found."
         _writeerrorlog "_find_input" "A valid source file was not found, so the script could not proceed."
