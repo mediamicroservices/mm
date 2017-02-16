@@ -633,9 +633,36 @@ Enjoy!\n\n" > "$temp_message"
         waveform_image="${OUTDIR_INGESTFILE}/${MEDIAID}/metadata/depictions/${MEDIAID}_waveform.png"
         if [ -f "${waveform_image}" ] ; then
             _report -d "Adding a waveform to the email from ${waveform_image}"
-            uuencode "${waveform_image}" $(basename "${waveform_image}") >> "$temp_message"
+            # email solution borrowed from http://stackoverflow.com/a/8063489
+            # --- generated values ---
+            BOUNDARY="unique-boundary-$RANDOM"
+            BODY_MIMETYPE=$(file -Ib "$temp_message" | cut -d";" -f1)   # detect mime type
+            ATT_MIMETYPE=$(file -Ib "${waveform_image}" | cut -d";" -f1)     # detect mime type
+            ATT_ENCODED=$(base64 < "${waveform_image}")  # encode attachment
+            # --- generate MIME message and pipe to sendmail ---
+            cat <<EOF | sendmail -f "${EMAIL_FROM}" -F "${EMAILTO}" "${EMAILTO}"
+MIME-Version: 1.0
+From: "${EMAIL_FROM}"
+To: "${EMAILTO}"
+Subject: [delivery] $(basename "${OUTPUT}")
+Content-Type: multipart/mixed; boundary="$BOUNDARY"
+
+--$BOUNDARY
+Content-Type: $BODY_MIMETYPE
+Content-Disposition: inline
+
+$(cat "$temp_message")
+--$BOUNDARY
+Content-Type: $ATT_MIMETYPE; name="$(basename "${waveform_image}")"
+Content-Transfer-Encoding: base64
+Content-Disposition: attachment; filename="$(basename "${waveform_image}")"
+
+$ATT_ENCODED
+--$BOUNDARY
+EOF
+        else
+            sendmail -f "${EMAIL_FROM}" -F "${EMAILTO}" "${EMAILTO}" < "$temp_message"
         fi
-        sendmail -f "${EMAIL_FROM}" -F "${EMAILTO}" "${EMAILTO}" < "$temp_message"
         if [ -f "$temp_message" ] ; then
             rm "$temp_message"
         fi
