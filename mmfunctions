@@ -809,23 +809,27 @@ _find_input (){
     unset FFMPEGINPUT
     EXPECTEDSERVICEFILE="${1}/objects/service/$(basename "${1}").mov"
     if [ -f "${1}" ] ; then
+        # if the input is a file then just `-i file`
         SOURCEFILE="${1}"
         FFMPEGINPUT+=(-i)
         FFMPEGINPUT+=("${SOURCEFILE}")
     elif [ -d "${1}/objects" ] ; then
         if [[ -s "${EXPECTEDSERVICEFILE}" && "${ADDSLATE}" != "Y" ]] ; then
+            # if the expectedservicefile exists and we should add a slate, then use the `-i expectedservicefile`
             ISOBJECT="N"
             SOURCEFILE="${EXPECTEDSERVICEFILE}"
             FFMPEGINPUT+=(-i)
             FFMPEGINPUT+=("${SOURCEFILE}")
         else
             if [[ -f "${EXPECTEDSERVICEFILE}" && ! -s "${EXPECTEDSERVICEFILE}" ]] ; then
+                # if the expectedservicefile is zero-sized, then delete it
                 _report -dt "Removing a zero-sized file: ${EXPECTEDSERVICEFILE}"
                 ls -l "${EXPECTEDSERVICEFILE}"
                 rm -v "${EXPECTEDSERVICEFILE}"
             fi
             ISOBJECT="Y"
             INPUTFILES=$(_maketemp)
+            # find av files in a directory and output to a temp list
             find "${1}/objects" -type f -size +0 ! -path "*/access/*" ! -path "*/service/*" ! -name ".DS_Store" | while read file ; do
                 streamcount=$(ffprobe -loglevel quiet "$file" -show_entries format=nb_streams -of default=nw=1:nk=1)
                 if [[ "$streamcount" > 1  ]] ; then
@@ -865,6 +869,7 @@ _find_input (){
         exit 1
     fi
     LOG+="SOURCEFILE: ${SOURCEFILE}\n"
+    # handle exceptions for certain types of source files
     if [[ "${SOURCEFILE#*.}" = "iso" ]] ; then
         _report -dt "Detecting iso input and hoping its a dvd image."
         if [[ $(uname -s) = "Darwin" ]] ; then
