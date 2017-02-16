@@ -813,53 +813,52 @@ _find_input (){
         FFMPEGINPUT+=(-i)
         FFMPEGINPUT+=("${SOURCEFILE}")
     elif [ -d "${1}/objects" ] ; then
-    if [[ -s "${EXPECTEDSERVICEFILE}" && "${ADDSLATE}" != "Y" ]] ; then
-        ISOBJECT="N"
-        SOURCEFILE="${EXPECTEDSERVICEFILE}"
-        FFMPEGINPUT+=(-i)
-        FFMPEGINPUT+=("${SOURCEFILE}")
-    else
-        if [[ -f "${EXPECTEDSERVICEFILE}" && ! -s "${EXPECTEDSERVICEFILE}" ]] ; then
-            _report -dt "Removing a zero-sized file: ${EXPECTEDSERVICEFILE}"
-            ls -l "${EXPECTEDSERVICEFILE}"
-            rm -v "${EXPECTEDSERVICEFILE}"
-        fi
-        ISOBJECT="Y"
-        INPUTFILES=$(_maketemp)
-        # find av files in a directory and output to a temp list
-        find "${1}/objects" -type f -size +0 ! -path "*/access/*" ! -path "*/service/*" ! -name ".DS_Store" | while read file ; do
-            streamcount=$(ffprobe -loglevel quiet "$file" -show_entries format=nb_streams -of default=nw=1:nk=1)
-            if [[ "$streamcount" > 1  ]] ; then
-                _report -d "Input file: $file"
-                echo "$file" >> "${INPUTFILES}"
-            fi
-        done
-        INPUTFILECOUNT=$(wc -l "${INPUTFILES}" | awk '{print $1}')
-        if [[ "${INPUTFILECOUNT}" = 0 ]] ; then
-            _report -w "Error no audiovisual input files were found."
-            _writeerrorlog "_find_input" "A valid source audiovisual file was not found, so the script could not proceed."
-            exit 1
-        elif [[ "${INPUTFILECOUNT}" = 1 ]] ; then
-            SOURCEFILE=$(cat "${INPUTFILES}" | head -n 1)
+        if [[ -s "${EXPECTEDSERVICEFILE}" && "${ADDSLATE}" != "Y" ]] ; then
+            ISOBJECT="N"
+            SOURCEFILE="${EXPECTEDSERVICEFILE}"
             FFMPEGINPUT+=(-i)
             FFMPEGINPUT+=("${SOURCEFILE}")
         else
-            VOLADJUST="N"
-            INPUTOPTIONS+=(-f concat)
-            INPUTOPTIONS+=(-safe 0)
-            FFCONCATFILE=$(_maketemp)
-            while read i ; do
-                duration4cat=$(ffprobe -loglevel quiet "${i}" -show_entries format=duration -of default=nw=1:nk=1)
-                printf "file " >> "${FFCONCATFILE}"
-                printf '%q' "${i}" >> "${FFCONCATFILE}"
-                echo >> "${FFCONCATFILE}"
-                echo "duration $duration4cat" >> "${FFCONCATFILE}"
-            done < "${INPUTFILES}"
-            SOURCEFILE=$(cat "${INPUTFILES}" | head -n 1)
-            FFMPEGINPUT+=(-i)
-            FFMPEGINPUT+=("${FFCONCATFILE}")
+            if [[ -f "${EXPECTEDSERVICEFILE}" && ! -s "${EXPECTEDSERVICEFILE}" ]] ; then
+                _report -dt "Removing a zero-sized file: ${EXPECTEDSERVICEFILE}"
+                ls -l "${EXPECTEDSERVICEFILE}"
+                rm -v "${EXPECTEDSERVICEFILE}"
+            fi
+            ISOBJECT="Y"
+            INPUTFILES=$(_maketemp)
+            find "${1}/objects" -type f -size +0 ! -path "*/access/*" ! -path "*/service/*" ! -name ".DS_Store" | while read file ; do
+                streamcount=$(ffprobe -loglevel quiet "$file" -show_entries format=nb_streams -of default=nw=1:nk=1)
+                if [[ "$streamcount" > 1  ]] ; then
+                    _report -d "Input file: $file"
+                    echo "$file" >> "${INPUTFILES}"
+                fi
+            done
+            INPUTFILECOUNT=$(wc -l "${INPUTFILES}" | awk '{print $1}')
+            if [[ "${INPUTFILECOUNT}" = 0 ]] ; then
+                _report -w "Error no audiovisual input files were found."
+                _writeerrorlog "_find_input" "A valid source audiovisual file was not found, so the script could not proceed."
+                exit 1
+            elif [[ "${INPUTFILECOUNT}" = 1 ]] ; then
+                SOURCEFILE=$(cat "${INPUTFILES}" | head -n 1)
+                FFMPEGINPUT+=(-i)
+                FFMPEGINPUT+=("${SOURCEFILE}")
+            else
+                VOLADJUST="N"
+                INPUTOPTIONS+=(-f concat)
+                INPUTOPTIONS+=(-safe 0)
+                FFCONCATFILE=$(_maketemp)
+                while read i ; do
+                    duration4cat=$(ffprobe -loglevel quiet "${i}" -show_entries format=duration -of default=nw=1:nk=1)
+                    printf "file " >> "${FFCONCATFILE}"
+                    printf '%q' "${i}" >> "${FFCONCATFILE}"
+                    echo >> "${FFCONCATFILE}"
+                    echo "duration $duration4cat" >> "${FFCONCATFILE}"
+                done < "${INPUTFILES}"
+                SOURCEFILE=$(cat "${INPUTFILES}" | head -n 1)
+                FFMPEGINPUT+=(-i)
+                FFMPEGINPUT+=("${FFCONCATFILE}")
+            fi
         fi
-    fi
     else
         _report -wt "A valid source file isn't found."
         _writeerrorlog "_find_input" "A valid source file was not found, so the script could not proceed."
