@@ -894,6 +894,52 @@ _find_input (){
             _writeerrorlog "_find_input" "Could not mount iso or find vob files to concatenate within ${OLDSOURCEFILE}."
             exit
         fi
+    elif [[ "${SOURCEFILE#*.}" = "mkv" ]] ; then
+        # if the sorucefile is an mkv, then check if it has a Presentation Chapter Edition
+        if [[ -n $(mkvextract tags "${SOURCEFILE}" | xml sel -t -m "/Tags/Tag/Simple[String='Presentation']" -v String) ]] ; then
+            _report -dt "The input file ($(basename "${SOURCEFILE}")) contains a Chapter Edition called 'Presentation', will use that for transcoding."
+            LISTCHAPTERS=$(mkvextract chapters "${SOURCEFILE}" | xml sel -t -m Chapters/EditionEntry[EditionFlagDefault='1']/ChapterAtom -v ChapterTimeStart -o "-" -v ChapterTimeEnd -o "-" -v ChapterSegmentUID -n -)
+            SegmentUIDs=$(mkvextract chapters "${SOURCEFILE}" | xml sel -t -m Chapters/EditionEntry[EditionFlagDefault='1']/ChapterAtom/ChapterSegmentUID -v . -n | sort -u)
+            if [[ -n "${LISTCHAPTERS}" ]]; then
+              _report -d "Found this chapter list:"
+              _report -d "${LISTCHAPTERS}"
+              unset FFMPEGINPUT
+              INPUTOPTIONS+=(-f concat)
+              INPUTOPTIONS+=(-safe 0)
+              FFCONCATFILE=$(_maketemp)
+              while read chapter ; do
+                STARTTIME=$(echo "${chapter}" | cut -d- -f1)
+                ENDTIME=$(echo "${chapter}" | cut -d- -f2)
+                CHAPSEGMENTUID=$(echo "${chapter}" | cut -d- -f3)
+                if [[ -n "${CHAPSEGMENTUID}" ]]; then
+                  MKVFOLDER=$(dirname "${SOURCEFILE}")
+                  while read file ; do
+                    FILESEGMENTUID=$(mkvinfo "${file}" | grep "Segment UID:" | cut -d : -f2 | sed 's/0x//g;s/ //g')
+                    unset MATCHMKV
+                    if [[ "${CHAPSEGMENTUID}" == "${FILESEGMENTUID}" ]] ; then
+                      MATCHMKV="${file}"
+                      break 1
+                    fi
+                  done < <(find "${MKVFOLDER}" -name "*.mkv" -type f)
+                  if [[ -n "${MATCHMKV}" ]]; then
+                    INPUTFILE="$MATCHMKV"
+                  else
+                    echo "Error: did not find a file to match ${CHAPSEGMENTUID}"
+                    exit
+                  fi
+                else
+                  INPUTFILE="$1"
+                fi
+                printf "file " >> "${FFCONCATFILE}"
+                printf '%q' "${INPUTFILE}" >> "${FFCONCATFILE}"
+                echo >> "${FFCONCATFILE}"
+                echo "inpoint ${STARTTIME}" >> "${FFCONCATFILE}"
+                echo "outpoint ${ENDTIME}" >> "${FFCONCATFILE}"
+              done < <(echo "${LISTCHAPTERS}")
+              FFMPEGINPUT+=(-i)
+              FFMPEGINPUT+=("${FFCONCATFILE}")
+            fi
+        fi
     fi
 }
 
