@@ -110,6 +110,6 @@ echo "<?xml version='1.0' encoding='UTF-8'?>
   </Tag>
 </Tags>" > "${MKVTAGS_XML}"
 
-mkvpropedit "${INPUT}" -c "${MKVCHAPTERS_XML}" -t all:"${MKVTAGS_XML}"
+mkvpropedit "${INPUT}" -c "${MKVCHAPTERS_XML}" -t global:"${MKVTAGS_XML}"
     fi
 done
