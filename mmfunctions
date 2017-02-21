@@ -2,7 +2,6 @@
 SCRIPTNAME=$(basename "${0}")
 SCRIPTDIR=$(dirname "${0}")
 MM_CONFIG_FILE="${SCRIPTDIR}/mm.conf"
-LTO_CONFIG_FILE="${SCRIPTDIR}/ltoper.conf"
 WHAT_IS_THIS="mediamicroservices"
 
 # load configuration file
@@ -339,13 +338,6 @@ _report(){
     [ "${LOG_MESSAGE}" = "Y" ] && _log -w "${MESSAGE}"
 }
 
-_config_edit(){
-    [ -z "${1}" -o -z "${2}" ] && { _report -w "The config_edit function requires two arguments. Error." ; exit ;};
-    SEDTEMP=$(_maketemp)
-    sed "s:^$1=[^ ]*:$1=$2:" "${LTO_CONFIG_FILE}" > "${SEDTEMP}"
-    cp "${SEDTEMP}" "${LTO_CONFIG_FILE}"
-}
-
 _test_config(){
     for DIRECTORYVARIABLE in OUTDIR_INGESTFILE OUTDIR_INGESTXDCAM OUTDIR_PAPER AIP_STORAGE PODCASTDELIVER YOUTUBEDELIVER TMPDIR CUSTOM_LOG_DIR LTO_INDEX_DIR ; do
         if [ -d "${!DIRECTORYVARIABLE}" ] ; then
@@ -354,15 +346,6 @@ _test_config(){
             _report -w "${DIRECTORYVARIABLE} is NOT a valid directory"
         fi
     done
-}
-
-_add_key(){
-    KEY_TO_ADD="${1}"
-    grep -q "^$KEY_TO_ADD=" "${LTO_CONFIG_FILE}" ; GREP_CODE="$?"
-    if [[ ! "${GREP_CODE}" -eq "0" ]] ; then
-        _report -td "Adding NEW variable $key_to_add to ${LTO_CONFIG_FILE}"
-        echo "$KEY_TO_ADD=" >> "${LTO_CONFIG_FILE}"
-    fi
 }
 
 _writeingestlog(){
