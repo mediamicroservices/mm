@@ -198,6 +198,9 @@ _premis_event_list(){
     if [ "$eventDetail" = "writelto" ] ; then
         eventType="fixity"
         MEDIA_ID="${TAPE_SERIAL}"
+        if [ "${VERIFY_CHECK}" = "Y" ] ; then
+            eventDetail="writelto(VERIFY)"
+        fi
     fi
     if [ "$eventDetail" = "verifylto" ] ; then
         eventType="fixity"
