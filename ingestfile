@@ -382,9 +382,7 @@ INGESTLOG="${LOGDIR}/capture.log"
 
 #performing interlacement test if formula is none- only to be used in specific edge cases, answer should be no in most cases.
 if [[ "${FORMULA}" == "Perform Test" ]] ; then
-
         INTERLACE_CHOICE="Y"
-
 fi
 
 #perform interlacement test
