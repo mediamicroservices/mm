@@ -207,6 +207,12 @@ _premis_event_list(){
         MEDIA_ID="${TAPE_SERIAL}"
         db_fixity=$(cat "${READBACKDIR}/${TAPE_SERIAL}_ReadBack_checksum_${VERIFYTIME}.md5")
     fi
+    if [ "$eventDetail" = "ingestcollectionchecksum" ] ; then
+        eventType="ingest"
+        if [ "${BATCH_CHECK}" = "Y" ] ; then
+            eventDetail="ingestcollectionchecksum(BATCH)"
+        fi
+    fi
 }
 
 _open_mysql_plist(){
