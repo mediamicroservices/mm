@@ -79,7 +79,6 @@ _report_fixity_db(){
         if [ -z "${db_fixity}" ] ; then
             echo -e "\033[1;31mNo fixity data found! Fixity information not reported to the database.\033[0m"
             event_outcome="No fixity information"
-            exit 1
         fi
         EVENT_ID=$(echo "SELECT eventIdentifierValue FROM event WHERE objectIdentifierValue = '${MEDIA_ID}' AND eventDetail = '${eventDetail}' ORDER BY eventIdentifierValue DESC LIMIT 1" | mysql --login-path="${PREMIS_PROFILE}"  "${PREMIS_NAME}")
         EVENT_ID_TRIM=$(echo $lastrecord | cut -d " " -f2)
