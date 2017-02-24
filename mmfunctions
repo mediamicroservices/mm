@@ -196,6 +196,7 @@ _premis_event_list(){
     if [ "$eventDetail" = "collectionchecksum" ] ; then
         eventType="fixity"
         db_fixity=$(cat "${TAPECHECKSUMFILE}")
+        db_source="${TAPECHECKSUMFILE}"
     fi
     if [ "$eventDetail" = "writelto" ] ; then
         eventType="fixity"
@@ -208,6 +209,7 @@ _premis_event_list(){
         eventType="fixity"
         MEDIA_ID="${TAPE_SERIAL}"
         db_fixity=$(cat "${READBACKDIR}/${TAPE_SERIAL}_ReadBack_checksum_${VERIFYTIME}.md5")
+        db_source="${READBACKDIR}/${TAPE_SERIAL}_ReadBack_checksum_${VERIFYTIME}.md5"
     fi
     if [ "$eventDetail" = "ingestcollectionchecksum" ] ; then
         eventType="ingest"
