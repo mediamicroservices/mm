@@ -199,7 +199,7 @@ _premis_event_list(){
         db_source="${TAPECHECKSUMFILE}"
     fi
     if [ "$eventDetail" = "writelto" ] ; then
-        eventType="fixity"
+        eventType="ingest"
         MEDIA_ID="${TAPE_SERIAL}"
         if [ "${VERIFY_CHECK}" = "Y" ] ; then
             eventDetail="writelto(VERIFY)"
