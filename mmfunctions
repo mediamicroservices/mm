@@ -79,16 +79,18 @@ _report_fixity_db(){
         if [ -z "${db_fixity}" ] ; then
             echo -e "\033[1;31mNo fixity data found! Fixity information not reported to the database.\033[0m"
             event_outcome="No fixity information"
-            exit 1
         fi
-        EVENT_ID=$(echo "SELECT eventIdentifierValue FROM event WHERE objectIdentifierValue = '${MEDIA_ID}' AND eventDetail = '${eventDetail}' ORDER BY eventIdentifierValue DESC LIMIT 1" | mysql --login-path="${PREMIS_PROFILE}"  "${PREMIS_NAME}")
+        echo "${MEDIA_ID}" && echo "${eventDetail}"
+        if [ -z "${lastrecord}" ] ; then    
+            lastrecord=$(echo "SELECT eventIdentifierValue FROM event WHERE objectIdentifierValue = '${MEDIA_ID}' AND eventDetail = '${eventDetail}' ORDER BY eventIdentifierValue DESC LIMIT 1" | mysql --login-path="${PREMIS_PROFILE}"  "${PREMIS_NAME}")
+        fi
         EVENT_ID_TRIM=$(echo $lastrecord | cut -d " " -f2)
         IFS=$(echo -en "\n\b")
         (for i in ${db_fixity}; do LINE=$i;
             messageDigestHASH=$(echo "$LINE" | cut -c -32 )
             messageDigestPATH=$(echo "$LINE" | cut -c 35- )
             messageDigestFILENAME=$(basename "${messageDigestPATH}")
-            echo "INSERT INTO fixity (eventIdentifierValue,objectIdentifierValue,eventDetail,messageDigestAlgorithm,messageDigestPATH,messageDigestFILENAME,messageDigestHASH) VALUES ('${EVENT_ID_TRIM}','${MEDIA_ID}','${eventDetail}','md5','${messageDigestPATH}','${messageDigestFILENAME}','${messageDigestHASH}')" | mysql --login-path="${PREMIS_PROFILE}"  "${PREMIS_NAME}" 
+            echo "INSERT INTO fixity (eventIdentifierValue,objectIdentifierValue,eventDetail,messageDigestAlgorithm,messageDigestSOURCE,messageDigestPATH,messageDigestFILENAME,messageDigestHASH) VALUES ('${EVENT_ID_TRIM}','${MEDIA_ID}','${eventDetail}','md5','${db_source}','${messageDigestPATH}','${messageDigestFILENAME}','${messageDigestHASH}')" | mysql --login-path="${PREMIS_PROFILE}"  "${PREMIS_NAME}" 
             if [ "${?}" != "0" ]; then
                 exit 1
             fi
@@ -128,7 +130,7 @@ _db_error_check(){
                 messageDigestHASH=$(echo "$LINE" | cut -c -32 )
                 messageDigestPATH=$(echo "$LINE" | cut -c 35- )
                 messageDigestFILENAME=$(basename "${messageDigestPATH}")
-                echo "echo \"INSERT INTO fixity (eventIdentifierValue,objectIdentifierValue,eventDetail,messageDigestAlgorithm,messageDigestPATH,messageDigestFILENAME,messageDigestHASH) VALUES ('${EVENT_ID_TRIM}','${MEDIAID}','md5','${messageDigestPATH}','${messageDigestFILENAME}','${messageDigestHASH}')\" | mysql --login-path=\"${PREMIS_PROFILE}\" \"${PREMIS_NAME}\"" >> ~/Desktop/"${MEDIA_ID}"_dbreport.txt
+                echo "echo \"INSERT INTO fixity (eventIdentifierValue,objectIdentifierValue,eventDetail,messageDigestAlgorithm,messageDigestSOURCE,messageDigestPATH,messageDigestFILENAME,messageDigestHASH) VALUES ('${EVENT_ID_TRIM}','${MEDIA_ID}','${eventDetail}','md5','${db_source}','${messageDigestPATH}','${messageDigestFILENAME}','${messageDigestHASH}')\" | mysql --login-path=\"${PREMIS_PROFILE}\" \"${PREMIS_NAME}\"" >> ~/Desktop/"${MEDIA_ID}"_dbreport.txt
             done
             unset IFS
         fi
@@ -194,9 +196,10 @@ _premis_event_list(){
     if [ "$eventDetail" = "collectionchecksum" ] ; then
         eventType="fixity"
         db_fixity=$(cat "${TAPECHECKSUMFILE}")
+        db_source="${TAPECHECKSUMFILE}"
     fi
     if [ "$eventDetail" = "writelto" ] ; then
-        eventType="fixity"
+        eventType="ingest"
         MEDIA_ID="${TAPE_SERIAL}"
         if [ "${VERIFY_CHECK}" = "Y" ] ; then
             eventDetail="writelto(VERIFY)"
@@ -206,6 +209,13 @@ _premis_event_list(){
         eventType="fixity"
         MEDIA_ID="${TAPE_SERIAL}"
         db_fixity=$(cat "${READBACKDIR}/${TAPE_SERIAL}_ReadBack_checksum_${VERIFYTIME}.md5")
+        db_source="${READBACKDIR}/${TAPE_SERIAL}_ReadBack_checksum_${VERIFYTIME}.md5"
+    fi
+    if [ "$eventDetail" = "ingestcollectionchecksum" ] ; then
+        eventType="ingest"
+        if [ "${BATCH_CHECK}" = "Y" ] ; then
+            eventDetail="ingestcollectionchecksum(BATCH)"
+        fi
     fi
 }
 
