@@ -80,7 +80,6 @@ _report_fixity_db(){
             echo -e "\033[1;31mNo fixity data found! Fixity information not reported to the database.\033[0m"
             event_outcome="No fixity information"
         fi
-        echo "${MEDIA_ID}" && echo "${eventDetail}"
         if [ -z "${lastrecord}" ] ; then    
             lastrecord=$(echo "SELECT eventIdentifierValue FROM event WHERE objectIdentifierValue = '${MEDIA_ID}' AND eventDetail = '${eventDetail}' ORDER BY eventIdentifierValue DESC LIMIT 1" | mysql --login-path="${PREMIS_PROFILE}"  "${PREMIS_NAME}")
         fi
@@ -213,9 +212,6 @@ _premis_event_list(){
     fi
     if [ "$eventDetail" = "ingestcollectionchecksum" ] ; then
         eventType="ingest"
-        if [ "${BATCH_CHECK}" = "Y" ] ; then
-            eventDetail="ingestcollectionchecksum(BATCH)"
-        fi
     fi
 }
 
