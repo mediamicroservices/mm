@@ -20,6 +20,11 @@ _cleanup_mount_dir(){
     fi
 }
 
+_escape_for_db(){
+    ESCAPEFORDB="${1}"
+    printf "%q" ${ESCAPEFORDB}
+}
+
 _report_to_db(){  
     if [ "${PREMIS_DB}" = "Y" ] ; then
         eventDetail=$(basename "${0}")
@@ -53,6 +58,7 @@ _report_to_db(){
 
 _report_schema_db(){
     if [ "${PREMIS_DB}" = "Y" ] ; then
+        _premis_event_list
         table_name="ltoSchema"
         if [ -z "${xmlschema}" ] ; then
             xmlschema="$LTO_LOGS/${TAPE_SERIAL}.schema"
@@ -61,8 +67,8 @@ _report_schema_db(){
         schema_tape=$(basename "${xmlschema}" | cut -d'.' -f1)
         IFS=$(echo -en "\n\b")
         (for i in ${schema_sorted}; do LINE=$i;
-        schema_name=$(echo "${LINE}" | cut -d'|' -f1)
-        schema_path=$(echo "${LINE}" | cut -d'|' -f4)
+        schema_name=$(_escape_for_db $(echo "${LINE}" | cut -d'|' -f1))
+        schema_path=$(_escape_for_db $(echo "${LINE}" | cut -d'|' -f4))
         schema_length=$(echo "${LINE}" | cut -d'|' -f2)
         schema_date=$(echo "${LINE}" | cut -d'|' -f3)
         echo "INSERT IGNORE INTO ltoSchema (ltoID,fileName,fileSize,modifyTime,filePath) VALUES ('${schema_tape}','${schema_name}','${schema_length}','$schema_date','${schema_path}${schema_name}')" | mysql  --login-path="${PREMIS_PROFILE}"  "${PREMIS_NAME}" 2> /dev/null
@@ -87,7 +93,7 @@ _report_fixity_db(){
         IFS=$(echo -en "\n\b")
         (for i in ${db_fixity}; do LINE=$i;
             messageDigestHASH=$(echo "$LINE" | cut -c -32 )
-            messageDigestPATH=$(echo "$LINE" | cut -c 35- )
+            messageDigestPATH=$(_escape_for_db $(echo "$LINE" | cut -c 35- ))
             messageDigestFILENAME=$(basename "${messageDigestPATH}")
             echo "INSERT INTO fixity (eventIdentifierValue,objectIdentifierValue,eventDetail,messageDigestAlgorithm,messageDigestSOURCE,messageDigestPATH,messageDigestFILENAME,messageDigestHASH) VALUES ('${EVENT_ID_TRIM}','${MEDIA_ID}','${eventDetail}','md5','${db_source}','${messageDigestPATH}','${messageDigestFILENAME}','${messageDigestHASH}')" | mysql --login-path="${PREMIS_PROFILE}"  "${PREMIS_NAME}" 
             if [ "${?}" != "0" ]; then
@@ -127,7 +133,7 @@ _db_error_check(){
             for i in ${db_fixity} ; do
 	        LINE=$i;
                 messageDigestHASH=$(echo "$LINE" | cut -c -32 )
-                messageDigestPATH=$(echo "$LINE" | cut -c 35- )
+                messageDigestPATH=$(_escape_for_db $(echo "$LINE" | cut -c 35- ))
                 messageDigestFILENAME=$(basename "${messageDigestPATH}")
                 echo "echo \"INSERT INTO fixity (eventIdentifierValue,objectIdentifierValue,eventDetail,messageDigestAlgorithm,messageDigestSOURCE,messageDigestPATH,messageDigestFILENAME,messageDigestHASH) VALUES ('${EVENT_ID_TRIM}','${MEDIA_ID}','${eventDetail}','md5','${db_source}','${messageDigestPATH}','${messageDigestFILENAME}','${messageDigestHASH}')\" | mysql --login-path=\"${PREMIS_PROFILE}\" \"${PREMIS_NAME}\"" >> ~/Desktop/"${MEDIA_ID}"_dbreport.txt
             done
@@ -212,6 +218,19 @@ _premis_event_list(){
     fi
     if [ "$eventDetail" = "ingestcollectionchecksum" ] ; then
         eventType="ingest"
+    fi
+    #Escape ID for SQL
+    if [ -z ${ESCAPE_CHECK1} ] ; then
+        MEDIA_ID=$(_escape_for_db ${MEDIA_ID})
+        ESCAPE_CHECK1="Y"
+    fi
+    if [ -z ${ESCAPE_CHECK2} ] ; then
+        db_source=$(_escape_for_db ${db_source})
+        ESCAPE_CHECK2="Y"
+    fi
+    if [ -z ${ESCAPE_CHECK3} ] ; then
+        user_input=$(_escape_for_db ${user_input})
+        ESCAPE_CHECK3="Y"
     fi
 }
 
