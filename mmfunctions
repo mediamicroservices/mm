@@ -21,8 +21,7 @@ _cleanup_mount_dir(){
 }
 
 _escape_for_db(){
-    ESCAPEFORDB="${1}"
-    printf "%q" ${ESCAPEFORDB}
+    echo "${1}" | tr "’" "'"| sed "s/'/\''/g"
 }
 
 _report_to_db(){  
