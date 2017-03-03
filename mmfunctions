@@ -71,6 +71,10 @@ _report_schema_db(){
         schema_length=$(echo "${LINE}" | cut -d'|' -f2)
         schema_date=$(echo "${LINE}" | cut -d'|' -f3)
         echo "INSERT IGNORE INTO ltoSchema (ltoID,fileName,fileSize,modifyTime,filePath) VALUES ('${schema_tape}','${schema_name}','${schema_length}','$schema_date','${schema_path}${schema_name}')" | mysql  --login-path="${PREMIS_PROFILE}"  "${PREMIS_NAME}" 2> /dev/null
+        if [ "${?}" != "0" ]; then
+            sleep 1
+            echo "INSERT INTO fixity (eventIdentifierValue,objectIdentifierValue,eventDetail,messageDigestAlgorithm,messageDigestSOURCE,messageDigestPATH,messageDigestFILENAME,messageDigestHASH) VALUES ('${EVENT_ID_TRIM}','${MEDIA_ID}','${eventDetail}','md5','${db_source}','${messageDigestPATH}','${messageDigestFILENAME}','${messageDigestHASH}')" | mysql --login-path="${PREMIS_PROFILE}"  "${PREMIS_NAME}" || exit 1
+        fi
         done)
         unset IFS
         _db_error_check
@@ -105,6 +109,23 @@ _report_fixity_db(){
     fi
 }
 
+_db_email_delivery(){
+    EMAILTO="${1}"
+    if [ "${EMAILTO}" ] ; then
+        temp_message=$(_maketemp)
+        if [[ -f "${REPORT_DUMP}" ]] ; then
+            echo -e "\033[1;103;95mZipping and emailing a copy of "${REPORT_DUMP} to to ${EMAILTO}"\033[0m"
+            gzip -f "${REPORT_DUMP}"
+            echo -e "Subject:Database insertion report for ${MEDIA_ID}\nThere was a problem with database reporting for the Media ID ${MEDIA_ID}.\n A database insertion report has been created at ${REPORT_DUMP}.gz on ${HOSTNAME}. A copy is attached to this email. \n\n" > "$temp_message"    
+            uuencode "${REPORT_DUMP}".gz $(basename "${REPORT_DUMP}".gz) >> "$temp_message"
+        sendmail -f "${EMAIL_FROM}" -F "${EMAILTO}" "${EMAILTO}" < "$temp_message"
+            if [ -f "$temp_message" ] ; then
+                rm "$temp_message"
+            fi
+        fi
+    fi
+}
+
 _eventoutcome_update(){
     if [ "${PREMIS_DB}" = "Y" ] ; then
         if [ -z "$event_outcome" ] ; then
@@ -122,32 +143,34 @@ _eventoutcome_update(){
 }
 
 _db_error_check(){
-    if [ "$?" != "0" ]; then
-        echo -e "\033[1;5;95mERROR:\033[0m \033[1;103;95mCould not access database "${PREMIS_NAME}". Information was not added to the "${table_name}" table. SQL command history has been written to ~/Desktop/"${MEDIA_ID}"_dbreport.txt\033[0m"
+    if [ "$?" != "0" ] ; then
+        ERROR_DATE=$(date +%Y%m%d)
+        REPORT_DUMP=~/Desktop/"${MEDIA_ID}"_"${ERROR_DATE}"_dbreport.sh
+        echo -e "\033[1;5;95mERROR:\033[0m \033[1;103;95mCould not access database "${PREMIS_NAME}". Information was not added to the "${table_name}" table. SQL command history has been written to "${REPORT_DUMP}"\033[0m"
         if [ "$table_name" = "object" ] ; then
-            echo "echo \"INSERT IGNORE INTO object (objectIdentifierValue,object_LastTouched) VALUES ('${MEDIA_ID}',NOW()) ON DUPLICATE KEY UPDATE object_LastTouched = NOW()\" | mysql --login-path=\"${PREMIS_PROFILE}\"  \"${PREMIS_NAME}\"" >> ~/Desktop/"${MEDIA_ID}"_dbreport.txt
+            echo "echo \"INSERT IGNORE INTO object (objectIdentifierValue,object_LastTouched) VALUES ('${MEDIA_ID}',NOW()) ON DUPLICATE KEY UPDATE object_LastTouched = NOW()\" | mysql --login-path=\"${PREMIS_PROFILE}\"  \"${PREMIS_NAME}\"" >> "${REPORT_DUMP}"
         fi
     
         if [ "${table_name}" = "fixity" ] ; then
             IFS=$(echo -en "\n\b")
             for i in ${db_fixity} ; do
-	        LINE=$i;
+	            LINE=$i;
                 messageDigestHASH=$(echo "$LINE" | cut -c -32 )
                 messageDigestPATH=$(_escape_for_db $(echo "$LINE" | cut -c 35- ))
                 messageDigestFILENAME=$(basename "${messageDigestPATH}")
-                echo "echo \"INSERT INTO fixity (eventIdentifierValue,objectIdentifierValue,eventDetail,messageDigestAlgorithm,messageDigestSOURCE,messageDigestPATH,messageDigestFILENAME,messageDigestHASH) VALUES ('${EVENT_ID_TRIM}','${MEDIA_ID}','${eventDetail}','md5','${db_source}','${messageDigestPATH}','${messageDigestFILENAME}','${messageDigestHASH}')\" | mysql --login-path=\"${PREMIS_PROFILE}\" \"${PREMIS_NAME}\"" >> ~/Desktop/"${MEDIA_ID}"_dbreport.txt
+                echo "echo \"INSERT INTO fixity (eventIdentifierValue,objectIdentifierValue,eventDetail,messageDigestAlgorithm,messageDigestSOURCE,messageDigestPATH,messageDigestFILENAME,messageDigestHASH) VALUES ('${EVENT_ID_TRIM}','${MEDIA_ID}','${eventDetail}','md5','${db_source}','${messageDigestPATH}','${messageDigestFILENAME}','${messageDigestHASH}')\" | mysql --login-path=\"${PREMIS_PROFILE}\" \"${PREMIS_NAME}\"" >> "${REPORT_DUMP}"
             done
             unset IFS
         fi
     
         if [ "${table_name}" = "event" ] ; then
-            echo "echo \"INSERT INTO event (objectIdentifierValue,eventType,eventDetail,eventDetailOPT,eventDetailCOMPNAME,linkingAgentIdentifierValue) VALUES ('${MEDIAID}','${eventType}','${eventDetail}','${user_input}','${HOSTNAME}', '${OP}')\" | mysql --login-path=\"${PREMIS_PROFILE}\"  \"${PREMIS_NAME}\"" >> ~/Desktop/"${MEDIA_ID}"_dbreport.txt
+            echo "echo \"INSERT INTO event (objectIdentifierValue,eventType,eventDetail,eventDetailOPT,eventDetailCOMPNAME,linkingAgentIdentifierValue) VALUES ('${MEDIAID}','${eventType}','${eventDetail}','${user_input}','${HOSTNAME}', '${OP}')\" | mysql --login-path=\"${PREMIS_PROFILE}\"  \"${PREMIS_NAME}\"" >> "${REPORT_DUMP}"
         fi
         if [ "${table_name}" = "objectCharacteristics" ] ; then
-            echo "echo \"INSERT IGNORE INTO objectCharacteristics (objectIdentifierValue,mediaInfo) VALUES ('${MEDIA_ID}','${MEDIAINFO}')\" | mysql --login-path=\"${PREMIS_PROFILE}\"  \"$PREMIS_NAME\"" >> ~/Desktop/"$MEDIA_ID"_dbreport.txt
+            echo "echo \"INSERT IGNORE INTO objectCharacteristics (objectIdentifierValue,mediaInfo) VALUES ('${MEDIA_ID}','${MEDIAINFO}')\" | mysql --login-path=\"${PREMIS_PROFILE}\"  \"$PREMIS_NAME\"" >> "${REPORT_DUMP}"
         fi
         if [ "${table_name}" = "ltoSchema" ] ; then
-            echo "echo \"INSERT INTO ltoSchema (ltoID,fileName,fileSize,modifyTime,filePath) VALUES ('${schema_tape}','${schema_name}','${schema_length}','$schema_date','${schema_path}${schema_name}')\" | mysql  --login-path=\"${PREMIS_PROFILE}\"  \"${PREMIS_NAME}\"" >> ~/Desktop/"$MEDIA_ID"_dbreport.txt
+            echo "echo \"INSERT INTO ltoSchema (ltoID,fileName,fileSize,modifyTime,filePath) VALUES ('${schema_tape}','${schema_name}','${schema_length}','$schema_date','${schema_path}${schema_name}')\" | mysql  --login-path=\"${PREMIS_PROFILE}\"  \"${PREMIS_NAME}\"" >> "${REPORT_DUMP}"
         fi
     else
         echo -e "\033[1;103;95mSuccessfully reported infomation to the "${table_name}" table in the database "${PREMIS_NAME}"\033[0m"
