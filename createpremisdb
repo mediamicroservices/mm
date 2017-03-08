@@ -46,6 +46,7 @@ echo "CREATE TABLE fixity (fixityIdentifierValue bigint NOT NULL AUTO_INCREMENT,
 echo "CREATE TABLE objectCharacteristics (objectCharacteristicValueID bigint NOT NULL AUTO_INCREMENT, objectIdentifierValue varchar(1000) NOT NULL,mediaInfo MEDIUMTEXT, PRIMARY KEY (objectCharacteristicValueID),FOREIGN KEY (objectIdentifierValue) REFERENCES object(objectIdentifierValue))" | mysql --login-path=tempsetting "$DB_NAME"
 echo "CREATE TABLE ltoSchema (ltoSchemaValueID bigint NOT NULL AUTO_INCREMENT, ltoID varchar(10) NOT NULL,fileName varchar(200),filePath varchar(400),fileSize varchar(100),modifyTime varchar(40),PRIMARY KEY (ltoSchemaValueID))" | mysql --login-path=tempsetting "$DB_NAME"
 echo "CREATE UNIQUE INDEX lto_column_index ON ltoSchema(ltoID,fileName,filePath,fileSize,modifyTime)" | mysql --login-path=tempsetting "$DB_NAME"
+echo "CREATE TABLE objectCharacteristics (objectCharacteristicValueID bigint NOT NULL AUTO_INCREMENT, objectIdentifierValue varchar(1000) NOT NULL UNIQUE,mediaInfo MEDIUMTEXT,captureLog TEXT,videoFingerprint MEDIUMTEXT,videoFingerprintSorted MEDIUMTEXT,PRIMARY KEY (objectCharacteristicValueID),FOREIGN KEY (objectIdentifierValue) REFERENCES object(objectIdentifierValue))" | mysql --login-path=tempsetting "$DB_NAME"
 _error_check
 #remove root config
 mysql_config_editor remove --login-path=tempsetting
