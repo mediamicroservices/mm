@@ -184,8 +184,8 @@ _premis_event_list(){
     if [ "$eventDetail" = "ingestfile" ] ; then
         eventType="creation"
         METADIR="${AIP_STORAGE}/${MEDIAID}/metadata"
-        MEDIAINFO=$(cat "${METADIR}/fileMeta/objects/${MEDIA_ID}_mediainfo.xml")
-        CAPTURELOG=$(cat "${METADIR}/logs/capture.log")
+        MEDIAINFO=$(_escape_for_db "$(cat "${METADIR}/fileMeta/objects/${MEDIA_ID}_mediainfo.xml")")
+        CAPTURELOG=$(_escape_for_db "$(cat "${METADIR}/logs/capture.log")")
         MEDIA_ID="${MEDIAID}"
     fi
     if [ "$eventDetail" = "makebroadcast" ] ; then
