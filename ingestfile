@@ -246,6 +246,13 @@ fi
     fi
     _ask_input
 
+    # Check if file is being modified
+    INPUT_DATE=$(getfileinfo "${INPUT}" | grep modified | cut -d' ' -f2-)
+    CURRENT_DATE=$(date -j "+%m/%d/%Y %H:%M:%S")
+    if [ "${INPUT_DATE}" = "${CURRENT_DATE}" ] ; then
+        _report -w "WARNING: Input is currently being modified. Exiting."
+        exit 1
+    fi
     #here is where we would insert an option for searching for  directory.
     if [ ! $(_is_video "${INPUT}") ] ; then
         _report -qnt "WARNING: ${INPUT} is not recognized as a video file. Please press q to quit, any other key to continue (if you know what you're doing): "
