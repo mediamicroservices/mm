@@ -236,6 +236,7 @@ while [ "${*}" != "" ] ; do
     fi
     _eventoutcome_update
     _report_fixity_db
+    _db_email_delivery "${MAKEBROADCAST_DELIVERY_EMAIL_TO}"
     _log -e
     shift
 done
