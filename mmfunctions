@@ -110,17 +110,19 @@ _report_fixity_db(){
 }
 
 _db_email_delivery(){
-    EMAILTO="${1}"
-    if [ "${EMAILTO}" ] ; then
-        temp_message=$(_maketemp)
-        if [[ -f "${REPORT_DUMP}" ]] ; then
-            echo -e "\033[1;103;95mZipping and emailing a copy of "${REPORT_DUMP} to to ${EMAILTO}"\033[0m"
-            gzip -f "${REPORT_DUMP}"
-            echo -e "Subject:Database insertion report for ${MEDIA_ID}\nThere was a problem with database reporting for the Media ID ${MEDIA_ID}.\n A database insertion report has been created at ${REPORT_DUMP}.gz on ${HOSTNAME}. A copy is attached to this email. \n\n" > "$temp_message"    
-            uuencode "${REPORT_DUMP}".gz $(basename "${REPORT_DUMP}".gz) >> "$temp_message"
-        sendmail -f "${EMAIL_FROM}" -F "${EMAILTO}" "${EMAILTO}" < "$temp_message"
-            if [ -f "$temp_message" ] ; then
-                rm "$temp_message"
+    if [ "${PREMIS_DB}" = "Y" ] ; then
+        EMAILTO="${1}"
+        if [ "${EMAILTO}" ] ; then
+            temp_message=$(_maketemp)
+            if [[ -f "${REPORT_DUMP}" ]] ; then
+                echo -e "\033[1;103;95mZipping and emailing a copy of "${REPORT_DUMP} to to ${EMAILTO}"\033[0m"
+                gzip -f "${REPORT_DUMP}"
+                echo -e "Subject:Database insertion report for ${MEDIA_ID}\nThere was a problem with database reporting for the Media ID ${MEDIA_ID}.\n A database insertion report has been created at ${REPORT_DUMP}.gz on ${HOSTNAME}. A copy is attached to this email. \n\n" > "$temp_message"    
+                uuencode "${REPORT_DUMP}".gz $(basename "${REPORT_DUMP}".gz) >> "$temp_message"
+                sendmail -f "${EMAIL_FROM}" -F "${EMAILTO}" "${EMAILTO}" < "$temp_message"
+                if [ -f "$temp_message" ] ; then
+                    rm "$temp_message"
+                fi
             fi
         fi
     fi
