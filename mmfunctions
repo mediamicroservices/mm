@@ -1433,7 +1433,7 @@ _pashua_run() {
     done
     if [ ! "${PASHUAPATH}" ] ; then
         echo "Error: Pashua is used to edit but is not found."
-        if [[ "${PASHUAINSTALL}" = "" ]] ; then
+        if [[ "${PASHUAINSTALL}" = "" ]] && [[ $OSTYPE = darwin* ]] ; then
             echo "Attempting to run: brew cask install pashua"
             if [[ "${PASHUAINSTALL}" != "Y" ]] ; then
                 brew cask install pashua
