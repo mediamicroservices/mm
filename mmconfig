@@ -7,7 +7,7 @@ SCRIPTDIR=$(dirname "${0}")
 . "${SCRIPTDIR}/mmfunctions" || { echo "Missing '${SCRIPTDIR}/mmfunctions'. Exiting." ; exit 1 ;};
 
 if [[ $OSTYPE = darwin* ]] ; then
-RUNPASHUA="Y"
+    RUNPASHUA="Y"
 fi
 
 _usage(){
@@ -321,7 +321,7 @@ if [[ "${RUNPASHUA}" = "Y" ]] ; then
         echo "  PREMIS_PROFILE = ${PREMIS_PROFILE}"
         echo "  PREMIS_NAME = ${PREMIS_NAME}"
         echo "  PREMIS_PLIST = ${PREMIS_PLIST}"
-        echo ""
+        echo
     fi
     #write to the config file
     {
