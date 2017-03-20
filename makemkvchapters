@@ -6,33 +6,53 @@ unset DEPENDENCIES
 DEPENDENCIES=(mkvpropedit)
 _initialize_make
 
+_ask_for_chapter(){
+    unset ChapterSegmentUID
+    _report -qn "Enter the name of the chapter or 'q' to quit: "
+    read -e CHAPTER_NAME
+    if [[ "${CHAPTER_NAME}" != "q" ]] ; then
+        _report -qn "Enter the start time for ${CHAPTER_NAME} or 'q' to quit: "
+        read -e STARTTIME
+        if [[ "${STARTTIME}" != "q" ]] ; then
+            _report -qn "Enter the end time or 'q' to quit: "
+            read -e ENDTIME
+            if [[ "${ENDTIME}" != "q" ]] ; then
+                _report -qn "Enter linked file if any, leave blank, or 'q' to quit: "
+                read -e LINKEDSEGMENT
+                if [[ "${LINKEDSEGMENT}" != "q" ]] ; then
+                    if [[ -f "${LINKEDSEGMENT}" ]] ; then
+                        LINKEDUID=$(mkvinfo  "${LINKEDSEGMENT}" | grep "Segment UID:" | cut -d: -f2 | sed 's/0x//g;s/ //g')
+                        ChapterSegmentUID="<ChapterSegmentUID format=\"hex\">${LINKEDUID}</ChapterSegmentUID>"
+                    fi
+                    CHAPTER="<ChapterAtom>
+                      <ChapterTimeStart>${STARTTIME}</ChapterTimeStart>
+                      <ChapterTimeEnd>${ENDTIME}</ChapterTimeEnd>
+                      <ChapterFlagHidden>0</ChapterFlagHidden>
+                      <ChapterFlagEnabled>1</ChapterFlagEnabled>
+                      ${ChapterSegmentUID}
+                      <ChapterDisplay>
+                        <ChapterString>${CHAPTER_NAME}</ChapterString>
+                        <ChapterLanguage>eng</ChapterLanguage>
+                      </ChapterDisplay>
+                    </ChapterAtom>"
+                    CHAPTER_LIST+="${CHAPTER}"
+                fi
+            fi
+        fi
+    fi
+}
+
 while [ "${*}" != "" ] ; do
     INPUT="${1}"
     shift
     if [ -f "${INPUT}" ] ; then
         MKVCHAPTERS_XML=$(_maketemp)
         MKVTAGS_XML=$(_maketemp)
-
-_report "For the Introduction"
+        while [[ "${CHAPTER_NAME}" != 'q' && "${STARTTIME}" != 'q' && "${ENDTIME}" != 'q' && "${LINKEDSEGMENT}" != 'q' ]] ; do
+            _ask_for_chapter
+        done
+        
 _report "Start and end times must be in HH:MM:SS.mmm or S.mmm format. Note mmm is milliseconds and not frames."
-_report -qn "Enter the start time or 'q' to quit: "
-read -e intimeI
-[[ "${intimeI}" = "q" ]] && exit 0
-_report -qn "Enter the end time or 'q' to quit: "
-read -e outtimeI
-[[ "${outtimeI}" = "q" ]] && exit 0
-labelI="Introduction"
-_report "For the Discussion"
-_report "Start and end times must be in HH:MM:SS.mmm or S.mmm format. Note mmm is milliseconds and not frames."
-_report -qn "Enter the start time or 'q' to quit: "
-read -e intimeD
-[[ "${intimeD}" = "q" ]] && exit 0
-_report -qn "Enter the end time or 'q' to quit: "
-read -e outtimeD
-[[ "${outtimeD}" = "q" ]] && exit 0
-labelD="Discussion"
-echo "$intimeI - $outtimeI: $labelI"
-echo "$intimeD - $outtimeD: $labelD"
 
 echo "<?xml version='1.0' encoding='UTF-8'?>
 <!-- <!DOCTYPE Tags SYSTEM 'matroskatags.dtd'> -->
@@ -41,6 +61,13 @@ echo "<?xml version='1.0' encoding='UTF-8'?>
     <EditionFlagOrdered>1</EditionFlagOrdered>
     <EditionFlagHidden>0</EditionFlagHidden>
     <EditionFlagDefault>1</EditionFlagDefault>
+    <EditionUID>3475548369</EditionUID>
+    ${CHAPTER_LIST}
+  </EditionEntry>
+  <EditionEntry>
+    <EditionFlagOrdered>1</EditionFlagOrdered>
+    <EditionFlagHidden>0</EditionFlagHidden>
+    <EditionFlagDefault>0</EditionFlagDefault>
     <EditionUID>12338659363134957115</EditionUID>
     <ChapterAtom>
       <ChapterTimeStart>00:00:00.000000000</ChapterTimeStart>
@@ -48,32 +75,6 @@ echo "<?xml version='1.0' encoding='UTF-8'?>
       <ChapterFlagEnabled>1</ChapterFlagEnabled>
       <ChapterDisplay>
         <ChapterString>Full</ChapterString>
-        <ChapterLanguage>eng</ChapterLanguage>
-      </ChapterDisplay>
-    </ChapterAtom>
-  </EditionEntry>
-  <EditionEntry>
-    <EditionFlagOrdered>1</EditionFlagOrdered>
-    <EditionFlagHidden>0</EditionFlagHidden>
-    <EditionFlagDefault>0</EditionFlagDefault>
-    <EditionUID>3475548369</EditionUID>
-    <ChapterAtom>
-      <ChapterTimeStart>${intimeI}</ChapterTimeStart>
-      <ChapterTimeEnd>${outtimeI}</ChapterTimeEnd>
-      <ChapterFlagHidden>0</ChapterFlagHidden>
-      <ChapterFlagEnabled>1</ChapterFlagEnabled>
-      <ChapterDisplay>
-        <ChapterString>${labelI}</ChapterString>
-        <ChapterLanguage>eng</ChapterLanguage>
-      </ChapterDisplay>
-    </ChapterAtom>
-    <ChapterAtom>
-      <ChapterTimeStart>${intimeD}</ChapterTimeStart>
-      <ChapterTimeEnd>${outtimeD}</ChapterTimeEnd>
-      <ChapterFlagHidden>0</ChapterFlagHidden>
-      <ChapterFlagEnabled>1</ChapterFlagEnabled>
-      <ChapterDisplay>
-        <ChapterString>${labelD}</ChapterString>
         <ChapterLanguage>eng</ChapterLanguage>
       </ChapterDisplay>
     </ChapterAtom>
@@ -109,6 +110,6 @@ echo "<?xml version='1.0' encoding='UTF-8'?>
   </Tag>
 </Tags>" > "${MKVTAGS_XML}"
 
-mkvpropedit "${INPUT}" -c "${MKVCHAPTERS_XML}" -t all:"${MKVTAGS_XML}"
+mkvpropedit "${INPUT}" -c "${MKVCHAPTERS_XML}" -t global:"${MKVTAGS_XML}"
     fi
 done

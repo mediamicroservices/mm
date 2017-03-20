@@ -5,7 +5,10 @@ CONFIG="Y"
 CONFIG_VERSION="1.0"
 SCRIPTDIR=$(dirname "${0}")
 . "${SCRIPTDIR}/mmfunctions" || { echo "Missing '${SCRIPTDIR}/mmfunctions'. Exiting." ; exit 1 ;};
-RUNPASHUA="Y"
+
+if [[ $OSTYPE = darwin* ]] ; then
+    RUNPASHUA="Y"
+fi
 
 _usage(){
     echo
@@ -15,7 +18,7 @@ _usage(){
 }
 
 # local variables
-REQUIRED_VARIABLES=("OUTDIR_INGESTFILE" "OUTDIR_INGESTXDCAM" "OUTDIR_PAPER" "AIP_STORAGE" "PODCASTDELIVER" "YOUTUBEDELIVER" "TMPDIR" "REGEX4PODCAST" "DVDLABELPREFIX" "OMNEONIP" "OMNEONPATH" "CUSTOM_LOG_DIR" "LTO_INDEX_DIR" "LOCAL_MM_DIR" "EMAIL_FROM" "MAKEYOUTUBE_DELIVERY_EMAIL_TO" "MAKEBROADCAST_DELIVERY_EMAIL_TO" "FILE_MAKER_DB" "FILE_MAKER_XML_URL" "VOLADJUST")
+REQUIRED_VARIABLES=("OUTDIR_INGESTFILE" "OUTDIR_INGESTXDCAM" "OUTDIR_PAPER" "AIP_STORAGE" "PODCASTDELIVER" "YOUTUBEDELIVER" "TMPDIR" "REGEX4PODCAST" "DVDLABELPREFIX" "OMNEONIP" "OMNEONPATH" "CUSTOM_LOG_DIR" "LTO_INDEX_DIR" "LOCAL_MM_DIR" "EMAIL_FROM" "MAKEYOUTUBE_DELIVERY_EMAIL_TO" "MAKEBROADCAST_DELIVERY_EMAIL_TO" "FILE_MAKER_DB" "VOLADJUST" "PREMIS_DB" "SQL_ERROR_EMAIL_TO" "PREMIS_PROFILE" "PREMIS_NAME")
 
 OPTIND=1
 
@@ -220,13 +223,13 @@ FILE_MAKER_DB.label = Please enter the name of the filemaker database:
 FILE_MAKER_DB.width = 125
 FILE_MAKER_DB.default = ${FILE_MAKER_DB}
 
-# FILE_MAKER_XML_URL
-FILE_MAKER_XML_URL.x = 600
-FILE_MAKER_XML_URL.y = 150
-FILE_MAKER_XML_URL.type = textfield
-FILE_MAKER_XML_URL.label = Please enter the address for the delivery of metadata to the FileMaker API:
-FILE_MAKER_XML_URL.width = 125
-FILE_MAKER_XML_URL.default = ${FILE_MAKER_XML_URL}
+# SQL_ERROR_EMAIL_TO
+SQL_ERROR_EMAIL_TO.x = 600
+SQL_ERROR_EMAIL_TO.y = 150
+SQL_ERROR_EMAIL_TO.type = textfield
+SQL_ERROR_EMAIL_TO.label = Please the email account for the delivery of SQL Error Reports:
+SQL_ERROR_EMAIL_TO.width = 125
+SQL_ERROR_EMAIL_TO.default = ${SQL_ERROR_EMAIL_TO}
 
 # VOLADJUST
 VOLADJUST.x = 600
@@ -297,33 +300,38 @@ if [[ "${RUNPASHUA}" = "Y" ]] ; then
     echo "${CONF}" > "${PASHUA_CONFIGFILE}"
     _pashua_run
     rm "${PASHUA_CONFIGFILE}"
-    echo "  OUTDIR_INGESTFILE = ${OUTDIR_INGESTFILE}"
-    echo "  OUTDIR_INGESTXDCAM = ${OUTDIR_INGESTXDCAM}"
-    echo "  OUTDIR_PAPER = ${OUTDIR_PAPER}"
-    echo "  AIP_STORAGE = ${AIP_STORAGE}"
-    echo "  PODCASTDELIVER = ${PODCASTDELIVER}"
-    echo "  YOUTUBEDELIVER = ${YOUTUBEDELIVER}"
-    echo "  TMPDIR = ${TMPDIR}"
-    echo "  REGEX4PODCAST = ${REGEX4PODCAST}"
-    echo "  DVDLABELPREFIX = ${DVDLABELPREFIX}"
-    echo "  OMNEONIP = ${OMNEONIP}"
-    echo "  OMNEONPATH = ${OMNEONPATH}"
-    echo "  CUSTOM_LOG_DIR = ${CUSTOM_LOG_DIR}"
-    echo "  LTO_INDEX_DIR = ${LTO_INDEX_DIR}"
-    echo "  LOCAL_MM_DIR = ${LOCAL_MM_DIR}"
-    echo "  EMAIL_FROM = ${EMAIL_FROM}"
-    echo "  MAKEYOUTUBE_DELIVERY_EMAIL_TO = ${MAKEYOUTUBE_DELIVERY_EMAIL_TO}"
-    echo "  MAKEBROADCAST_DELIVERY_EMAIL_TO = ${MAKEBROADCAST_DELIVERY_EMAIL_TO}"
-    echo "  FILE_MAKER_DB = ${FILE_MAKER_DB}"
-    echo "  FILE_MAKER_XML_URL = ${FILE_MAKER_XML_URL}"
-    echo "  VOLADJUST = ${VOLADJUST}"
-    echo "  PREMIS_DB = ${PREMIS_DB}"
-    echo "  PREMIS_PROFILE = ${PREMIS_PROFILE}"
-    echo "  PREMIS_NAME = ${PREMIS_NAME}"
-    echo "  PREMIS_PLIST = ${PREMIS_PLIST}"
-    echo "  PERCEPTUAL_HASH = ${PERCEPTUAL_HASH}"
-    echo ""
-
+    if [ "${PASHUAFAIL}" = "Y" ] ; then
+        echo "Pashua is not installed.  Opening via CLI."
+        sleep 1
+        exec $(basename "${0}") -t
+    else
+        echo "  OUTDIR_INGESTFILE = ${OUTDIR_INGESTFILE}"
+        echo "  OUTDIR_INGESTXDCAM = ${OUTDIR_INGESTXDCAM}"
+        echo "  OUTDIR_PAPER = ${OUTDIR_PAPER}"
+        echo "  AIP_STORAGE = ${AIP_STORAGE}"
+        echo "  PODCASTDELIVER = ${PODCASTDELIVER}"
+        echo "  YOUTUBEDELIVER = ${YOUTUBEDELIVER}"
+        echo "  TMPDIR = ${TMPDIR}"
+        echo "  REGEX4PODCAST = ${REGEX4PODCAST}"
+        echo "  DVDLABELPREFIX = ${DVDLABELPREFIX}"
+        echo "  OMNEONIP = ${OMNEONIP}"
+        echo "  OMNEONPATH = ${OMNEONPATH}"
+        echo "  CUSTOM_LOG_DIR = ${CUSTOM_LOG_DIR}"
+        echo "  LTO_INDEX_DIR = ${LTO_INDEX_DIR}"
+        echo "  LOCAL_MM_DIR = ${LOCAL_MM_DIR}"
+        echo "  EMAIL_FROM = ${EMAIL_FROM}"
+        echo "  MAKEYOUTUBE_DELIVERY_EMAIL_TO = ${MAKEYOUTUBE_DELIVERY_EMAIL_TO}"
+        echo "  MAKEBROADCAST_DELIVERY_EMAIL_TO = ${MAKEBROADCAST_DELIVERY_EMAIL_TO}"
+        echo "  FILE_MAKER_DB = ${FILE_MAKER_DB}"
+        echo "  SQL_ERROR_EMAIL_TO = ${SQL_ERROR_EMAIL_TO}"
+        echo "  VOLADJUST = ${VOLADJUST}"
+        echo "  PREMIS_DB = ${PREMIS_DB}"
+        echo "  PREMIS_PROFILE = ${PREMIS_PROFILE}"
+        echo "  PREMIS_NAME = ${PREMIS_NAME}"
+        echo "  PREMIS_PLIST = ${PREMIS_PLIST}"
+        echo "  PERCEPTUAL_HASH = ${PERCEPTUAL_HASH}"
+        echo
+    fi
     #write to the config file
     {
         echo "OUTDIR_INGESTFILE=\"${OUTDIR_INGESTFILE}\""
@@ -344,7 +352,7 @@ if [[ "${RUNPASHUA}" = "Y" ]] ; then
         echo "MAKEYOUTUBE_DELIVERY_EMAIL_TO=\"${MAKEYOUTUBE_DELIVERY_EMAIL_TO}\""
         echo "MAKEBROADCAST_DELIVERY_EMAIL_TO=\"${MAKEBROADCAST_DELIVERY_EMAIL_TO}\""
         echo "FILE_MAKER_DB=\"${FILE_MAKER_DB}\""
-        echo "FILE_MAKER_XML_URL=\"${FILE_MAKER_XML_URL}\""
+        echo "SQL_ERROR_EMAIL_TO=\"${SQL_ERROR_EMAIL_TO}\""
         echo "VOLADJUST=\"${VOLADJUST}\""
         echo "PREMIS_DB=\"${PREMIS_DB}\""
         echo "PREMIS_PROFILE=\"${PREMIS_PROFILE}\""

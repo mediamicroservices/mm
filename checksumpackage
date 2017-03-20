@@ -182,6 +182,7 @@ while [ "${*}" != "" ] ; do
         else
             xml sel -T -t -m "/dfxml/fileobject" -v "hashdigest" -o "  " -v "filename" -n "${PACKAGE}/${OUTDIR}/${DFXMLNAME}" > "${PACKAGE}/${OUTDIR}/${CHECKSUMNAME}"
         fi
+        db_source="${PACKAGE}/${OUTDIR}/${CHECKSUMNAME}"
         db_fixity=$(cat "${PACKAGE}/${OUTDIR}/${CHECKSUMNAME}")
         _report_to_db
         echo "$(_get_iso8601): $(basename "${0}"):${VERSION}: ${CHECKSUMNAME} is generated" >> "${PACKAGE}/${OUTDIR}/${CHECKSUMPROCESSLOG}"
@@ -235,6 +236,7 @@ while [ "${*}" != "" ] ; do
     fi
     _eventoutcome_update
     _report_fixity_db
+    _db_email_delivery "${SQL_ERROR_EMAIL_TO}"
     _log -e
     shift
 done

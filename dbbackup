@@ -46,7 +46,7 @@ while getopts "hec" opt ; do
 done
 
 
-FILES=$(ls "$SQL_BACKUP_DIR"/"$DATABASE_NAME"_backup_*.sql.gz| sort)
+FILES=$(ls -rt "$SQL_BACKUP_DIR"/"$DATABASE_NAME"_backup_*.sql.gz)
 FILE_COUNT=$(echo "$FILES" | wc -l)
 OLDEST_FILE=$(echo "$FILES" | head -n 1)
 BACKUP_FILE=${SQL_BACKUP_DIR}/"$DATABASE_NAME"_backup_`date +"%m-%d-%Y_%H-%M-%S"`.sql

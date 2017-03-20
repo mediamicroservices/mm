@@ -2,7 +2,6 @@
 SCRIPTNAME=$(basename "${0}")
 SCRIPTDIR=$(dirname "${0}")
 MM_CONFIG_FILE="${SCRIPTDIR}/mm.conf"
-LTO_CONFIG_FILE="${SCRIPTDIR}/ltoper.conf"
 WHAT_IS_THIS="mediamicroservices"
 
 # load configuration file
@@ -21,14 +20,22 @@ _cleanup_mount_dir(){
     fi
 }
 
+_escape_for_db(){
+    echo "${1}" | tr "’" "'"| sed "s/'/\''/g"
+}
+
 _report_to_db(){  
     if [ "${PREMIS_DB}" = "Y" ] ; then
         eventDetail=$(basename "${0}")
-        MEDIA_ID=$(basename "${INPUT}")
+        if [ -z "${MEDIA_ID}" ] ; then
+            MEDIA_ID=$(basename "${INPUT}")
+        fi
         LOGDIR="${OUTDIR_INGESTFILE}/${MEDIAID}/metadata/logs"
         INGESTLOG="${LOGDIR}/capture.log"
         if [ -f "${INGESTLOG}" ] ; then
             OP=$(grep "operator" "${INGESTLOG}" | cut -c 11-)
+        else
+            OP="${OP}"
         fi
         if [ -z "${OP}" ] ; then
             OP="${USER}"
@@ -48,6 +55,32 @@ _report_to_db(){
     fi
 }
 
+_report_schema_db(){
+    if [ "${PREMIS_DB}" = "Y" ] ; then
+        _premis_event_list
+        table_name="ltoSchema"
+        if [ -z "${xmlschema}" ] ; then
+            xmlschema="$LTO_LOGS/${TAPE_SERIAL}.schema"
+        fi
+        schema_sorted=$(xml sel -t -m ".//file" -v "concat(name,'|',length, '|', modifytime)" -o "|" -m "ancestor-or-self::directory" -v "name" -o "/" -b -n "${xmlschema}")
+        schema_tape=$(basename "${xmlschema}" | cut -d'.' -f1)
+        IFS=$(echo -en "\n\b")
+        (for i in ${schema_sorted}; do LINE=$i;
+        schema_name=$(_escape_for_db $(echo "${LINE}" | cut -d'|' -f1))
+        schema_path=$(_escape_for_db $(echo "${LINE}" | cut -d'|' -f4))
+        schema_length=$(echo "${LINE}" | cut -d'|' -f2)
+        schema_date=$(echo "${LINE}" | cut -d'|' -f3)
+        echo "INSERT IGNORE INTO ltoSchema (ltoID,fileName,fileSize,modifyTime,filePath) VALUES ('${schema_tape}','${schema_name}','${schema_length}','$schema_date','${schema_path}${schema_name}')" | mysql  --login-path="${PREMIS_PROFILE}"  "${PREMIS_NAME}" 2> /dev/null
+        if [ "${?}" != "0" ]; then
+            sleep 1
+            echo "INSERT INTO fixity (eventIdentifierValue,objectIdentifierValue,eventDetail,messageDigestAlgorithm,messageDigestSOURCE,messageDigestPATH,messageDigestFILENAME,messageDigestHASH) VALUES ('${EVENT_ID_TRIM}','${MEDIA_ID}','${eventDetail}','md5','${db_source}','${messageDigestPATH}','${messageDigestFILENAME}','${messageDigestHASH}')" | mysql --login-path="${PREMIS_PROFILE}"  "${PREMIS_NAME}" || exit 1
+        fi
+        done)
+        unset IFS
+        _db_error_check
+    fi
+}
+
 _report_fixity_db(){
     if [ "${PREMIS_DB}" = "Y" ] ; then
         _premis_event_list
@@ -55,22 +88,43 @@ _report_fixity_db(){
         if [ -z "${db_fixity}" ] ; then
             echo -e "\033[1;31mNo fixity data found! Fixity information not reported to the database.\033[0m"
             event_outcome="No fixity information"
-            exit 1
         fi
-        EVENT_ID=$(echo "SELECT eventIdentifierValue FROM event WHERE objectIdentifierValue = '${MEDIA_ID}' AND eventDetail = '${eventDetail}' ORDER BY eventIdentifierValue DESC LIMIT 1" | mysql --login-path="${PREMIS_PROFILE}"  "${PREMIS_NAME}")
+        if [ -z "${lastrecord}" ] ; then    
+            lastrecord=$(echo "SELECT eventIdentifierValue FROM event WHERE objectIdentifierValue = '${MEDIA_ID}' AND eventDetail = '${eventDetail}' ORDER BY eventIdentifierValue DESC LIMIT 1" | mysql --login-path="${PREMIS_PROFILE}"  "${PREMIS_NAME}")
+        fi
         EVENT_ID_TRIM=$(echo $lastrecord | cut -d " " -f2)
         IFS=$(echo -en "\n\b")
         (for i in ${db_fixity}; do LINE=$i;
             messageDigestHASH=$(echo "$LINE" | cut -c -32 )
-            messageDigestPATH=$(echo "$LINE" | cut -c 35- )
+            messageDigestPATH=$(_escape_for_db $(echo "$LINE" | cut -c 35- ))
             messageDigestFILENAME=$(basename "${messageDigestPATH}")
-            echo "INSERT INTO fixity (eventIdentifierValue,objectIdentifierValue,eventDetail,messageDigestAlgorithm,messageDigestPATH,messageDigestFILENAME,messageDigestHASH) VALUES ('${EVENT_ID_TRIM}','${MEDIA_ID}','${eventDetail}','md5','${messageDigestPATH}','${messageDigestFILENAME}','${messageDigestHASH}')" | mysql --login-path="${PREMIS_PROFILE}"  "${PREMIS_NAME}" 
+            echo "INSERT INTO fixity (eventIdentifierValue,objectIdentifierValue,eventDetail,messageDigestAlgorithm,messageDigestSOURCE,messageDigestPATH,messageDigestFILENAME,messageDigestHASH) VALUES ('${EVENT_ID_TRIM}','${MEDIA_ID}','${eventDetail}','md5','${db_source}','${messageDigestPATH}','${messageDigestFILENAME}','${messageDigestHASH}')" | mysql --login-path="${PREMIS_PROFILE}"  "${PREMIS_NAME}" 
             if [ "${?}" != "0" ]; then
-                exit 1
+                sleep 1
+                echo "INSERT INTO fixity (eventIdentifierValue,objectIdentifierValue,eventDetail,messageDigestAlgorithm,messageDigestSOURCE,messageDigestPATH,messageDigestFILENAME,messageDigestHASH) VALUES ('${EVENT_ID_TRIM}','${MEDIA_ID}','${eventDetail}','md5','${db_source}','${messageDigestPATH}','${messageDigestFILENAME}','${messageDigestHASH}')" | mysql --login-path="${PREMIS_PROFILE}"  "${PREMIS_NAME}" || exit 1
             fi
         done)
         _db_error_check
         unset IFS
+    fi
+}
+
+_db_email_delivery(){
+    if [ "${PREMIS_DB}" = "Y" ] ; then
+        EMAILTO="${1}"
+        if [ "${EMAILTO}" ] ; then
+            temp_message=$(_maketemp)
+            if [[ -f "${REPORT_DUMP}" ]] ; then
+                echo -e "\033[1;103;95mZipping and emailing a copy of "${REPORT_DUMP} to to ${EMAILTO}"\033[0m"
+                gzip -f "${REPORT_DUMP}"
+                echo -e "Subject:Database insertion report for ${MEDIA_ID}\nThere was a problem with database reporting for the Media ID ${MEDIA_ID}.\n A database insertion report has been created at ${REPORT_DUMP}.gz on ${HOSTNAME}. A copy is attached to this email. \n\n" > "$temp_message"    
+                uuencode "${REPORT_DUMP}".gz $(basename "${REPORT_DUMP}".gz) >> "$temp_message"
+                sendmail -f "${EMAIL_FROM}" -F "${EMAILTO}" "${EMAILTO}" < "$temp_message"
+                if [ -f "$temp_message" ] ; then
+                    rm "$temp_message"
+                fi
+            fi
+        fi
     fi
 }
 
@@ -91,33 +145,38 @@ _eventoutcome_update(){
 }
 
 _db_error_check(){
-    if [ "$?" != "0" ]; then
-        echo -e "\033[1;5;95mERROR:\033[0m \033[1;103;95mCould not access database "${PREMIS_NAME}". Information was not added to the "${table_name}" table. SQL command history has been written to ~/Desktop/"${MEDIA_ID}"_dbreport.txt\033[0m"
+    if [ "$?" != "0" ] ; then
+        ERROR_DATE=$(date +%Y%m%d)
+        REPORT_DUMP=~/Desktop/"${MEDIA_ID}"_"${ERROR_DATE}"_dbreport.sh
+        echo -e "\033[1;5;95mERROR:\033[0m \033[1;103;95mCould not access database "${PREMIS_NAME}". Information was not added to the "${table_name}" table. SQL command history has been written to "${REPORT_DUMP}"\033[0m"
         if [ "$table_name" = "object" ] ; then
-            echo "echo \"INSERT IGNORE INTO object (objectIdentifierValue,object_LastTouched) VALUES ('${MEDIA_ID}',NOW()) ON DUPLICATE KEY UPDATE object_LastTouched = NOW()\" | mysql --login-path=\"${PREMIS_PROFILE}\"  \"${PREMIS_NAME}\"" >> ~/Desktop/"${MEDIA_ID}"_dbreport.txt
+            echo "echo \"INSERT IGNORE INTO object (objectIdentifierValue,object_LastTouched) VALUES ('${MEDIA_ID}',NOW()) ON DUPLICATE KEY UPDATE object_LastTouched = NOW()\" | mysql --login-path=\"${PREMIS_PROFILE}\"  \"${PREMIS_NAME}\"" >> "${REPORT_DUMP}"
         fi
     
         if [ "${table_name}" = "fixity" ] ; then
             IFS=$(echo -en "\n\b")
             for i in ${db_fixity} ; do
-	        LINE=$i;
+	            LINE=$i;
                 messageDigestHASH=$(echo "$LINE" | cut -c -32 )
-                messageDigestPATH=$(echo "$LINE" | cut -c 35- )
-                messageDigestFILENAME=$(basename ${messageDigestPATH})
-                echo "echo \"INSERT INTO fixity (eventIdentifierValue,objectIdentifierValue,eventDetail,messageDigestAlgorithm,messageDigestPATH,messageDigestFILENAME,messageDigestHASH) VALUES ('${EVENT_ID_TRIM}','${MEDIAID}','md5','${messageDigestPATH}','${messageDigestFILENAME}','${messageDigestHASH}')\" | mysql --login-path=\"${PREMIS_PROFILE}\" \"${PREMIS_NAME}\"" >> ~/Desktop/"${MEDIA_ID}"_dbreport.txt
+                messageDigestPATH=$(_escape_for_db $(echo "$LINE" | cut -c 35- ))
+                messageDigestFILENAME=$(basename "${messageDigestPATH}")
+                echo "echo \"INSERT INTO fixity (eventIdentifierValue,objectIdentifierValue,eventDetail,messageDigestAlgorithm,messageDigestSOURCE,messageDigestPATH,messageDigestFILENAME,messageDigestHASH) VALUES ('${EVENT_ID_TRIM}','${MEDIA_ID}','${eventDetail}','md5','${db_source}','${messageDigestPATH}','${messageDigestFILENAME}','${messageDigestHASH}')\" | mysql --login-path=\"${PREMIS_PROFILE}\" \"${PREMIS_NAME}\"" >> "${REPORT_DUMP}"
             done
             unset IFS
         fi
     
         if [ "${table_name}" = "event" ] ; then
-            echo "echo \"INSERT INTO event (objectIdentifierValue,eventType,eventDetail,eventDetailOPT,eventDetailCOMPNAME,linkingAgentIdentifierValue) VALUES ('${MEDIAID}','${eventType}','${eventDetail}','${user_input}','${HOSTNAME}', '${OP}')\" | mysql --login-path=\"${PREMIS_PROFILE}\"  \"${PREMIS_NAME}\"" >> ~/Desktop/"${MEDIA_ID}"_dbreport.txt
+            echo "echo \"INSERT INTO event (objectIdentifierValue,eventType,eventDetail,eventDetailOPT,eventDetailCOMPNAME,linkingAgentIdentifierValue) VALUES ('${MEDIAID}','${eventType}','${eventDetail}','${user_input}','${HOSTNAME}', '${OP}')\" | mysql --login-path=\"${PREMIS_PROFILE}\"  \"${PREMIS_NAME}\"" >> "${REPORT_DUMP}"
         fi
         if [ "${table_name}" = "objectCharacteristics" ] ; then
-            echo "echo \"INSERT INTO objectCharacteristics (objectIdentifierValue,mediaInfo,captureLog,videoFingerprint,videoFingerprintSorted) VALUES ('${MEDIA_ID}','${MEDIAINFO}','${CAPTURELOG}','${VIDEOFINGERPRINT}','${VIDEOFINGERPRINT_SORTED}') ON DUPLICATE KEY UPDATE mediaInfo=COALESCE(NULLIF(mediaInfo,''),'${MEDIAINFO}'),captureLog=COALESCE(NULLIF(captureLog,''),'${CAPTURELOG}'),videoFingerprint=COALESCE(NULLIF(videoFingerprint,''),'${VIDEOFINGERPRINT}'),videoFingerprintSorted=COALESCE(NULLIF(videoFingerprintSorted,''),'${VIDEOFINGERPRINT_SORTED}')\" | mysql --login-path=\"${PREMIS_PROFILE}\"  \"$PREMIS_NAME\"" >> ~/Desktop/"$MEDIA_ID"_dbreport.txt
+            echo "echo \"INSERT INTO objectCharacteristics (objectIdentifierValue,mediaInfo,captureLog,videoFingerprint,videoFingerprintSorted) VALUES ('${MEDIA_ID}','${MEDIAINFO}','${CAPTURELOG}','${VIDEOFINGERPRINT}','${VIDEOFINGERPRINT_SORTED}') ON DUPLICATE KEY UPDATE mediaInfo=COALESCE(NULLIF(mediaInfo,''),'${MEDIAINFO}'),captureLog=COALESCE(NULLIF(captureLog,''),'${CAPTURELOG}'),videoFingerprint=COALESCE(NULLIF(videoFingerprint,''),'${VIDEOFINGERPRINT}'),videoFingerprintSorted=COALESCE(NULLIF(videoFingerprintSorted,''),'${VIDEOFINGERPRINT_SORTED}')\" | mysql --login-path=\"${PREMIS_PROFILE}\"  \"$PREMIS_NAME\"" >> "${REPORT_DUMP}"
+        fi
+        if [ "${table_name}" = "ltoSchema" ] ; then
+            echo "echo \"INSERT INTO ltoSchema (ltoID,fileName,fileSize,modifyTime,filePath) VALUES ('${schema_tape}','${schema_name}','${schema_length}','$schema_date','${schema_path}${schema_name}')\" | mysql  --login-path=\"${PREMIS_PROFILE}\"  \"${PREMIS_NAME}\"" >> "${REPORT_DUMP}"
         fi
     else
         echo -e "\033[1;103;95mSuccessfully reported infomation to the "${table_name}" table in the database "${PREMIS_NAME}"\033[0m"
-    fi
+    fi  
 }
 
 _fingerprint_to_db(){
@@ -133,8 +192,8 @@ _premis_event_list(){
     if [ "$eventDetail" = "ingestfile" ] ; then
         eventType="creation"
         METADIR="${AIP_STORAGE}/${MEDIAID}/metadata"
-        MEDIAINFO=$(cat "${METADIR}/fileMeta/objects/${MEDIA_ID}_mediainfo.xml")
-        CAPTURELOG=$(cat "${METADIR}/logs/capture.log")
+        MEDIAINFO=$(_escape_for_db "$(cat "${METADIR}/fileMeta/objects/${MEDIA_ID}_mediainfo.xml")")
+        CAPTURELOG=$(_escape_for_db "$(cat "${METADIR}/logs/capture.log")")
         MEDIA_ID="${MEDIAID}"
     fi
     if [ "$eventDetail" = "makebroadcast" ] ; then
@@ -178,22 +237,43 @@ _premis_event_list(){
     if [ "$eventDetail" = "collectionchecksum" ] ; then
         eventType="fixity"
         db_fixity=$(cat "${TAPECHECKSUMFILE}")
+        db_source="${TAPECHECKSUMFILE}"
     fi
     if [ "$eventDetail" = "writelto" ] ; then
-        eventType="fixity"
+        eventType="ingest"
         MEDIA_ID="${TAPE_SERIAL}"
+        if [ "${VERIFY_CHECK}" = "Y" ] ; then
+            eventDetail="writelto(VERIFY)"
+        fi
     fi
     if [ "$eventDetail" = "verifylto" ] ; then
         eventType="fixity"
         MEDIA_ID="${TAPE_SERIAL}"
         db_fixity=$(cat "${READBACKDIR}/${TAPE_SERIAL}_ReadBack_checksum_${VERIFYTIME}.md5")
+        db_source="${READBACKDIR}/${TAPE_SERIAL}_ReadBack_checksum_${VERIFYTIME}.md5"
+    fi
+    if [ "$eventDetail" = "ingestcollectionchecksum" ] ; then
+        eventType="ingest"
+    fi
+    #Escape ID for SQL
+    if [ -z ${ESCAPE_CHECK1} ] ; then
+        MEDIA_ID=$(_escape_for_db ${MEDIA_ID})
+        ESCAPE_CHECK1="Y"
+    fi
+    if [ -z ${ESCAPE_CHECK2} ] ; then
+        db_source=$(_escape_for_db ${db_source})
+        ESCAPE_CHECK2="Y"
+    fi
+    if [ -z ${ESCAPE_CHECK3} ] ; then
+        user_input=$(_escape_for_db ${user_input})
+        ESCAPE_CHECK3="Y"
     fi
 }
 
 _open_mysql_plist(){
     plist_path=$(find /usr/local/Cellar/mysql -iname homebrew.mxcl.mysql.plist | sort | tail -n1)
     if [ -n "$plist_path" ] ; then
-        ip_address=$(ifconfig |grep inet | tail -n1 | cut -d ' ' -f2)
+        ip_address="0.0.0.0"
         cat "$plist_path" | grep "$ip_address" > /dev/null
         if [ "$?" != "0" ] ; then
             sed -i '' "12s/.*/<string>--bind-address=$ip_address<\/string>/" "$plist_path"
@@ -322,13 +402,6 @@ _report(){
     [ "${LOG_MESSAGE}" = "Y" ] && _log -w "${MESSAGE}"
 }
 
-_config_edit(){
-    [ -z "${1}" -o -z "${2}" ] && { _report -w "The config_edit function requires two arguments. Error." ; exit ;};
-    SEDTEMP=$(_maketemp)
-    sed "s:^$1=[^ ]*:$1=$2:" "${LTO_CONFIG_FILE}" > "${SEDTEMP}"
-    cp "${SEDTEMP}" "${LTO_CONFIG_FILE}"
-}
-
 _test_config(){
     for DIRECTORYVARIABLE in OUTDIR_INGESTFILE OUTDIR_INGESTXDCAM OUTDIR_PAPER AIP_STORAGE PODCASTDELIVER YOUTUBEDELIVER TMPDIR CUSTOM_LOG_DIR LTO_INDEX_DIR ; do
         if [ -d "${!DIRECTORYVARIABLE}" ] ; then
@@ -337,15 +410,6 @@ _test_config(){
             _report -w "${DIRECTORYVARIABLE} is NOT a valid directory"
         fi
     done
-}
-
-_add_key(){
-    KEY_TO_ADD="${1}"
-    grep -q "^$KEY_TO_ADD=" "${LTO_CONFIG_FILE}" ; GREP_CODE="$?"
-    if [[ ! "${GREP_CODE}" -eq "0" ]] ; then
-        _report -td "Adding NEW variable $key_to_add to ${LTO_CONFIG_FILE}"
-        echo "$KEY_TO_ADD=" >> "${LTO_CONFIG_FILE}"
-    fi
 }
 
 _writeingestlog(){
@@ -616,9 +680,36 @@ Enjoy!\n\n" > "$temp_message"
         waveform_image="${OUTDIR_INGESTFILE}/${MEDIAID}/metadata/depictions/${MEDIAID}_waveform.png"
         if [ -f "${waveform_image}" ] ; then
             _report -d "Adding a waveform to the email from ${waveform_image}"
-            uuencode "${waveform_image}" $(basename "${waveform_image}") >> "$temp_message"
+            # email solution borrowed from http://stackoverflow.com/a/8063489
+            # --- generated values ---
+            BOUNDARY="unique-boundary-$RANDOM"
+            BODY_MIMETYPE=$(file -Ib "$temp_message" | cut -d";" -f1)   # detect mime type
+            ATT_MIMETYPE=$(file -Ib "${waveform_image}" | cut -d";" -f1)     # detect mime type
+            ATT_ENCODED=$(base64 < "${waveform_image}")  # encode attachment
+            # --- generate MIME message and pipe to sendmail ---
+            cat <<EOF | sendmail -f "${EMAIL_FROM}" -F "${EMAILTO}" "${EMAILTO}"
+MIME-Version: 1.0
+From: "${EMAIL_FROM}"
+To: "${EMAILTO}"
+Subject: [delivery] $(basename "${OUTPUT}")
+Content-Type: multipart/mixed; boundary="$BOUNDARY"
+
+--$BOUNDARY
+Content-Type: $BODY_MIMETYPE
+Content-Disposition: inline
+
+$(cat "$temp_message")
+--$BOUNDARY
+Content-Type: $ATT_MIMETYPE; name="$(basename "${waveform_image}")"
+Content-Transfer-Encoding: base64
+Content-Disposition: attachment; filename="$(basename "${waveform_image}")"
+
+$ATT_ENCODED
+--$BOUNDARY
+EOF
+        else
+            sendmail -f "${EMAIL_FROM}" -F "${EMAILTO}" "${EMAILTO}" < "$temp_message"
         fi
-        sendmail -f "${EMAIL_FROM}" -F "${EMAILTO}" "${EMAILTO}" < "$temp_message"
         if [ -f "$temp_message" ] ; then
             rm "$temp_message"
         fi
@@ -765,54 +856,59 @@ _find_input (){
     unset FFMPEGINPUT
     EXPECTEDSERVICEFILE="${1}/objects/service/$(basename "${1}").mov"
     if [ -f "${1}" ] ; then
+        # if the input is a file then just `-i file`
         SOURCEFILE="${1}"
         FFMPEGINPUT+=(-i)
         FFMPEGINPUT+=("${SOURCEFILE}")
-    elif [[ -s "${EXPECTEDSERVICEFILE}" && "${ADDSLATE}" != "Y" ]] ; then
-        ISOBJECT="N"
-        SOURCEFILE="${EXPECTEDSERVICEFILE}"
-        FFMPEGINPUT+=(-i)
-        FFMPEGINPUT+=("${SOURCEFILE}")
     elif [ -d "${1}/objects" ] ; then
-        if [[ -f "${EXPECTEDSERVICEFILE}" && ! -s "${EXPECTEDSERVICEFILE}" ]] ; then
-            _report -dt "Removing a zero-sized file: ${EXPECTEDSERVICEFILE}"
-            ls -l "${EXPECTEDSERVICEFILE}"
-            rm -v "${EXPECTEDSERVICEFILE}"
-        fi
-        ISOBJECT="Y"
-        INPUTFILES=$(_maketemp)
-        # find av files in a directory and output to a temp list
-        find "${1}/objects" -type f -size +0 ! -path "*/access/*" ! -path "*/service/*" ! -name ".DS_Store" | while read file ; do
-            streamcount=$(ffprobe -loglevel quiet "$file" -show_entries format=nb_streams -of default=nw=1:nk=1)
-            if [[ "$streamcount" > 1  ]] ; then
-                _report -d "Input file: $file"
-                echo "$file" >> "${INPUTFILES}"
-            fi
-        done
-        INPUTFILECOUNT=$(wc -l "${INPUTFILES}" | awk '{print $1}')
-        if [[ "${INPUTFILECOUNT}" = 0 ]] ; then
-            _report -w "Error no audiovisual input files were found."
-            _writeerrorlog "_find_input" "A valid source audiovisual file was not found, so the script could not proceed."
-            exit 1
-        elif [[ "${INPUTFILECOUNT}" = 1 ]] ; then
-            SOURCEFILE=$(cat "${INPUTFILES}" | head -n 1)
+        if [[ -s "${EXPECTEDSERVICEFILE}" && "${ADDSLATE}" != "Y" ]] ; then
+            # if the expectedservicefile exists and we should add a slate, then use the `-i expectedservicefile`
+            ISOBJECT="N"
+            SOURCEFILE="${EXPECTEDSERVICEFILE}"
             FFMPEGINPUT+=(-i)
             FFMPEGINPUT+=("${SOURCEFILE}")
         else
-            VOLADJUST="N"
-            INPUTOPTIONS+=(-f concat)
-            INPUTOPTIONS+=(-safe 0)
-            FFCONCATFILE=$(_maketemp)
-            while read i ; do
-                duration4cat=$(ffprobe -loglevel quiet "${i}" -show_entries format=duration -of default=nw=1:nk=1)
-                printf "file " >> "${FFCONCATFILE}"
-                printf '%q' "${i}" >> "${FFCONCATFILE}"
-                echo >> "${FFCONCATFILE}"
-                echo "duration $duration4cat" >> "${FFCONCATFILE}"
-            done < "${INPUTFILES}"
-            SOURCEFILE=$(cat "${INPUTFILES}" | head -n 1)
-            FFMPEGINPUT+=(-i)
-            FFMPEGINPUT+=("${FFCONCATFILE}")
+            if [[ -f "${EXPECTEDSERVICEFILE}" && ! -s "${EXPECTEDSERVICEFILE}" ]] ; then
+                # if the expectedservicefile is zero-sized, then delete it
+                _report -dt "Removing a zero-sized file: ${EXPECTEDSERVICEFILE}"
+                ls -l "${EXPECTEDSERVICEFILE}"
+                rm -v "${EXPECTEDSERVICEFILE}"
+            fi
+            ISOBJECT="Y"
+            INPUTFILES=$(_maketemp)
+            # find av files in a directory and output to a temp list
+            find "${1}/objects" -type f -size +0 ! -path "*/access/*" ! -path "*/service/*" ! -name ".DS_Store" | while read file ; do
+                streamcount=$(ffprobe -loglevel quiet "$file" -show_entries format=nb_streams -of default=nw=1:nk=1)
+                if [[ "$streamcount" > 1  ]] ; then
+                    _report -d "Input file: $file"
+                    echo "$file" >> "${INPUTFILES}"
+                fi
+            done
+            INPUTFILECOUNT=$(wc -l "${INPUTFILES}" | awk '{print $1}')
+            if [[ "${INPUTFILECOUNT}" = 0 ]] ; then
+                _report -w "Error no audiovisual input files were found."
+                _writeerrorlog "_find_input" "A valid source audiovisual file was not found, so the script could not proceed."
+                exit 1
+            elif [[ "${INPUTFILECOUNT}" = 1 ]] ; then
+                SOURCEFILE=$(cat "${INPUTFILES}" | head -n 1)
+                FFMPEGINPUT+=(-i)
+                FFMPEGINPUT+=("${SOURCEFILE}")
+            else
+                VOLADJUST="N"
+                INPUTOPTIONS+=(-f concat)
+                INPUTOPTIONS+=(-safe 0)
+                FFCONCATFILE=$(_maketemp)
+                while read i ; do
+                    duration4cat=$(ffprobe -loglevel quiet "${i}" -show_entries format=duration -of default=nw=1:nk=1)
+                    printf "file " >> "${FFCONCATFILE}"
+                    printf '%q' "${i}" >> "${FFCONCATFILE}"
+                    echo >> "${FFCONCATFILE}"
+                    echo "duration $duration4cat" >> "${FFCONCATFILE}"
+                done < "${INPUTFILES}"
+                SOURCEFILE=$(cat "${INPUTFILES}" | head -n 1)
+                FFMPEGINPUT+=(-i)
+                FFMPEGINPUT+=("${FFCONCATFILE}")
+            fi
         fi
     else
         _report -wt "A valid source file isn't found."
@@ -820,6 +916,7 @@ _find_input (){
         exit 1
     fi
     LOG+="SOURCEFILE: ${SOURCEFILE}\n"
+    # handle exceptions for certain types of source files
     if [[ "${SOURCEFILE#*.}" = "iso" ]] ; then
         _report -dt "Detecting iso input and hoping its a dvd image."
         if [[ $(uname -s) = "Darwin" ]] ; then
@@ -843,6 +940,52 @@ _find_input (){
             _report -wt "ERROR: Can not mount iso or find vob files to concatenate within ${OLDSOURCEFILE}. Exiting."
             _writeerrorlog "_find_input" "Could not mount iso or find vob files to concatenate within ${OLDSOURCEFILE}."
             exit
+        fi
+    elif [[ "${SOURCEFILE#*.}" = "mkv" ]] ; then
+        # if the sorucefile is an mkv, then check if it has a Presentation Chapter Edition
+        if [[ -n $(mkvextract tags "${SOURCEFILE}" | xml sel -t -m "/Tags/Tag/Simple[String='Presentation']" -v String) ]] ; then
+            _report -dt "The input file ($(basename "${SOURCEFILE}")) contains a Chapter Edition called 'Presentation', will use that for transcoding."
+            LISTCHAPTERS=$(mkvextract chapters "${SOURCEFILE}" | xml sel -t -m Chapters/EditionEntry[EditionFlagDefault='1']/ChapterAtom -v ChapterTimeStart -o "-" -v ChapterTimeEnd -o "-" -v ChapterSegmentUID -n -)
+            SegmentUIDs=$(mkvextract chapters "${SOURCEFILE}" | xml sel -t -m Chapters/EditionEntry[EditionFlagDefault='1']/ChapterAtom/ChapterSegmentUID -v . -n | sort -u)
+            if [[ -n "${LISTCHAPTERS}" ]]; then
+              _report -d "Found this chapter list:"
+              _report -d "${LISTCHAPTERS}"
+              unset FFMPEGINPUT
+              INPUTOPTIONS+=(-f concat)
+              INPUTOPTIONS+=(-safe 0)
+              FFCONCATFILE=$(_maketemp)
+              while read chapter ; do
+                STARTTIME=$(echo "${chapter}" | cut -d- -f1)
+                ENDTIME=$(echo "${chapter}" | cut -d- -f2)
+                CHAPSEGMENTUID=$(echo "${chapter}" | cut -d- -f3)
+                if [[ -n "${CHAPSEGMENTUID}" ]]; then
+                  MKVFOLDER=$(dirname "${SOURCEFILE}")
+                  while read file ; do
+                    FILESEGMENTUID=$(mkvinfo "${file}" | grep "Segment UID:" | cut -d : -f2 | sed 's/0x//g;s/ //g')
+                    unset MATCHMKV
+                    if [[ "${CHAPSEGMENTUID}" == "${FILESEGMENTUID}" ]] ; then
+                      MATCHMKV="${file}"
+                      break 1
+                    fi
+                  done < <(find "${MKVFOLDER}" -name "*.mkv" -type f)
+                  if [[ -n "${MATCHMKV}" ]]; then
+                    INPUTFILE="$MATCHMKV"
+                  else
+                    echo "Error: did not find a file to match ${CHAPSEGMENTUID}"
+                    exit
+                  fi
+                else
+                  INPUTFILE="$1"
+                fi
+                printf "file " >> "${FFCONCATFILE}"
+                printf '%q' "${INPUTFILE}" >> "${FFCONCATFILE}"
+                echo >> "${FFCONCATFILE}"
+                echo "inpoint ${STARTTIME}" >> "${FFCONCATFILE}"
+                echo "outpoint ${ENDTIME}" >> "${FFCONCATFILE}"
+              done < <(echo "${LISTCHAPTERS}")
+              FFMPEGINPUT+=(-i)
+              FFMPEGINPUT+=("${FFCONCATFILE}")
+            fi
         fi
     fi
 }
@@ -929,7 +1072,7 @@ _get_audio_mapping(){
         _report -wt "The first two audio tracks of this non matroska file are both mono. Considering track 1 for left and track 2 for right."
         _add_audio_filter -p "[0:a:0][0:a:1]amerge=inputs=2"
         _add_audio_filter "aformat=channel_layouts=stereo"
-    elif [[ "${AUDIO_CHANNELS}" -gt 2 && "${CHANNEL_LAYOUT}" = "4.0" ]] ; then
+    elif [[ "${AUDIO_CHANNELS}" -gt 2 && "${CHANNEL_LAYOUT}" != "5.1" ]] ; then
         _report -wt "The first audio track has more than 2 channels. Considering channel 1 for left and channel 2 for right and ignoring the rest."
         _add_audio_filter -p "[0:a:0]channelmap=0|1:stereo"
     else
@@ -1298,16 +1441,13 @@ _pashua_run() {
             break
         fi
     done
-    if [ ! "${PASHUAPATH}" ] ; then
+    if [ ! "${PASHUAPATH}" ] && [[ ${OSTYPE} = darwin* ]] ; then
         echo "Error: Pashua is used to edit but is not found."
         if [[ "${PASHUAINSTALL}" = "" ]] ; then
             echo "Attempting to run: brew cask install pashua"
-            if [[ "${PASHUAINSTALL}" != "Y" ]] ; then
-                brew cask install pashua
-                PASHUAINSTALL="Y"
+            if [[ "${PASHUAINSTALL}" != "Y" ]] && [[ "${PASHUAFAIL}" != "Y" ]] ; then
+                brew cask install pashua && PASHUAINSTALL="Y" || PASHUAFAIL=Y
                 _pashua_run
-            else
-                break 2
             fi
         fi
     else

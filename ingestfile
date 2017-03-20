@@ -167,6 +167,7 @@ FORMULA.tooltip = To force the input file to be interpreted as top or bottom fie
 FORMULA.default = none
 FORMULA.option =
 FORMULA.option = none
+FORMULA.option = check interlacement
 FORMULA.option = tff
 FORMULA.option = bff
 FORMULA.option = hds
@@ -245,6 +246,13 @@ fi
     fi
     _ask_input
 
+    # Check if file is being modified
+    INPUT_DATE=$(getfileinfo "${INPUT}" | grep modified | cut -d' ' -f2-)
+    CURRENT_DATE=$(date -j "+%m/%d/%Y %H:%M:%S")
+    if [ "${INPUT_DATE}" = "${CURRENT_DATE}" ] ; then
+        _report -w "WARNING: Input is currently being modified. Exiting."
+        exit 1
+    fi
     #here is where we would insert an option for searching for  directory.
     if [ ! $(_is_video "${INPUT}") ] ; then
         _report -qnt "WARNING: ${INPUT} is not recognized as a video file. Please press q to quit, any other key to continue (if you know what you're doing): "
@@ -273,7 +281,7 @@ fi
         _report -q "Select an optional formula for unusual cases? "
         _report -d "In most cases, select 'none'. To force the input file to be interpreted as top or bottom field first interlacement, select tff or bff. To stretch the input video to 1920x1080 HD frame size, select 'hds'. To squish into Standard Definition, select 'sds'."
         PS3="Selection? "
-        select FORMULA in "none" "tff" "bff" "hds" "sds"
+        select FORMULA in "none" "check interlacement" "tff" "bff" "hds" "sds"
         do
             break
         done
@@ -381,18 +389,8 @@ _run _mkdir2 "${LOGDIR}"
 INGESTLOG="${LOGDIR}/capture.log"
 
 #performing interlacement test if formula is none- only to be used in specific edge cases, answer should be no in most cases.
-if [[ "${FORMULA}" == "none" ]] ; then
-    _report -q "You did not choose a formula, do you want to perform an interlacement test on the file to determine the correct formula?"
-    PS3="Selection? "
-    select INTERLACETEST in "Yes" "No"
-        do
-            break
-        done
-    if [ "${INTERLACETEST}" = "Yes" ] ; then
+if [[ "${FORMULA}" == "check interlacement" ]] ; then
         INTERLACE_CHOICE="Y"
-    else
-        INTERLACE_CHOICE="N"
-    fi
 fi
 
 #perform interlacement test
