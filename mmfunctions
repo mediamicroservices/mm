@@ -23,8 +23,10 @@ _cleanup_mount_dir(){
 _check_for_colons(){
     COLONALERT=$(find "${1}" -iname '*:*')
     if [ -n "${COLONALERT}" ] ; then
-        _report -w "Illegal characters (colons) have been detected in the following file(s)"
-        _report -w "${COLONALERT}"
+        _report -w "Illegal characters (colons) have been detected in the following file(s):"
+        for i in ${COLONALERT} ; do
+            _report -w "    ${i}"
+        done
         _report -w "Exiting"
         exit 1
     fi
