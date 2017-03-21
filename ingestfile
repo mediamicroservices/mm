@@ -559,6 +559,9 @@ fi
 # more logging
 _writeingestlog "datetime_end" "$(_get_iso8601)"
 
+# fingerprint
+"${SCRIPTDIR}/makefingerprint" "${OUTDIR_INGESTFILE}/${MEDIAID}"
+
 # move and cleanup
 if [[ "${DELIVERYTOAIPSTORAGE}" == "Y" ]] ; then
     if [ "${AIP_STORAGE}" != "${OUTDIR_INGESTFILE}" ] ; then
