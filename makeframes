@@ -67,12 +67,12 @@ while [ "${*}" != "" ] ; do
     _log -b
     DURATION=$(ffprobe 2>/dev/null "${SOURCEFILE}" -show_format | grep duration | cut -d= -f2)
     _run_critical mkdir -p "${OUTPUTDIR}"
+    _prep_ffmpeg_log -q
     for (( IMAGENUMBER=1; IMAGENUMBER<=${IMAGECOUNT}; IMAGENUMBER++)) ; do
         START=$(echo "( ${DURATION} / ( ${IMAGECOUNT} + 1 )) * ${IMAGENUMBER}" | bc)
         SUFFIX="_${IMAGENUMBER}"
         _set_up_output
         _report -d "Making frame ${IMAGENUMBER} of ${IMAGECOUNT}  - dur:${DURATION} start:${START} - ${OUTPUT}"
-        _prep_ffmpeg_log -q
         if [ "${CONCATSOURCE}" != "" ] ; then
             FFMPEGINPUT="${CONCATSOURCE}"
         fi
