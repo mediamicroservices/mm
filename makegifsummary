@@ -1,0 +1,103 @@
+#!/bin/bash
+# makegifsummary
+VERSION="1.0"
+SCRIPTDIR=$(dirname $(which "${0}"))
+. "${SCRIPTDIR}/mmfunctions" || { echo "Missing '${SCRIPTDIR}/mmfunctions'. Exiting." ; exit 1 ;};
+DEPENDENCIES=(ffmpeg ffprobe)
+_initialize_make
+EXTENSION="gif"
+
+# local variables
+IMAGECOUNT=20
+
+_usage(){
+    echo
+    echo "$(basename "${0}") ${VERSION}"
+    echo "This application will make a gif as a visual representation of a video."
+    echo "Dependencies: ${DEPENDENCIES[@]}"
+    echo "Usage: $(basename ${0}) [ -d /path/to/deliver/to/ ] fileorpackage1 [ fileorpackage2 ...]"
+    echo "  -d directory ( directory to deliver the resulting file to )"
+    echo "  -o directory ( directory to write the resulting file to )"
+    echo "  -n (dry-run mode, show the commands that would be run but don't do anything)"
+    echo "  -h display this help"
+    echo
+    exit
+}
+[ "${#}" = 0 ] && _usage
+
+user_input="${*}"
+# command-line options to set mediaid and original variables
+OPTIND=1
+while getopts ":d:e:E:o:nh" OPT ; do
+    case "${OPT}" in
+        d) DELIVERDIR="${OPTARG}" && _check_deliverdir ;;
+        e) EMAILADDRESS_DELIVERY="${OPTARG}" && check_emailaddress "${EMAILADDRESS_DELIVERY}" ;;
+        E) EMAILADDRESS_OUTCOME="${OPTARG}" && check_emailaddress "${EMAILADDRESS_OUTCOME}" ;;
+        o) OUTPUTDIR_FORCED="${OPTARG}" && _check_outputdir_forced ;;
+        n) DRYRUN=true;;
+        h) _usage ;;
+        *) echo "bad option -${OPTARG}" ; _usage ;;
+        :) echo "Option -${OPTARG} requires an argument" ; _writeerrorlog "makeframes" "The option selected required an argument and none was provided. The script had to exit." ; exit 1 ;;
+    esac
+done
+shift $(( ${OPTIND} - 1 ))
+
+while [ "${*}" != "" ] ; do
+    INPUT="${1}"
+    shift
+    if [ -z "${OUTPUTDIR_FORCED}" ] ; then
+        [ -d "${INPUT}" ] && { OUTPUTDIR="${INPUT}/objects/access/gif" && LOGDIR="${INPUT}/metadata/logs" ;};
+        [ -f "${INPUT}" ] && { OUTPUTDIR=$(dirname "${INPUT}")"/access/gif" && LOGDIR="$(dirname "${INPUT}")/access/logs" ;};
+        [ ! "$OUTPUTDIR" ] && { OUTPUTDIR="${INPUT}/objects/access/gif" && LOGDIR="${INPUT}/metadata/logs" ;};
+    else
+        OUTPUTDIR="${OUTPUTDIR_FORCED}"
+        LOGDIR="${OUTPUTDIR_FORCED}/logs"
+    fi
+    _unset_variables
+    _find_input "${INPUT}"
+
+    MEDIAID=$(basename "${INPUT}" | cut -d. -f1)
+    _report_to_db
+
+    # encoding options
+    _get_codectagstring "${SOURCEFILE}"
+    _get_dar "${SOURCEFILE}"
+    INPUTOPTIONS+=(-vsync 0)
+    INPUTOPTIONS+=(-nostdin)
+    if [[ "${CODEC_TAG_STRING}" == "mjp2" ]] ; then
+         INPUTOPTIONS+=(-vcodec libopenjpeg)
+    fi
+    _add_video_filter "scale=320:320/($DAR)"
+    _add_video_filter "thumbnail=4"
+    MIDDLEOPTIONS+=(-frames:v 1)
+    echo "DAR $DAR"
+    _filter_to_middle_option
+    _set_up_output
+    _log -b
+    DURATION=$(ffprobe 2>/dev/null "${SOURCEFILE}" -show_format | grep duration | cut -d= -f2)
+    _run_critical mkdir -p "${OUTPUTDIR}"
+    TEMPIMAGES="$(_maketemp)"
+    _prep_ffmpeg_log -q
+    for (( IMAGENUMBER=1; IMAGENUMBER<=${IMAGECOUNT}; IMAGENUMBER++)) ; do
+        START="0$(echo "scale=2; ( ${DURATION} / ( ${IMAGECOUNT} + 1 )) * ${IMAGENUMBER}" | bc)"
+        SUFFIX="_${IMAGENUMBER}"
+        _report -d "Making frame ${IMAGENUMBER} of ${IMAGECOUNT}  - dur:${DURATION} start:${START} - ${OUTPUT}"
+        if [ "${CONCATSOURCE}" != "" ] ; then
+            FFMPEGINPUT="${CONCATSOURCE}"
+        fi
+
+        _run_critical_event ffmpeg -y ${INPUTOPTIONS[@]} -v warning -ss "$START" "${FFMPEGINPUT[@]}" "${MIDDLEOPTIONS[@]}" "${TEMPIMAGES}.${IMAGENUMBER}.png"
+    done
+    PALETTE="$(_maketemp)"
+    ffmpeg -f image2 -framerate 6 -i "${TEMPIMAGES}.%01d.png" -vf palettegen "${PALETTE}.png"
+    ffmpeg -f image2 -framerate 6 -i "${TEMPIMAGES}.%01d.png" -i "${PALETTE}.png" -filter_complex paletteuse "${OUTPUT}"
+    echo
+    if [ -d "${DELIVERDIR}" ] ; then
+        _report -dt "Delivering output"
+        _run mkdir -p "${DELIVERDIR}/${MEDIAID}_images/"
+        _run cp -av "${OUTPUTDIR}/" "${DELIVERDIR}/${MEDIAID}_images/"
+    fi
+    _report -d "cleaning up temp files"
+    rm -v "${TEMPIMAGES}."*".png"
+    _log -e
+done
