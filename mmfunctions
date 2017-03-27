@@ -47,11 +47,11 @@ _report_to_db(){
         table_name="event"
         echo "INSERT INTO event (objectIdentifierValue,eventType,eventDetail,eventDetailOPT,eventDetailCOMPNAME,linkingAgentIdentifierValue) VALUES ('${MEDIA_ID}','${eventType}','${eventDetail}','${user_input}','${HOSTNAME}', '${OP}')" | mysql --login-path="${PREMIS_PROFILE}"  "${PREMIS_NAME}" 2> /dev/null
         _db_error_check
-        if [ -n "${MEDIAINFO}" ] || [ -n "${CAPTURELOG}" ] || [ -n "${VIDEOFINGERPRINT}" ] ; then
+        if [ -n "${MEDIAINFO}" ] || [ -n "${CAPTURELOG}" ] ; then
             table_name="objectCharacteristics"
-            echo "INSERT INTO objectCharacteristics (objectIdentifierValue,mediaInfo,captureLog,videoFingerprint,videoFingerprintSorted) VALUES ('${MEDIA_ID}','${MEDIAINFO}','${CAPTURELOG}','${VIDEOFINGERPRINT}','${VIDEOFINGERPRINT_SORTED}') ON DUPLICATE KEY UPDATE mediaInfo=COALESCE(NULLIF(mediaInfo,''),'${MEDIAINFO}'),captureLog=COALESCE(NULLIF(captureLog,''),'${CAPTURELOG}'),videoFingerprint=COALESCE(NULLIF(videoFingerprint,''),'${VIDEOFINGERPRINT}'),videoFingerprintSorted=COALESCE(NULLIF(videoFingerprintSorted,''),'${VIDEOFINGERPRINT_SORTED}')" | mysql  --login-path="${PREMIS_PROFILE}"  "${PREMIS_NAME}" 2> /dev/null
+            echo "INSERT INTO objectCharacteristics (objectIdentifierValue,mediaInfo,captureLog,videoFingerprint,videoFingerprintSorted) VALUES ('${MEDIA_ID}','${MEDIAINFO}','${CAPTURELOG}') ON DUPLICATE KEY UPDATE mediaInfo=COALESCE(NULLIF(mediaInfo,''),'${MEDIAINFO}'),captureLog=COALESCE(NULLIF(captureLog,''),'${CAPTURELOG}')" | mysql  --login-path="${PREMIS_PROFILE}"  "${PREMIS_NAME}" 2> /dev/null
         _db_error_check
-    fi
+        fi
     fi
 }
 
