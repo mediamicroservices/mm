@@ -34,6 +34,7 @@ while [ "${*}" != "" ] ; do
     if [ "${PERCEPTUAL_HASH}" = "1" ] ; then
         _fingerprint_to_db
         _report_to_db
+        _report_fingerprint_db
         _eventoutcome_update
         gzip "${FINGERPRINT_XML}"
     else
