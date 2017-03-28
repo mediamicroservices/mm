@@ -83,16 +83,17 @@ _report_schema_db(){
 
 _report_fingerprint_db(){
     (IFS=$'\n'
-    for i in "${VIDEOFINGERPRINT}" ; do 
+    for i in ${VIDEOFINGERPRINT} ; do
     hash1=$(echo "$i" | cut -d':' -f3)
     hash2=$(echo "$i" | cut -d':' -f4)
     hash3=$(echo "$i" | cut -d':' -f5)
-    hash4=$(echo "$i" | cut -d':' -6)
+    hash4=$(echo "$i" | cut -d':' -f6)
     hash5=$(echo "$i" | cut -d':' -f7)
     startframe=$(echo "$i" | cut -d':' -f1)
     endframe=$(echo "$i" | cut -d':' -f2)
-    echo "INSERT INTO fingerprint (objectIdentifierValue,startframe,endframe,hash1,hash2,hash3,hash4,hash5) VALUES ('${MEDIA_ID}','${startframe}','${endframe}','${hash1}','${hash2}','${hash3}','${hash4}','${hash5}')" | mysql --login-path="${PREMIS_PROFILE}"  "${PREMIS_NAME}"
+    echo "INSERT INTO fingerprints (objectIdentifierValue,startframe,endframe,hash1,hash2,hash3,hash4,hash5) VALUES ('${MEDIA_ID}','${startframe}','${endframe}','${hash1}','${hash2}','${hash3}','${hash4}','${hash5}')" | mysql --login-path="${PREMIS_PROFILE}"  "${PREMIS_NAME}"
     done)
+    _db_error_check
 }
 
 _report_fixity_db(){
