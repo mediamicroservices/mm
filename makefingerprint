@@ -31,7 +31,7 @@ while [ "${*}" != "" ] ; do
     FINGERPRINT_XML="${FINGERDIR}/${SIGNATURE}"
     
     #Report to DB
-    if [ "${PERCEPTUAL_HASH}" = "1" ] ; then
+    if [ "${PERCEPTUAL_HASH}" = "1" ] && [ "${PREMIS_DB}" = "Y" ]; then
         _fingerprint_to_db
         _report_to_db
         _report_fingerprint_db

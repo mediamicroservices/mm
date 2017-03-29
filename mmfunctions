@@ -49,7 +49,7 @@ _report_to_db(){
         _db_error_check
         if [ -n "${MEDIAINFO}" ] || [ -n "${CAPTURELOG}" ] ; then
             table_name="objectCharacteristics"
-            echo "INSERT INTO objectCharacteristics (objectIdentifierValue,mediaInfo,captureLog,videoFingerprint,videoFingerprintSorted) VALUES ('${MEDIA_ID}','${MEDIAINFO}','${CAPTURELOG}') ON DUPLICATE KEY UPDATE mediaInfo=COALESCE(NULLIF(mediaInfo,''),'${MEDIAINFO}'),captureLog=COALESCE(NULLIF(captureLog,''),'${CAPTURELOG}')" | mysql  --login-path="${PREMIS_PROFILE}"  "${PREMIS_NAME}" 2> /dev/null
+            echo "INSERT INTO objectCharacteristics (objectIdentifierValue,mediaInfo,captureLog) VALUES ('${MEDIA_ID}','${MEDIAINFO}','${CAPTURELOG}') ON DUPLICATE KEY UPDATE mediaInfo=COALESCE(NULLIF(mediaInfo,''),'${MEDIAINFO}'),captureLog=COALESCE(NULLIF(captureLog,''),'${CAPTURELOG}')" | mysql  --login-path="${PREMIS_PROFILE}"  "${PREMIS_NAME}" 2> /dev/null
         _db_error_check
         fi
     fi
@@ -82,6 +82,7 @@ _report_schema_db(){
 }
 
 _report_fingerprint_db(){
+    table_name="fingerprints"
     (IFS=$'\n'
     for i in ${VIDEOFINGERPRINT} ; do
     hash1=$(echo "$i" | cut -d':' -f3)
