@@ -73,7 +73,7 @@ _report_schema_db(){
         echo "INSERT IGNORE INTO ltoSchema (ltoID,fileName,fileSize,modifyTime,filePath) VALUES ('${schema_tape}','${schema_name}','${schema_length}','$schema_date','${schema_path}${schema_name}')" | mysql  --login-path="${PREMIS_PROFILE}"  "${PREMIS_NAME}" 2> /dev/null
         if [ "${?}" != "0" ]; then
             sleep 1
-            echo "INSERT IGNORE INTO ltoSchema (ltoID,fileName,fileSize,modifyTime,filePath) VALUES ('${schema_tape}','${schema_name}','${schema_length}','$schema_date','${schema_path}${schema_name}')" | mysql  --login-path="${PREMIS_PROFILE}"  "${PREMIS_NAME}" || exit 1
+            echo "INSERT IGNORE INTO ltoSchema (ltoID,fileName,fileSize,modifyTime,filePath) VALUES ('${schema_tape}','${schema_name}','${schema_length}','$schema_date','${schema_path}${schema_name}')" | mysql --login-path="${PREMIS_PROFILE}"  "${PREMIS_NAME}" || exit 1
         fi
         done)
         unset IFS
@@ -247,6 +247,7 @@ _premis_event_list(){
     
     if [ "$eventDetail" = "makefingerprint" ] ; then
         eventType="creation"
+        MEDIA_ID=$(basename "${SOURCEFILE}")
     fi
 
     if [ "$eventDetail" = "migratefiles" ] ; then
