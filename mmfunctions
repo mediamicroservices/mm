@@ -59,9 +59,9 @@ _report_to_db(){
         table_name="event"
         echo "INSERT INTO event (objectIdentifierValue,eventType,eventDetail,eventDetailOPT,eventDetailCOMPNAME,linkingAgentIdentifierValue) VALUES ('${MEDIA_ID}','${eventType}','${eventDetail}','${user_input}','${HOSTNAME}', '${OP}')" | mysql --login-path="${PREMIS_PROFILE}"  "${PREMIS_NAME}" 2> /dev/null
         _db_error_check
-        if [ -n "${MEDIAINFO}" ] || [ -n "${CAPTURELOG}" ] || [ -n "${VIDEOFINGERPRINT}" ] ; then
+        if [ -n "${MEDIAINFO}" ] || [ -n "${CAPTURELOG}" ] ; then
             table_name="objectCharacteristics"
-            echo "INSERT INTO objectCharacteristics (objectIdentifierValue,mediaInfo,captureLog,videoFingerprint,videoFingerprintSorted) VALUES ('${MEDIA_ID}','${MEDIAINFO}','${CAPTURELOG}','${VIDEOFINGERPRINT}','${VIDEOFINGERPRINT_SORTED}') ON DUPLICATE KEY UPDATE mediaInfo=COALESCE(NULLIF(mediaInfo,''),'${MEDIAINFO}'),captureLog=COALESCE(NULLIF(captureLog,''),'${CAPTURELOG}'),videoFingerprint=COALESCE(NULLIF(videoFingerprint,''),'${VIDEOFINGERPRINT}'),videoFingerprintSorted=COALESCE(NULLIF(videoFingerprintSorted,''),'${VIDEOFINGERPRINT_SORTED}')" | mysql  --login-path="${PREMIS_PROFILE}"  "${PREMIS_NAME}" 2> /dev/null
+            echo "INSERT INTO objectCharacteristics (objectIdentifierValue,mediaInfo,captureLog) VALUES ('${MEDIA_ID}','${MEDIAINFO}','${CAPTURELOG}') ON DUPLICATE KEY UPDATE mediaInfo=COALESCE(NULLIF(mediaInfo,''),'${MEDIAINFO}'),captureLog=COALESCE(NULLIF(captureLog,''),'${CAPTURELOG}')" | mysql  --login-path="${PREMIS_PROFILE}"  "${PREMIS_NAME}" 2> /dev/null
         _db_error_check
         fi
     fi
@@ -85,12 +85,31 @@ _report_schema_db(){
         echo "INSERT IGNORE INTO ltoSchema (ltoID,fileName,fileSize,modifyTime,filePath) VALUES ('${schema_tape}','${schema_name}','${schema_length}','$schema_date','${schema_path}${schema_name}')" | mysql  --login-path="${PREMIS_PROFILE}"  "${PREMIS_NAME}" 2> /dev/null
         if [ "${?}" != "0" ]; then
             sleep 1
-            echo "INSERT INTO fixity (eventIdentifierValue,objectIdentifierValue,eventDetail,messageDigestAlgorithm,messageDigestSOURCE,messageDigestPATH,messageDigestFILENAME,messageDigestHASH) VALUES ('${EVENT_ID_TRIM}','${MEDIA_ID}','${eventDetail}','md5','${db_source}','${messageDigestPATH}','${messageDigestFILENAME}','${messageDigestHASH}')" | mysql --login-path="${PREMIS_PROFILE}"  "${PREMIS_NAME}" || exit 1
+            echo "INSERT IGNORE INTO ltoSchema (ltoID,fileName,fileSize,modifyTime,filePath) VALUES ('${schema_tape}','${schema_name}','${schema_length}','$schema_date','${schema_path}${schema_name}')" | mysql --login-path="${PREMIS_PROFILE}"  "${PREMIS_NAME}" || exit 1
         fi
         done)
         unset IFS
         _db_error_check
     fi
+}
+
+_report_fingerprint_db(){
+    table_name="fingerprints"
+    (IFS=$'\n'
+    for i in ${VIDEOFINGERPRINT} ; do
+    hash1=$(echo "$i" | cut -d':' -f3)
+    hash2=$(echo "$i" | cut -d':' -f4)
+    hash3=$(echo "$i" | cut -d':' -f5)
+    hash4=$(echo "$i" | cut -d':' -f6)
+    hash5=$(echo "$i" | cut -d':' -f7)
+    startframe=$(echo "$i" | cut -d':' -f1)
+    endframe=$(echo "$i" | cut -d':' -f2)
+    echo "INSERT INTO fingerprints (objectIdentifierValue,startframe,endframe,hash1,hash2,hash3,hash4,hash5) VALUES ('${MEDIA_ID}','${startframe}','${endframe}','${hash1}','${hash2}','${hash3}','${hash4}','${hash5}')" | mysql --login-path="${PREMIS_PROFILE}"  "${PREMIS_NAME}"
+    if [ "${?}" != "0" ]; then
+         echo "INSERT INTO fingerprints (objectIdentifierValue,startframe,endframe,hash1,hash2,hash3,hash4,hash5) VALUES ('${MEDIA_ID}','${startframe}','${endframe}','${hash1}','${hash2}','${hash3}','${hash4}','${hash5}')" | mysql --login-path="${PREMIS_PROFILE}"  "${PREMIS_NAME}" || exit 1
+    fi
+    done)
+    _db_error_check
 }
 
 _report_fixity_db(){
@@ -186,9 +205,26 @@ _db_error_check(){
         if [ "${table_name}" = "ltoSchema" ] ; then
             echo "echo \"INSERT INTO ltoSchema (ltoID,fileName,fileSize,modifyTime,filePath) VALUES ('${schema_tape}','${schema_name}','${schema_length}','$schema_date','${schema_path}${schema_name}')\" | mysql  --login-path=\"${PREMIS_PROFILE}\"  \"${PREMIS_NAME}\"" >> "${REPORT_DUMP}"
         fi
+        if [ "${table_name}" = "fingerprints" ] ; then
+            (IFS=$'\n'
+            for i in ${VIDEOFINGERPRINT} ; do
+            hash1=$(echo "$i" | cut -d':' -f3)
+            hash2=$(echo "$i" | cut -d':' -f4)
+            hash3=$(echo "$i" | cut -d':' -f5)
+            hash4=$(echo "$i" | cut -d':' -f6)
+            hash5=$(echo "$i" | cut -d':' -f7)
+            startframe=$(echo "$i" | cut -d':' -f1)
+            endframe=$(echo "$i" | cut -d':' -f2)
+            echo "echo \"INSERT INTO fingerprints (objectIdentifierValue,startframe,endframe,hash1,hash2,hash3,hash4,hash5) VALUES ('${MEDIA_ID}','${startframe}','${endframe}','${hash1}','${hash2}','${hash3}','${hash4}','${hash5}')\" | mysql  --login-path=\"${PREMIS_PROFILE}\"  \"${PREMIS_NAME}\"" >> "${REPORT_DUMP}"
+            done)
+        fi
     else
         echo -e "\033[1;103;95mSuccessfully reported infomation to the "${table_name}" table in the database "${PREMIS_NAME}"\033[0m"
     fi  
+}
+
+_fingerprint_to_db(){
+VIDEOFINGERPRINT=$(xml sel -N "m=urn:mpeg:mpeg7:schema:2001" -t -m "m:Mpeg7/m:DescriptionUnit/m:Descriptor/m:VideoSignatureRegion/m:VSVideoSegment" -v m:StartFrameOfSegment -o ':' -v m:EndFrameOfSegment -o ':' -m m:BagOfWords -v "translate(.,' ','')" -o ':' -b -n "${FINGERPRINT_XML}")
 }
 
 _premis_event_list(){
@@ -219,6 +255,11 @@ _premis_event_list(){
     fi
     if [ "$eventDetail" = "makewaveform" ] ; then
         eventType="creation"
+    fi
+    
+    if [ "$eventDetail" = "makefingerprint" ] ; then
+        eventType="creation"
+        MEDIA_ID=$(basename "${SOURCEFILE}")
     fi
 
     if [ "$eventDetail" = "migratefiles" ] ; then

@@ -1,0 +1,43 @@
+#!/bin/bash
+# makefingerprint generates a video perceptual hash for an input
+SCRIPTDIR=$(dirname $(which "${0}"))
+. "${SCRIPTDIR}/mmfunctions" || { echo "Missing '${SCRIPTDIR}/mmfunctions'. Exiting." ; exit 1 ;};
+SUFFIX="_signature"
+EXTENSION="xml"
+RELATIVEPATH="metadata"
+
+while [ "${*}" != "" ] ; do
+    # get context about the input
+    INPUT="${1}"
+    shift
+    if [ -z "${OUTPUTDIR_FORCED}" ] ; then
+        [ -d "${INPUT}" ] && { OUTPUTDIR="$INPUT/metadata/${RELATIVEPATH}" && FINGERDIR="${INPUT}/metadata/fingerprints" ;};
+        [ -f "${INPUT}" ] && { OUTPUTDIR=$(dirname "${INPUT}")"/${RELATIVEPATH}" && FINGERDIR="$(dirname "${INPUT}")/fingerprints" ;};
+        [ ! "${OUTPUTDIR}" ] && { OUTPUTDIR="${INPUT}/metadata/${RELATIVEPATH}" && FINGERDIR="${INPUT}/metadata/fingerprints" ;};
+    else
+        OUTPUTDIR="${OUTPUTDIR_FORCED}"
+        FINGERDIR="${OUTPUTDIR}/metadata/fingerprints"
+    fi
+    _unset_variables
+    _find_input "${INPUT}"
+    MEDIAID=$(basename "${INPUT}" | cut -d. -f1)
+
+    if [ "${FINGERDIR}" != "" ] ; then
+        _mkdir2 "${FINGERDIR}"
+    fi
+    #Generate Fingerprint
+    SIGNATURE="${MEDIAID}""${SUFFIX}"."${EXTENSION}"
+    _run_critical_event ffmpeg "${FFMPEGINPUT[@]}" -vf signature=format=xml:filename="${FINGERDIR}/${SIGNATURE}" -map 0:v -f null -
+    FINGERPRINT_XML="${FINGERDIR}/${SIGNATURE}"
+    
+    #Report to DB
+    if [ "${PERCEPTUAL_HASH}" = "1" ] && [ "${PREMIS_DB}" = "Y" ]; then
+        _fingerprint_to_db
+        _report_to_db
+        _report_fingerprint_db
+        _eventoutcome_update
+        gzip "${FINGERPRINT_XML}"
+    else
+        gzip "${FINGERPRINT_XML}"
+    fi
+done
