@@ -42,13 +42,18 @@ while [ "${*}" != "" ] ; do
     find "./objects" -type f ! -name ".*" ! -path "*/access/*" ! -path "*/service/*" > "${FILELIST}"
     (IFS=$'\n'
     for FILE in $(cat "${FILELIST}") ; do
-        FILENAMEROOT=$(basename "${FILE}")
-        PARENTDIR=$(dirname "${FILE}")
-        FILEOUTPUT="${OUTPUTDIR}/${PARENTDIR}"
-        if [ ! -d "${FILEOUTPUT}" ] ; then
-            _run mkdir -p "${FILEOUTPUT}"
+        VIDEOTEST=$(file -Ib "${FILE}" | grep 'video')
+        if [ -n "${VIDEOTEST}" ] ; then
+            FILENAMEROOT=$(basename "${FILE}")
+            PARENTDIR=$(dirname "${FILE}")
+            FILEOUTPUT="${OUTPUTDIR}/${PARENTDIR}"
+            if [ ! -d "${FILEOUTPUT}" ] ; then
+                _run mkdir -p "${FILEOUTPUT}"
+            fi
+            ffmpeg -i "${FILE}" -f framemd5 -an "${FILEOUTPUT}/${FILENAMEROOT}.framemd5"
+        else
+            _report -d "No video track found in target. Skipping."
         fi
-        ffmpeg -i "${FILE}" -f framemd5 -an "${FILEOUTPUT}/${FILENAMEROOT}.framemd5"
     done)
     rm "${FILELIST}"
 done
