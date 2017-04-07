@@ -5,7 +5,7 @@ SCRIPTDIR=$(dirname "${0}")
 
 _usage(){
     echo
-    echo "$(basename "${0}") ${VERSION}"
+    echo "$(basename "${0}")"
     echo "Produces framemd5s for video files in a target directory."
     echo "Usage: $(basename "${0}") [ -h ] package1 [ package2 ... ]"
     echo "  -h (show usage)"
@@ -18,7 +18,6 @@ while getopts ":h" OPT ; do
     case "${OPT}" in
         h) _usage ;;
         *) echo "bad option -${OPTARG}" ; _usage ;;
-        :) echo "Option -${OPTARG} requires an argument" ; _writeerrorlog "makeframemd5" "The option selected required an argument and none was provided. The script had to exit." ; exit 1 ;;
     esac
 done
 shift $(( ${OPTIND} - 1 ))
