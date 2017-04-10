@@ -1,0 +1,60 @@
+#!/usr/bin/env bash
+
+SCRIPTDIR=$(dirname "${0}")
+. "${SCRIPTDIR}/mmfunctions" || { echo "Missing '${SCRIPTDIR}/mmfunctions'. Exiting." ; exit 1 ;};
+
+_usage(){
+    echo
+    echo "$(basename "${0}")"
+    echo "Produces framemd5s for video files in a target directory."
+    echo "Usage: $(basename "${0}") [ -h ] package1 [ package2 ... ]"
+    echo "  -h (show usage)"
+    exit
+}
+[ "${#}" = 0 ] && _usage
+
+OPTIND=1
+while getopts ":h" OPT ; do
+    case "${OPT}" in
+        h) _usage ;;
+        *) echo "bad option -${OPTARG}" ; _usage ;;
+    esac
+done
+shift $(( ${OPTIND} - 1 ))
+
+_set_up_framemd5(){
+    _log -b
+    if [[ -d "${PACKAGE_PATH}/${OUTPUTDIR}" ]] ; then
+        _report -wt "WARNING ${PACKAGE_PATH}/${OUTPUTDIR} already exists, not making framemd5."
+        continue
+    fi
+    _mkdir2 "${PACKAGE_PATH}/${OUTPUTDIR}"
+}
+
+OUTPUTDIR="./metadata/frameMD5s"
+while [ "${*}" != "" ] ; do
+    PACKAGE_PATH="${1}"
+    shift
+    _set_up_framemd5
+    cd "${PACKAGE_PATH}"
+    FILELIST=$(_maketemp)
+    find "./objects" -type f ! -name ".*" ! -path "*/access/*" ! -path "*/service/*" > "${FILELIST}"
+    (IFS=$'\n'
+    for FILE in $(cat "${FILELIST}") ; do
+        VIDEOTEST=$(file -Ib "${FILE}" | grep 'video')
+        if [ -n "${VIDEOTEST}" ] ; then
+            FILENAMEROOT=$(basename "${FILE}")
+            PARENTDIR=$(dirname "${FILE}")
+            FILEOUTPUT="${OUTPUTDIR}/${PARENTDIR}"
+            if [ ! -d "${FILEOUTPUT}" ] ; then
+                _run mkdir -p "${FILEOUTPUT}"
+            fi
+            ffmpeg -i "${FILE}" -f framemd5 -an "${FILEOUTPUT}/${FILENAMEROOT}.framemd5"
+        else
+            _report -d "No video track found in target. Skipping."
+        fi
+    done)
+    rm "${FILELIST}"
+done
+                
+
