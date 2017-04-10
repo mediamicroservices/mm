@@ -30,13 +30,21 @@ while [ "${*}" != "" ] ; do
     RESULTS=$(mktemp)
     echo "file '${INPUT}'" > "${IO}"
     if [ -n "${INTIME}" ] ; then
-        echo "inpoint ${INTIME}" >> "${IO}"
+        if ! [[ "${INTIME}" =~ ^-?[0-9]+$ ]] ; then
+            echo 'Please use an integer value for input time' && exit 0
+        else
+            echo "inpoint ${INTIME}" >> "${IO}"
+        fi
     fi
     if [ -n "${OUTTIME}" ]; then
-        if [ -n "${INTIME}" ] && ! [ "${OUTTIME}" -gt "${INTIME}" ] ; then
-            echo "Error! Output time must be greater than input time!" && exit 1
-        else 
-            echo "outpoint ${OUTTIME}" >> "${IO}"
+        if ! [[ "${OUTTIME}" =~ ^-?[0-9]+$ ]] ; then
+            echo 'Please use an integer value for output time' && exit 0
+        else
+            if [ -n "${INTIME}" ] && ! [ "${OUTTIME}" -gt "${INTIME}" ] ; then
+                echo "Error! Output time must be greater than input time!" && exit 1
+            else 
+                echo "outpoint ${OUTTIME}" >> "${IO}"
+            fi
         fi
     fi
     ffmpeg -f concat -safe 0 -i "${IO}" -vf signature=format=xml:filename="${TEMPFINGERPRINT}" -map 0:v -f null -
