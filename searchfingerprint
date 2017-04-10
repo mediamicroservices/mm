@@ -1,1 +1,36 @@
 #!/usr/bin/env bash
+SCRIPTNAME=$(basename "${0}")
+SCRIPTDIR=$(dirname "${0}")
+MM_CONFIG_FILE="${SCRIPTDIR}/mm.conf"
+
+. "${SCRIPTDIR}/mmfunctions" || { echo "Missing '${SCRIPTDIR}/mmfunctions'. Exiting." ; exit 1 ;};
+. ${MM_CONFIG_FILE} || { echo "Missing '${MM_CONFIG_FILE}/mmfunctions'. Exiting." ; exit 1 ;};
+
+_usage(){
+    echo $(basename "${0}") Usage: searchfingerprint [ -h ] [ -t ] inputfile1
+}
+
+OPTIND=1
+while getopts "hi:o:" OPT ; do
+    case "${OPT}" in
+        i) INTIME="${OPTARG}" ;;
+        o) OUTTIME="${OPTARG}" ;;
+        h) _usage ;;
+        *) echo "bad option -${OPTARG}" ; _usage ;;
+    esac
+done
+shift $(( ${OPTIND} - 1 ))
+
+while [ "${*}" != "" ] ; do
+    INPUT="${1}"
+    shift
+    IO=$(mktemp)
+    TEMPFINGERPRINT=$(mktemp)
+    TEMPFINGERPRINT_SORTED=$(mktemp)
+    echo "file '${INPUT}'" > "${IO}"
+    echo "inpoint ${INTIME}" >> "${IO}"
+    echo "outpoint ${OUTTIME}" >> "${IO}"
+    ffmpeg -f concat -safe 0 -i "${IO}" -vf signature=format=xml:filename="${TEMPFINGERPRINT}" -map 0:v -f null -
+    xml sel -N "m=urn:mpeg:mpeg7:schema:2001" -t -m "m:Mpeg7/m:DescriptionUnit/m:Descriptor/m:VideoSignatureRegion/m:VSVideoSegment" -v m:StartFrameOfSegment -o ':' -v m:EndFrameOfSegment -o ':' -m m:BagOfWords -v "translate(.,' ','')" -o ':' -b -n "${TEMPFINGERPRINT}"
+    
+done
