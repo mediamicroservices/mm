@@ -7,7 +7,9 @@ MM_CONFIG_FILE="${SCRIPTDIR}/mm.conf"
 . ${MM_CONFIG_FILE} || { echo "Missing '${MM_CONFIG_FILE}/mmfunctions'. Exiting." ; exit 1 ;};
 
 _usage(){
-    echo $(basename "${0}") Usage: searchfingerprint [ -h ] [ -t ] inputfile1
+cat << EOF; 
+Usage: searchfingerprint [ -h ] [ -i ] [ -o ] inputfile1  inputfile2   
+EOF
 }
 
 OPTIND=1
@@ -15,7 +17,7 @@ while getopts "hi:o:" OPT ; do
     case "${OPT}" in
         i) INTIME="${OPTARG}" ;;
         o) OUTTIME="${OPTARG}" ;;
-        h) _usage ;;
+        h) _usage && exit;;
         *) echo "bad option -${OPTARG}" ; _usage ;;
     esac
 done
@@ -59,5 +61,5 @@ while [ "${*}" != "" ] ; do
         echo "SELECT objectIdentifierValue,startframe,endframe FROM fingerprints WHERE hash1='${hash1}' AND hash2='${hash2}' AND (hash3='${hash3}' OR hash4='${hash4}')" | mysql --login-path="${PREMIS_PROFILE}"  "${PREMIS_NAME}" | tr '\t' ' ' >> "${RESULTS}"
     done)
     echo "The Following potential matches were found:"
-    cat "${RESULTS}" | grep -v "objectIdentifierValue" | sort
+    grep -v "objectIdentifierValue" "${RESULTS}" | sort
 done
