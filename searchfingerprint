@@ -56,8 +56,8 @@ while [ "${*}" != "" ] ; do
         hash2=$(echo "${i}" | cut -d':' -f4)
         hash3=$(echo "${i}" | cut -d':' -f5)
         hash4=$(echo "${i}" | cut -d':' -f6)
-        echo "SELECT objectIdentifierValue,startframe,endframe FROM fingerprints WHERE hash1='${hash1}' AND hash2='${hash2}' AND (hash3='${hash3}' OR hash4='${hash4}')" | mysql --login-path="${PREMIS_PROFILE}"  "${PREMIS_NAME}" >> "${RESULTS}"
+        echo "SELECT objectIdentifierValue,startframe,endframe FROM fingerprints WHERE hash1='${hash1}' AND hash2='${hash2}' AND (hash3='${hash3}' OR hash4='${hash4}')" | mysql --login-path="${PREMIS_PROFILE}"  "${PREMIS_NAME}" | tr '\t' ' ' >> "${RESULTS}"
     done)
     echo "The Following potential matches were found:"
-    cat "${RESULTS}" | sort -u
+    cat "${RESULTS}" | grep -v "objectIdentifierValue" | sort
 done
