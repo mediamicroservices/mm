@@ -8,8 +8,13 @@ MM_CONFIG_FILE="${SCRIPTDIR}/mm.conf"
 
 _usage(){
 cat << EOF; 
-Usage: searchfingerprint [ -h ] [ -i ] [ -o ] inputfile1  inputfile2   
+Takes an input file, calculates a video fingerprint for specified portion, and compares results to fingerprint database
+Usage: ${0} [ -h ] [ -i ] [ -o ] inputfile1 | inputfile2
+-h Display this help
+-i Set input time in seconds for fingerprint comparison
+-o Set output time in seconds for fingerprint comparison
 EOF
+exit
 }
 
 OPTIND=1
@@ -17,11 +22,16 @@ while getopts "hi:o:" OPT ; do
     case "${OPT}" in
         i) INTIME="${OPTARG}" ;;
         o) OUTTIME="${OPTARG}" ;;
-        h) _usage && exit;;
+        h) _usage ;;
         *) echo "bad option -${OPTARG}" ; _usage ;;
     esac
 done
 shift $(( ${OPTIND} - 1 ))
+
+if ! [ "${1}" ] ; then
+    _usage
+fi
+    
 
 while [ "${*}" != "" ] ; do
     INPUT="${1}"
