@@ -42,6 +42,7 @@ while [ "${*}" != "" ] ; do
     TEMPFINGERPRINT_SORTED=$(mktemp)
     RESULTS=$(mktemp)
     VISUALRESULTS=$(mktemp)
+    DRAWTEXT=$(mktemp)
     #Set up concat input for fingerprint filter
     echo "file '${INPUT}'" > "${IO}"
     if [ -n "${INTIME}" ] ; then
@@ -62,6 +63,7 @@ while [ "${*}" != "" ] ; do
             fi
         fi
     fi
+    
     #Create Fingerprint
     ffmpeg -f concat -safe 0 -i "${IO}" -vf signature=format=xml:filename="${TEMPFINGERPRINT}" -map 0:v -f null -
     xml sel -N "m=urn:mpeg:mpeg7:schema:2001" -t -m "m:Mpeg7/m:DescriptionUnit/m:Descriptor/m:VideoSignatureRegion/m:VSVideoSegment" -v m:StartFrameOfSegment -o ':' -v m:EndFrameOfSegment -o ':' -m m:BagOfWords -v "translate(.,' ','')" -o ':' -b -n "${TEMPFINGERPRINT}" > "${TEMPFINGERPRINT_SORTED}"
@@ -89,23 +91,23 @@ while [ "${*}" != "" ] ; do
     #Checks if the result is a new file. Marks last out time for previous file and new file name.
     if ! [[ "${RESULTNAME}" = "${LASTRESULTNAME}" ]] ; then
         if [ -n "${FINALOUT}" ] ; then
-            echo "Out ${FINALOUT}"
+            echo "Out ${FINALOUT}" | tee -a "${DRAWTEXT}"
             echo "outpoint $((( $(grep "${FINALHASH}" "${TEMPFINGERPRINT_SORTED}" | cut -d':' -f2 | head -n 1) / 30 ) + ${INTIME}))" >> "${VISUALRESULTS}"
-            echo
+            echo | tee -a "${DRAWTEXT}"
             FINALOUT=''
             FINALHASH=''
         fi
         LASTRESULTNAME=$(echo "$RESULT" | cut -d' ' -f1)
         LASTOUTFRAME=''
         LASTINFRAME=''
-        echo "${LASTRESULTNAME}"
-        echo "------"
+        echo "${LASTRESULTNAME}" | tee -a "${DRAWTEXT}"
+        echo "------"  | tee -a "${DRAWTEXT}"
     fi
     
     #Checks if new frame match preceeds previous matches and resets variables
     if [[ ${INFRAME} -lt ${LASTINFRAME} ]] ; then
         if ! [ "${NEWIN}" = "1" ] ; then
-            echo "Out ${FINALOUT}"
+            echo "Out ${FINALOUT}" | tee -a "${DRAWTEXT}"
             echo "outpoint $((($(grep "${FINALHASH}" "${TEMPFINGERPRINT_SORTED}" | cut -d':' -f2 | head -n 1) / 30 ) + ${INTIME}))" >> "${VISUALRESULTS}"
         fi
         LASTOUTFRAME=''
@@ -124,7 +126,7 @@ while [ "${*}" != "" ] ; do
     
     # Marks input if first match for file or after reset
     if  [ "${NEWIN}" = "1" ] ; then
-        echo "In ${INFRAME}"
+        echo "In ${INFRAME}" | tee -a "${DRAWTEXT}"
         echo "file '${INPUT}'" >> "${VISUALRESULTS}"
         echo "inpoint $((($(grep "${HASHMATCH}" "${TEMPFINGERPRINT_SORTED}" | cut -d':' -f1 | head -n 1) / 30 ) + ${INTIME}))" >> "${VISUALRESULTS}"
         NEWIN=''
@@ -134,7 +136,7 @@ while [ "${*}" != "" ] ; do
     if [[ "${OUTFRAME}" -gt $(( ${LASTOUTFRAME} + 500 )) ]] ; then
         LASTOUTFRAME="${OUTFRAME}"
         NEWIN='1'
-        echo "Out ${LASTOUTFRAME}"
+        echo "Out ${LASTOUTFRAME}" | tee -a "${DRAWTEXT}"
         echo "outpoint $((($(grep "${HASHMATCH}" "${TEMPFINGERPRINT_SORTED}" | cut -d':' -f2 | head -n 1) / 30 ) + ${INTIME}))" >> "${VISUALRESULTS}"
     fi
     FINALOUT="${OUTFRAME}"
@@ -142,8 +144,8 @@ while [ "${*}" != "" ] ; do
     
     done < <(cat "${RESULTS}" | sort -u)
     #Marks the last outpoint of last file
-    echo "Out ${FINALOUT}"
+    echo "Out ${FINALOUT}"  | tee -a "${DRAWTEXT}"
     echo "outpoint $((($(grep "${FINALHASH}" "${TEMPFINGERPRINT_SORTED}" | cut -d':' -f2 | head -n 1) / 30 ) + ${INTIME}))" >> "${VISUALRESULTS}"
 done
 #Play footage from input for which possible matches were found
-ffplay -hide_banner -loglevel panic -f concat -safe 0 -i "${VISUALRESULTS}"
+ffplay -hide_banner -loglevel panic -f concat -safe 0 -i "${VISUALRESULTS}" -vf drawtext=fontcolor=white:box=1:boxcolor=black@.4:fontsize=20:fontfile="/Library/Fonts/Andale Mono.ttf":textfile="${DRAWTEXT}"
