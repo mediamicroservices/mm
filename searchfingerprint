@@ -70,6 +70,53 @@ while [ "${*}" != "" ] ; do
         hash4=$(echo "${i}" | cut -d':' -f6)
         echo "SELECT objectIdentifierValue,startframe,endframe FROM fingerprints WHERE hash1='${hash1}' AND hash2='${hash2}' AND (hash3='${hash3}' OR hash4='${hash4}')" | mysql --login-path="${PREMIS_PROFILE}"  "${PREMIS_NAME}" | tr '\t' ' ' | grep -v "objectIdentifierValue" >> "${RESULTS}"
     done)
-    echo "The Following potential matches were found:"
-    grep -v "objectIdentifierValue" "${RESULTS}" | sort
+    echo
+    echo "Potential matches were found in the following frame ranges:"
+    echo
+    
+    while read RESULT ; do
+    RESULTNAME=$(echo "$RESULT" | cut -d' ' -f1)
+    INFRAME=$(echo "$RESULT" | cut -d' ' -f2)
+    OUTFRAME=$(echo "$RESULT" | cut -d' ' -f3)
+
+    if ! [[ "${RESULTNAME}" = "${LASTRESULTNAME}" ]] ; then
+        if [ -n "${FINALOUT}" ] ; then
+            echo "Out ${FINALOUT}"
+            echo
+            FINALOUT=''
+        fi
+        LASTRESULTNAME=$(echo "$RESULT" | cut -d' ' -f1)
+        LASTOUTFRAME=''
+        LASTINFRAME=''
+        echo "${LASTRESULTNAME}"
+        echo "------"
+    fi
+    if [[ ${INFRAME} -lt ${LASTINFRAME} ]] ; then
+        if ! [ "${NEWIN}" = "1" ] ; then
+            echo "Out ${FINALOUT}"
+        fi
+        LASTOUTFRAME=''
+        LASTINFRAME=''
+    fi
+    if [ -z "${LASTINFRAME}" ] ; then
+        LASTINFRAME="${INFRAME}"
+        NEWIN=1
+    fi
+    if [ -z "${LASTOUTFRAME}" ] ; then
+        LASTOUTFRAME="${OUTFRAME}"
+    fi
+    if  [ "${NEWIN}" = "1" ] ; then
+        echo "In ${INFRAME}"
+        NEWIN=''
+    fi
+    if [[ "${OUTFRAME}" -gt $(( ${LASTOUTFRAME} + 500 )) ]] ; then
+        LASTOUTFRAME="${OUTFRAME}"
+        NEWIN='1'
+        echo "Out ${LASTOUTFRAME}"
+    fi
+    FINALOUT="${OUTFRAME}"
+    
+    done < <(cat "${RESULTS}" | sort -u)
+    echo "Out ${FINALOUT}"
+    cat "${RESULTS}" | sort -u > ~/Desktop/test.txt
 done
