@@ -34,12 +34,15 @@ fi
     
 
 while [ "${*}" != "" ] ; do
+    #Set up input and temp files
     INPUT="${1}"
     shift
     IO=$(mktemp)
     TEMPFINGERPRINT=$(mktemp)
     TEMPFINGERPRINT_SORTED=$(mktemp)
     RESULTS=$(mktemp)
+    VISUALRESULTS=$(mktemp)
+    #Set up concat input for fingerprint filter
     echo "file '${INPUT}'" > "${IO}"
     if [ -n "${INTIME}" ] ; then
         if ! [[ "${INTIME}" =~ ^-?[0-9]+$ ]] ; then
@@ -59,31 +62,38 @@ while [ "${*}" != "" ] ; do
             fi
         fi
     fi
+    #Create Fingerprint
     ffmpeg -f concat -safe 0 -i "${IO}" -vf signature=format=xml:filename="${TEMPFINGERPRINT}" -map 0:v -f null -
     xml sel -N "m=urn:mpeg:mpeg7:schema:2001" -t -m "m:Mpeg7/m:DescriptionUnit/m:Descriptor/m:VideoSignatureRegion/m:VSVideoSegment" -v m:StartFrameOfSegment -o ':' -v m:EndFrameOfSegment -o ':' -m m:BagOfWords -v "translate(.,' ','')" -o ':' -b -n "${TEMPFINGERPRINT}" > "${TEMPFINGERPRINT_SORTED}"
     
+    #Sort extract relevant values from fingerprint and sort for parsing
     (IFS=$'\n'
     for i in $(cat "${TEMPFINGERPRINT_SORTED}") ; do
         hash1=$(echo "${i}" | cut -d':' -f3)
         hash2=$(echo "${i}" | cut -d':' -f4)
         hash3=$(echo "${i}" | cut -d':' -f5)
         hash4=$(echo "${i}" | cut -d':' -f6)
-        echo "SELECT objectIdentifierValue,startframe,endframe FROM fingerprints WHERE hash1='${hash1}' AND hash2='${hash2}' AND (hash3='${hash3}' OR hash4='${hash4}')" | mysql --login-path="${PREMIS_PROFILE}"  "${PREMIS_NAME}" | tr '\t' ' ' | grep -v "objectIdentifierValue" >> "${RESULTS}"
+        echo "SELECT objectIdentifierValue,startframe,endframe,hash1,hash2 FROM fingerprints WHERE hash1='${hash1}' AND hash2='${hash2}' AND (hash3='${hash3}' OR hash4='${hash4}')" | mysql --login-path="${PREMIS_PROFILE}"  "${PREMIS_NAME}" | tr '\t' ' ' | grep -v "objectIdentifierValue" >> "${RESULTS}"
     done)
     echo
     echo "Potential matches were found in the following frame ranges:"
     echo
     
+    #Loop for sorting possible matches divided by files and chunks of approximately 500 frames (Finds an input and then first output after 500)
     while read RESULT ; do
     RESULTNAME=$(echo "$RESULT" | cut -d' ' -f1)
     INFRAME=$(echo "$RESULT" | cut -d' ' -f2)
     OUTFRAME=$(echo "$RESULT" | cut -d' ' -f3)
+    HASHMATCH=$(echo "$RESULT" | cut -d' ' -f4- | tr ' ' ':')
 
+    #Checks if the result is a new file. Marks last out time for previous file and new file name.
     if ! [[ "${RESULTNAME}" = "${LASTRESULTNAME}" ]] ; then
         if [ -n "${FINALOUT}" ] ; then
             echo "Out ${FINALOUT}"
+            echo "outpoint $((( $(grep "${FINALHASH}" "${TEMPFINGERPRINT_SORTED}" | cut -d':' -f2 | head -n 1) / 30 ) + ${INTIME}))" >> "${VISUALRESULTS}"
             echo
             FINALOUT=''
+            FINALHASH=''
         fi
         LASTRESULTNAME=$(echo "$RESULT" | cut -d' ' -f1)
         LASTOUTFRAME=''
@@ -91,32 +101,49 @@ while [ "${*}" != "" ] ; do
         echo "${LASTRESULTNAME}"
         echo "------"
     fi
+    
+    #Checks if new frame match preceeds previous matches and resets variables
     if [[ ${INFRAME} -lt ${LASTINFRAME} ]] ; then
         if ! [ "${NEWIN}" = "1" ] ; then
             echo "Out ${FINALOUT}"
+            echo "outpoint $((($(grep "${FINALHASH}" "${TEMPFINGERPRINT_SORTED}" | cut -d':' -f2 | head -n 1) / 30 ) + ${INTIME}))" >> "${VISUALRESULTS}"
         fi
         LASTOUTFRAME=''
         LASTINFRAME=''
     fi
+    
+    # Checks if match is first matching chunk for that file (or after reset) and sets variable
     if [ -z "${LASTINFRAME}" ] ; then
         LASTINFRAME="${INFRAME}"
         NEWIN=1
     fi
+    # Sets variable if empty (first match after reset)
     if [ -z "${LASTOUTFRAME}" ] ; then
         LASTOUTFRAME="${OUTFRAME}"
     fi
+    
+    # Marks input if first match for file or after reset
     if  [ "${NEWIN}" = "1" ] ; then
         echo "In ${INFRAME}"
+        echo "file '${INPUT}'" >> "${VISUALRESULTS}"
+        echo "inpoint $((($(grep "${HASHMATCH}" "${TEMPFINGERPRINT_SORTED}" | cut -d':' -f1 | head -n 1) / 30 ) + ${INTIME}))" >> "${VISUALRESULTS}"
         NEWIN=''
     fi
+    
+    # Marks output after 500 frame threshold is exceded
     if [[ "${OUTFRAME}" -gt $(( ${LASTOUTFRAME} + 500 )) ]] ; then
         LASTOUTFRAME="${OUTFRAME}"
         NEWIN='1'
         echo "Out ${LASTOUTFRAME}"
+        echo "outpoint $((($(grep "${HASHMATCH}" "${TEMPFINGERPRINT_SORTED}" | cut -d':' -f2 | head -n 1) / 30 ) + ${INTIME}))" >> "${VISUALRESULTS}"
     fi
     FINALOUT="${OUTFRAME}"
+    FINALHASH="${HASHMATCH}"
     
     done < <(cat "${RESULTS}" | sort -u)
+    #Marks the last outpoint of last file
     echo "Out ${FINALOUT}"
-    cat "${RESULTS}" | sort -u > ~/Desktop/test.txt
+    echo "outpoint $((($(grep "${FINALHASH}" "${TEMPFINGERPRINT_SORTED}" | cut -d':' -f2 | head -n 1) / 30 ) + ${INTIME}))" >> "${VISUALRESULTS}"
 done
+#Play footage from input for which possible matches were found
+ffplay -hide_banner -loglevel panic -f concat -safe 0 -i "${VISUALRESULTS}"
