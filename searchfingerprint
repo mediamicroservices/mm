@@ -9,20 +9,22 @@ MM_CONFIG_FILE="${SCRIPTDIR}/mm.conf"
 _usage(){
 cat << EOF; 
 Takes an input file, calculates a video fingerprint for specified portion, and compares results to fingerprint database
-Usage: ${0} [ -h ] [ -i ] [ -o ] inputfile1 | inputfile2
+Usage: ${0} [ -h ] [ -i ] [ -o ] [ -t ] inputfile1 | inputfile2
 -h Display this help
 -i Set input time in seconds for fingerprint comparison
 -o Set output time in seconds for fingerprint comparison
+-t Text only results (disables preview window)
 EOF
 exit
 }
 
 OPTIND=1
-while getopts "hi:o:" OPT ; do
+while getopts "hi:o:t" OPT ; do
     case "${OPT}" in
         i) INTIME="${OPTARG}" ;;
         o) OUTTIME="${OPTARG}" ;;
         h) _usage ;;
+        t) MODE="text" ;;
         *) echo "bad option -${OPTARG}" ; _usage ;;
     esac
 done
@@ -163,4 +165,6 @@ while [ "${*}" != "" ] ; do
     fi
 done
 #Play footage from input for which possible matches were found
+if ! [ "${MODE}" = 'text' ] ; then
 ffplay -hide_banner -loglevel panic -f concat -safe 0 -i "${VISUALRESULTS}" -vf drawtext=fontcolor=white:box=1:boxcolor=black@.4:fontsize=20:fontfile="/Library/Fonts/Andale Mono.ttf":textfile="${DRAWTEXT}"
+fi
