@@ -102,15 +102,17 @@ while [ "${*}" != "" ] ; do
     #Checks if the result is a new file. Marks last out time for previous file and new file name.
     if ! [[ "${RESULTNAME}" = "${LASTRESULTNAME}" ]] ; then
         if [ -n "${FINALOUT}" ] ; then
-            echo "Out ${FINALOUT}" | tee -a "${DRAWTEXT}"
-            echo "outpoint $((( $(grep "${FINALHASH}" "${TEMPFINGERPRINT_SORTED}" | cut -d':' -f2 | head -n 1) / 30 ) + ${INTIME}))" >> "${VISUALRESULTS}"
-            echo | tee -a "${DRAWTEXT}"
+            if ! [ "${FINALOUT}" = "${LASTOUTFRAME}" ] ; then
+                echo "Out ${FINALOUT}" | tee -a "${DRAWTEXT}"
+                echo "outpoint $((( $(grep "${FINALHASH}" "${TEMPFINGERPRINT_SORTED}" | cut -d':' -f2 | head -n 1) / 30 ) + ${INTIME}))" >> "${VISUALRESULTS}"
+            fi
             FINALOUT=''
             FINALHASH=''
         fi
         LASTRESULTNAME=$(echo "$RESULT" | cut -d' ' -f1)
         LASTOUTFRAME=''
         LASTINFRAME=''
+        echo | tee -a "${DRAWTEXT}"
         echo "${LASTRESULTNAME}" | tee -a "${DRAWTEXT}"
         echo "------"  | tee -a "${DRAWTEXT}"
     fi
