@@ -341,8 +341,12 @@ fi
 # blackframe analysis, in/out time settings requests, ask for digitization logs
 if [ "${PRESERVATION_MODE}" == "Y" ] ; then
     _reset_directory
-    _ask_intime
-    _ask_outtime
+    if [[ "${INPUT#*.}" = "mkv" ]] ; then
+        "${SCRIPTDIR}/makemkvchapters" "${INPUT}"
+    else
+        _ask_intime
+        _ask_outtime
+    fi
     _ask_digitization_logs
     PHASECHECKTEST="N"
 
