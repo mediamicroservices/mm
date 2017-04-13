@@ -37,6 +37,12 @@ while [ "${*}" != "" ] ; do
     #Set up input and temp files
     INPUT="${1}"
     shift
+    
+    #Confirm input is a video file
+    if [ -z $(file -Ib "${INPUT}" | grep video) ] ; then
+        echo "Input is not a video file" && continue
+    fi
+    
     IO=$(mktemp)
     TEMPFINGERPRINT=$(mktemp)
     TEMPFINGERPRINT_SORTED=$(mktemp)
@@ -52,6 +58,7 @@ while [ "${*}" != "" ] ; do
             echo "inpoint ${INTIME}" >> "${IO}"
         fi
     fi
+    
     if [ -n "${OUTTIME}" ]; then
         if ! [[ "${OUTTIME}" =~ ^-?[0-9]+$ ]] ; then
             echo 'Please use an integer value for output time' && exit 0
@@ -78,6 +85,10 @@ while [ "${*}" != "" ] ; do
         echo "SELECT objectIdentifierValue,startframe,endframe,hash1,hash2 FROM fingerprints WHERE hash1='${hash1}' AND hash2='${hash2}' AND (hash3='${hash3}' OR hash4='${hash4}')" | mysql --login-path="${PREMIS_PROFILE}"  "${PREMIS_NAME}" | tr '\t' ' ' | grep -v "objectIdentifierValue" >> "${RESULTS}"
     done)
     echo
+    #Exit if no results found
+    if [ -z $(cat "${RESULTS}") ] ; then
+        echo "No potential matches were found." && exit 0
+    fi
     echo "Potential matches were found in the following frame ranges:"
     echo
     
@@ -144,8 +155,10 @@ while [ "${*}" != "" ] ; do
     
     done < <(cat "${RESULTS}" | sort -u)
     #Marks the last outpoint of last file
-    echo "Out ${FINALOUT}"  | tee -a "${DRAWTEXT}"
-    echo "outpoint $((($(grep "${FINALHASH}" "${TEMPFINGERPRINT_SORTED}" | cut -d':' -f2 | head -n 1) / 30 ) + ${INTIME}))" >> "${VISUALRESULTS}"
+    if ! [ "${FINALOUT}" = "${LASTOUTFRAME}" ] ; then
+        echo "Out ${FINALOUT}"  | tee -a "${DRAWTEXT}"
+        echo "outpoint $((($(grep "${FINALHASH}" "${TEMPFINGERPRINT_SORTED}" | cut -d':' -f2 | head -n 1) / 30 ) + ${INTIME}))" >> "${VISUALRESULTS}"
+    fi
 done
 #Play footage from input for which possible matches were found
 ffplay -hide_banner -loglevel panic -f concat -safe 0 -i "${VISUALRESULTS}" -vf drawtext=fontcolor=white:box=1:boxcolor=black@.4:fontsize=20:fontfile="/Library/Fonts/Andale Mono.ttf":textfile="${DRAWTEXT}"
