@@ -4,12 +4,12 @@ SCRIPTDIR=$(dirname "${0}")
 MM_CONFIG_FILE="${SCRIPTDIR}/mm.conf"
 
 . "${SCRIPTDIR}/mmfunctions" || { echo "Missing '${SCRIPTDIR}/mmfunctions'. Exiting." ; exit 1 ;};
-. ${MM_CONFIG_FILE} || { echo "Missing '${MM_CONFIG_FILE}/mmfunctions'. Exiting." ; exit 1 ;};
+. "${MM_CONFIG_FILE}" || { echo "Missing '${MM_CONFIG_FILE}/mmfunctions'. Exiting." ; exit 1 ;};
 
 _usage(){
 cat << EOF; 
 Takes an input file, calculates a video fingerprint for specified portion, and compares results to fingerprint database
-Usage: ${0} [ -h ] [ -i ] [ -o ] [ -t ] inputfile1 | inputfile2
+Usage: "${SCRIPTNAME}" [ -h ] [ -i ] [ -o ] [ -t ] inputfile1 | inputfile2
 -h Display this help
 -i Set input time in seconds for fingerprint comparison
 -o Set output time in seconds for fingerprint comparison
@@ -53,6 +53,7 @@ while [ "${*}" != "" ] ; do
     DRAWTEXT=$(mktemp)
     #Set up concat input for fingerprint filter
     echo "file '${INPUT}'" > "${IO}"
+    
     if [ -n "${INTIME}" ] ; then
         if ! [[ "${INTIME}" =~ ^-?[0-9]+$ ]] ; then
             echo 'Please use an integer value for input time' && exit 0
@@ -87,6 +88,7 @@ while [ "${*}" != "" ] ; do
         echo "SELECT objectIdentifierValue,startframe,endframe,hash1,hash2 FROM fingerprints WHERE hash1='${hash1}' AND hash2='${hash2}' AND (hash3='${hash3}' OR hash4='${hash4}')" | mysql --login-path="${PREMIS_PROFILE}"  "${PREMIS_NAME}" | tr '\t' ' ' | grep -v "objectIdentifierValue" >> "${RESULTS}"
     done)
     echo
+    
     #Exit if no results found
     if [ -z $(cat "${RESULTS}") ] ; then
         echo "No potential matches were found." && exit 0
@@ -95,7 +97,7 @@ while [ "${*}" != "" ] ; do
     echo
     
     #Loop for sorting possible matches divided by files and chunks of approximately 500 frames (Finds an input and then first output after 500)
-    while read RESULT ; do
+    while read -r RESULT ; do
     RESULTNAME=$(echo "$RESULT" | cut -d' ' -f1)
     INFRAME=$(echo "$RESULT" | cut -d' ' -f2)
     OUTFRAME=$(echo "$RESULT" | cut -d' ' -f3)
@@ -137,16 +139,14 @@ while [ "${*}" != "" ] ; do
     # Sets variable if empty (first match after reset)
     if [ -z "${LASTOUTFRAME}" ] ; then
         LASTOUTFRAME="${OUTFRAME}"
-    fi
-    
+    fi  
     # Marks input if first match for file or after reset
     if  [ "${NEWIN}" = "1" ] ; then
         echo "In ${INFRAME}" | tee -a "${DRAWTEXT}"
         echo "file '${INPUT}'" >> "${VISUALRESULTS}"
         echo "inpoint $((($(grep "${HASHMATCH}" "${TEMPFINGERPRINT_SORTED}" | cut -d':' -f1 | head -n 1) / 30 ) + ${INTIME}))" >> "${VISUALRESULTS}"
         NEWIN=''
-    fi
-    
+    fi 
     # Marks output after 500 frame threshold is exceded
     if [[ "${OUTFRAME}" -gt $(( ${LASTOUTFRAME} + 500 )) ]] ; then
         LASTOUTFRAME="${OUTFRAME}"
