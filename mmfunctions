@@ -640,7 +640,6 @@ _check_dependencies(){
 
 _initialize_make(){
     _check_dependencies "${DEPENDENCIES[@]}"
-    unset DEPENDENCIES
     DELIVERDIR=""
     DRYRUN=false
     EMAILADDRESS=""
