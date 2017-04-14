@@ -90,7 +90,7 @@ while [ "${*}" != "" ] ; do
     echo
     
     #Exit if no results found
-    if [ -z $(cat "${RESULTS}") ] ; then
+    if [[ -z $(cat "${RESULTS}") ]] ; then
         echo "No potential matches were found." && exit 0
     fi
     echo "Potential matches were found in the following frame ranges:"
@@ -102,6 +102,10 @@ while [ "${*}" != "" ] ; do
     INFRAME=$(echo "$RESULT" | cut -d' ' -f2)
     OUTFRAME=$(echo "$RESULT" | cut -d' ' -f3)
     HASHMATCH=$(echo "$RESULT" | cut -d' ' -f4- | tr ' ' ':')
+    
+    if [ -z ${INTIME} ] ; then
+        INTIME=0
+    fi
 
     #Checks if the result is a new file. Marks last out time for previous file and new file name.
     if ! [[ "${RESULTNAME}" = "${LASTRESULTNAME}" ]] ; then
