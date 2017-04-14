@@ -110,12 +110,13 @@ while [ "${*}" != "" ] ; do
     #Checks if the result is a new file. Marks last out time for previous file and new file name.
     if ! [[ "${RESULTNAME}" = "${LASTRESULTNAME}" ]] ; then
         if [ -n "${FINALOUT}" ] ; then
-            if ! [ "${FINALOUT}" = "${LASTOUTFRAME}" ] ; then
+            if  ! [ "${FINALOUT}" = "${LASTOUTFRAME}" ] ||  ! [ "${LARGEMATCH}" = 1 ]; then
                 echo "Out ${FINALOUT}" | tee -a "${DRAWTEXT}"
                 echo "outpoint $((( $(grep "${FINALHASH}" "${TEMPFINGERPRINT_SORTED}" | cut -d':' -f2 | head -n 1) / 30 ) + ${INTIME}))" >> "${VISUALRESULTS}"
             fi
             FINALOUT=''
             FINALHASH=''
+            LARGEMATCH=''
         fi
         LASTRESULTNAME=$(echo "$RESULT" | cut -d' ' -f1)
         LASTOUTFRAME=''
@@ -155,6 +156,7 @@ while [ "${*}" != "" ] ; do
     if [[ "${OUTFRAME}" -gt $(( ${LASTOUTFRAME} + 500 )) ]] ; then
         LASTOUTFRAME="${OUTFRAME}"
         NEWIN='1'
+        LARGEMATCH='1'
         echo "Out ${LASTOUTFRAME}" | tee -a "${DRAWTEXT}"
         echo "outpoint $((($(grep "${HASHMATCH}" "${TEMPFINGERPRINT_SORTED}" | cut -d':' -f2 | head -n 1) / 30 ) + ${INTIME}))" >> "${VISUALRESULTS}"
     fi
@@ -163,7 +165,7 @@ while [ "${*}" != "" ] ; do
     
     done < <(cat "${RESULTS}" | sort -u)
     #Marks the last outpoint of last file
-    if ! [ "${FINALOUT}" = "${LASTOUTFRAME}" ] ; then
+    if ! [ "${FINALOUT}" = "${LASTOUTFRAME}" ] ||  ! [ "${LARGEMATCH}" = 1 ] ; then
         echo "Out ${FINALOUT}"  | tee -a "${DRAWTEXT}"
         echo "outpoint $((($(grep "${FINALHASH}" "${TEMPFINGERPRINT_SORTED}" | cut -d':' -f2 | head -n 1) / 30 ) + ${INTIME}))" >> "${VISUALRESULTS}"
     fi
