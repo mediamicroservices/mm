@@ -41,7 +41,7 @@ while [ "${*}" != "" ] ; do
     shift
     
     #Confirm input is a video file
-    if [ -z $(file -Ib "${INPUT}" | grep video) ] ; then
+    if [[ -z $(file -Ib "${INPUT}" | grep video) ]] ; then
         echo "Input is not a video file" && continue
     fi
     
