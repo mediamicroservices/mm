@@ -29,6 +29,7 @@ while [ "${*}" != "" ] ; do
     echo "Now I'm going to create a capture log (if needed) and record the package type."
     LOGDIR="${INPUT}/metadata/logs"
     INGESTLOG="${LOGDIR}/capture.log"
+    _mkdir2 "${LOGDIR}"
     echo "" >> "${INGESTLOG}"
     INGESTPACKAGETYPE=$(_readingestlog "package type")
     if [[ ! "${INGESTPACKAGETYPE}" ]] ; then
