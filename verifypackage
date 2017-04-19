@@ -12,15 +12,30 @@ while [ "${*}" != "" ] ; do
     MEDIAID=$(basename "${PACKAGE}")
     shift
 #verify the makebroadcast file
-    if [ -f "${PACKAGE}/objects/service/${MEDIAID}.mov" ] ; then 
-      mediaconch -fx -p "${SCRIPTDIR}/makebroadcast_policies.xml" "${PACKAGE}/objects/service/${MEDIAID}.mov" | xml sel -N mc="https://mediaarea.net/mediaconch" -t -v mc:MediaConch/mc:media/mc:policy/@outcome -o " " -v mc:MediaConch/mc:media/@ref -n
+    if [ -f "${PACKAGE}/objects/service/${MEDIAID}.mov" ] ; then
+        STATUS=$(mediaconch -fx -p "${SCRIPTDIR}/makebroadcast_policies.xml" "${PACKAGE}/objects/service/${MEDIAID}.mov" | xml sel -N mc="https://mediaarea.net/mediaconch" -t -v mc:MediaConch/mc:media/mc:policy/@outcome -n)
+        if [[ "$STATUS" = "pass!" ]] ; then
+          _report -dt "Pass: ${PACKAGE}/objects/service/${MEDIAID}.mov"
+        else
+          mediaconch -fs -p "${SCRIPTDIR}/makebroadcast_policies.xml" "${PACKAGE}/objects/service/${MEDIAID}.mov"
+        fi
     fi
 #verify the makeyoutube file
     if [ -f "${PACKAGE}/objects/access/youtube_up/${MEDIAID}.mp4" ] ; then
-    mediaconch -fx -p "${SCRIPTDIR}/makeyoutube_policies.xml" "${PACKAGE}/objects/access/youtube_up/${MEDIAID}.mp4" | xml sel -N mc="https://mediaarea.net/mediaconch" -t -v mc:MediaConch/mc:media/mc:policy/@outcome -o " " -v mc:MediaConch/mc:media/@ref -n
+        STATUS=$(mediaconch -fx -p "${SCRIPTDIR}/makeyoutube_policies.xml" "${PACKAGE}/objects/access/youtube_up/${MEDIAID}.mp4" | xml sel -N mc="https://mediaarea.net/mediaconch" -t -v mc:MediaConch/mc:media/mc:policy/@outcome -n)
+        if [[ "$STATUS" = "pass!" ]] ; then
+            _report -dt "Pass: ${PACKAGE}/objects/access/youtube_up/${MEDIAID}.mp4"
+        else
+            mediaconch -fs -p "${SCRIPTDIR}/makeyoutube_policies.xml" "${PACKAGE}/objects/access/youtube_up/${MEDIAID}.mp4"
+        fi
     fi
 #verify the makedvd file
     if [ -f "${PACKAGE}/objects/access/dvd/${MEDIAID}.iso" ] ; then
-    mediaconch -fx -p "${SCRIPTDIR}/makedvd_policies.xml" "${PACKAGE}/objects/access/dvd/${MEDIAID}.iso" | xml sel -N mc="https://mediaarea.net/mediaconch" -t -v mc:MediaConch/mc:media/mc:policy/@outcome -o " " -v mc:MediaConch/mc:media/@ref -n
+        STATUS=$(mediaconch -fx -p "${SCRIPTDIR}/makedvd_policies.xml" "${PACKAGE}/objects/access/dvd/${MEDIAID}.iso" | xml sel -N mc="https://mediaarea.net/mediaconch" -t -v mc:MediaConch/mc:media/mc:policy/@outcome -n)
+        if [[ "$STATUS" = "pass!" ]] ; then
+            _report -dt "Pass: ${PACKAGE}/objects/access/dvd/${MEDIAID}.iso"
+        else
+            mediaconch -fs -p "${SCRIPTDIR}/makedvd_policies.xml" "${PACKAGE}/objects/access/dvd/${MEDIAID}.iso"
+        fi
     fi
 done
