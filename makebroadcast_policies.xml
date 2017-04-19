@@ -22,10 +22,11 @@
     <rule name="Is the audio signed?" value="Format_Settings_Sign" tracktype="Audio" operator="=">Signed</rule>
     <rule name="Is the audio bitrate CBR?" value="BitRate_Mode" tracktype="Audio" operator="=">CBR</rule>
     <rule name="Is the sampling rate 48Hz?" value="SamplingRate" tracktype="Audio" operator="=">48000</rule>
+    <rule name="Is the format profile correct?" value="Format_Profile" tracktype="Video" operator="=">4:2:2</rule>
     <policy type="or" name="True for either XDCam or IMF">
       <policy type="and" name="True about XDCam">
         <rule name="Is it XDCAM HD422?" value="Format_Commercial_IfAny" tracktype="Video" operator="=">XDCAM HD422</rule>
-        <rule name="Is the format profile correct?" value="Format_Profile" tracktype="Video" operator="=">4:2:2@High</rule>
+        <rule name="Is the format level correct?" value="Format_Level" tracktype="Video" operator="=">High</rule>
         <rule name="Is the CodecId correct?" value="CodecID" tracktype="Video" operator="=">xd5b</rule>
         <rule name="Is the width 1920?" value="Width" tracktype="Video" operator="=">1920</rule>
         <rule name="Is the height 1080?" value="Height" tracktype="Video" operator="=">1080</rule>
@@ -37,7 +38,7 @@
           </policy>
       </policy>
       <policy type="and" name="True about IMX">
-        <rule name="Is the format profile correct?" value="Format_Profile" tracktype="Video" operator="=">4:2:2@Main</rule>
+        <rule name="Is the format level correct?" value="Format_Level" tracktype="Video" operator="=">Main</rule>
         <rule name="Is the CodecId correct?" value="CodecID" tracktype="Video" operator="=">mx3n</rule>
         <rule name="Is the bitrate 30MB?" value="BitRate" tracktype="Video" operator="=">30000000</rule>
         <rule name="Is the width 720?" value="Width" tracktype="Video" operator="=">720</rule>
