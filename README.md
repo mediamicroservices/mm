@@ -59,7 +59,7 @@ Please use the [issue tracker](https://github.com/mediamicroservices/mm/issues) 
 
 Please subscribe to this repository to receive updates about new releases and enhanced functionalities.
 
-###License
+### License
 This software and associated documentation is covered by the MIT license.  Details available [here](https://github.com/mediamicroservices/mm/blob/master/LICENSE.txt).
 
 ## installing and configuring mediamicroservices ##
@@ -197,7 +197,7 @@ if editing in the terminal, use this option to leave the configuration file edit
 
 
 ## configuring PREMIS/fixity logging database
-### Database Configuration 
+### Database Configuration
 The microservice scripts are able to report to a central database information corresponding with PREMIS events such as date and location run as well as generated fixity hashes.  To enable this function you will need a computer running mySQL to function as a server.  
 
 To configure the database, run the command `createpremisdb -c` on your __host__ computer and follow the prompts.  This will set up the database as well as facilitate user creation. To create users without creating a new database, use the command `createpremisdb -u`.  At the end of user creation, the script will supply a command to create a log-in profile for the database.  It should look something like this: `mysql_config_editor set --login-path=your_user_config --host=xx.xx.xxx.xxx --user=your_user --password`. Run this command on your __user__ computer and enter the password for the user you created when prompted.  This will create the SQL log-in profile that you will use when configuring the microservices. NOTE: When supplying the suggested command, the script does its best to auto-fill the host IP address.  You may wish to verify that this is the correct IP.
@@ -231,7 +231,7 @@ makepodcast, makebroadcast, makeflv, make prores, makeresourcespace, makeyoutube
 
 To view the specific ffmpeg encoding options for each file, view the sourcecode of the microservice directly on GitHub or using a text editor on your computer.
 
-####aipupgrade
+#### aipupgrade
 * this script takes an archival information package created by earlier versions of ingestfile and removes the submissionDocumentation directory, removes .DS__Store files, logs the package type to the capture log if there is not one listed, and creates new technical metadata files that overwrite previously created metadata files. To use aipupgrade, type aipupgrade and drag in all the packages you wish to modify. Note that you will be asked to choose a package type and that will be assigned to all of the packages, so only drag in packages of one type of content. Your command will look like this: aipupgrade [package1] [package2]
 
 #### barcodeinterpret
@@ -325,10 +325,10 @@ To view the specific ffmpeg encoding options for each file, view the sourcecode 
 #### makemetadata ####
 * makemetadata produces a set of metadata reports, using ffprobe, mediainfo, and exiftool, for an archival information package on all files in the objects subdirectory. ffprobe reports are .xml and .json files, mediainfo reports are .xml and mediainfo trace reports are .txt, and exiftool reports are .xml and .txt. Your command will look like this: makemetadata [input].
 
-####makemets
+#### makemets
 * makemets creates a mets.xml file that documents the structure of an archival information package created by ingestfile. The mets file also includes information from the dfxml file created in the makemetadata process.
 
-####makemp3 ####
+#### makemp3 ####
 * makemp3 creates an mp3 file from a video file or package input. Your command will look like this: makemp3 [input].
 * if you want to specify a directory for the file to be written directly to, use option o. Your command will look like this: makemp3 -o [directory/path] [input]
 
@@ -371,16 +371,16 @@ To view the specific ffmpeg encoding options for each file, view the sourcecode 
     * If you use option e, your command will look like this: makeyoutube -e -d [path/to/directory] [input].
     * If you use option -E, your command will look like this: makeyoutube -E [input].
 
-####migratefiles
+#### migratefiles
 * migratefiles is a script that uses rsync to move files, and creates a log documenting the checksum, time, and file paths of files migrated. migratefiles expects a directory input. To use migrate files, type the command migratefiles -o [destination] [input]
 
-####qatesting
+#### qatesting
 * QA testing performs a series on tests on one or multiple video inputs and outputs the results into the terminal. Your command will look like this: qatesting [input] [input1] [input2]
 
-####removeDSStore
+#### removeDSStore
 * removeDSStore is a script to remove hidden .DS_\_Store files from a package input. Your command will look like this: removeDSStore [input]
 
-####restructureForCompliance
+#### restructureForCompliance
 * restructureForCompliance is a script that takes one or multiple directory or file input and creates an archival information directory structure.
 * If the input is a file, the script creates an upper level directory named by the media ID, named with the same name as the input file, and within that an objects directory and a metadata directory. The metadata directory contains a fileMeta folder and a logs folder. The script also moves the input file into the objects directory.
 * If the input is a directory, the script creates the objects and metadata directory within the input directory, as well as a fileMeta and logs directory within the metadata directory. The script also moves the input file into the objects directory.
