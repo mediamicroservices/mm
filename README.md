@@ -28,11 +28,13 @@ table of contents
     * [ingestfile](https://github.com/mediamicroservices/mm#ingestfile)
     * [makebroadcast](https://github.com/mediamicroservices/mm#makebroadcast)
     * [makedvd](https://github.com/mediamicroservices/mm#makedvd)
+    * [makefingerprint](https://github.com/mediamicroservices/mm/#makefingerprint)
     * [makeflv](https://github.com/mediamicroservices/mm#makeflv)
+    * [makeframemd5](https://github.com/mediamicroservices/mm/#makeframemd5)
     * [makeframes](https://github.com/mediamicroservices/mm#makeframes)
     * [makelossless](https://github.com/mediamicroservices/mm#makelossless)
     * [makemetadata](https://github.com/mediamicroservices/mm#makemetadata)
-	* [makemets](https://github.com/mediamicroservices/mm#makemets)
+    * [makemets](https://github.com/mediamicroservices/mm#makemets)
     * [makemp3](https://github.com/mediamicroservices/mm#makemp3)
     * [makepodcast](https://github.com/mediamicroservices/mm#makepodcast)
     * [makeprores](https://github.com/mediamicroservices/mm#makeprores)
@@ -40,11 +42,12 @@ table of contents
     * [makeresourcespace](https://github.com/mediamicroservices/mm#makeresourcespace)
     * [makeslate](https://github.com/mediamicroservices/mm#makeslate)
     * [makeyoutube](https://github.com/mediamicroservices/mm#makeyoutube)
-	* [migratefiles](https://github.com/mediamicroservices/mm#migratefiles)
-	* [qatesting](https://github.com/mediamicroservices/mm#qatesting)
+    * [migratefiles](https://github.com/mediamicroservices/mm#migratefiles)
+    * [qatesting](https://github.com/mediamicroservices/mm#qatesting)
     * [quickcompare](https://github.com/mediamicroservices/mm#quickcompare)
-	* [removeDSStore](https://github.com/mediamicroservices/mm#removedsstore)
-	* [restructureForCompliance](https://github.com/mediamicroservices/mm#restructureforcompliance)
+    * [removeDSStore](https://github.com/mediamicroservices/mm#removedsstore)
+    * [restructureForCompliance](https://github.com/mediamicroservices/mm#restructureforcompliance)
+    * [searchfingerprint](https://github.com/mediamicroservices/mm/#searchfingerprint)
     * [uploadomneon](https://github.com/mediamicroservices/mm#uploadomneon)
     * [verifytree](https://github.com/mediamicroservices/mm#verifytree)
     * [xdcamingest](https://github.com/mediamicroservices/mm#xdcamingest)
@@ -81,7 +84,7 @@ once homebrew has been installed, you can install mediamicroservices. First, use
 
 Type brew tap mediamicroservices/mm into the command line.
 
-Then, type brew install mediamicroservices/mm/mm into the command line. This command will install mediamicroservices to your computer.
+Then, type brew install mm into the command line. This command will install mediamicroservices to your computer.
 
 hooray, you've installed mediamicroservices!
 
@@ -96,20 +99,17 @@ mediamicroservice dependencies:
 * sdl
 * ffmpeg --with-sdl2 --with-freetype
 * flac
-* ltopers
+* ltopers (optional)
 * hashdeep
 * mediaconch
 * mediainfo
-* normalize
-* homebrew/dupes/rsync
+* rsync
 * tree
 * xmlstarlet
 
 mediamicroservices also uses Pashua to run a graphical user interface. It is recommended to install Pashua before running media microservices. Type brew install Pashua into the command line and press enter. You will be prompted for your password. Enter your password, and then you will be able to run mediamicroservices scripts and options that utilize a GUI.
 
-mediamicroservices will require an ltoper.conf file to run. If you do not want to use ltopers, create a fake ltoper.conf file by typing the following command: touch /usr/local/bin/ltoper.conf
-
-If at any point you would like to uninstall mediamicroservices, type brew uninstall mediamicroservices/mm/mm into the command line.
+If at any point you would like to uninstall mediamicroservices, type brew uninstall mm into the command line.
 
 ### configuring mediamicroservices
 In order for mediamicroservices to run, you must configure your variable settings. First, take a look at the list of variables below to get a sense of what each variable means. Then, create all of the delivery directories that you'll need, in the place you'd like them to be. You can name the directories themselves anything you'd like- the more important part is tying them to a variable in the configuration process. Not all variables are necessary for microservices to run, so look over which microservices you'd like to use to get a sense of whether or not you'll need to a specific variable.
