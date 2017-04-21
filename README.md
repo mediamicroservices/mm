@@ -253,6 +253,11 @@ To view the specific ffmpeg encoding options for each file, view the sourcecode 
 * createpremisdb will create a database for the logging of microservices information as well as facilitate user creation.  For more information on use, see the [database configuration](#configuring-premisfixity-logging-database) section of this readme.
 * commands are `createpremisdb -c` for database creation and `createpremisdb -u` for user creation.
 
+#### dbbackup
+* Creates backups of selected database. Allows a user specified number of backups to be saved. Script can be run manually or set up as a recurring task using the `brew services start mm` command.
+
+* Usage: -e edit configurations, -c create login credentials for backup -h help
+
 #### finishpackage ####
 * finishpackage is a combination of the microservices makelossless, makebroadcast, makeyoutube, makemetadata, and checksumpackage. The purpose is to losslessly transcode, create access copies, and create metadata and directory structure information for a file or package input. To use finishpackage, type finishpackage and drag your input into the command line: finishpackage [input]. finish package is typically used in conjunction with restructureForCompliance.
 
@@ -306,6 +311,9 @@ To view the specific ffmpeg encoding options for each file, view the sourcecode 
     * If you use option e, your command will look like this: makedvd -e -d [path/to/directory] [input].
     * If you use option -E, your command will look like this: makedvd -E [input].
 
+#### makefingerprint
+* makefingerprint creates perceptual hashes from input video files and packages. It is also capable of reporting fingerprint information into a centralized database set up through mm.
+
 #### makeflv ####
 * makeflv creates a flash file from a video file or package input. Your command will look like this: makeflv [input].
 * makeflv has options d, o, n, e, E. To reread what those options mean, return to [section header](https://github.com/mediamicroservices/mm#mediamicroservices-functions-and-instructions-for-use).
@@ -313,6 +321,9 @@ To view the specific ffmpeg encoding options for each file, view the sourcecode 
     * If you use option n, your command will look like this: makeflv -n [input].
     * If you use option e, your command will look like this: makeflv -e -d [path/to/directory] [input].
     * If you use option -E, your command will look like this: makeflv -E [input].
+
+#### makeframemd5
+* Creates a frame md5 for video files in target package. Relies on package structure used in mm.
 
 #### makeframes ####
 * makeframes creates 10 still images from a video file or package input. Your command will look like:  makeframes [input]. To deliver still images to a specific directory, use this command  ingestfile -d [path/to/directory] [input].
@@ -377,6 +388,9 @@ To view the specific ffmpeg encoding options for each file, view the sourcecode 
 #### qatesting
 * QA testing performs a series on tests on one or multiple video inputs and outputs the results into the terminal. Your command will look like this: qatesting [input] [input1] [input2]
 
+#### quickcompare ####
+* quickcompare takes two files and compares the checksums against one another, and outputs the results into the terminal. Your command will look like this: quickcompare [input1] [input2]
+
 #### removeDSStore
 * removeDSStore is a script to remove hidden .DS_\_Store files from a package input. Your command will look like this: removeDSStore [input]
 
@@ -386,8 +400,9 @@ To view the specific ffmpeg encoding options for each file, view the sourcecode 
 * If the input is a directory, the script creates the objects and metadata directory within the input directory, as well as a fileMeta and logs directory within the metadata directory. The script also moves the input file into the objects directory.
 * Your command will look like this: restructureForCompliance [file or directory input] [file or directory input 2]
 
-#### quickcompare ####
-* quickcompare takes two files and compares the checksums against one another, and outputs the results into the terminal. Your command will look like this: quickcompare [input1] [input2]
+#### searchfingerprint
+* Generates fingerprints (perceptual hashes) from whole or specified portion of an input video file and compares them against fingerprints stored in the mm database. Outputs any detected matches in 500 frame segments both in the terminal and in an optional preview window. Preview window will attempt to locate the portions of input video for which matches were found.
+* Usage: "searchfingerprint" [ -h ] (help) [ -i ] (set in time) [ -o ] (set out time) [ -t ] (text only-don't display video preview)
 
 #### uploadomneon ####
 * uploadomneon uploads a file or group of files, in sequential order, to a server using rsync. Although the script is called uploadomneon because that is the name of the server at CUNY Television, it can be set to any server and directory path in mmconfig. To run uploadomneon, the server IP address, path, and tmpdir variables must be set. Your command will look like this: uploadomneon [input1] [input2]
