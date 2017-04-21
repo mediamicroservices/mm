@@ -54,7 +54,7 @@ table of contents
 
 ## summary
 
-mediamicroservices have been developed for the purpose of processing audiovisual collections at [CUNY Television](http://cuny.tv). This repository includes scripts to run ffmpeg to create access and service copies of audiovisual assets, as well as to analyze, report, and deliver media as individual files or as Archive Information Packages. Mediamicroservices are written in bash, and developed and tested for a Mac OS X environment.
+mediamicroservices have been developed for the purpose of processing audiovisual collections at [CUNY Television](http://cuny.tv). This repository includes scripts to run ffmpeg to create access and service copies of audiovisual assets, as well as to analyze, report, and deliver media as individual files or as Archive Information Packages. Mediamicroservices are written in Bash, and developed and tested for a macOS environment.
 
 Mediamicroservices are installed and run using the terminal application, so knowledge of the command line is necessary. For information on the command line, please see [The Command Line Crash Course](http://cli.learncodethehardway.org/book/) or the [Code Academy Course](https://www.codecademy.com/learn/learn-the-command-line).
 
@@ -73,16 +73,16 @@ homebrew is a package manager that assists in managing all of the necessary comp
 
 be sure to update/upgrade homebrew regularly.
 
-to update the packages in homebrew, type: brew update into the command line. This command will tell you which packages need to be updated.
+to update the packages in homebrew, type: `brew update` into the command line. This command will tell you which packages need to be updated.
 
-to upgrade the packages in homebrew, type: brew upgrade into the command line. This command will update all packages to their most recent version.
+to upgrade the packages in homebrew, type: `brew upgrade` into the command line. This command will update all packages to their most recent version.
 
 ![brewupgrade gif](https://github.com/mediamicroservices/mm/blob/master/Resources/updateupgrade.gif)
 
 ### installing mediamicroservices and dependencies
 once homebrew has been installed, you can install mediamicroservices. First, use the [tap](https://github.com/Homebrew/homebrew/blob/master/share/doc/homebrew/brew-tap.md) command. Then, you can install.
 
-Type brew tap mediamicroservices/mm into the command line.
+Type `brew tap mediamicroservices/mm` into the command line.
 
 Then, type brew install mm into the command line. This command will install mediamicroservices to your computer.
 
@@ -107,14 +107,14 @@ mediamicroservice dependencies:
 * tree
 * xmlstarlet
 
-mediamicroservices also uses Pashua to run a graphical user interface. It is recommended to install Pashua before running media microservices. Type brew install Pashua into the command line and press enter. You will be prompted for your password. Enter your password, and then you will be able to run mediamicroservices scripts and options that utilize a GUI.
+mediamicroservices also uses Pashua to run a graphical user interface. It is recommended to install Pashua before running media microservices. Type `brew install Pashua` into the command line and press enter. You will be prompted for your password. Enter your password, and then you will be able to run mediamicroservices scripts and options that utilize a GUI (Graphical User Interface).
 
-If at any point you would like to uninstall mediamicroservices, type brew uninstall mm into the command line.
+If at any point you would like to uninstall mediamicroservices, type `brew uninstall mm` into the command line.
 
 ### configuring mediamicroservices
-In order for mediamicroservices to run, you must configure your variable settings. First, take a look at the list of variables below to get a sense of what each variable means. Then, create all of the delivery directories that you'll need, in the place you'd like them to be. You can name the directories themselves anything you'd like- the more important part is tying them to a variable in the configuration process. Not all variables are necessary for microservices to run, so look over which microservices you'd like to use to get a sense of whether or not you'll need to a specific variable.
+In order for mediamicroservices to run, you must configure your variable settings. First, take a look at the list of variables below to get a sense of what each variable means. Then, create all of the delivery directories that you'll need, in the place you'd like them to be. You can name the directories themselves anything you'd like; the more important part is tying them to a variable in the configuration process. Not all variables are necessary for microservices to run, so look over which microservices you'd like to use to get a sense of whether or not you'll need to a specific variable.
 
-Type mmconfig -a into the terminal to access the configuration GUI, which will take information input and save a file as mm.conf. This file will store your system variables.
+Type `mmconfig` into the terminal to access the configuration GUI (or `mmconfig -t` for the CLI), which will take information input and save a file as mm.conf. This file will store your system variables.
 
 ![Alt text](Resources/mmconfiggui.png "mmconfig GUI")
 ![mmconfig gui gif](https://github.com/mediamicroservices/mm/blob/master/Resources/mmconfig3.gif)
@@ -186,13 +186,22 @@ this variable is the email address (or addresses) that notifications will be sen
 **20. FILEMAKER_DB**
 this variable stores the name of the FileMaker database that is used in checksum2filemaker to upload metadata from processed files to a FileMaker database. You may leave this variable blank if you do not use FileMaker.
 
-**21. FILEMAKER_XML_URL**
-this variable stores the API address where metadata is delivered to in FileMaker.
-
-**22. VOLADJUST**
+**21. VOLADJUST**
 This variable must be set to yes (Y) or no (N). If set to yes, volume will be run through a volume adjustment filter and adjusted accordingly during transcoding.
 
-**23. Quit**
+**22. PREMIS_DB**
+This variable must be set to yes (Y) or no (N). If set to yes, database reporting for mm will be enabled.
+
+**23. SQL_ERROR_EMAIL_TO**
+This can be set to include an email address to recieve error reports for database insertion.
+
+**24. PREMIS_PROFILE**
+Enter the login path information for the database here. (Use the output supplied by the createpremisdb script, or create your own using mysql_config_editor).
+** PREMIS_NAME**
+Enter the name of the database used for mm reporting.
+**26 PERCEPTUAL_HASH**
+Set this to 1 (on) to enable the creation of perceptual hashes during the ingestfile process
+**27. Quit**
 if editing in the terminal, use this option to leave the configuration file editor.
 
 
