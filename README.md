@@ -51,6 +51,8 @@ table of contents
     * [uploadomneon](https://github.com/mediamicroservices/mm#uploadomneon)
     * [verifytree](https://github.com/mediamicroservices/mm#verifytree)
     * [xdcamingest](https://github.com/mediamicroservices/mm#xdcamingest)
+    
+***
 
 ## summary
 
@@ -62,8 +64,12 @@ Please use the [issue tracker](https://github.com/mediamicroservices/mm/issues) 
 
 Please subscribe to this repository to receive updates about new releases and enhanced functionalities.
 
+***
+
 ### License
 This software and associated documentation is covered by the MIT license.  Details available [here](https://github.com/mediamicroservices/mm/blob/master/LICENSE.txt).
+
+***
 
 ## installing and configuring mediamicroservices
 
@@ -204,6 +210,8 @@ Set this to 1 (on) to enable the creation of perceptual hashes during the ingest
 **27. Quit**
 if editing in the terminal, use this option to leave the configuration file editor.
 
+***
+
 
 ## Database Instructions
 
@@ -229,6 +237,7 @@ MM includes a script for database backup.  This can be either run manually or se
 
 To configure database backup use the command `dbbackup -e`. This will open the config file in a terminal editor. Set the neccessary variables to your desired values.
 
+***
 
 ## mediamicroservices functions and instructions for use
 
