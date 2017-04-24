@@ -1,7 +1,28 @@
 # mediamicroservices/LTOpers Database Features
 
 ## Introduction
-The MM database supports the storing and querying of a variety of information created by both mediamicroservices and LTOpers. This document will provide a breakdown of the structure of the database, as well as examples of the scripts currently used to interact with it.
+The mediamicroservices database supports the storing and querying of a variety of information created by both mediamicroservices and LTOpers. This document will provide a breakdown of the structure of the database, as well as examples of the scripts currently used to interact with it.
+
+## Database specific scripts
+* createpremisdb
+* dbbackup
+* makefingerprint
+* searchfingerprint
+* updatingplist
+
+## Database Configuration
+
+To configure the database, run the command `createpremisdb -c` on your __host__ computer and follow the prompts.  This will set up the database as well as facilitate user creation. To create users without creating a new database, use the command `createpremisdb -u`.  At the end of user creation, the script will supply a command to create a log-in profile for the database.  It should look something like this: `mysql_config_editor set --login-path=your_user_config --host=xx.xx.xxx.xxx --user=your_user --password`. Run this command on your __user__ computer and enter the password for the user you created when prompted.  This will create the SQL log-in profile that you will use when configuring the microservices. NOTE: When supplying the suggested command, the script does its best to auto-fill the host IP address.  You may wish to verify that this is the correct IP.
+
+To finalize the database setup, run `mmconfig` (GUI mode) or `mmconfig -t` (CLI) and select 'Y' in the PREMIS Database logging section, (or set to Y if using CLI). Enter the database name and log-in profile you have created to finalize DB connectivity. Additional database options (such as fingerprint generation) can be set at this time.
+
+![Database GUI Example](https://github.com/mediamicroservices/mm/blob/master/Resources/mmgui_dbsetup.png)
+
+## Database Backup
+Mediamicroservices includes a script for database backup.  This can be either run manually or set up as an automated process.  After configuring the backup script, running `dbbackup` will create a zipped backup in the chosen location.  To automate this process use Brew Services.  Typing `brew services start mm` will cause the db to be backed up automatically using the included plist file.  By default, backups will occur daily at 2:00 AM.
+
+To configure database backup use the command `dbbackup -e`. This will open the config file in a terminal editor. Set the neccessary variables to your desired values.
+
 
 ## Database structure
 The Database is divided into six tables with the following structure:
