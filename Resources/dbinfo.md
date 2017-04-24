@@ -59,3 +59,19 @@ __Stores fingerprints (perceptual hash information).__
 |hashNumber|objectIdentifierValue|startframe|endframe|hash1|hash2|hash3|hash4|hash5|
 |---|---|---|---|---|---|---|---|---|
 |Auto-incrementing number for hashes|Name of corresponding item|Start frame for hash|End frame for hash|First component of hash|Second component of hash|Third component of hash|Fourth component of hash|Fifth component of hash|
+
+## Database Search Scripts
+
+#### searchlto
+
+Searches the LTO schema information stored in the database. Input for standard search can consist either of a Tape ID or a Media ID. If the `-c` flag is used, input is a file to be compared against information stored in the DB. Input file will be compared for modification time, file size and file name.
+
+Usage: searchlto [-h] (help) [-c] (compares an input file to file information stored in DB) [-f] (shows full schema) [Input]
+
+
+
+#### searchfingerprint
+
+Generates fingerprints (perceptual hashes) from whole or specified portion of an input video file and compares them against fingerprints stored in the mm database. Outputs any detected matches in 500 frame segments both in the terminal and in an optional preview window. Preview window will attempt to locate the portions of input video for which matches were found.
+
+Usage: "searchfingerprint" [ -h ] (help) [ -i ] (set in time) [ -o ] (set out time) [ -t ] (text only-don't display video preview) [Input]
