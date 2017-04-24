@@ -51,7 +51,7 @@ table of contents
     * [uploadomneon](https://github.com/mediamicroservices/mm#uploadomneon)
     * [verifytree](https://github.com/mediamicroservices/mm#verifytree)
     * [xdcamingest](https://github.com/mediamicroservices/mm#xdcamingest)
-    
+
 ***
 
 ## summary
@@ -90,7 +90,7 @@ once homebrew has been installed, you can install mediamicroservices. First, use
 
 Type `brew tap mediamicroservices/mm` into the command line.
 
-Then, type brew install mm into the command line. This command will install mediamicroservices to your computer.
+Then, type `brew install mm` into the command line. This command will install mediamicroservices to your computer.
 
 hooray, you've installed mediamicroservices!
 
@@ -259,7 +259,7 @@ makepodcast, makebroadcast, makeflv, make prores, makeresourcespace, makeyoutube
 To view the specific ffmpeg encoding options for each file, view the sourcecode of the microservice directly on GitHub or using a text editor on your computer.
 
 #### aipupgrade
-* this script takes an archival information package created by earlier versions of ingestfile and removes the submissionDocumentation directory, removes .DS__Store files, logs the package type to the capture log if there is not one listed, and creates new technical metadata files that overwrite previously created metadata files. To use aipupgrade, type aipupgrade and drag in all the packages you wish to modify. Note that you will be asked to choose a package type and that will be assigned to all of the packages, so only drag in packages of one type of content. Your command will look like this: aipupgrade [package1] [package2]
+* this script takes an archival information package created by earlier versions of ingestfile and removes the submissionDocumentation directory, removes .DS_Store files, logs the package type to the capture log if there is not one listed, and creates new technical metadata files that overwrite previously created metadata files. To use aipupgrade, type aipupgrade and drag in all the packages you wish to modify. Note that you will be asked to choose a package type and that will be assigned to all of the packages, so only drag in packages of one type of content. Your command will look like this: aipupgrade [package1] [package2]
 
 #### barcodeinterpret
 * barcodeinterpret works with xdcamingest to gather metadata about an XDCam disk by scanning the barcode on the disk case. this script is no longer in use and development is not supported.
