@@ -134,6 +134,7 @@ while [ "${*}" != "" ] ; do
         fi
         LASTOUTFRAME=''
         LASTINFRAME=''
+        SMALLFINALMATCH='1'
     fi
 
     # Checks if match is first matching chunk for that file (or after reset) and sets variable
@@ -158,6 +159,7 @@ while [ "${*}" != "" ] ; do
         LASTOUTFRAME="${OUTFRAME}"
         NEWIN='1'
         LARGEMATCH='1'
+        SMALLFINALMATCH=''
         echo "Out ${LASTOUTFRAME}" | tee -a "${DRAWTEXT}"
         echo "outpoint $((($(grep "${HASHMATCH}" "${TEMPFINGERPRINT_SORTED}" | cut -d':' -f2 | head -n 1) / 30 ) + ${INTIME}))" >> "${VISUALRESULTS}"
     fi
@@ -166,7 +168,7 @@ while [ "${*}" != "" ] ; do
 
     done < <(cat "${RESULTS}" | sort -u)
     #Marks the last outpoint of last file
-    if ! [ "${FINALOUT}" = "${LASTOUTFRAME}" ] ||  ! [ "${LARGEMATCH}" = 1 ] ; then
+    if ! [ "${FINALOUT}" = "${LASTOUTFRAME}" ] ||  ! [ "${LARGEMATCH}" = 1 ] || [ "${SMALLFINALMATCH}" = 1 ] ; then
         echo "Out ${FINALOUT}"  | tee -a "${DRAWTEXT}"
         echo "outpoint $((($(grep "${FINALHASH}" "${TEMPFINGERPRINT_SORTED}" | cut -d':' -f2 | head -n 1) / 30 ) + ${INTIME}))" >> "${VISUALRESULTS}"
     fi
