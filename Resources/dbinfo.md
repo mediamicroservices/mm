@@ -1,7 +1,7 @@
-# MM/LTOpers Database Features
+# mediamicroservices/LTOpers Database Features
 
 ## Introduction
-The MM database supports the storing and querying of a variety of information created by both Media Microservices and LTOpers. This document will provide a breakdown of the structure of the database, as well as examples of the scripts currently used to interact with it.
+The MM database supports the storing and querying of a variety of information created by both mediamicroservices and LTOpers. This document will provide a breakdown of the structure of the database, as well as examples of the scripts currently used to interact with it.
 
 ## Database structure
 The Database is divided into six tables with the following structure:
@@ -72,6 +72,6 @@ Usage: searchlto [-h] (help) [-c] (compares an input file to file information st
 
 #### searchfingerprint
 
-Generates fingerprints (perceptual hashes) from whole or specified portion of an input video file and compares them against fingerprints stored in the mm database. Outputs any detected matches in 500 frame segments both in the terminal and in an optional preview window. Preview window will attempt to locate the portions of input video for which matches were found.
+Generates fingerprints (perceptual hashes) from whole or specified portion of an input video file and compares them against fingerprints stored in the database. Outputs any detected matches in 500 frame segments both in the terminal and in an optional preview window. Preview window will attempt to locate the portions of input video for which matches were found.
 
 Usage: searchfingerprint [ -h ] (help) [ -i ] (set in time) [ -o ] (set out time) [ -t ] (text only-don't display video preview) [Input]
