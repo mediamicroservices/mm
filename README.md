@@ -305,8 +305,8 @@ To view the specific ffmpeg encoding options for each file, view the sourcecode 
 
 
 * here's two gifs of ingestfile
-![ingestfile without gui](https://github.com/mediamicroservices/mm/blob/master/Resources/ingestfile.gif)
-![ingestfile with gui](https://github.com/mediamicroservices/mm/blob/master/Resources/ingestfilegui.gif)
+<img src="https://github.com/mediamicroservices/mm/blob/master/Resources/ingestfile.gif" width="500">
+<img src="https://github.com/mediamicroservices/mm/blob/master/Resources/ingestfilegui.gif" width="500">
 
 #### makebroadcast
 * makebroadcast creates a file suitable for broadcast or editing from the input of a file or package. Your command will look like this: makebroadcast [input].
