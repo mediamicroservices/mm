@@ -122,7 +122,7 @@ Type `mmconfig` into the terminal to access the configuration GUI (or `mmconfig 
 mmconfig only has to be run once to create the configuration file, variables will be stored and can be changed by re-running mmconfig.
 
 if you prefer to edit in the terminal, simply run mmconfig and follow the directions on screen. this option allows for you to also choose to edit the config file in nano or TextMate.
-![Alt text](Resources/mmconfigterminal.png "mmconfig in terminal")
+<img src="https://raw.githubusercontent.com/mediamicroservices/mm/master/Resources/mmconfig_cli_small.png">
 
 #### variable explanations
 
