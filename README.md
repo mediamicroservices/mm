@@ -77,7 +77,7 @@ to update the packages in homebrew, type: `brew update` into the command line. T
 
 to upgrade the packages in homebrew, type: `brew upgrade` into the command line. This command will update all packages to their most recent version.
 
-![brewupgrade gif](https://github.com/mediamicroservices/mm/blob/master/Resources/updateupgrade.gif)
+<img src="https://github.com/mediamicroservices/mm/blob/master/Resources/updateupgrade.gif" width="400">
 
 ### installing mediamicroservices and dependencies
 once homebrew has been installed, you can install mediamicroservices. First, use the [tap](https://github.com/Homebrew/homebrew/blob/master/share/doc/homebrew/brew-tap.md) command. Then, you can install.
@@ -117,7 +117,7 @@ In order for mediamicroservices to run, you must configure your variable setting
 Type `mmconfig` into the terminal to access the configuration GUI (or `mmconfig -t` for the CLI), which will take information input and save a file as mm.conf. This file will store your system variables.
 
 ![Alt text](Resources/mmconfiggui.png "mmconfig GUI")
-![mmconfig gui gif](https://github.com/mediamicroservices/mm/blob/master/Resources/mmconfig3.gif)
+<img src="https://github.com/mediamicroservices/mm/blob/master/Resources/mmconfig3.gif" width="500">
 
 mmconfig only has to be run once to create the configuration file, variables will be stored and can be changed by re-running mmconfig.
 
