@@ -4,13 +4,13 @@ mediamicroservices documentation
 table of contents
 -------------------
 
-1. [summary](https://github.com/mediamicroservices/mm#summary)
+1. [Summary](https://github.com/mediamicroservices/mm#summary)
 	* [License](#license)
 2. [installing and configuring mediamicroservices](https://github.com/mediamicroservices/mm#installing-and-configuring-mediamicroservices)
-    1. [installing homebrew](https://github.com/mediamicroservices/mm#installing-homebrew)
-    2. [installing mediamicroservices](https://github.com/mediamicroservices/mm#installing-mediamicroservices)
-    3. [configuring mediamicroservices](https://github.com/mediamicroservices/mm#configuring-mediamicroservices)
-        1. [variable explanations](https://github.com/mediamicroservices/mm#variable-explanations)
+    1. [Installing homebrew](https://github.com/mediamicroservices/mm#installing-homebrew)
+    2. [Installing mediamicroservices](https://github.com/mediamicroservices/mm#installing-mediamicroservices)
+    3. [Configuring mediamicroservices](https://github.com/mediamicroservices/mm#configuring-mediamicroservices)
+        1. [Variable explanations](https://github.com/mediamicroservices/mm#variable-explanations)
 3. [Database Instructions](#database-instructions)
 	1. [Database Configuration](#database-configuration)
 	2. [Database Backup](#database-backup)
@@ -54,11 +54,11 @@ table of contents
 
 ***
 
-## summary
+## Summary
 
-mediamicroservices have been developed for the purpose of processing audiovisual collections at [CUNY Television](http://cuny.tv). This repository includes scripts to run ffmpeg to create access and service copies of audiovisual assets, as well as to analyze, report, and deliver media as individual files or as Archive Information Packages. Mediamicroservices are written in Bash, and developed and tested for a macOS environment.
+mediamicroservices have been developed for the purpose of processing audiovisual collections at [CUNY Television](http://cuny.tv). This repository includes scripts to run ffmpeg to create access and service copies of audiovisual assets, as well as to analyze, report, and deliver media as individual files or as Archive Information Packages. mediamicroservices are written in Bash, and developed and tested for a macOS environment.
 
-Mediamicroservices are installed and run using the terminal application, so knowledge of the command line is necessary. For information on the command line, please see [The Command Line Crash Course](http://cli.learncodethehardway.org/book/) or the [Code Academy Course](https://www.codecademy.com/learn/learn-the-command-line).
+mediamicroservices are installed and run using the terminal application, so knowledge of the command line is necessary. For information on the command line, please see [The Command Line Crash Course](http://cli.learncodethehardway.org/book/) or the [Code Academy Course](https://www.codecademy.com/learn/learn-the-command-line).
 
 Please use the [issue tracker](https://github.com/mediamicroservices/mm/issues) to report any issues with installation and usage of mediamicroservices.
 
@@ -71,28 +71,28 @@ This software and associated documentation is covered by the MIT license.  Detai
 
 ***
 
-## installing and configuring mediamicroservices
+## Installing and configuring mediamicroservices
 
-### installing homebrew
-before installing mediamicroservices, install homebrew to your computer. [here are directions for downloading homebrew](http://brew.sh/).
-homebrew is a package manager that assists in managing all of the necessary components of mediamicroservices.
+### Installing homebrew
+Before installing mediamicroservices, install homebrew to your computer. [here are directions for downloading homebrew](http://brew.sh/).
+Homebrew is a package manager that assists in managing all of the necessary components of mediamicroservices.
 
-be sure to update/upgrade homebrew regularly.
+Be sure to update/upgrade homebrew regularly.
 
-to update the packages in homebrew, type: `brew update` into the command line. This command will tell you which packages need to be updated.
+To update the packages in homebrew, type: `brew update` into the command line. This command will tell you which packages need to be updated.
 
-to upgrade the packages in homebrew, type: `brew upgrade` into the command line. This command will update all packages to their most recent version.
+To upgrade the packages in homebrew, type: `brew upgrade` into the command line. This command will update all packages to their most recent version.
 
 <img src="https://github.com/mediamicroservices/mm/blob/master/Resources/updateupgrade.gif" width="400">
 
-### installing mediamicroservices and dependencies
-once homebrew has been installed, you can install mediamicroservices. First, use the [tap](https://github.com/Homebrew/homebrew/blob/master/share/doc/homebrew/brew-tap.md) command. Then, you can install.
+### Installing mediamicroservices and dependencies
+Once homebrew has been installed, you can install mediamicroservices. First, use the [tap](https://github.com/Homebrew/homebrew/blob/master/share/doc/homebrew/brew-tap.md) command. Then, you can install.
 
 Type `brew tap mediamicroservices/mm` into the command line.
 
 Then, type `brew install mm` into the command line. This command will install mediamicroservices to your computer.
 
-hooray, you've installed mediamicroservices!
+Hooray, you've installed mediamicroservices!
 
 mediamicroservices is dependent on other open source software to run. If you do not have the following software when installing mediamicroservices, homebrew will install it for you.
 
@@ -117,7 +117,7 @@ mediamicroservices also uses Pashua to run a graphical user interface. It is rec
 
 If at any point you would like to uninstall mediamicroservices, type `brew uninstall mm` into the command line.
 
-### configuring mediamicroservices
+### Configuring mediamicroservices
 In order for mediamicroservices to run, you must configure your variable settings. First, take a look at the list of variables below to get a sense of what each variable means. Then, create all of the delivery directories that you'll need, in the place you'd like them to be. You can name the directories themselves anything you'd like; the more important part is tying them to a variable in the configuration process. Not all variables are necessary for microservices to run, so look over which microservices you'd like to use to get a sense of whether or not you'll need to a specific variable.
 
 Type `mmconfig` into the terminal to access the configuration GUI (or `mmconfig -t` for the CLI), which will take information input and save a file as mm.conf. This file will store your system variables.
@@ -127,61 +127,61 @@ Type `mmconfig` into the terminal to access the configuration GUI (or `mmconfig 
 
 mmconfig only has to be run once to create the configuration file, variables will be stored and can be changed by re-running mmconfig.
 
-if you prefer to edit in the terminal, simply run mmconfig and follow the directions on screen. this option allows for you to also choose to edit the config file in nano or TextMate.
+If you prefer to edit in the terminal, simply run mmconfig and follow the directions on screen. this option allows for you to also choose to edit the config file in nano or TextMate.
 <img src="https://raw.githubusercontent.com/mediamicroservices/mm/master/Resources/mmconfig_cli_small.png">
 
-#### variable explanations
+#### Variable explanations
 
 **1. edit config file in nano**
-choose this option to edit the config file using [nano](http://www.nano-editor.org/)
+Choose this option to edit the config file using [nano](http://www.nano-editor.org/)
 
 **2. edit config file in TextMate**
-choose this option to edit the config file using [TextMate](http://macromates.com/)
+Choose this option to edit the config file using [TextMate](http://macromates.com/)
 
 **3. OUTDIR_INGESTFILE**
-set this variable to the processing directory. it is directory where your package will be created, and if you do not choose to deliver the package to AIP_STORAGE, this is where the completed package will remain.
+Set this variable to the processing directory. it is directory where your package will be created, and if you do not choose to deliver the package to AIP_STORAGE, this is where the completed package will remain.
 
 **4. OUTDIR_INGESTXDCAM**
-set this variable to the processing directory for xdcam files that are processed using using the mediamicroservices xdcamingest.
+Set this variable to the processing directory for xdcam files that are processed using using the mediamicroservices xdcamingest.
 
 **5. OUTDIR_PAPER**
-set this variable to the processing directory when using the paperingest script.
+Set this variable to the processing directory when using the paperingest script.
 
 **6. AIP_STORAGE**
-set this variable to the directory where the archival information package is delivered.
+Set this variable to the directory where the archival information package is delivered.
 
 **7. PODCASTDELIVER**
-set this variable to the directory where your podcast access copy is delivered.
+Set this variable to the directory where your podcast access copy is delivered.
 
 **8. YOUTUBEDELIVER**
-set this variable to the directory where your youtube access copy is delivered.
+Set this variable to the directory where your youtube access copy is delivered.
 
 **9. TMPDIR**
-set this variable to a temporary directory. it is used in the uploadomneon microservice as a temporary place for a file to live before it is uploaded to the omneon server.
+Set this variable to a temporary directory. it is used in the uploadomneon microservice as a temporary place for a file to live before it is uploaded to the omneon server.
 
 **10. REGEX4PODCAST**
-this varible holds regular expressions that are queried when makepodcast is run, in order to determine if a file qualifies for podcast creation. If you want all of your files to qualify for podcast creation, enter a "." which matches (almost) any character. Learn more about [regex](https://en.wikipedia.org/wiki/Regular_expression).
+This varible holds regular expressions that are queried when makepodcast is run, in order to determine if a file qualifies for podcast creation. If you want all of your files to qualify for podcast creation, enter a "." which matches (almost) any character. Learn more about [regex](https://en.wikipedia.org/wiki/Regular_expression).
 
 **11. DVDLABELPREFIX**
-this variable is for adding a set prefix to the filename for DVDs in makedvd. You may leave this variable blank if you do not want to have a prefix uniformly assigned.
+This variable is for adding a set prefix to the filename for DVDs in makedvd. You may leave this variable blank if you do not want to have a prefix uniformly assigned.
 
 **12. OMNEONIP**
-this variable sets the IP address for delivery of files to the omneon server in uploadomneon and ingestfile. this variable can be set to the IP address of any server that you'd like to have the broadcast copy of your files delivered to.
+This variable sets the IP address for delivery of files to the omneon server in uploadomneon and ingestfile. this variable can be set to the IP address of any server that you'd like to have the broadcast copy of your files delivered to.
 
 **13. OMNEONPATH**
-this variable is the file path to the specific directory you'd like assets to be delivered to on the omneon server.
+This variable is the file path to the specific directory you'd like assets to be delivered to on the omneon server.
 
 **14. CUSTOM_LOG_DIR**
-this variable is the directory that stores processing logs for all of the media microservices, and is used when the `_log` function is called. Consider creating a directory called mmlogs in your documents directory, and assigning it to this variable.
+This variable is the directory that stores processing logs for all of the media microservices, and is used when the `_log` function is called. Consider creating a directory called mmlogs in your documents directory, and assigning it to this variable.
 
 **15. LTO_INDEX_DIR**
-this variable is the directory that stores the .schema files created when LTOs are mounted and written to. If you are not using LTO in your workflow, you do not need to create this variable. If you do use LTO in your workflow, consider creating a directory called LTO Indexes, to be housed in your documents directory, and assigning it to this variable.
+This variable is the directory that stores the .schema files created when LTOs are mounted and written to. If you are not using LTO in your workflow, you do not need to create this variable. If you do use LTO in your workflow, consider creating a directory called LTO Indexes, to be housed in your documents directory, and assigning it to this variable.
 
 **16. LOCAL_MM_DIR**
-this variable is the directory that stores mediamicroservices scripts locally.
+This variable is the directory that stores mediamicroservices scripts locally.
 
 **17. EMAIL_FROM**
-this variable is the email address that notifications will be sent from once processes have been completed. You may leave this variable blank if you do not want any notification emails sent once actions have been performed on files.
+This variable is the email address that notifications will be sent from once processes have been completed. You may leave this variable blank if you do not want any notification emails sent once actions have been performed on files.
 
 **18. MAKEYOUTUBE_DELIVERY_EMAIL_TO**
 this variable is the email address (or addresses) that notifications will be sent to once makeyoutube has been run on a file.
@@ -190,7 +190,7 @@ this variable is the email address (or addresses) that notifications will be sen
 this variable is the email address (or addresses) that notifications will be sent to once makebroadcast has been run on a file.
 
 **20. FILEMAKER_DB**
-this variable stores the name of the FileMaker database that is used in checksum2filemaker to upload metadata from processed files to a FileMaker database. You may leave this variable blank if you do not use FileMaker.
+This variable stores the name of the FileMaker database that is used in checksum2filemaker to upload metadata from processed files to a FileMaker database. You may leave this variable blank if you do not use FileMaker.
 
 **21. VOLADJUST**
 This variable must be set to yes (Y) or no (N). If set to yes, volume will be run through a volume adjustment filter and adjusted accordingly during transcoding.
