@@ -4,7 +4,7 @@
 The mediamicroservices database supports the storing and querying of a variety of information created by both [mediamicroservices](https://github.com/mediamicroservices/mm) and [LTOpers](https://github.com/amiaopensource/ltopers). This document provides database setup information, a breakdown of the structure of the database and examples of the scripts currently used to interact with it.
 
 ## Database specific scripts
-* createmmdb
+* createpremisdb
 * dbbackup
 * makefingerprint
 * searchfingerprint
@@ -12,7 +12,7 @@ The mediamicroservices database supports the storing and querying of a variety o
 
 ## Database Configuration
 
-To configure the database, run the command `createmmdb -c` on your __host__ computer and follow the prompts.  This will set up the database as well as facilitate user creation. To create users without creating a new database, use the command `createmmdb -u`.  At the end of user creation, the script will supply a command to create a log-in profile for the database.  It should look something like this: `mysql_config_editor set --login-path=your_user_config --host=xx.xx.xxx.xxx --user=your_user --password`. Run this command on your __user__ computer and enter the password for the user you created when prompted.  This will create the SQL log-in profile that you will use when configuring the microservices. NOTE: When supplying the suggested command, the script does its best to auto-fill the host IP address.  You may wish to verify that this is the correct IP.
+To configure the database, run the command `createpremisdb -c` on your __host__ computer and follow the prompts.  This will set up the database as well as facilitate user creation. To create users without creating a new database, use the command `createpremisdb -u`.  At the end of user creation, the script will supply a command to create a log-in profile for the database.  It should look something like this: `mysql_config_editor set --login-path=your_user_config --host=xx.xx.xxx.xxx --user=your_user --password`. Run this command on your __user__ computer and enter the password for the user you created when prompted.  This will create the SQL log-in profile that you will use when configuring the microservices. NOTE: When supplying the suggested command, the script does its best to auto-fill the host IP address.  You may wish to verify that this is the correct IP.
 
 To finalize the database setup, run `mmconfig` (GUI mode) or `mmconfig -t` (CLI) and select 'Y' in the PREMIS Database logging section, (or set to Y if using CLI). Enter the database name and log-in profile you have created to finalize DB connectivity. Additional database options (such as fingerprint generation) can be set at this time.
 
@@ -98,6 +98,6 @@ Generates fingerprints (perceptual hashes) from whole or specified portion of an
 Usage: searchfingerprint [ -h ] (help) [ -i ] (set in time) [ -o ] (set out time) [ -t ] (text only-don't display video preview) [Input]
 
 ## Database Support Scripts
-#### createmmdb
+#### createpremisdb
 #### dbbackup
 #### updatingplist
