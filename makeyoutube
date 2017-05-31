@@ -99,12 +99,9 @@ while [ "${*}" != "" ] ; do
         MIDDLEOPTIONS+=(-bufsize 1835k)
         if  [[ "${WIDTH}" == 720 && "${HEIGHT}" == 486 ]] ; then
             _add_video_filter "crop=720:480:0:4"
-            _add_video_filter "yadif"
         elif  [[ "${WIDTH}" == 720 && "${HEIGHT}" == 512 ]] ; then
             _add_video_filter "crop=720:480:0:32"
-            _add_video_filter "yadif"
         else
-            _add_video_filter "yadif"
         fi
     fi
     if [[ "${AUDIOSTREAMCOUNT}" > 0 ]] ; then
