@@ -1424,11 +1424,11 @@ _prep_volume_adjustment(){
     unset VOLADJ
     if [[ "${VOLADJUST}" != "N" ]] ; then
         if [[ -f "${INGESTLOG}" ]] ; then
-            measured_I=$(_readingestlog "r128_integrated_loudness")
-            measured_LRA=$(_readingestlog "r128_loudness_range")
-            measured_TP=$(_readingestlog "measured_true_peak")
-            measured_thresh=$(_readingestlog "measured_threshold")
-            target_offset=$(_readingestlog "target_offset")
+            measured_I=$(_readingestlog "input_r128_integrated_loudness")
+            measured_LRA=$(_readingestlog "input_r128_loudness_range")
+            measured_TP=$(_readingestlog "input_measured_true_peak")
+            measured_thresh=$(_readingestlog "input_measured_threshold")
+            target_offset=$(_readingestlog "input_target_offset")
             LOUD_ADJ=$(_readingestlog "loudness_adjustment")
         fi
         if [ ! "${LOUD_ADJ}" ] ; then
@@ -1440,7 +1440,7 @@ _prep_volume_adjustment(){
 }
 
 _lookup_final_loudness(){
-    FFMPEGLOG=$(ls -t | head -n 1)
+    FFMPEGLOG=$(ls -t | grep "${0}" | head -n 1)
     PARSE_FOR_LOUNDESS=$(cat "${FFMPEGLOG}")
     output_i=$(echo "$LOUDNESS_DATA" | grep "output_i" | awk -F\" '{print $4}')
     output_lra=$(echo "$LOUDNESS_DATA" | grep "output_lra" | awk -F\" '{print $4}')
