@@ -579,7 +579,7 @@ fi
 echo "${RSYNC_ERR}"
 
 if [[ "${CLEANUP_CHOICE}" == "Y" ]] ; then
-    if [ "${RSYNC_ERR}" -gt "0" ] ; then
+    if [ -n "${RSYNC_ERR}" ] && [ "${RSYNC_ERR}" -gt "0" ] ; then
         echo "${RSYNC_ERR}"
         _report -wt "Cancelling requested deletion of source file, not looking safe."
     else
