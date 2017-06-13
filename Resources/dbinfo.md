@@ -3,6 +3,14 @@
 ## Introduction
 The mediamicroservices database supports the storing and querying of a variety of information created by both [mediamicroservices](https://github.com/mediamicroservices/mm) and [LTOpers](https://github.com/amiaopensource/ltopers). This document provides database setup information, a breakdown of the structure of the database and examples of the scripts currently used to interact with it.
 
+## Database Capabilities
+The database is designed to enable capturing and storing information of the following nature:
+* PREMIS event information
+* File fixity information
+* LTO schema file contents
+* Media Info and Capture Log Reports
+* Perceptual Hashes of video files
+
 ## Database specific scripts
 * createmmdb
 * dbbackup
