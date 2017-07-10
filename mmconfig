@@ -182,6 +182,14 @@ LTO_INDEX_DIR.label = Please navigate to and select the LTO_INDEX_DIR directory 
 LTO_INDEX_DIR.width = 270
 LTO_INDEX_DIR.default = ${LTO_INDEX_DIR}
 
+# LTO_MD5_FLAGS
+LTO_MD5_FLAGS.x = 850
+LTO_MD5_FLAGS.y = 200
+LTO_MD5_FLAGS.type = textfield
+LTO_MD5_FLAGS.label = Please select the flags you would like md5deep to use. ex md5deep -rel
+LTO_MD5_FLAGS.width = 125
+LTO_MD5_FLAGS.default = ${LTO_MD5_FLAGS}
+
 # LOCAL_MM_DIR
 LOCAL_MM_DIR.x = 600
 LOCAL_MM_DIR.y = 450
@@ -318,6 +326,7 @@ if [[ "${RUNPASHUA}" = "Y" ]] ; then
         echo "  OMNEONPATH = ${OMNEONPATH}"
         echo "  CUSTOM_LOG_DIR = ${CUSTOM_LOG_DIR}"
         echo "  LTO_INDEX_DIR = ${LTO_INDEX_DIR}"
+        echo "  LTO_MD5_FLAGS = ${LTO_MD5_FLAGS}"
         echo "  LOCAL_MM_DIR = ${LOCAL_MM_DIR}"
         echo "  EMAIL_FROM = ${EMAIL_FROM}"
         echo "  MAKEYOUTUBE_DELIVERY_EMAIL_TO = ${MAKEYOUTUBE_DELIVERY_EMAIL_TO}"
@@ -347,6 +356,7 @@ if [[ "${RUNPASHUA}" = "Y" ]] ; then
         echo "OMNEONPATH=\"${OMNEONPATH}\""
         echo "CUSTOM_LOG_DIR=\"${CUSTOM_LOG_DIR}\""
         echo "LTO_INDEX_DIR=\"${LTO_INDEX_DIR}\""
+        echo "LTO_MD5_FLAGS=\"${LTO_MD5_FLAGS}\""
         echo "LOCAL_MM_DIR=\"${LOCAL_MM_DIR}\""
         echo "EMAIL_FROM=\"${EMAIL_FROM}\""
         echo "MAKEYOUTUBE_DELIVERY_EMAIL_TO=\"${MAKEYOUTUBE_DELIVERY_EMAIL_TO}\""
