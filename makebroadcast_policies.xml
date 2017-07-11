@@ -3,6 +3,7 @@
   <description>This policy tests files made using makebroadcast and checks their validity</description>
   <policy type="and" name="True for both XDCam and IMX">
     <rule name="Is it MPEG-4?" value="Format" tracktype="General" operator="=">MPEG-4</rule>
+    <rule name="Is it Apple QuickTime" value="Writing_library" tracktype="General" operator="!=">Apple QuickTime</rule>
     <rule name="Is it QuickTime?" value="Format_Profile" tracktype="General" operator="=">QuickTime</rule>
     <rule name="Is the CodecID qt?" value="CodecID" tracktype="General" operator="=">qt  </rule>
     <rule name="Is the framerate 29.970?" value="FrameRate" tracktype="General" operator="=">29.970</rule>
