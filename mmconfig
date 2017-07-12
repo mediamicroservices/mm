@@ -188,7 +188,8 @@ LTO_MD5_FLAGS.y = 200
 LTO_MD5_FLAGS.type = textfield
 LTO_MD5_FLAGS.label = Please select the flags you would like md5deep to use. ex md5deep -rel
 LTO_MD5_FLAGS.width = 125
-LTO_MD5_FLAGS.default = ${LTO_MD5_FLAGS}
+LTO_MD5_FLAGS.defualt = ${LTO_MD5_FLAGS}
+
 
 # LOCAL_MM_DIR
 LOCAL_MM_DIR.x = 600

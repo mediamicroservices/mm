@@ -20,6 +20,14 @@ _cleanup_mount_dir(){
     fi
 }
 
+_check_for_lto_md5_flags(){
+    if [ -z "${LTO_MD5_FLAGS}" ] ; then
+        LTO_MD5_FLAGS="md5deep -rel"
+    else
+        LTO_MD5_FLAGS="${LTO_MD5_FLAGS}"
+    fi
+}
+
 _check_for_colons(){
     COLONALERT=$(find "${1}" -iname '*:*')
     if [ -n "${COLONALERT}" ] ; then
@@ -36,7 +44,7 @@ _escape_for_db(){
     echo "${1}" | tr "’" "'"| sed "s/'/\''/g"
 }
 
-_report_to_db(){  
+_report_to_db(){
     if [ "${PREMIS_DB}" = "Y" ] ; then
         eventDetail=$(basename "${0}")
         if [ -z "${MEDIA_ID}" ] ; then
@@ -120,7 +128,7 @@ _report_fixity_db(){
             echo -e "\033[1;31mNo fixity data found! Fixity information not reported to the database.\033[0m"
             event_outcome="No fixity information"
         fi
-        if [ -z "${lastrecord}" ] ; then    
+        if [ -z "${lastrecord}" ] ; then
             lastrecord=$(echo "SELECT eventIdentifierValue FROM event WHERE objectIdentifierValue = '${MEDIA_ID}' AND eventDetail = '${eventDetail}' ORDER BY eventIdentifierValue DESC LIMIT 1" | mysql --login-path="${PREMIS_PROFILE}"  "${PREMIS_NAME}")
         fi
         EVENT_ID_TRIM=$(echo $lastrecord | cut -d " " -f2)
@@ -129,7 +137,7 @@ _report_fixity_db(){
             messageDigestHASH=$(echo "$LINE" | cut -c -32 )
             messageDigestPATH=$(_escape_for_db $(echo "$LINE" | cut -c 35- ))
             messageDigestFILENAME=$(basename "${messageDigestPATH}")
-            echo "INSERT INTO fixity (eventIdentifierValue,objectIdentifierValue,eventDetail,messageDigestAlgorithm,messageDigestSOURCE,messageDigestPATH,messageDigestFILENAME,messageDigestHASH) VALUES ('${EVENT_ID_TRIM}','${MEDIA_ID}','${eventDetail}','md5','${db_source}','${messageDigestPATH}','${messageDigestFILENAME}','${messageDigestHASH}')" | mysql --login-path="${PREMIS_PROFILE}"  "${PREMIS_NAME}" 
+            echo "INSERT INTO fixity (eventIdentifierValue,objectIdentifierValue,eventDetail,messageDigestAlgorithm,messageDigestSOURCE,messageDigestPATH,messageDigestFILENAME,messageDigestHASH) VALUES ('${EVENT_ID_TRIM}','${MEDIA_ID}','${eventDetail}','md5','${db_source}','${messageDigestPATH}','${messageDigestFILENAME}','${messageDigestHASH}')" | mysql --login-path="${PREMIS_PROFILE}"  "${PREMIS_NAME}"
             if [ "${?}" != "0" ]; then
                 sleep 1
                 echo "INSERT INTO fixity (eventIdentifierValue,objectIdentifierValue,eventDetail,messageDigestAlgorithm,messageDigestSOURCE,messageDigestPATH,messageDigestFILENAME,messageDigestHASH) VALUES ('${EVENT_ID_TRIM}','${MEDIA_ID}','${eventDetail}','md5','${db_source}','${messageDigestPATH}','${messageDigestFILENAME}','${messageDigestHASH}')" | mysql --login-path="${PREMIS_PROFILE}"  "${PREMIS_NAME}" || exit 1
@@ -148,7 +156,7 @@ _db_email_delivery(){
             if [[ -f "${REPORT_DUMP}" ]] ; then
                 echo -e "\033[1;103;95mZipping and emailing a copy of "${REPORT_DUMP} to to ${EMAILTO}"\033[0m"
                 gzip -f "${REPORT_DUMP}"
-                echo -e "Subject:Database insertion report for ${MEDIA_ID}\nThere was a problem with database reporting for the Media ID ${MEDIA_ID}.\n A database insertion report has been created at ${REPORT_DUMP}.gz on ${HOSTNAME}. A copy is attached to this email. \n\n" > "$temp_message"    
+                echo -e "Subject:Database insertion report for ${MEDIA_ID}\nThere was a problem with database reporting for the Media ID ${MEDIA_ID}.\n A database insertion report has been created at ${REPORT_DUMP}.gz on ${HOSTNAME}. A copy is attached to this email. \n\n" > "$temp_message"
                 uuencode "${REPORT_DUMP}".gz $(basename "${REPORT_DUMP}".gz) >> "$temp_message"
                 sendmail -f "${EMAIL_FROM}" -F "${EMAILTO}" "${EMAILTO}" < "$temp_message"
                 if [ -f "$temp_message" ] ; then
@@ -183,7 +191,7 @@ _db_error_check(){
         if [ "$table_name" = "object" ] ; then
             echo "echo \"INSERT IGNORE INTO object (objectIdentifierValue,object_LastTouched) VALUES ('${MEDIA_ID}',NOW()) ON DUPLICATE KEY UPDATE object_LastTouched = NOW()\" | mysql --login-path=\"${PREMIS_PROFILE}\"  \"${PREMIS_NAME}\"" >> "${REPORT_DUMP}"
         fi
-    
+
         if [ "${table_name}" = "fixity" ] ; then
             IFS=$(echo -en "\n\b")
             for i in ${db_fixity} ; do
@@ -195,7 +203,7 @@ _db_error_check(){
             done
             unset IFS
         fi
-    
+
         if [ "${table_name}" = "event" ] ; then
             echo "echo \"INSERT INTO event (objectIdentifierValue,eventType,eventDetail,eventDetailOPT,eventDetailCOMPNAME,linkingAgentIdentifierValue) VALUES ('${MEDIAID}','${eventType}','${eventDetail}','${user_input}','${HOSTNAME}', '${OP}')\" | mysql --login-path=\"${PREMIS_PROFILE}\"  \"${PREMIS_NAME}\"" >> "${REPORT_DUMP}"
         fi
@@ -220,7 +228,7 @@ _db_error_check(){
         fi
     else
         echo -e "\033[1;103;95mSuccessfully reported infomation to the "${table_name}" table in the database "${PREMIS_NAME}"\033[0m"
-    fi  
+    fi
 }
 
 _fingerprint_to_db(){
@@ -256,7 +264,7 @@ _premis_event_list(){
     if [ "$eventDetail" = "makewaveform" ] ; then
         eventType="creation"
     fi
-    
+
     if [ "$eventDetail" = "makefingerprint" ] ; then
         eventType="creation"
         MEDIA_ID=$(basename "${SOURCEFILE}")
@@ -1228,7 +1236,7 @@ _get_phase_warning(){
             else
                 : $((last++)) $((last++)) $((last++)) $((last++)) $((last++))
             fi
-		
+
         done < "${PHASETEMPWARNINGS}"
         echo
     fi
