@@ -5,14 +5,10 @@
     <rule name="Is it MPEG-4?" value="Format" tracktype="General" operator="=">MPEG-4</rule>
     <rule name="Is it base media?" value="Format_Profile" tracktype="General" operator="=">Base Media</rule>
     <rule name="Is the video AVC?" value="Format" tracktype="Video" operator="=">AVC</rule>
-    <rule name="Is the width correct?" value="Width" tracktype="Video" operator="=">1920</rule>
-    <rule name="Is the height correct?" value="Height" tracktype="Video" operator="=">1080</rule>
-    <rule name="Is the display aspect ratio correct?" value="DisplayAspectRatio" tracktype="Video" operator="=">1.778</rule>
     <rule name="Is the video codec id correct?" value="CodecID" tracktype="Video" operator="=">avc1</rule>
     <rule name="Is it YUV?" value="ColorSpace" tracktype="Video" operator="=">YUV</rule>
     <rule name="Is it 8 bit?" value="BitDepth" tracktype="Video" operator="=">8</rule>
     <rule name="Is the chroma subsampling 4:2:0?" value="ChromaSubsampling" tracktype="Video" operator="=">4:2:0</rule>
-    <rule name="Is it progressive?" value="ScanType" tracktype="Video" operator="=">Progressive</rule>
     <rule name="Is the audio AAC?" value="Format" tracktype="Audio" operator="=">AAC</rule>
   </policy>
 </policy>
