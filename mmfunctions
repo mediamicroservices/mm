@@ -32,11 +32,12 @@ _check_for_lto_index_dir(){
     if [ -z "${LTO_INDEX_DIR}" ] ; then
         echo "LTO_INDEX_DIR is not set in mmconfig. Default of ${HOME}/Documents/lto_indexes will be used."
         echo "If a different location is desired please set this in mmconfig"
-        LTO_MD5_FLAGS="${HOME}/Documents/lto_indexes"
+        LTO_INDEX_DIR="${HOME}/Documents/lto_indexes"
     else
         LTO_INDEX_DIR="${LTO_INDEX_DIR}"
     fi
 }
+
 _check_for_colons(){
     COLONALERT=$(find "${1}" -iname '*:*')
     if [ -n "${COLONALERT}" ] ; then
