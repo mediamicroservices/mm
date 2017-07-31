@@ -918,12 +918,6 @@ _find_input (){
             FFMPEGINPUT+=(-i)
             FFMPEGINPUT+=("${SOURCEFILE}")
         else
-            if [[ -f "${EXPECTEDSERVICEFILE}" && ! -s "${EXPECTEDSERVICEFILE}" ]] ; then
-                # if the expectedservicefile is zero-sized, then delete it
-                _report -dt "Removing a zero-sized file: ${EXPECTEDSERVICEFILE}"
-                ls -l "${EXPECTEDSERVICEFILE}"
-                rm -v "${EXPECTEDSERVICEFILE}"
-            fi
             ISOBJECT="Y"
             INPUTFILES=$(_maketemp)
             # find av files in a directory and output to a temp list
