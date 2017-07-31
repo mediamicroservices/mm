@@ -108,9 +108,9 @@ while [ "${*}" != "" ] ; do
         fi
     fi
     if [[ "${AUDIOSTREAMCOUNT}" > 0 ]] ; then
-        MIDDLEOPTIONS+=(-c:a aac -strict -2)
+        MIDDLEOPTIONS+=(-c:a aac)
         MIDDLEOPTIONS+=(-ac 2)
-        MIDDLEOPTIONS+=(-b:a 128k)
+        MIDDLEOPTIONS+=(-b:a 320k)
         _get_audio_index "${SOURCEFILE}"
         if [ "${ISOBJECT}" = "Y" ] ; then
             _get_audio_mapping -v "${SOURCEFILE}"
