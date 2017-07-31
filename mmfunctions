@@ -921,19 +921,13 @@ _find_input (){
         FFMPEGINPUT+=(-i)
         FFMPEGINPUT+=("${SOURCEFILE}")
     elif [ -d "${1}/objects" ] ; then
-        if [[ -s "${EXPECTEDSERVICEFILE}" && "${ADDSLATE}" != "Y" ]] ; then
+        if [[ -s "${EXPECTEDSERVICEFILE}" && "${ADDSLATE}" != "Y" ]] && ! [[ "$(basename "${0}")" = 'makeyoutube' ]] ; then
             # if the expectedservicefile exists and we should add a slate, then use the `-i expectedservicefile`
             ISOBJECT="N"
             SOURCEFILE="${EXPECTEDSERVICEFILE}"
             FFMPEGINPUT+=(-i)
             FFMPEGINPUT+=("${SOURCEFILE}")
         else
-            if [[ -f "${EXPECTEDSERVICEFILE}" && ! -s "${EXPECTEDSERVICEFILE}" ]] ; then
-                # if the expectedservicefile is zero-sized, then delete it
-                _report -dt "Removing a zero-sized file: ${EXPECTEDSERVICEFILE}"
-                ls -l "${EXPECTEDSERVICEFILE}"
-                rm -v "${EXPECTEDSERVICEFILE}"
-            fi
             ISOBJECT="Y"
             INPUTFILES=$(_maketemp)
             # find av files in a directory and output to a temp list
@@ -979,7 +973,7 @@ _find_input (){
     # handle exceptions for certain types of source files
     if [[ "${SOURCEFILE#*.}" = "iso" ]] ; then
         _report -dt "Detecting iso input and hoping its a dvd image."
-        if [[ $(uname -s) = "Darwin" ]] ; then
+        if [[ "$(uname -s)" = "Darwin" ]] ; then
             MOUNTPATH=$(hdiutil mount "${SOURCEFILE}" | cut -d " " -f 2- | sed 's/^[ \t]*//')
             _report -dt "Mounting iso at ${MOUNTPATH}"
         else
@@ -1501,7 +1495,7 @@ _pashua_run() {
             break
         fi
     done
-    if [ ! "${PASHUAPATH}" ] && [[ ${OSTYPE} = darwin* ]] ; then
+    if [ ! "${PASHUAPATH}" ] && [[ "$(uname -s)" = "Darwin" ]] ; then
         echo "Error: Pashua is used to edit but is not found."
         if [[ "${PASHUAINSTALL}" = "" ]] ; then
             echo "Attempting to run: brew cask install pashua"
