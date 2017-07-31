@@ -969,7 +969,7 @@ _find_input (){
     # handle exceptions for certain types of source files
     if [[ "${SOURCEFILE#*.}" = "iso" ]] ; then
         _report -dt "Detecting iso input and hoping its a dvd image."
-        if [[ $(uname -s) = "Darwin" ]] ; then
+        if [[ "$(uname -s)" = "Darwin" ]] ; then
             MOUNTPATH=$(hdiutil mount "${SOURCEFILE}" | cut -d " " -f 2- | sed 's/^[ \t]*//')
             _report -dt "Mounting iso at ${MOUNTPATH}"
         else
@@ -1491,7 +1491,7 @@ _pashua_run() {
             break
         fi
     done
-    if [ ! "${PASHUAPATH}" ] && [[ $(uname -s) = "Darwin" ]] ; then
+    if [ ! "${PASHUAPATH}" ] && [[ "$(uname -s)" = "Darwin" ]] ; then
         echo "Error: Pashua is used to edit but is not found."
         if [[ "${PASHUAINSTALL}" = "" ]] ; then
             echo "Attempting to run: brew cask install pashua"
