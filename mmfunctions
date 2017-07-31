@@ -23,8 +23,6 @@ _cleanup_mount_dir(){
 _check_for_lto_md5_flags(){
     if [ -z "${LTO_MD5_FLAGS}" ] ; then
         LTO_MD5_FLAGS="md5deep -rel"
-    else
-        LTO_MD5_FLAGS="${LTO_MD5_FLAGS}"
     fi
 }
 
@@ -33,8 +31,6 @@ _check_for_lto_index_dir(){
         echo "LTO_INDEX_DIR is not set in mmconfig. Default of ${HOME}/Documents/lto_indexes will be used."
         echo "If a different location is desired please set this in mmconfig"
         LTO_INDEX_DIR="${HOME}/Documents/lto_indexes"
-    else
-        LTO_INDEX_DIR="${LTO_INDEX_DIR}"
     fi
 }
 
