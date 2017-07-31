@@ -911,7 +911,7 @@ _find_input (){
         FFMPEGINPUT+=(-i)
         FFMPEGINPUT+=("${SOURCEFILE}")
     elif [ -d "${1}/objects" ] ; then
-        if [[ -s "${EXPECTEDSERVICEFILE}" && "${ADDSLATE}" != "Y" ]] ; then
+        if [[ -s "${EXPECTEDSERVICEFILE}" && "${ADDSLATE}" != "Y" ]] && ! [[ "${0}" = 'makeyoutube' ]] ; then
             # if the expectedservicefile exists and we should add a slate, then use the `-i expectedservicefile`
             ISOBJECT="N"
             SOURCEFILE="${EXPECTEDSERVICEFILE}"
