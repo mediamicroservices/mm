@@ -929,7 +929,8 @@ _find_input (){
             # find av files in a directory and output to a temp list
             find "${1}/objects" -type f -size +0 ! -path "*/access/*" ! -path "*/service/*" ! -name ".DS_Store" | while read file ; do
                 streamcount=$(ffprobe -loglevel quiet "$file" -show_entries format=nb_streams -of default=nw=1:nk=1)
-                if [[ "$streamcount" > 1  ]] ; then
+                duration_ts=$(ffprobe -loglevel quiet "$file" -show_entries stream=duration_ts -of default=nw=1:nk=1)
+                if [[ "$streamcount" > 0  && "${duration_ts}" != 1 ]] ; then
                     _report -d "Input file: $file"
                     echo "$file" >> "${INPUTFILES}"
                 fi
