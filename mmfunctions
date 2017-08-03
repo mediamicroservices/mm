@@ -699,11 +699,11 @@ _email_delivery(){
         if [[ -f "${INGESTLOG}" ]] ; then
             FROMLOG="Operator: $(_readingestlog "operator")\n
 Processing Computer: $(_readingestlog "computer_name")
-Audio True Peak (dBTP): $(_readingestlog "measured_true_peak")
-Integrated Loudness (LUFS): $(_readingestlog "r128_integrated_loudness")
+Audio True Peak (dBTP): $(_readingestlog "output_measured_true_peak")
+Integrated Loudness (LUFS): $(_readingestlog "output_r128_integrated_loudness")
 Loudness Adjustment (LUFS): $(_readingestlog "loudness_adjustment")
-Loudness Range (LU): $(_readingestlog "r128_loudness_range")
-Threshold (LUFS) : $(_readingestlog "measured_threshold")
+Loudness Range (LU): $(_readingestlog "output_r128_loudness_range")
+Threshold (LUFS) : $(_readingestlog "output_measured_threshold")
 Out of Phase Audio Ranges: $(_readingestlog "Out_of_phase_audio_ranges")"
         fi
         echo -e "Subject: [delivery] $(basename "${OUTPUT}")\n
@@ -1255,11 +1255,11 @@ _get_volume_adjustment(){
         target_offset=$(echo "$LOUDNESS_DATA" | grep "target_offset" | awk -F\" '{print $4}')
         LOUD_ADJ=$(echo "($measured_I - -24)*-1" | bc)
         if [[ -f "${INGESTLOG}" ]] ; then
-            _writeingestlog "input_measured_true_peak" "${measured_TP}"
-            _writeingestlog "input_r128_loudness_range" "${measured_LRA}"
-            _writeingestlog "input_r128_integrated_loudness" "${measured_I}"
-            _writeingestlog "input_measured_threshold" "${measured_thresh}"
-            _writeingestlog "input_target_offset" "${target_offset}"
+            _writeingestlog "measured_true_peak" "${measured_TP}"
+            _writeingestlog "r128_loudness_range" "${measured_LRA}"
+            _writeingestlog "r128_integrated_loudness" "${measured_I}"
+            _writeingestlog "measured_threshold" "${measured_thresh}"
+            _writeingestlog "target_offset" "${target_offset}"
             _writeingestlog "loudness_adjustment" "${LOUD_ADJ}"
         fi
     fi
@@ -1424,11 +1424,11 @@ _prep_volume_adjustment(){
     unset VOLADJ
     if [[ "${VOLADJUST}" != "N" ]] ; then
         if [[ -f "${INGESTLOG}" ]] ; then
-            measured_I=$(_readingestlog "input_r128_integrated_loudness")
-            measured_LRA=$(_readingestlog "input_r128_loudness_range")
-            measured_TP=$(_readingestlog "input_measured_true_peak")
-            measured_thresh=$(_readingestlog "input_measured_threshold")
-            target_offset=$(_readingestlog "input_target_offset")
+            measured_I=$(_readingestlog "r128_integrated_loudness")
+            measured_LRA=$(_readingestlog "r128_loudness_range")
+            measured_TP=$(_readingestlog "measured_true_peak")
+            measured_thresh=$(_readingestlog "measured_threshold")
+            target_offset=$(_readingestlog "target_offset")
             LOUD_ADJ=$(_readingestlog "loudness_adjustment")
         fi
         if [ ! "${LOUD_ADJ}" ] ; then
@@ -1440,17 +1440,17 @@ _prep_volume_adjustment(){
 }
 
 _lookup_final_loudness(){
-    FFMPEGLOG=$(ls -t | grep "${0}" | head -n 1)
-    PARSE_FOR_LOUNDESS=$(cat "${FFMPEGLOG}")
-    output_i=$(echo "$LOUDNESS_DATA" | grep "output_i" | awk -F\" '{print $4}')
-    output_lra=$(echo "$LOUDNESS_DATA" | grep "output_lra" | awk -F\" '{print $4}')
-    output_tp=$(echo "$LOUDNESS_DATA" | grep "output_tp" | awk -F\" '{print $4}')
-    output_thresh=$(echo "$LOUDNESS_DATA" | grep "output_thresh" | awk -F\" '{print $4}') 
+    FFMPEGLOG=$(ls -t "${LOGDIR}" | grep "${0}" | head -n 1)
+    PARSE_FOR_LOUDNESS=$(cat "${LOGDIR}/${FFMPEGLOG}")
+    output_i=$(echo "${PARSE_FOR_LOUDNESS}" | grep "output_i" | awk -F\" '{print $4}')
+    output_lra=$(echo "${PARSE_FOR_LOUDNESS}" | grep "output_lra" | awk -F\" '{print $4}')
+    output_tp=$(echo "${PARSE_FOR_LOUDNESS}" | grep "output_tp" | awk -F\" '{print $4}')
+    output_thresh=$(echo "${PARSE_FOR_LOUDNESS}" | grep "output_thresh" | awk -F\" '{print $4}')
     if [[ -f "${INGESTLOG}" ]] ; then
-        _writeingestlog "r128_integrated_loudness" "${output_i}"
-        _writeingestlog "r128_loudness_range" "${output_lra}"
-        _writeingestlog "measured_true_peak" "${output_tp}"
-        _writeingestlog "measured_threshold" "${output_thresh}"
+        _writeingestlog "output_r128_integrated_loudness" "${output_i}"
+        _writeingestlog "output_r128_loudness_range" "${output_lra}"
+        _writeingestlog "output_measured_true_peak" "${output_tp}"
+        _writeingestlog "output_measured_threshold" "${output_thresh}"
     fi
 }
 
