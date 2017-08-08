@@ -418,7 +418,7 @@ _log(){
         fi
     fi
     OPTIND=1
-    while getopts ":beac" OPT; do
+    while getopts ":beacw" OPT; do
         case "${OPT}" in
             b) STATUS="start" ;;              # script is beginning
             e) STATUS="end"   ;;              # script is ending
