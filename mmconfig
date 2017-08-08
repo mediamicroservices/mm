@@ -18,7 +18,7 @@ _usage(){
 }
 
 # local variables
-REQUIRED_VARIABLES=("OUTDIR_INGESTFILE" "OUTDIR_INGESTXDCAM" "OUTDIR_PAPER" "AIP_STORAGE" "PODCASTDELIVER" "YOUTUBEDELIVER" "TMPDIR" "REGEX4PODCAST" "DVDLABELPREFIX" "OMNEONIP" "OMNEONPATH" "CUSTOM_LOG_DIR" "LTO_INDEX_DIR" "LOCAL_MM_DIR" "EMAIL_FROM" "MAKEYOUTUBE_DELIVERY_EMAIL_TO" "MAKEBROADCAST_DELIVERY_EMAIL_TO" "FILE_MAKER_DB" "VOLADJUST" "PREMIS_DB" "SQL_ERROR_EMAIL_TO" "PREMIS_PROFILE" "PREMIS_NAME" "PERCEPTUAL_HASH")
+REQUIRED_VARIABLES=("OUTDIR_INGESTFILE" "OUTDIR_INGESTXDCAM" "OUTDIR_PAPER" "AIP_STORAGE" "PODCASTDELIVER" "YOUTUBEDELIVER" "TMPDIR" "REGEX4PODCAST" "REGEX4IA" "DVDLABELPREFIX" "OMNEONIP" "OMNEONPATH" "CUSTOM_LOG_DIR" "LTO_INDEX_DIR" "LOCAL_MM_DIR" "EMAIL_FROM" "MAKEYOUTUBE_DELIVERY_EMAIL_TO" "MAKEBROADCAST_DELIVERY_EMAIL_TO" "FILE_MAKER_DB" "VOLADJUST" "PREMIS_DB" "SQL_ERROR_EMAIL_TO" "PREMIS_PROFILE" "PREMIS_NAME" "PERCEPTUAL_HASH")
 
 OPTIND=1
 
@@ -73,14 +73,14 @@ CONF="
 
 # intro text
 intro.x = 20
-intro.y = 600
+intro.y = 650
 intro.width = 500
 intro.type = text
 intro.text = Set up mmconfig variables
 
 # ask OUTDIR_INGESTFILE
 OUTDIR_INGESTFILE.x = 20
-OUTDIR_INGESTFILE.y = 550
+OUTDIR_INGESTFILE.y = 600
 OUTDIR_INGESTFILE.type = openbrowser
 OUTDIR_INGESTFILE.label = Please navigate to and select the OUTDIR_INGESTFILE directory that you've created:
 OUTDIR_INGESTFILE.width = 270
@@ -88,7 +88,7 @@ OUTDIR_INGESTFILE.default = ${OUTDIR_INGESTFILE}
 
 # OUTDIR_INGESTXDCAM
 OUTDIR_INGESTXDCAM.x = 20
-OUTDIR_INGESTXDCAM.y = 500
+OUTDIR_INGESTXDCAM.y = 550
 OUTDIR_INGESTXDCAM.type = openbrowser
 OUTDIR_INGESTXDCAM.label = Please navigate to and select the OUTDIR_INGESTXDCAM directory that you've created:
 OUTDIR_INGESTXDCAM.width = 270
@@ -96,7 +96,7 @@ OUTDIR_INGESTXDCAM.default = ${OUTDIR_INGESTXDCAM}
 
 # OUTDIR_PAPER
 OUTDIR_PAPER.x = 20
-OUTDIR_PAPER.y = 450
+OUTDIR_PAPER.y = 500
 OUTDIR_PAPER.type = openbrowser
 OUTDIR_PAPER.label = Please navigate to and select the OUTDIR_PAPER directory that you've created:
 OUTDIR_PAPER.width = 270
@@ -104,7 +104,7 @@ OUTDIR_PAPER.default = ${OUTDIR_PAPER}
 
 # AIP_STORAGE
 AIP_STORAGE.x = 20
-AIP_STORAGE.y = 400
+AIP_STORAGE.y = 450
 AIP_STORAGE.type = openbrowser
 AIP_STORAGE.label = Please navigate to and select the AIP_STORAGE directory that you've created:
 AIP_STORAGE.width = 270
@@ -112,7 +112,7 @@ AIP_STORAGE.default = ${AIP_STORAGE}
 
 # PODCASTDELIVER
 PODCASTDELIVER.x = 20
-PODCASTDELIVER.y = 350
+PODCASTDELIVER.y = 400
 PODCASTDELIVER.type = openbrowser
 PODCASTDELIVER.label = Please navigate to and select the PODCASTDELIVER directory that you've created:
 PODCASTDELIVER.width = 270
@@ -120,7 +120,7 @@ PODCASTDELIVER.default = ${PODCASTDELIVER}
 
 # YOUTUBEDELIVER
 YOUTUBEDELIVER.x = 20
-YOUTUBEDELIVER.y = 300
+YOUTUBEDELIVER.y = 350
 YOUTUBEDELIVER.type = openbrowser
 YOUTUBEDELIVER.label = Please navigate to and select the YOUTUBEDELIVER directory that you've created:
 YOUTUBEDELIVER.width = 270
@@ -128,7 +128,7 @@ YOUTUBEDELIVER.default = ${YOUTUBEDELIVER}
 
 # TMPDIR
 TMPDIR.x = 20
-TMPDIR.y = 250
+TMPDIR.y = 300
 TMPDIR.type = openbrowser
 TMPDIR.label = Please navigate to and select the TMPDIR directory that you've created:
 TMPDIR.width = 270
@@ -136,11 +136,19 @@ TMPDIR.default = ${TMPDIR}
 
 # REGEX4PODCAST
 REGEX4PODCAST.x = 20
-REGEX4PODCAST.y = 200
+REGEX4PODCAST.y = 250
 REGEX4PODCAST.type = textfield
-REGEX4PODCAST.label = Please enter the regular expression you'd like to use to determine whether a file qualifies for podcast creation:
+REGEX4PODCAST.label = Please enter the regular expression you'd like to use to determine if a file qualifies for podcast:
 REGEX4PODCAST.width = 300
 REGEX4PODCAST.default = ${REGEX4PODCAST}
+
+# REGEX4IA
+REGEX4IA.x = 20
+REGEX4IA.y = 200
+REGEX4IA.type = textfield
+REGEX4IA.label = Please enter the regular expression you'd like to use to upload to the Internet Archive:
+REGEX4IA.width = 300
+REGEX4IA.default = ${REGEX4IA}
 
 # DVDLABELPREFIX
 DVDLABELPREFIX.x = 20
@@ -168,7 +176,7 @@ OMNEONPATH.default = ${OMNEONPATH}
 
 # CUSTOM_LOG_DIR
 CUSTOM_LOG_DIR.x = 600
-CUSTOM_LOG_DIR.y = 550
+CUSTOM_LOG_DIR.y = 600
 CUSTOM_LOG_DIR.type = openbrowser
 CUSTOM_LOG_DIR.label = Please navigate to and select the CUSTOM_LOG_DIR directory that you've created:
 CUSTOM_LOG_DIR.width = 270
@@ -176,24 +184,23 @@ CUSTOM_LOG_DIR.default = ${CUSTOM_LOG_DIR}
 
 # LTO_INDEX_DIR
 LTO_INDEX_DIR.x = 600
-LTO_INDEX_DIR.y = 500
+LTO_INDEX_DIR.y = 550
 LTO_INDEX_DIR.type = openbrowser
 LTO_INDEX_DIR.label = Please navigate to and select the LTO_INDEX_DIR directory that you've created:
 LTO_INDEX_DIR.width = 270
 LTO_INDEX_DIR.default = ${LTO_INDEX_DIR}
 
 # LTO_MD5_FLAGS
-LTO_MD5_FLAGS.x = 850
-LTO_MD5_FLAGS.y = 200
+LTO_MD5_FLAGS.x = 600
+LTO_MD5_FLAGS.y = 250
 LTO_MD5_FLAGS.type = textfield
 LTO_MD5_FLAGS.label = Please select the flags you would like md5deep to use. ex md5deep -rel
 LTO_MD5_FLAGS.width = 125
 LTO_MD5_FLAGS.defualt = ${LTO_MD5_FLAGS}
 
-
 # LOCAL_MM_DIR
 LOCAL_MM_DIR.x = 600
-LOCAL_MM_DIR.y = 450
+LOCAL_MM_DIR.y = 500
 LOCAL_MM_DIR.type = openbrowser
 LOCAL_MM_DIR.label = Please navigate to and select the LOCAL_MM_DIR directory that you've created:
 LOCAL_MM_DIR.width = 270
@@ -201,7 +208,7 @@ LOCAL_MM_DIR.default = ${LOCAL_MM_DIR}
 
 # EMAIL_FROM
 EMAIL_FROM.x = 600
-EMAIL_FROM.y = 400
+EMAIL_FROM.y = 450
 EMAIL_FROM.type = textfield
 EMAIL_FROM.label = Please enter the email account that notifications will be sent from:
 EMAIL_FROM.width = 125
@@ -209,7 +216,7 @@ EMAIL_FROM.default = ${EMAIL_FROM}
 
 # MAKEYOUTUBE_DELIVERY_EMAIL_TO
 MAKEYOUTUBE_DELIVERY_EMAIL_TO.x = 600
-MAKEYOUTUBE_DELIVERY_EMAIL_TO.y = 350
+MAKEYOUTUBE_DELIVERY_EMAIL_TO.y = 400
 MAKEYOUTUBE_DELIVERY_EMAIL_TO.type = textfield
 MAKEYOUTUBE_DELIVERY_EMAIL_TO.label = Please enter the email account (or multiple accounts separated by a comma) makeyoutube notifications will be delivered to:
 MAKEYOUTUBE_DELIVERY_EMAIL_TO.width = 125
@@ -218,7 +225,7 @@ MAKEYOUTUBE_DELIVERY_EMAIL_TO.default = ${MAKEYOUTUBE_DELIVERY_EMAIL_TO}
 
 # MAKEBROADCAST_DELIVERY_EMAIL_TO
 MAKEBROADCAST_DELIVERY_EMAIL_TO.x = 600
-MAKEBROADCAST_DELIVERY_EMAIL_TO.y = 300
+MAKEBROADCAST_DELIVERY_EMAIL_TO.y = 350
 MAKEBROADCAST_DELIVERY_EMAIL_TO.type = textfield
 MAKEBROADCAST_DELIVERY_EMAIL_TO.label = Please enter the email account (or multiple accounts separated by a comma) makebroadcast notifications will be delivered to:
 MAKEBROADCAST_DELIVERY_EMAIL_TO.width = 125
@@ -226,7 +233,7 @@ MAKEBROADCAST_DELIVERY_EMAIL_TO.default = ${MAKEBROADCAST_DELIVERY_EMAIL_TO}
 
 # FILE_MAKER_DB
 FILE_MAKER_DB.x = 600
-FILE_MAKER_DB.y = 250
+FILE_MAKER_DB.y = 300
 FILE_MAKER_DB.type = textfield
 FILE_MAKER_DB.label = Please enter the name of the filemaker database:
 FILE_MAKER_DB.width = 125
@@ -234,7 +241,7 @@ FILE_MAKER_DB.default = ${FILE_MAKER_DB}
 
 # SQL_ERROR_EMAIL_TO
 SQL_ERROR_EMAIL_TO.x = 600
-SQL_ERROR_EMAIL_TO.y = 150
+SQL_ERROR_EMAIL_TO.y = 200
 SQL_ERROR_EMAIL_TO.type = textfield
 SQL_ERROR_EMAIL_TO.label = Please the email account for the delivery of SQL Error Reports:
 SQL_ERROR_EMAIL_TO.width = 125
@@ -242,7 +249,7 @@ SQL_ERROR_EMAIL_TO.default = ${SQL_ERROR_EMAIL_TO}
 
 # VOLADJUST
 VOLADJUST.x = 600
-VOLADJUST.y = 80
+VOLADJUST.y = 100
 VOLADJUST.type = radiobutton
 VOLADJUST.label = Please choose either Y or N to test and adjust volume during transcoding:
 VOLADJUST.option = Y
