@@ -552,12 +552,21 @@ if [ "${MAKEACCESSCOPIES}" == "Y" ] ; then
     # makedvd
     "${SCRIPTDIR}/makedvd" "${OUTDIR_INGESTFILE}/${MEDIAID}"
 fi
+
 # makemetadata
 "${SCRIPTDIR}/makemetadata" "${OUTDIR_INGESTFILE}/${MEDIAID}"
 
 # checksums
 if [ "${DOCHECKSUMS}" = "Y" ] ; then
     "${SCRIPTDIR}/checksumpackage" "${OUTDIR_INGESTFILE}/${MEDIAID}"
+fi
+
+#uploadia
+if [ $(echo "${MEDIAID}" | grep -E "${REGEX4IA}") ] ; then
+    if [ $(which uploadia) ] ; then
+        _report -dt "Attempting to run uploadia and upload to Internet Archive"
+        uploadia "${OUTDIR_INGESTFILE}/${MEDIAID}/objects/access/youtube_up/${MEDIAID}.mp4" "${OUTDIR_INGESTFILE}/${MEDIAID}/objects/access/dvd/${MEDIAID}.iso"
+    fi
 fi
 
 # more logging
