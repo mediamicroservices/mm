@@ -31,6 +31,9 @@ _usage(){
     echo "  -p Preservation mode- to be used when packaging digitized material and digitization logs. Does not make any deliveries, and creates the package in the same directory as the input."
     echo "  -n (do not make any deliveries except for sending the final package to ${AIP_STORAGE}.)"
     echo "  -i PSA Mode- to be used when packaging PSA files. Does not make any deliveries except for sending the final package to ${DELIVERYTOOMNEON}."
+    echo "  -u Enter the name of the operator"
+    echo "  -I Enter the path to the input file"
+    echo "  -m set mediaID"
     echo "  -h display this help"
     echo
     exit
@@ -39,13 +42,16 @@ _usage(){
 user_input="${*}"
 OPTIND=1
 
-while getopts ":F:pnhei" OPT ; do
+while getopts ":F:pnheiu:I:m:" OPT ; do
     case "${OPT}" in
         F) FORMULA="${OPTARG}";;
         e) EDIT_MODE="N" ;;
         p) PRESERVATION_MODE="Y" ; DELIVERYTOOMNEON="N" ; DELIVERACCESSCOPIES="N" ; DELIVERYTOAIPSTORAGE="N" ;;
         n) DELIVERYTOOMNEON="N" ; DELIVERACCESSCOPIES="N" ;;
         i) DELIVERYTOOMNEON="Y" ; DELIVERACCESSCOPIES="N" ; DELIVERYTOAIPSTORAGE="Y" ;;
+        u) OPERATOR="${OPTARG}" ;;
+        I) INPUT="${OPTARG}" ;;
+        m) MEDIAID="${OPTARG}" ;;
         h) _usage ;;
         *) echo "bad option -${OPTARG}" ; _usage ;;
         :) echo "Option -${OPTARG} requires an argument" ;  _writeerrorlog "ingestfile" "You used an invalid option and the script had to exit" ; exit 1 ;;
