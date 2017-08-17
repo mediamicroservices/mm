@@ -15,6 +15,8 @@ DELIVERYTOOMNEON="Y"       # use 'Y' for yes or any other character for no
 DELIVERACCESSCOPIES="Y"    # use 'Y' for yes or any other character for no
 DELIVERYTOAIPSTORAGE="Y"   # use 'Y' for yes or any other character for no
 EDIT_MODE="Y"
+SILENT_RUNNING=""
+NL=$'\n\t'
 
 QUEUEFILE="${HOME}/Desktop/queue.txt"
 SCRIPTDIR=$(dirname "${0}")
@@ -31,6 +33,10 @@ _usage(){
     echo "  -p Preservation mode- to be used when packaging digitized material and digitization logs. Does not make any deliveries, and creates the package in the same directory as the input."
     echo "  -n (do not make any deliveries except for sending the final package to ${AIP_STORAGE}.)"
     echo "  -i PSA Mode- to be used when packaging PSA files. Does not make any deliveries except for sending the final package to ${DELIVERYTOOMNEON}."
+    echo "  -u Enter the name of the operator. "
+    echo "  -I Enter the path to the input file"
+    echo "  -m Set mediaID"
+    echo "  -s Use SILENT_RUNNING mode. This also requires the flags -u for the operator name, -I for input file path, and -m for media id.${NL}SILENT_RUNNING suppresses user input, makes a resourcespace access copy and delivers the package to the AIP delivery directory.${NL}All user-interactive functions are suppressed--NOTE: warnings are logged rather than requiring further direction from operator."
     echo "  -h display this help"
     echo
     exit
@@ -39,13 +45,17 @@ _usage(){
 user_input="${*}"
 OPTIND=1
 
-while getopts ":F:pnhei" OPT ; do
+while getopts ":F:pnheiu:I:m:s" OPT ; do
     case "${OPT}" in
         F) FORMULA="${OPTARG}";;
         e) EDIT_MODE="N" ;;
         p) PRESERVATION_MODE="Y" ; DELIVERYTOOMNEON="N" ; DELIVERACCESSCOPIES="N" ; DELIVERYTOAIPSTORAGE="N" ;;
         n) DELIVERYTOOMNEON="N" ; DELIVERACCESSCOPIES="N" ;;
         i) DELIVERYTOOMNEON="Y" ; DELIVERACCESSCOPIES="N" ; DELIVERYTOAIPSTORAGE="Y" ;;
+        u) OP="${OPTARG}" ;;
+        I) INPUT="${OPTARG}" ;;
+        m) MEDIAID="${OPTARG}" ;;
+        s) SILENT_RUNNING="Y" ;;
         h) _usage ;;
         *) echo "bad option -${OPTARG}" ; _usage ;;
         :) echo "Option -${OPTARG} requires an argument" ;  _writeerrorlog "ingestfile" "You used an invalid option and the script had to exit" ; exit 1 ;;
@@ -84,6 +94,22 @@ else
     _report -w "you're in a directory that doesn't actually exist. The script exited and you need to cd into a different directory. ¯\_(ツ)_/¯ "
     exit 1
 fi
+
+if [ "${SILENT_RUNNING}" == "Y" ] && [[ "${OP}" == "" || "${INPUT}" == "" || "${MEDIAID}" == "" ]] ; then
+    echo "You must specify each of: operator name, input filepath, media id. Please assign a value to each of these and try again. :)"
+    _report -wt "You tried to use ingestfile in SILENT_RUNNING mode and failed to specify one of the necessary variables: Operator name, input file path, and media id."
+    exit 1
+fi
+
+if [ "${SILENT_RUNNING}" == "Y" ] ; then
+    EDIT_MODE="N"
+    DELIVERYTOOMNEON="N"
+    CLEANUP_CHOICE="Y"
+    PRIORITY="start now"
+    SLATE="N"
+    MAKEACCESSCOPIES="Y"
+fi
+
 [ -z "${OUTDIR_INGESTFILE}" ] && { echo "The processing directory must be set. Use [ -p /path/to/processing/directory ] or run mmconfig to set OUTDIR_INGESTFILE." ; exit 1 ;};
 [ -z "${AIP_STORAGE}" ] && { echo "The AIP Storage directory must be set. Use [ -a /path/to/AIP/storage/directory ] or run mmconfig to set AIP_STORAGE." ; exit 1 ;};
 [ -z "${PODCASTDELIVER}" ] && { echo "A directory for podcast delivery must be set. Use [ -w /path/to/deliver/podcastfiles] or run mmconfig to set PODCASTDELIVER." ; exit 1 ;};
@@ -243,7 +269,9 @@ fi
         _report -wt "It looks like ${MEDIAID} was already ingested. If you want to overwrite the existing one please delete ${AIP_STORAGE}/${MEDIAID} first and then try again."
         exit 1
     fi
+    if [ -z "${SILENT_RUNNING}" ] ; then
     _ask_input
+    fi
 
     # Check if file is being modified
     INPUT_DATE=$(getfileinfo "${INPUT}" | grep modified | cut -d' ' -f2-)
@@ -258,6 +286,7 @@ fi
         read NOTVIDRESPONSE
         [ "${NOTVIDRESPONSE}" == "q" ] && exit 0
     fi
+    if [ -z "${SILENT_RUNNING}" ] ; then
     if [ "${AUDIODECISION}" = "" ] ; then
         _report -q "Select an audio strategy? "
         PS3="Selection? "
@@ -293,6 +322,7 @@ fi
         do
             break
         done
+    fi
     fi
     if [ "${CLEANUPDECISION}" = "Remove source file after successful ingest" ] ; then
         CLEANUP_CHOICE="Y"
@@ -391,6 +421,12 @@ LOGDIR="${OUTDIR_INGESTFILE}/${MEDIAID}/metadata/logs"
 _run _mkdir2 "${LOGDIR}"
 INGESTLOG="${LOGDIR}/capture.log"
 
+# check for or create a RESOURCESPACEDELIVER directory
+RESOURCESPACEDELIVER="${OUTDIR_INGESTFILE}/resourcespace_output"
+if [ ! -d "${RESOURCESPACEDELIVER}" ] && [ "${SILENT_RUNNING}" == "Y" ] ; then
+    _run_critical _mkdir2 "${RESOURCESPACEDELIVER}"
+fi
+
 #performing interlacement test if formula is none- only to be used in specific edge cases, answer should be no in most cases.
 if [[ "${FORMULA}" == "check interlacement" ]] ; then
         INTERLACE_CHOICE="Y"
@@ -443,7 +479,7 @@ _writeingestlog "made this" "ingestfile"
 _writeingestlog "Interlacement test" "${INTERLACETEST}"
 
 if [ -n "$(cat "${PHASEREPORT}" | xargs)" ] ; then
-	_writeingestlog "Out_of_phase_audio_ranges" "$(cat "${PHASEREPORT}" | xargs)"
+    _writeingestlog "Out_of_phase_audio_ranges" "$(cat "${PHASEREPORT}" | xargs)"
 else
     _writeingestlog "Out_of_phase_audio_ranges" "None"
 fi
@@ -458,6 +494,8 @@ fi
 #log package type
 if [ "${PRESERVATION_MODE}" == "Y" ] ; then
     _writeingestlog "package type" "Preservation-Video"
+elif [ "${SILENT_RUNNING}" == "Y" ] ; then
+    _writeingestlog "package type" "Silent-Running"
 else
     _writeingestlog "package type" "Production"
 fi
@@ -499,7 +537,7 @@ if [ ! -z "${FORMULA}" ] ; then
 fi
 #create slate version first and upload to omneon
 if [ "${SLATE_CHOICE}" = "Y" ] ; then
-    "${SCRIPTDIR}/makederiv" -T broadcast -s "${MMAKEDERIVOPTS[@]}" "${OUTDIR_INGESTFILE}/${MEDIAID}"
+    "${SCRIPTDIR}/makederiv" -T broadcast -s "${MAKEDERIVOPTS[@]}" "${OUTDIR_INGESTFILE}/${MEDIAID}"
     if [ "${DELIVERYTOOMNEON}" == "Y" ] ; then
         _report -dt "STATUS Uploading ${OBJECTSDIR}/service/${MEDIAID%.*}_SLATE.mov to the OMNEON."
         "${SCRIPTDIR}/uploadomneon" "${OBJECTSDIR}/service/${MEDIAID%.*}_SLATE.mov"
@@ -509,7 +547,9 @@ if [ "${SLATE_CHOICE}" = "Y" ] ; then
 fi
 
 # make copy for broadcast
+if [ -z "${SILENT_RUNNING}" ] ; then 
 "${SCRIPTDIR}/makederiv" -T broadcast "${MAKEDERIVOPTS[@]}" "${OUTDIR_INGESTFILE}/${MEDIAID}"
+fi
 
 # upload broadcast copy
 if [ "${DELIVERYTOOMNEON}" == "Y" ] ; then
@@ -532,6 +572,7 @@ if [ "${MAKEACCESSCOPIES}" == "Y" ] ; then
     # make waveform
     "${SCRIPTDIR}/makewaveform" "${OUTDIR_INGESTFILE}/${MEDIAID}"
 
+    if [ -z "${SILENT_RUNNING}" ] ; then
     # make copy for youtube
     unset MAKEDERIVOPTS
     [ "${DELIVERACCESSCOPIES}" = "Y" ] && MAKEDERIVOPTS=(-Y -d "${YOUTUBEDELIVER}")
@@ -550,6 +591,12 @@ if [ "${MAKEACCESSCOPIES}" == "Y" ] ; then
     fi
     # make dvd
     "${SCRIPTDIR}/makederiv" -T dvd "${OUTDIR_INGESTFILE}/${MEDIAID}"
+
+    else
+        unset MAKEDERIVOPTS
+        MAKEDERIVOPTS=(-d "${RESOURCESPACEDELIVER}")
+        "${SCRIPTDIR}/makederiv" -T resourcespace "${MAKEDERIVOPTS[@]}" "${OUTDIR_INGESTFILE}/${MEDIAID}"
+    fi
 fi
 
 # makemetadata
