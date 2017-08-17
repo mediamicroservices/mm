@@ -49,7 +49,7 @@ while getopts ":F:pnheiu:I:m:" OPT ; do
         p) PRESERVATION_MODE="Y" ; DELIVERYTOOMNEON="N" ; DELIVERACCESSCOPIES="N" ; DELIVERYTOAIPSTORAGE="N" ;;
         n) DELIVERYTOOMNEON="N" ; DELIVERACCESSCOPIES="N" ;;
         i) DELIVERYTOOMNEON="Y" ; DELIVERACCESSCOPIES="N" ; DELIVERYTOAIPSTORAGE="Y" ;;
-        u) OPERATOR="${OPTARG}" ;;
+        u) SILENT_RUNNING="Y" ; OPERATOR="${OPTARG}" ;;
         I) INPUT="${OPTARG}" ;;
         m) MEDIAID="${OPTARG}" ;;
         h) _usage ;;
@@ -90,6 +90,15 @@ else
     _report -w "you're in a directory that doesn't actually exist. The script exited and you need to cd into a different directory. ¯\_(ツ)_/¯ "
     exit 1
 fi
+
+if [ "${SILENT_RUNNING}" == "Y" ] ; then
+    EDIT_MODE="N"
+    DELIVERYTOOMNEON="N"
+    CLEANUP_CHOICE="Y"
+    PRIORITY="start now"
+    SLATE="N"
+fi
+
 [ -z "${OUTDIR_INGESTFILE}" ] && { echo "The processing directory must be set. Use [ -p /path/to/processing/directory ] or run mmconfig to set OUTDIR_INGESTFILE." ; exit 1 ;};
 [ -z "${AIP_STORAGE}" ] && { echo "The AIP Storage directory must be set. Use [ -a /path/to/AIP/storage/directory ] or run mmconfig to set AIP_STORAGE." ; exit 1 ;};
 [ -z "${PODCASTDELIVER}" ] && { echo "A directory for podcast delivery must be set. Use [ -w /path/to/deliver/podcastfiles] or run mmconfig to set PODCASTDELIVER." ; exit 1 ;};
