@@ -15,6 +15,8 @@ DELIVERYTOOMNEON="Y"       # use 'Y' for yes or any other character for no
 DELIVERACCESSCOPIES="Y"    # use 'Y' for yes or any other character for no
 DELIVERYTOAIPSTORAGE="Y"   # use 'Y' for yes or any other character for no
 EDIT_MODE="Y"
+SILENT_RUNNING=""
+
 
 QUEUEFILE="${HOME}/Desktop/queue.txt"
 SCRIPTDIR=$(dirname "${0}")
@@ -97,6 +99,7 @@ if [ "${SILENT_RUNNING}" == "Y" ] ; then
     CLEANUP_CHOICE="Y"
     PRIORITY="start now"
     SLATE="N"
+    DELIVERRESOURCESPACE="Y"
 fi
 
 [ -z "${OUTDIR_INGESTFILE}" ] && { echo "The processing directory must be set. Use [ -p /path/to/processing/directory ] or run mmconfig to set OUTDIR_INGESTFILE." ; exit 1 ;};
@@ -243,12 +246,18 @@ if
     echo "ERROR The MEDIA ID must only contain capital letters, numbers, hyphen and underscore"
     echo "Please reenter valid ID"
     MEDIAID=""
-    _ask_mediaid
+    if [ -z "${SILENT_RUNNING}" ] ; then
+        _ask_mediaid
+    else
+        exit 1
+    fi
 fi
 
-    # interview the operator
-    _ask_operator
-    _ask_mediaid
+    if [ -z "${SILENT_RUNNING}" ] ; then
+        # interview the operator
+        _ask_operator
+        _ask_mediaid
+    fi
 
     ## check for existing output
     if [ -d "${OUTDIR_INGESTFILE}/${MEDIAID}" ] ; then
@@ -259,7 +268,10 @@ fi
         _report -wt "It looks like ${MEDIAID} was already ingested. If you want to overwrite the existing one please delete ${AIP_STORAGE}/${MEDIAID} first and then try again."
         exit 1
     fi
-    _ask_input
+    
+    if [ -z "${SILENT_RUNNING}" ] ; then
+        _ask_input
+    fi
 
     # Check if file is being modified
     INPUT_DATE=$(getfileinfo "${INPUT}" | grep modified | cut -d' ' -f2-)
@@ -274,7 +286,7 @@ fi
         read NOTVIDRESPONSE
         [ "${NOTVIDRESPONSE}" == "q" ] && exit 0
     fi
-    if [ "${AUDIODECISION}" = "" ] ; then
+    if [ "${AUDIODECISION}" = "" ] && [ "${SILENT_RUNNING}" == "" ] ; then
         _report -q "Select an audio strategy? "
         PS3="Selection? "
         select AUDIODECISION in "Default audio mapping [first audio track used for stereo output]" "Only use left of the first audio track [for 21st Century]" "Only use right of the first audio track"
@@ -283,7 +295,7 @@ fi
         done
     fi
 
-    if [ "${CROPDECISION}" = "" ] ; then
+    if [ "${CROPDECISION}" = "" ] && [ "${SILENT_RUNNING}" == "" ] ; then
         _report -q "Select a cropping strategy? "
         PS3="Selection? "
         select CROPDECISION in "Do not crop." "Examine the video and auto-crop out black borders (slower)"
@@ -292,7 +304,7 @@ fi
         done
     fi
 
-    if [ "${FORMULA}" = "" ] ; then
+    if [ "${FORMULA}" = "" ] && [ "${SILENT_RUNNING}" == "" ] ; then
         _report -q "Select an optional formula for unusual cases? "
         _report -d "In most cases, select 'none'. To force the input file to be interpreted as top or bottom field first interlacement, select tff or bff. To stretch the input video to 1920x1080 HD frame size, select 'hds'. To squish into Standard Definition, select 'sds'."
         PS3="Selection? "
@@ -302,7 +314,7 @@ fi
         done
     fi
 
-    if [ "${CLEANUPDECISION}" = "" ] ; then
+    if [ "${CLEANUPDECISION}" = "" ] && [ "${SILENT_RUNNING}" == "" ] ; then
         _report -q "Select a cleanup strategy? "
         PS3="Selection? "
         select CLEANUPDECISION in "Leave source file where it is." "Remove source file after successful ingest"
@@ -397,8 +409,13 @@ if [ "${PHASECHECKTEST}" = "Y" ] ; then
 fi
 
 #frame count test- will ask operator for what to do if there is a discrepancy between the container frame count and the video track frame count.
-_get_frame_count "${INPUT}"
-
+if ! -z _get_frame_count "${INPUT}" && [ "${SILENT_RUNNING}" == "Y" ] ; then
+    _report -dt "The frame count according to the container is: ${CONTAINERFRAMECOUNT}"
+    _report -dt "The frame count according to the video track is: ${VIDEOTRACKFRAMECOUNT}"
+    _report -wt "warning! - there are discrepancies between the container frame count and video track frame count. This could result in the desynchronization of audio and video."
+elif [ -z "${SILENT_RUNNING}" ] ; then
+    _get_frame_count "${INPUT}"
+fi 
 # set up package directories
 OBJECTSDIR="${OUTDIR_INGESTFILE}/${MEDIAID}/objects"
 _run_critical _mkdir2 "${OBJECTSDIR}"
@@ -474,6 +491,8 @@ fi
 #log package type
 if [ "${PRESERVATION_MODE}" == "Y" ] ; then
     _writeingestlog "package type" "Preservation-Video"
+elif [ "${SILENT_RUNNING}" == "Y" ] ; then
+    _writeingestlog "package type" "Silent-Running"
 else
     _writeingestlog "package type" "Production"
 fi
@@ -535,7 +554,7 @@ if [ "${DELIVERYTOOMNEON}" == "Y" ] ; then
 fi
 
 # make access copies
-if [ "${MAKEACCESSCOPIES}" == "Y" ] ; then
+if [ "${MAKEACCESSCOPIES}" == "Y" ] ; then # && [ "${SILENT_RUNNING}" == "" ] ; then
     _report -dt "STATUS Making access copies."
     # makemp3
     "${SCRIPTDIR}/makemp3" "${OUTDIR_INGESTFILE}/${MEDIAID}"
@@ -566,6 +585,7 @@ if [ "${MAKEACCESSCOPIES}" == "Y" ] ; then
     fi
     # makedvd
     "${SCRIPTDIR}/makedvd" "${OUTDIR_INGESTFILE}/${MEDIAID}"
+
 fi
 
 # makemetadata
