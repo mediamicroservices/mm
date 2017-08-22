@@ -93,6 +93,12 @@ else
     exit 1
 fi
 
+if [ "${SILENT_RUNNING}" == "Y" ] && [[ "${OPERATOR}" == "" || "${INPUT}" == "" || "${MEDIAID}" == "" ]] ; then
+    echo "You must specify each of: operator name, input filepath, media id. Please assign a value to each of these and try again. :)"
+    _report -wt "You tried to use ingestfile in SILENT_RUNNING mode and failed to specify one of the necessary variables: Operator name, input file path, and media id."
+    exit 1
+fi
+
 if [ "${SILENT_RUNNING}" == "Y" ] ; then
     EDIT_MODE="N"
     DELIVERYTOOMNEON="N"
@@ -483,7 +489,7 @@ _writeingestlog "made this" "ingestfile"
 _writeingestlog "Interlacement test" "${INTERLACETEST}"
 
 if [ -n "$(cat "${PHASEREPORT}" | xargs)" ] ; then
-	_writeingestlog "Out_of_phase_audio_ranges" "$(cat "${PHASEREPORT}" | xargs)"
+    _writeingestlog "Out_of_phase_audio_ranges" "$(cat "${PHASEREPORT}" | xargs)"
 else
     _writeingestlog "Out_of_phase_audio_ranges" "None"
 fi
