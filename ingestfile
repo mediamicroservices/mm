@@ -292,7 +292,7 @@ fi
         read NOTVIDRESPONSE
         [ "${NOTVIDRESPONSE}" == "q" ] && exit 0
     fi
-    if [ "${AUDIODECISION}" = "" ] && [ "${SILENT_RUNNING}" == "" ] ; then
+    if [ "${AUDIODECISION}" = "" ] && [ "${SILENT_RUNNING}" = "" ] ; then
         _report -q "Select an audio strategy? "
         PS3="Selection? "
         select AUDIODECISION in "Default audio mapping [first audio track used for stereo output]" "Only use left of the first audio track [for 21st Century]" "Only use right of the first audio track"
@@ -301,7 +301,7 @@ fi
         done
     fi
 
-    if [ "${CROPDECISION}" = "" ] && [ "${SILENT_RUNNING}" == "" ] ; then
+    if [ "${CROPDECISION}" = "" ] && [ "${SILENT_RUNNING}" = "" ] ; then
         _report -q "Select a cropping strategy? "
         PS3="Selection? "
         select CROPDECISION in "Do not crop." "Examine the video and auto-crop out black borders (slower)"
@@ -310,7 +310,7 @@ fi
         done
     fi
 
-    if [ "${FORMULA}" = "" ] && [ "${SILENT_RUNNING}" == "" ] ; then
+    if [ "${FORMULA}" = "" ] && [ "${SILENT_RUNNING}" = "" ] ; then
         _report -q "Select an optional formula for unusual cases? "
         _report -d "In most cases, select 'none'. To force the input file to be interpreted as top or bottom field first interlacement, select tff or bff. To stretch the input video to 1920x1080 HD frame size, select 'hds'. To squish into Standard Definition, select 'sds'."
         PS3="Selection? "
@@ -320,7 +320,7 @@ fi
         done
     fi
 
-    if [ "${CLEANUPDECISION}" = "" ] && [ "${SILENT_RUNNING}" == "" ] ; then
+    if [ "${CLEANUPDECISION}" = "" ] && [ "${SILENT_RUNNING}" = "" ] ; then
         _report -q "Select a cleanup strategy? "
         PS3="Selection? "
         select CLEANUPDECISION in "Leave source file where it is." "Remove source file after successful ingest"
