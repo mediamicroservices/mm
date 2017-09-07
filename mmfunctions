@@ -28,8 +28,6 @@ _check_for_lto_md5_flags(){
 
 _check_for_lto_index_dir(){
     if [ -z "${LTO_INDEX_DIR}" ] ; then
-        echo "LTO_INDEX_DIR is not set in mmconfig. Default of ${HOME}/Documents/lto_indexes will be used."
-        echo "If a different location is desired please set this in mmconfig"
         LTO_INDEX_DIR="${HOME}/Documents/lto_indexes"
     fi
 }

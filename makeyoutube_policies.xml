@@ -10,5 +10,6 @@
     <rule name="Is it 8 bit?" value="BitDepth" tracktype="Video" operator="=">8</rule>
     <rule name="Is the chroma subsampling 4:2:0?" value="ChromaSubsampling" tracktype="Video" operator="=">4:2:0</rule>
     <rule name="Is the audio AAC?" value="Format" tracktype="Audio" operator="=">AAC</rule>
+    <rule name="Is the sample rate 48khz?" value="SamplingRate" tracktype="Audio" operator="=">48000</rule>
   </policy>
 </policy>
