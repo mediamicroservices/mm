@@ -384,7 +384,7 @@ if [ "${PRESERVATION_MODE}" == "Y" ] ; then
     PHASECHECKTEST="N"
 
 else
-    if [ "${BLACKFRAMETEST}" = "Y" ] ; then
+    if [ "${BLACKFRAMETEST}" = "Y" ] && [ -z "$SILENT_RUNNING" ] ; then
         _black_at_ends "${INPUT}"
         if [ "${HEAD_BLACK}" -gt "30" ] ; then
             _report -wt "WARNING - There are at least ${HEAD_BLACK} frames of black at the beginning of ${INPUT}"
@@ -470,7 +470,11 @@ _log -b
 echo -e "${LOG}" >> "${INGESTLOG}"
 _writeingestlog "media ID" "${MEDIAID}"
 _writeingestlog "media ID slate" "${MEDIAID4SLATE}"
-_writeingestlog "operator" "${OP}"
+if [ -z "${OP}" ] ; then
+    _writeingestlog "operator" "${OPERATOR}" 
+else 
+    _writeingestlog "operator" "${OP}"
+fi
 _writeingestlog "input" "${INPUT}"
 _writeingestlog "processing_directory" "${OUTDIR_INGESTFILE}"
 _writeingestlog "audiodecision" "${AUDIODECISION}"
