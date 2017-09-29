@@ -711,11 +711,11 @@ _email_delivery(){
         if [[ -f "${INGESTLOG}" ]] ; then
             FROMLOG="Operator: $(_readingestlog "operator")\n
 Processing Computer: $(_readingestlog "computer_name")
-Audio True Peak (dBTP): $(_readingestlog "measured_true_peak")
-Integrated Loudness (LUFS): $(_readingestlog "r128_integrated_loudness")
+Audio True Peak (dBTP): $(_readingestlog "output_measured_true_peak")
+Integrated Loudness (LUFS): $(_readingestlog "output_r128_integrated_loudness")
 Loudness Adjustment (LUFS): $(_readingestlog "loudness_adjustment")
-Loudness Range (LU): $(_readingestlog "r128_loudness_range")
-Threshold (LUFS) : $(_readingestlog "measured_threshold")
+Loudness Range (LU): $(_readingestlog "output_r128_loudness_range")
+Threshold (LUFS) : $(_readingestlog "output_measured_threshold")
 Out of Phase Audio Ranges: $(_readingestlog "Out_of_phase_audio_ranges")"
         fi
         echo -e "Subject: [delivery] $(basename "${OUTPUT}")\n
@@ -1442,7 +1442,22 @@ _prep_volume_adjustment(){
             _get_volume_adjustment "${SOURCEFILE}"
         fi
         _report -dt "Integrated loudness for $(basename "${INPUT_MOVIE}") is ${measured_I} LUFS. Reference is -24 LUFS. Will adjust by ${LOUD_ADJ} LUFS"
-        _add_audio_filter "loudnorm=measured_I=${measured_I}:measured_LRA=${measured_LRA}:measured_TP=${measured_TP}:measured_thresh=${measured_thresh}:offset=${target_offset}:linear=true:print_format=summary"
+        _add_audio_filter "loudnorm=measured_I=${measured_I}:measured_LRA=${measured_LRA}:measured_TP=${measured_TP}:measured_thresh=${measured_thresh}:offset=${target_offset}:linear=true:print_format=json"
+    fi
+}
+
+_lookup_final_loudness(){
+    FFMPEGLOG=$(ls -t "${LOGDIR}" | grep "${0}" | head -n 1)
+    PARSE_FOR_LOUDNESS=$(cat "${LOGDIR}/${FFMPEGLOG}")
+    output_i=$(echo "${PARSE_FOR_LOUDNESS}" | grep "output_i" | awk -F\" '{print $4}')
+    output_lra=$(echo "${PARSE_FOR_LOUDNESS}" | grep "output_lra" | awk -F\" '{print $4}')
+    output_tp=$(echo "${PARSE_FOR_LOUDNESS}" | grep "output_tp" | awk -F\" '{print $4}')
+    output_thresh=$(echo "${PARSE_FOR_LOUDNESS}" | grep "output_thresh" | awk -F\" '{print $4}')
+    if [[ -f "${INGESTLOG}" ]] ; then
+        _writeingestlog "output_r128_integrated_loudness" "${output_i}"
+        _writeingestlog "output_r128_loudness_range" "${output_lra}"
+        _writeingestlog "output_measured_true_peak" "${output_tp}"
+        _writeingestlog "output_measured_threshold" "${output_thresh}"
     fi
 }
 
