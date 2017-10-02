@@ -1,0 +1,563 @@
+#!/bin/bash
+# makederiv, makes a derivative file appropriate for editing, upload, and other functions
+VERSION="1.0"
+SCRIPTDIR=$(dirname $(which "${0}"))
+. "${SCRIPTDIR}/mmfunctions" || { echo "Missing '${SCRIPTDIR}/mmfunctions'. Exiting." ; exit 1 ;};
+SUFFIX=""
+
+_usage(){
+        echo
+        echo "$(basename "makederiv") ${VERSION}"
+        echo "This application will create a derivative file from a video file or package input with the following options."
+        echo "Dependencies: ${DEPENDENCIES[@]}"
+        echo "Usage: $(basename "${0}") [ -d /path/to/deliver/to/ ] fileorpackage1 [ fileorpackage2 ...]"
+        echo "  -T derivative (specify a derivative video type:)"
+        echo "      broadcast (mov) for broadcast"
+        echo "      prores (mov) for editing"
+        echo "      youtube (mp4) for uploading"
+        echo "      resourcespace (mp4) for uploading to resourcespace"
+        echo "      dvd (iso)"
+        echo "      mp3 (mp3)"
+        echo "      podcast (mov)"
+        echo "  -l (only use the left channel of the first audio track)"
+        echo "  -r (only use the right channel of the first audio track)"
+        echo "  -t (burn timecode overlay)"
+        echo "  -v Y|N (run the video through a volume adjustment filter, then adjust the volume accordingly during transcoding, slower; defaults to ${VOLADJUST})"
+        echo "  -d directory (directory to deliver the resulting file to)"
+        echo "  -o directory (directory to write the resulting file to)"
+        echo "  -e emailaddress (send an email about the delivery; only valid if -d is used)"
+        echo "  -E emailaddress (send an email about process outcome)"
+        echo "  -n (dry-run mode: show the commands that would be run but don't do anything)"
+        echo "  -h (display this help)"
+        echo "  FOR BROADCAST USE ONLY:"
+        echo "      -F (apply a formula, override default settings)"
+        echo "      -s (create slate, which adds color bars, a slate, and 30 seconds of black at the end)"
+        echo "      -c (run the video through a crop detection filter, then crop the video accordingly during transcoding, slower)"
+        echo "  FOR YOUTUBE USE ONLY:"
+        echo "      -Y (attempt to use uploadyoutube on the resulting file)"
+        echo "  FOR DVD USE ONLY:"
+        echo "      -p dvdlabelprefix (optional)"
+        exit
+}
+
+user_input=${@}
+OPTIND=1
+while getopts ":T:lrv:d:o:e:E:F:scYp:tnh" OPT ; do
+    case "${OPT}" in
+        T) OUTPUT_TYPE="${OPTARG}";;
+        l) AUDIOMAP="L";;
+        r) AUDIOMAP="R";;
+        v) VOLADJUST="${OPTARG}";;
+        d) DELIVERDIR="${OPTARG}" && _check_deliverdir ;;
+        o) OUTPUTDIR_FORCED="${OPTARG}" && _check_outputdir_forced ;;
+        e) EMAILADDRESS_DELIVERY="${OPTARG}" && _check_emailaddress "${EMAILADDRESS_DELIVERY}" ;;
+        E) EMAILADDRESS_OUTCOME="${OPTARG}" && _check_emailaddress "${EMAILADDRESS_OUTCOME}" ;;
+        F) FORMULA="${OPTARG}";;
+        s) ADDSLATE="Y";;
+        c) CROPDETECT="Y" ;;
+        Y) YOUTUBEUPLOAD="Y";;
+        p) DVDLABELPREFIX="${OPTARG}";;
+        t) TCBURN="Y";;
+        n) DRYRUN=true;;
+        h) _usage ;;
+        *) echo "bad option -${OPTARG}" ; _usage ;;
+        :) echo "Option -${OPTARG} requires an argument" ; _writeerrorlog "makederiv" "The option selected required an argument and none was provided. The script had to exit." ; exit 1 ;;
+    esac
+done
+shift $(( ${OPTIND} - 1 ))
+
+DEPENDENCIES=(ffmpeg ffprobe)
+# set derivative extensions and paths
+if [[ "${OUTPUT_TYPE}" == "broadcast" ]] ; then
+    EXTENSION="mov"
+    RELATIVEPATH="service"
+elif [[ "${OUTPUT_TYPE}" == "prores" ]] ; then
+    EXTENSION="mov"
+    RELATIVEPATH="access/prores"
+elif [[ "${OUTPUT_TYPE}" == "youtube" ]] ; then
+    EXTENSION="mp4"
+    RELATIVEPATH="access/youtube_up"
+elif [[ "${OUTPUT_TYPE}" == "resourcespace" ]] ; then
+    EXTENSION="mp4"
+    RELATIVEPATH="access/resourcespace"
+elif [[ "${OUTPUT_TYPE}" == "dvd" ]] ; then
+    EXTENSION="iso"
+    RELATIVEPATH="access/dvd"
+    DEPENDENCIES+=(dvdauthor mkisofs)
+elif [[ "${OUTPUT_TYPE}" == "mp3" ]] ; then
+    EXTENSION="mp3"
+    RELATIVEPATH="access/mp3"
+    DEPENDENCIES+=(normalize)
+elif [[ "${OUTPUT_TYPE}" == "podcast" ]] ; then
+    EXTENSION="mov"
+    RELATIVEPATH="access/podcast"
+else
+    echo "No matches for specified output type."
+    _usage
+fi
+_initialize_make
+
+while [[ "${@}" != "" ]] ; do
+    # get context about the input
+    INPUT="${1}"
+    shift
+    if [ -z "${OUTPUTDIR_FORCED}" ] ; then
+        [ -d "${INPUT}" ] && { OUTPUTDIR="${INPUT}/objects/${RELATIVEPATH}" && LOGDIR="${INPUT}/metadata/logs/${OUTPUT_TYPE}" ;};
+        [ -f "${INPUT}" ] && { OUTPUTDIR=$(dirname "${INPUT}")"/${RELATIVEPATH}" && LOGDIR="$(dirname "${INPUT}")/${RELATIVEPATH}/logs/${OUTPUT_TYPE}" ;};
+        [ ! "${OUTPUTDIR}" ] && { OUTPUTDIR="${INPUT}/objects/${RELATIVEPATH}" && LOGDIR="${INPUT}/metadata/logs/${OUTPUT_TYPE}" ;};
+    else
+        OUTPUTDIR="${OUTPUTDIR_FORCED}"
+        LOGDIR="${OUTPUTDIR}/logs/${OUTPUT_TYPE}"
+    fi
+    _unset_variables
+    _find_input "${INPUT}"
+
+    MEDIAID=$(basename "${INPUT}" | cut -d. -f1)
+    INGESTLOG="${LOGDIR}/capture.log"
+     _report_to_db
+     if [ "${ADDSLATE}" = "Y" ] ; then
+         SUFFIX="_SLATE"
+     fi
+
+    _set_up_output
+    if [[ "${OUTPUT_TYPE}" == "dvd" ]] || [[ "${OUTPUT_TYPE}" == "broadcast" ]] ; then
+        INPUTOPTIONS+=(-y)
+    elif [[ "${OUTPUT_TYPE}" != "mp3" ]] || [[ "${OUTPUT_TYPE}" != "podcast" ]] ; then
+        INPUTOPTIONS+=(-vsync 0)
+    fi
+    INPUTOPTIONS+=(-nostdin)
+        
+    # get information on the input
+    _get_height "${SOURCEFILE}"
+    _get_width "${SOURCEFILE}"
+    _get_seconds "${SOURCEFILE}"
+    _get_codectagstring "${SOURCEFILE}"
+    _get_videostreamcount "${SOURCEFILE}"
+    _get_audiostreamcount "${SOURCEFILE}"
+    _get_dar "${SOURCEFILE}"
+    _get_sar "${SOURCEFILE}"
+    
+    # set in and out times if used; ignore out time if a slate is being created
+    if [[ -f "${INGESTLOG}" && "${ISOBJECT}" = "Y" ]] ; then
+        INTIME=$(_readingestlog "intime")
+        OUTTIME=$(_readingestlog "outtime")
+        if [[ "${INTIME}" ]] ; then
+            _report -dt "Transcoding will use intime (${INTIME}) during transcoding."
+            INPUTOPTIONS+=(-seek_timestamp 1)
+            MIDDLEOPTIONS+=(-ss "${INTIME}")
+        fi
+        if [[ "${OUTTIME}" && "${ADDSLATE}" = "Y" ]] ; then
+            _report -dt "Transcoding will NOT use outtime (${OUTTIME}) during transcoding, as there is a slate being created for this file."
+        elif [[ "${OUTTIME}" && "${ADDSLATE}" != "Y" ]] ; then
+            _report -dt "Transcoding will use outtime (${OUTTIME}) during transcoding."
+            MIDDLEOPTIONS+=(-to "${OUTTIME}")
+        fi
+    fi
+    
+    # encoding options
+    if [[ "${VIDEOSTREAMCOUNT}" -gt 0 ]] ; then
+        if [[ "${CODEC_TAG_STRING}" == "mjp2" ]] ; then
+             INPUTOPTIONS+=(-vcodec libopenjpeg)
+        fi
+        if [[ "${OUTPUT_TYPE}" == "broadcast" ]] ; then
+            _get_broadcastduration "${SOURCEFILE}"
+            if [ "${CROPDETECT}" = "Y" ] ; then
+                _get_cropdetection "${SOURCEFILE}"
+                _add_video_filter "${CROPADJ}"
+                WIDTH=$(echo "${CROPADJ}" | cut -d= -f2 | cut -d: -f1)
+                HEIGHT=$(echo "${CROPADJ}" | cut -d= -f2 | cut -d: -f2)
+                DAR="(${WIDTH}/${HEIGHT})*${SAR}"
+            fi
+            # set options for zeroing timecode if input is MXF
+            if [[ "$INPUT" == *.mxf ]] ; then
+                metadata_option="-metadata"
+            else metadata_option="-metadata:s:v:0"
+            fi
+            # if adding a slate: request metadata
+            MEDIAID4SLATE=$(_readingestlog "media ID slate")
+            if [[ "${ADDSLATE}" == "Y" ]] ; then
+                if [ -z "${MEDIAID4SLATE}" ] ; then
+                    cowsay "MediaID?"
+                    echo -n ":: "
+                    read -r MEDIAID4SLATE
+                fi
+                SERIESTITLE=$(_readingestlog "Series Title")
+                if [ -z "${SERIESTITLE}" ] ; then
+                    cowsay -t "Series Title?"
+                    echo -n ":: "
+                    read -r SERIESTITLE
+                fi
+                EPISODETITLE=$(_readingestlog "Episode Title")
+                if [ -z "${EPISODETITLE}" ] ; then
+                    cowsay -s "Episode Title?"
+                    echo -n ":: "
+                    read -r EPISODETITLE
+                fi
+                SLATE_MEDIAID=$(_maketemp)
+                echo "${MEDIAID4SLATE}" > "${SLATE_MEDIAID}"
+                SLATE_SERIES=$(_maketemp)
+                echo "${SERIESTITLE}" > "${SLATE_SERIES}"
+                SLATE_EPISODE=$(_maketemp)
+                echo "${EPISODETITLE}" > "${SLATE_EPISODE}"
+                SLATE_DURATION=$(_maketemp)
+                echo "${BROADCASTDURATION}" > "${SLATE_DURATION}"
+                SLATE_CH1=$(_maketemp)
+                echo "Ch. 1 Stereo L" > "${SLATE_CH1}"
+                SLATE_CH2=$(_maketemp)
+                echo "Ch. 2 Stereo R" > "${SLATE_CH2}"
+                SLATE_CH3=$(_maketemp)
+                echo "Ch. 3 Mono Mix" > "${SLATE_CH3}"
+                SLATE_CH4=$(_maketemp)
+                echo "Ch. 4 Mono Mix" > "${SLATE_CH4}"
+                COLORBARS_SECS=60
+                SLATE_SECS=20
+                COUNTDOWN_SECS=8.2
+                BLACK_SECS=1.8
+                END_BLACK_SECS=30
+                fontfile="/System/Library/Fonts/HelveticaNeue.dfont"
+                fontenable="enable=gte(t\,${COLORBARS_SECS})*lt(t\,${COLORBARS_SECS}+${SLATE_SECS})"
+                MIDDLEOPTIONS+=(-f lavfi -i "smptehdbars=s=1920x1080:r=30000/1001:sar=16/9:d=${COLORBARS_SECS}" \
+                    -f lavfi -i "aevalsrc=0.1*sin(1000*2*PI*t):d=${COLORBARS_SECS}:s=48000:c=stereo" \
+                    -f lavfi -i "color=c=BlueViolet:s=1920x1080:r=30000/1001:sar=16/9:d=${COUNTDOWN_SECS},geq=r='X/W*r(X,Y)':g='(1-X/W)*g(X,Y)':b='(H-Y)/H*b(X,Y)'" \
+                    -f lavfi -i "aevalsrc=0:d=${SLATE_SECS}:s=48000:c=stereo" \
+                    -f lavfi -i "color=black:s=1920x1080:r=30000/1001:sar=16/9:d=${COUNTDOWN_SECS}" \
+                    -f lavfi -i "sine=r=48000:frequency=1:beep_factor=400:duration=${COUNTDOWN_SECS}" \
+                    -f lavfi -i "color=black:s=1920x1080:r=30000/1001:sar=16/9:d=${BLACK_SECS}" \
+                    -f lavfi -i "aevalsrc=0:d=${BLACK_SECS}:s=48000:c=stereo" \
+                    -f lavfi -i "color=black:s=1920x1080:r=30000/1001:sar=16/9:d=${END_BLACK_SECS}" \
+                    -f lavfi -i "aevalsrc=0:d=${END_BLACK_SECS}:s=48000:c=stereo")
+                MIDDLEOPTIONS+=("$metadata_option" timecode=00:58:30\;00)
+            else
+                MIDDLEOPTIONS+=("$metadata_option" timecode=00:00:00.00)
+            fi
+            # determine filter choice if set in capture
+            if [[ -f "${INGESTLOG}" && "${ISOBJECT}" = "Y" ]] ; then
+                if [[ "${FORMULA}" == "none" ]] ; then
+                    FILTERCHOICE=$(_readingestlog "filter choice")
+                    _add_video_filter "${FILTERCHOICE}"
+                    echo  "${FILTERCHOICE}"
+                fi
+            fi
+            #options for either xdcam or imx
+            MIDDLEOPTIONS+=(-r ntsc)
+            MIDDLEOPTIONS+=(-c:v mpeg2video)
+            MIDDLEOPTIONS+=(-intra_vlc 1)
+            MIDDLEOPTIONS+=(-non_linear_quant 1)
+            MIDDLEOPTIONS+=(-qmin 1)
+            MIDDLEOPTIONS+=(-dc 10)
+            MIDDLEOPTIONS+=(-lmin QP2LAMBDA)
+            MIDDLEOPTIONS+=(-ps 1)
+            MIDDLEOPTIONS+=(-flags +ildct+ilme)
+            MIDDLEOPTIONS+=(-pix_fmt yuv422p)
+            MIDDLEOPTIONS+=(-top 1)
+            MIDDLEOPTIONS+=(-mpv_flags strict_gop)
+            MIDDLEOPTIONS+=(-drop_frame_timecode 1)
+            #xdcam options
+            MIDDLEOPTIONSXDCAM+=(-s 1920x1080)
+            MIDDLEOPTIONSXDCAM+=(-vtag xd5b)
+            MIDDLEOPTIONSXDCAM+=(-aspect 16:9)
+            MIDDLEOPTIONSXDCAM+=(-q:v 1)
+            MIDDLEOPTIONSXDCAM+=(-qmax 8)
+            MIDDLEOPTIONSXDCAM+=(-g 15)
+            MIDDLEOPTIONSXDCAM+=(-bf 2)
+            MIDDLEOPTIONSXDCAM+=(-b:v 50M)
+            MIDDLEOPTIONSXDCAM+=(-maxrate:v 50M)
+            MIDDLEOPTIONSXDCAM+=(-minrate:v 50M)
+            MIDDLEOPTIONSXDCAM+=(-bufsize 17825792)
+            MIDDLEOPTIONSXDCAM+=(-rc_init_occupancy 17825792)
+            # imx options
+            MIDDLEOPTIONSIMX+=(-aspect 4:3)
+            MIDDLEOPTIONSIMX+=(-qmax 12)
+            MIDDLEOPTIONSIMX+=(-g 1)
+            MIDDLEOPTIONSIMX+=(-top 1)
+            MIDDLEOPTIONSIMX+=(-intra)
+            MIDDLEOPTIONSIMX+=(-b:v 30M)
+            MIDDLEOPTIONSIMX+=(-maxrate:v 30M)
+            MIDDLEOPTIONSIMX+=(-minrate:v 30M)
+            MIDDLEOPTIONSIMX+=(-bufsize 1001000)
+            MIDDLEOPTIONSIMX+=(-rc_init_occupancy 1001000)
+            MIDDLEOPTIONSIMX+=(-rc_max_vbv_use 1)
+            MIDDLEOPTIONSIMX+=(-rc_min_vbv_use 1)
+            MIDDLEOPTIONSIMX+=(-rc_buf_aggressivity 0.25)
+            MIDDLEOPTIONSIMX+=(-vbsf imxdump)
+            MIDDLEOPTIONSIMX+=(-tag:v mx3n)
+            # decide on an output codec, aspect ratio, and padding strategy
+            DARRATIO=$(echo "scale=3 ; ${DAR}" | bc)
+            if [ "${FORMULA}" = "tff" ] ; then
+                _add_video_filter "setfield=tff"
+            elif [ "${FORMULA}" = "bff" ] ; then
+                _add_video_filter "setfield=bff"
+            fi
+            _add_video_filter "fieldorder=tff"
+            if [ "${FORMULA}" = "hds" ] ; then
+                _add_video_filter "scale=size=hd1080:interl=1"
+                _add_video_filter "setsar=1/1"
+                _add_video_filter "setdar=16/9"
+                _add_video_filter "fps=fps=ntsc"
+                MIDDLEOPTIONS+=("${MIDDLEOPTIONSXDCAM[@]}")
+            elif [ "${FORMULA}" = "sds" ] ; then
+                _add_video_filter "scale=720:480"
+                _add_video_filter "pad=720:512:0:24"
+                _add_video_filter "setsar=1/1"
+                _add_video_filter "setdar=4/3"
+                MIDDLEOPTIONS+=("${MIDDLEOPTIONSIMX[@]}")
+            elif [ "${DARRATIO}" = "1.777" -a ! "${CROPDETECT}" = "Y" ] ; then
+                _add_video_filter "scale=size=hd1080:interl=1"
+                _add_video_filter "setsar=1/1"
+                _add_video_filter "setdar=16/9"
+                _add_video_filter "fps=fps=ntsc"
+                MIDDLEOPTIONS+=("${MIDDLEOPTIONSXDCAM[@]}")
+            elif [ $(echo "scale=3 ; ${DARRATIO} > (16/9)" | bc -l) = 1 ] ; then
+                _add_video_filter "pad=${WIDTH}:${WIDTH}*(9/16)*(${SAR}):(ow-${WIDTH})/2:(oh-${HEIGHT})/2"
+                _add_video_filter "scale=size=hd1080:interl=1"
+                _add_video_filter "setsar=1/1"
+                _add_video_filter "setdar=16/9"
+                _add_video_filter "fps=fps=ntsc"
+                MIDDLEOPTIONS+=("${MIDDLEOPTIONSXDCAM[@]}")
+            elif [ $(echo "scale=3 ; $DARRATIO > (3/2)" | bc -l) = 1 -o "${ADDSLATE}" = "Y" ] ; then
+                _add_video_filter "pad=${HEIGHT}*(16/9)/(${SAR}):${HEIGHT}:(ow-${WIDTH})/2:(oh-${HEIGHT})/2"
+                _add_video_filter "scale=size=hd1080:interl=1"
+                _add_video_filter "setsar=1/1"
+                _add_video_filter "setdar=16/9"
+                _add_video_filter "fps=fps=ntsc"
+                MIDDLEOPTIONS+=("${MIDDLEOPTIONSXDCAM[@]}")
+            elif [ "${WIDTH}" = "720" -a "${HEIGHT}" = "480" -a $(echo "scale=3 ; ${DARRATIO} < (3/2)" | bc -l) = 1 -a ! "${CROPDETECT}" = "Y" ] ; then
+                _add_video_filter "scale=720:480"
+                _add_video_filter "pad=720:512:0:24"
+                _add_video_filter "setsar=1/1"
+                _add_video_filter "setdar=4/3"
+                MIDDLEOPTIONS+=("${MIDDLEOPTIONSIMX[@]}")
+            elif [ "${HEIGHT}" -eq "486" -a "${WIDTH}" -eq "720" ] ; then
+                _add_video_filter "crop=720:484:0:0"
+                _add_video_filter "pad=720:512:0:28"
+                _add_video_filter "setsar=1/1"
+                _add_video_filter "setdar=4/3"
+                MIDDLEOPTIONS+=("${MIDDLEOPTIONSIMX[@]}")
+            elif  [ "${HEIGHT}" -eq "512" -a "${WIDTH}" -eq "720" ] ;then
+                _add_video_filter "setsar=1/1"
+                _add_video_filter "setdar=4/3"
+                MIDDLEOPTIONS+=("${MIDDLEOPTIONSIMX[@]}")
+            else
+                _add_video_filter "scale=720:480"
+                _add_video_filter "pad=720:512:0:24"
+                _add_video_filter "setsar=1/1"
+                _add_video_filter "setdar=4/3"
+                MIDDLEOPTIONS+=("${MIDDLEOPTIONSIMX[@]}")
+            fi
+            _add_video_filter "format=yuv422p"
+            _add_video_filter "lut=y=if(gt(val\,235)\,235\,val):u=if(gt(val\,235)\,235\,val):v=if(gt(val\,235)\,235\,val)"
+        elif [[ "${OUTPUT_TYPE}" == "prores" ]] ; then
+            MIDDLEOPTIONS+=(-map 0:v)
+            MIDDLEOPTIONS+=(-c:v prores_ks)
+            MIDDLEOPTIONS+=(-profile:v 3)
+            MIDDLEOPTIONS+=(-flags +ildct+ilme)
+        elif [[ "${OUTPUT_TYPE}" == "youtube" ]] || [[ "${OUTPUT_TYPE}" == "resourcespace" ]] ; then
+            MIDDLEOPTIONS+=(-movflags faststart)
+            MIDDLEOPTIONS+=(-pix_fmt yuv420p)
+            MIDDLEOPTIONS+=(-c:v libx264)
+            MIDDLEOPTIONS+=(-bufsize 1835k)
+            MIDDLEOPTIONS+=(-f mp4)
+            if [[ "${OUTPUT_TYPE}" == "youtube" ]] ; then
+                MIDDLEOPTIONS+=(-crf 18)
+                if [ "${FILESECONDS%.*}" -gt "7200" ] ; then
+                    MIDDLEOPTIONS+=(-maxrate 2190k)
+                elif [ "${FILESECONDS%.*}" -gt "3600" ] ; then
+                    MIDDLEOPTIONS+=(-maxrate 4380k)
+                else
+                    MIDDLEOPTIONS+=(-maxrate 8760k)
+                fi
+            else
+                if [ "${FILESECONDS%.*}" -gt "7200" ] ; then
+                    MIDDLEOPTIONS+=(-maxrate 800k)
+                elif [ "${FILESECONDS%.*}" -gt "3600" ] ; then
+                    MIDDLEOPTIONS+=(-maxrate 900k)
+                else
+                    MIDDLEOPTIONS+=(-maxrate 2000k)
+                fi
+            fi
+            if  [[ "${WIDTH}" == 720 && "${HEIGHT}" == 486 ]] ; then
+                _add_video_filter "crop=720:480:0:4"
+            elif  [[ "${WIDTH}" == 720 && "${HEIGHT}" == 512 ]] ; then
+                _add_video_filter "crop=720:480:0:32"
+            fi
+            _add_video_filter "yadif"
+        elif [[ "${OUTPUT_TYPE}" == "dvd" ]] ; then
+            DARRATIO=$(echo "scale=3 ; ${DAR}" | bc)
+            if [ $(echo "scale=5 ; ${DARRATIO} > 1.5" | bc -l) = 1 ] ;then
+                ASPECT="16/9"
+                DVDASPECT="16:9"
+            else
+                ASPECT="4/3"
+                DVDASPECT="4:3"
+            fi
+            _get_maxdvdbitrate "${SOURCEFILE}"
+            MIDDLEOPTIONS+=(-r:v ntsc)
+            MIDDLEOPTIONS+=(-c:v mpeg2video)
+            MIDDLEOPTIONS+=(-c:a ac3)
+            MIDDLEOPTIONS+=(-f dvd)
+            MIDDLEOPTIONS+=(-bf 2)
+            MIDDLEOPTIONS+=(-qscale:v 2)
+            MIDDLEOPTIONS+=(-mbd rd)
+            MIDDLEOPTIONS+=(-s 720x480)
+            MIDDLEOPTIONS+=(-pix_fmt yuv420p)
+            MIDDLEOPTIONS+=(-g 18)
+            MIDDLEOPTIONS+=(-b:v "${MAXDVDBITRATE}")
+            MIDDLEOPTIONS+=(-bt 400k)
+            MIDDLEOPTIONS+=(-top 0)
+            MIDDLEOPTIONS+=(-flags +ildct+ilme)
+            MIDDLEOPTIONS+=(-maxrate "${MAXDVDBITRATE}")
+            MIDDLEOPTIONS+=(-minrate 0)
+            MIDDLEOPTIONS+=(-bufsize 3600k)
+            MIDDLEOPTIONS+=(-packetsize 2048)
+            MIDDLEOPTIONS+=(-muxrate 10080000)
+            MIDDLEOPTIONS+=(-lmin 1)
+            MIDDLEOPTIONS+=(-lmax 200000)
+            MIDDLEOPTIONS+=(-aspect "${ASPECT}")
+            if  [[ "${WIDTH}" == 720 && "${HEIGHT}" == 486 ]] ; then
+                _add_video_filter "fieldorder=bff"
+                _add_video_filter "crop=720:480:0:4"
+                _add_video_filter "setdar=${ASPECT}${TIMECODEOVERLAY}"
+            elif  [[ "${WIDTH}" == 720 && "${HEIGHT}" == 480 ]] ; then
+                _add_video_filter "fieldorder=bff"
+                _add_video_filter "setdar=${ASPECT}${TIMECODEOVERLAY}"
+            elif  [[ "${WIDTH}" == 720 && "${HEIGHT}" == 512 ]] ; then
+                _add_video_filter "fieldorder=bff"
+                _add_video_filter "crop=720:480:0:32"
+                _add_video_filter "setdar=${ASPECT}${TIMECODEOVERLAY}"
+            else
+                _add_video_filter "fieldorder=bff"
+                _add_video_filter "scale=720:480:interl=1"
+                _add_video_filter "setdar=${ASPECT}${TIMECODEOVERLAY}"
+            fi
+        elif [[ "${OUTPUT_TYPE}" == "podcast" ]] ; then
+            MIDDLEOPTIONS+=(-movflags faststart)
+            MIDDLEOPTIONS+=(-pix_fmt yuv420p)
+            MIDDLEOPTIONS+=(-c:v libx264)
+            MIDDLEOPTIONS+=(-b:v 1500k)
+            MIDDLEOPTIONS+=(-maxrate:v 3000k)
+            MIDDLEOPTIONS+=(-minrate:v 375k)
+            MIDDLEOPTIONS+=(-bufsize:v 6000k)
+            _add_video_filter "yadif"
+            _add_video_filter "scale=640:trunc(ow/dar/2)*2:interl=1"
+        else
+            echo "Invalid video derivative type."
+        fi
+    fi
+    if [[ "${AUDIOSTREAMCOUNT}" -gt 0 ]] ; then
+        _get_audio_index "${SOURCEFILE}"
+        if [[ "${OUTPUT_TYPE}" == "broadcast" ]] ; then
+            _get_audio_mapping -bv "${SOURCEFILE}"
+            MIDDLEOPTIONS+=("${AUDIOMAPPING_FFMPEG[@]}")
+            MIDDLEOPTIONS+=(-acodec pcm_s24be)
+            MIDDLEOPTIONS+=(-ar 48k)
+        elif [[ "${OUTPUT_TYPE}" == "prores" ]] ; then
+            MIDDLEOPTIONS+=(-map 0:a)
+            MIDDLEOPTIONS+=(-c:a pcm_s16le)
+        elif [[ "${OUTPUT_TYPE}" == "youtube" ]] ; then
+            MIDDLEOPTIONS+=("${AUDIOMAPPING_FFMPEG[@]}")
+            MIDDLEOPTIONS+=(-c:a aac)
+            MIDDLEOPTIONS+=(-ac 2)
+            MIDDLEOPTIONS+=(-b:a 320k)
+            MIDDLEOPTIONS+=(-ar 48000)
+            if [ "${ISOBJECT}" = "Y" ] ; then
+                _get_audio_mapping -v "${SOURCEFILE}"
+            else
+                _get_audio_mapping "${SOURCEFILE}"
+            fi
+        elif [[ "${OUTPUT_TYPE}" == "resourcespace" ]] ; then
+            _get_audio_mapping "${SOURCEFILE}"
+            MIDDLEOPTIONS+=("${AUDIOMAPPING_FFMPEG[@]}")
+            MIDDLEOPTIONS+=(-c:a aac -strict -2)
+            MIDDLEOPTIONS+=(-ac 2)
+            MIDDLEOPTIONS+=(-b:a 128k)
+        elif [[ "${OUTPUT_TYPE}" == "dvd" ]] ; then
+            MIDDLEOPTIONS+=(-b:a 448000)
+            MIDDLEOPTIONS+=(-ar 48000)
+        elif [[ "${OUTPUT_TYPE}" == "mp3" ]] ; then
+            MIDDLEOPTIONS+=("${AUDIOMAPPING_FFMPEG[@]}")
+            MIDDLEOPTIONS+=(-map 0:a:0)
+            MIDDLEOPTIONS+=(-ac 2)
+            MIDDLEOPTIONS+=(-r:a 44100)
+            MIDDLEOPTIONS+=(-sample_fmt s16p)
+        elif [[ "${OUTPUT_TYPE}" == "podcast" ]] ; then
+            MIDDLEOPTIONS+=("${AUDIOMAPPING_FFMPEG[@]}")
+            MIDDLEOPTIONS+=(-c:a aac -strict -2)
+            MIDDLEOPTIONS+=(-b:a 96k)
+        else
+            echo "Invalid audio derivative type."
+        fi
+    fi
+
+    # log process
+    _prep_ffmpeg_log
+    if [[ "${CONCATSOURCE}" != "" ]] ; then
+        FFMPEGINPUT="${CONCATSOURCE}"
+    fi
+
+    # timecode process
+    TIMECODEOVERLAY=""
+    if [[ "${TCBURN}" == "Y" ]] ; then
+        _get_timecode_overlay "${SOURCEFILE}"
+        _add_video_filter "${TIMECODEOVERLAY}"
+    fi
+
+    # slate process
+    if [[ "${ADDSLATE}" == "Y" ]] ; then
+        if [[ "${OUTPUT_TYPE}" != "broadcast" ]] ; then
+        echo "ADDSLATE is only valid with broadcast derivatives. Please specify -T broadcast."
+        break
+        else
+        _add_video_filter "copy[program_video]"
+        _add_audio_filter "[1:v:0][2:a:0][3:v:0][4:a:0][5:v:0][6:a:0][7:v:0][8:a:0]concat=n=4:v=1:a=1[slate_v][slate_a];[slate_v]drawtext=fontsize=32:fontfile=${fontfile}:fontcolor=white:${fontenable}:x=388:y=158:textfile=${SLATE_MEDIAID},drawtext=fontsize=80:fontfile=${fontfile}:fontcolor=white:${fontenable}:x=388:y=340:textfile=${SLATE_SERIES},drawtext=fontsize=50:fontfile=${fontfile}:fontcolor=white:${fontenable}:x=388:y=460:textfile=${SLATE_EPISODE},drawtext=fontsize=32:fontfile=${fontfile}:fontcolor=white:${fontenable}:x=388:y=793:text='VIDEO',drawtext=fontsize=32:fontfile=${fontfile}:fontcolor=white:${fontenable}:x=388:y=831:text='1080i',drawtext=fontsize=32:fontfile=${fontfile}:fontcolor=white:${fontenable}:x=388:y=869:text='59.94DF',drawtext=fontsize=32:fontfile=${fontfile}:fontcolor=white:${fontenable}:x=790:y=793:text='AUDIO',drawtext=fontsize=32:fontfile=${fontfile}:fontcolor=white:${fontenable}:x=790:y=831:textfile=${SLATE_CH1},drawtext=fontsize=32:fontfile=${fontfile}:fontcolor=white:${fontenable}:x=790:y=869:textfile=${SLATE_CH2},drawtext=fontsize=32:fontfile=${fontfile}:fontcolor=white:${fontenable}:x=790:y=908:textfile=${SLATE_CH3},drawtext=fontsize=32:fontfile=${fontfile}:fontcolor=white:${fontenable}:x=790:y=947:textfile=${SLATE_CH4},drawtext=fontsize=32:fontfile=${fontfile}:fontcolor=white:${fontenable}:x=1151:y=908:text='Duration',drawtext=fontsize=32:fontfile=${fontfile}:fontcolor=white:${fontenable}:x=1151:y=947:textfile=${SLATE_DURATION},drawtext=fontsize=420:fontfile=${fontfile}:fontcolor=white:enable=gte(t\,${COLORBARS_SECS}+${SLATE_SECS})*lt(t\,${COLORBARS_SECS}+${SLATE_SECS}+${COUNTDOWN_SECS}):x=(w-text_w)/2:y=(h-text_h-line_h)/2:text='%{eif\:${COLORBARS_SECS}+${SLATE_SECS}+11-t\:d}',scale=size=hd1080,format=yuv422p,setsar=1/1,setdar=16/9,fps=fps=ntsc[slate_v1];[slate_a]asplit[slate_stereo1][slate_stereo2];[slate_stereo2]aformat=channel_layouts=mono,asplit[slate_mono1][slate_mono2];[9:v:0]format=yuv422p,setsar=1/1,setdar=16/9[end_black];[10:a:0]asplit[end_stereo1][end_stereo2];[end_stereo2]aformat=channel_layouts=mono,asplit[end_mono1][end_mono2];[slate_v1][slate_stereo1][slate_mono1][slate_mono2][program_video][stereo1][mono1][mono2][end_black][end_stereo1][end_mono1][end_mono2]concat=n=3:v=1:a=3[with_slate_video][with_slate_stereo1][with_slate_mono1][with_slate_mono2]"
+        MIDDLEOPTIONS+=(-map "[with_slate_video]" -map "[with_slate_stereo1]" -map "[with_slate_mono1]" -map "[with_slate_mono2]")
+        fi
+    fi
+    
+    # temporary output set for dvd to allow mpeg -> iso transition
+    if [[ "${OUTPUT_TYPE}" == "dvd" ]] ; then
+        OUTPUT_TMP="$OUTPUT"
+        OUTPUT="${OUTPUT%.iso}.mpeg"
+    fi
+
+    _filter_to_middle_option
+    _run_critical_event ffmpeg "${INPUTOPTIONS[@]}" "${FFMPEGINPUT[@]}" "${MIDDLEOPTIONS[@]}" "${OUTPUT}"
+
+    # DVD VIDEO_TS folder process: chapters every 5 minutes, dvdauthor will ignore chapter markers greater than duration
+    if [[ "${OUTPUT_TYPE}" == "dvd" ]] ; then
+        export VIDEO_FORMAT=NTSC
+        OUTPUT="$OUTPUT_TMP"
+        _run_critical dvdauthor --title -v "ntsc+${DVDASPECT}" -a ac3+en -c 0,5:00,10:00,15:00,20:00,25:00,30:00,35:00,40:00,45:00,50:00,55:00,1:00:00,1:05:00,1:10:00,1:15:00,1:20:00,1:25:00,1:30:00,1:35:00,1:40:00,1:45:00,1:50:00,1:55:00,2:00:00,2:05:00,2:10:00,2:15:00,2:20:00,2:25:00,2:30:00,2:35:00,2:40:00,2:45:00,2:50:00,2:55:00,3:00:00,3:05:00,3:10:00,3:15:00,3:20:00,3:25:00,3:30:00,3:35:00,3:40:00,3:45:00,3:50:00,3:55:00 -f "${OUTPUTDIR}/${MEDIAID%.*}.mpeg" -o "${OUTPUTDIR}/${MEDIAID%.*}/" 2> "${LOGDIR}/dvdauthor_$(_get_iso8601_c)_$(basename ${0})_${VERSION}.txt"
+        _run rm "${OUTPUTDIR}/${MEDIAID%.*}.mpeg"
+        _run_critical_event dvdauthor -T -o "${OUTPUTDIR}/${MEDIAID%.*}/"
+        # Making DVD image file
+        volname=$(echo "${DVDLABELPREFIX}${MEDIAID}")
+        _run_critical_event mkisofs -f -dvd-video -udf -V "${volname:0:32}" -v -v -o "${OUTPUT}"  "${OUTPUTDIR}/${MEDIAID%.*}" 2> "${LOGDIR}/mkisofs_$(_get_iso8601_c)_$(basename ${0})_${VERSION}.txt"
+        _run rm -r "${OUTPUTDIR}/${MEDIAID%.*}/"
+    fi
+    
+    echo
+    _summarize_make
+    if [[ "${OUTPUT_TYPE}" == "broadcast" ]] && [[ -z "${MAKEBROADCAST_DELIVERY_EMAIL_TO}" ]] ; then
+        _deliver_output "${MAKEBROADCAST_DELIVERY_EMAIL_TO}"
+    else
+        _deliver_output "${EMAILADDRESS_DELIVERY}"
+    fi
+
+    # youtube upload process
+    if [[ "${YOUTUBEUPLOAD}" == "Y" ]] ; then
+        if [[ "${OUTPUT_TYPE}" != "youtube" ]]; then
+            echo "YOUTUBEUPLOAD is only valid with youtube (H264) derivatives. Please specify -T youtube."
+            break
+        elif [ $(which uploadyoutube) ] ; then
+            _report -dt "Attempting to run uploadyoutube on ${OUTPUT}"
+            uploadyoutube "${OUTPUT}"
+            echo "$(_get_iso8601),${OUTPUT},attempted upload,$?" >> "${HOME}/Desktop/upload.log"
+            _deliver_output "${MAKEYOUTUBE_DELIVERY_EMAIL_TO}"
+        else
+            _report -wt "$(basename "${OUTPUT}") qualified for uploadyoutube but it is not installed."
+        fi
+    fi
+    _log -e
+done
+unset ADDSLATE
+unset YOUTUBEUPLOAD
