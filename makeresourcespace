@@ -1,126 +1,17 @@
 #!/bin/bash
 # makeresourcespace, makes a file appropriate for uploading to resourcespace, is used in a local script, queryresourcespace
-VERSION="1.0"
+# v 2.0 integrate with new microservice makederiv to streamline derivative creation
+VERSION="2.0"
 SCRIPTDIR=$(dirname $(which "${0}"))
 . "${SCRIPTDIR}/mmfunctions" || { echo "Missing '${SCRIPTDIR}/mmfunctions'. Exiting." ; exit 1 ;};
-DEPENDENCIES=(ffmpeg ffprobe)
-_initialize_make
-SUFFIX=""
-EXTENSION="mp4"
-RELATIVEPATH="access/resourcespace"
 
 _usage(){
     echo
-    echo "$(basename "${0}") ${VERSION}"
-    echo "This application will create a high quality h264 file (suitable for uploading to YouTube) from a video file or package input with the following options."
-    echo "DEPENDENCIES: ${DEPENDENCIES[@]}"
-    echo "Usage: $(basename "${0}") [ -d /path/to/deliver/to/ ] fileorpackage1 [ fileorpackage2 ...]"
-    echo "  -l (only use the left channel of the first audio track)"
-    echo "  -r (only use the right channel of the first audio track)"
-    echo "  -d directory ( directory to deliver the resulting file to )"
-    echo "  -o directory ( directory to write the resulting file to )"
-    echo "  -n (dry-run mode, show the commands that would be run but don't do anything)"
-    echo "  -e emailaddress ( send an email about the delivery, only valid if -d is used )"
-    echo "  -E emailaddress ( send an email about process outcome )"
-    echo "  -v Y|N (run the video through a volume adjustment filter, then adjust the volume accordingly during transcoding, slower). Defaults to ${VOLADJUST}."
-    echo "  -h ( display this help )"
     echo
-    exit
+    _report -d "makeresourcespace is an alias for the updated function makederiv (options below)."
+    _report -d "You can create a derivative file for ResourceSpace with makederiv by typing: 'makederiv -T resourcespace [options] [input]'."
+    _report -d "Or continue to use makeresourcespace using the valid options below."
+    . "${SCRIPTDIR}/makederiv" -h
 }
 [ "${#}" = 0 ] && _usage
-
-# command-line options to set mediaid and original variables
-OPTIND=1
-while getopts ":lrv:o:d:e:E:nh" OPT ; do
-    case "${OPT}" in
-        l) AUDIOMAP="L";;
-        r) AUDIOMAP="R";;
-        v) VOLADJUST="${OPTARG}";;
-        o) OUTPUTDIR_FORCED="${OPTARG}" && _check_outputdir_forced ;;
-        d) DELIVERDIR="${OPTARG}" && _check_deliverdir ;;
-        e) EMAILADDRESS_DELIVERY="${OPTARG}" && _check_emailaddress "${EMAILADDRESS_DELIVERY}" ;;
-        E) EMAILADDRESS_OUTCOME="${OPTARG}" && _check_emailaddress "${EMAILADDRESS_OUTCOME}" ;;
-        n) DRYRUN=true;;
-        h) _usage ;;
-        *) echo "bad option -${OPTARG}" ; _usage ;;
-        :) echo "Option -${OPTARG} requires an argument" ; _writeerrorlog "makeresourcespace" "The option selected required an argument and none was provided. The script had to exit." ; exit 1 ;;
-    esac
-done
-shift $(( ${OPTIND} - 1 ))
-
-while [ "${*}" != "" ] ; do
-    # get context about the input
-    INPUT="${1}"
-    shift
-    if [ -z "${OUTPUTDIR_FORCED}" ] ; then
-        [ -d "${INPUT}" ] && { OUTPUTDIR="${INPUT}/objects/${RELATIVEPATH}" && LOGDIR="${INPUT}/metadata/logs" ;};
-        [ -f "${INPUT}" ] && { OUTPUTDIR=$(dirname "${INPUT}")"/${RELATIVEPATH}" && LOGDIR="$(dirname "${INPUT}")/${RELATIVEPATH}/logs" ;};
-        [ ! "${OUTPUTDIR}" ] && { OUTPUTDIR="${INPUT}/objects/${RELATIVEPATH}" && LOGDIR="${INPUT}/metadata/logs" ;};
-    else
-        OUTPUTDIR="${OUTPUTDIR_FORCED}"
-    fi
-    _unset_variables
-    _find_input "${INPUT}"
-    MEDIAID=$(basename "${INPUT}" | cut -d. -f1)
-
-    _set_up_output
-
-    # get information on the input
-    _get_height "${SOURCEFILE}"
-    _get_width "${SOURCEFILE}"
-    _get_seconds "${SOURCEFILE}"
-
-    # encoding options
-    _get_codectagstring "${SOURCEFILE}"
-    _get_videostreamcount "${SOURCEFILE}"
-    _get_audiostreamcount "${SOURCEFILE}"
-    INPUTOPTIONS+=(-vsync 0)
-    INPUTOPTIONS+=(-nostdin)
-    if [[ "${VIDEOSTREAMCOUNT}" > 0 ]] ; then
-        if [[ "${CODEC_TAG_STRING}" == "mjp2" ]] ; then
-             INPUTOPTIONS+=(-vcodec libopenjpeg)
-        fi
-        MIDDLEOPTIONS+=(-movflags faststart)
-        MIDDLEOPTIONS+=(-pix_fmt yuv420p)
-        MIDDLEOPTIONS+=(-c:v libx264)
-        MIDDLEOPTIONS+=(-crf 23)
-        if [ "${FILESECONDS%.*}" -gt "7200" ] ; then
-            MIDDLEOPTIONS+=(-maxrate 800k)
-        elif [ "${FILESECONDS%.*}" -gt "3600" ] ; then
-            MIDDLEOPTIONS+=(-maxrate 900k)
-        else
-            MIDDLEOPTIONS+=(-maxrate 2000k)
-        fi
-        MIDDLEOPTIONS+=(-bufsize 1835k)
-        if  [[ "${WIDTH}" == 720 && "${HEIGHT}" == 486 ]] ; then
-            _add_video_filter "crop=720:480:0:4"
-            _add_video_filter "yadif"
-        elif  [[ "${WIDTH}" == 720 && "${HEIGHT}" == 512 ]] ; then
-            _add_video_filter "crop=720:480:0:32"
-            _add_video_filter "yadif"
-        else
-            _add_video_filter "yadif"
-        fi
-    fi
-    if [[ "${AUDIOSTREAMCOUNT}" > 0 ]] ; then
-        MIDDLEOPTIONS+=(-c:a aac -strict -2)
-        MIDDLEOPTIONS+=(-ac 2)
-        MIDDLEOPTIONS+=(-b:a 128k)
-        _get_audio_index "${SOURCEFILE}"
-        _get_audio_mapping "${SOURCEFILE}"
-        MIDDLEOPTIONS+=("${AUDIOMAPPING_FFMPEG[@]}")
-    fi
-    MIDDLEOPTIONS+=(-f mp4)
-
-    if [ "${CONCATSOURCE}" != "" ] ; then
-        FFMPEGINPUT="${CONCATSOURCE}"
-    fi
-
-    _filter_to_middle_option
-
-    _run_critical ffmpeg "${INPUTOPTIONS[@]}" "${FFMPEGINPUT[@]}" "${MIDDLEOPTIONS[@]}" "${OUTPUT}"
-    echo
-    _summarize_make
-    _deliver_output
-    _log -e
-done
+"${SCRIPTDIR}/makederiv" -T resourcespace "${@}"

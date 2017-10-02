@@ -7,7 +7,7 @@ SCRIPTDIR=$(dirname "${0}")
 
 [ -z "${LOCAL_MM_DIR}" ] && { echo "A local directory of mediamicoservice must be declared. Run mmconfig to set LOCAL_MM_DIR." ; exit 1 ;};
 [ ! -d "${LOCAL_MM_DIR}" ] && { echo "mmupdate is configured to use ${LOCAL_MM_DIR}, which is not available. Run mmconfig to set LOCAL_MM_DIR." ; exit 1 ;};
-for SCRIPT in barcodeinterpret blackatends checksumpackage fix_left2stereo fix_rewrap fix_volume ingestfile ingestfile makebroadcast makedvd makeframes makelossless makemetadata makepodcast makeprores makeyoutube mmconfig mmfunctions mmhelp paperingest quickcompare removeDSStore uploadomneon xdcamingest mmupdate checksum2filemaker ; do
+for SCRIPT in barcodeinterpret blackatends checksumpackage fix_left2stereo fix_rewrap fix_volume ingestfile ingestfile makebroadcast makederiv makedvd makeframes makelossless makemetadata makepodcast makeprores makeyoutube mmconfig mmfunctions mmhelp paperingest quickcompare removeDSStore uploadomneon xdcamingest mmupdate checksum2filemaker ; do
     if [ -f "${LOCAL_MM_DIR}/${SCRIPT}" ] ; then
         rm "/usr/local/bin/${SCRIPT}"
     fi
