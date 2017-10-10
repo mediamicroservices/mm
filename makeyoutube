@@ -111,6 +111,7 @@ while [ "${*}" != "" ] ; do
         MIDDLEOPTIONS+=(-c:a aac)
         MIDDLEOPTIONS+=(-ac 2)
         MIDDLEOPTIONS+=(-b:a 320k)
+        MIDDLEOPTIONS+=(-ar 48000)
         _get_audio_index "${SOURCEFILE}"
         if [ "${ISOBJECT}" = "Y" ] ; then
             _get_audio_mapping -v "${SOURCEFILE}"
