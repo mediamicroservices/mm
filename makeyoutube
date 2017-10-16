@@ -11,7 +11,7 @@ _usage(){
     _report -d "makeyoutube is an alias for the updated function makederiv (options below)."
     _report -d "You can create a file for upload to YouTube with makederiv by typing: 'makederiv -T youtube [options] [input]'."
     _report -d "Or continue to use makeyoutube using the valid options below."
-    . "${SCRIPTDIR}/makederiv" -h
+    "${SCRIPTDIR}/makederiv" -h
 }
 [ "${#}" = 0 ] && _usage
 "${SCRIPTDIR}/makederiv" -T youtube "${@}"

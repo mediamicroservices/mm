@@ -11,7 +11,7 @@ _usage(){
     _report -d "makeresourcespace is an alias for the updated function makederiv (options below)."
     _report -d "You can create a derivative file for ResourceSpace with makederiv by typing: 'makederiv -T resourcespace [options] [input]'."
     _report -d "Or continue to use makeresourcespace using the valid options below."
-    . "${SCRIPTDIR}/makederiv" -h
+    "${SCRIPTDIR}/makederiv" -h
 }
 [ "${#}" = 0 ] && _usage
 "${SCRIPTDIR}/makederiv" -T resourcespace "${@}"

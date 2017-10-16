@@ -4,6 +4,7 @@ VERSION="1.0"
 SCRIPTDIR=$(dirname $(which "${0}"))
 . "${SCRIPTDIR}/mmfunctions" || { echo "Missing '${SCRIPTDIR}/mmfunctions'. Exiting." ; exit 1 ;};
 SUFFIX=""
+_initialize_make
 
 _usage(){
         echo
@@ -95,7 +96,7 @@ else
     echo "No matches for specified output type."
     _usage
 fi
-_initialize_make
+_check_dependencies "${DEPENDENCIES[@]}"
 
 while [[ "${@}" != "" ]] ; do
     # get context about the input
@@ -114,15 +115,18 @@ while [[ "${@}" != "" ]] ; do
 
     MEDIAID=$(basename "${INPUT}" | cut -d. -f1)
     INGESTLOG="${LOGDIR}/capture.log"
-     _report_to_db
      if [ "${ADDSLATE}" = "Y" ] ; then
          SUFFIX="_SLATE"
      fi
-
+     if [ "${OUTPUT_TYPE}" == "podcast" ] ; then
+         SUFFIX="_PODCAST"
+     fi
+     _report_to_db
+     
     _set_up_output
     if [[ "${OUTPUT_TYPE}" == "dvd" ]] || [[ "${OUTPUT_TYPE}" == "broadcast" ]] ; then
         INPUTOPTIONS+=(-y)
-    elif [[ "${OUTPUT_TYPE}" != "mp3" ]] || [[ "${OUTPUT_TYPE}" != "podcast" ]] ; then
+    elif [[ "${OUTPUT_TYPE}" != "mp3" ]] && [[ "${OUTPUT_TYPE}" != "podcast" ]] ; then
         INPUTOPTIONS+=(-vsync 0)
     fi
     INPUTOPTIONS+=(-nostdin)
@@ -174,8 +178,8 @@ while [[ "${@}" != "" ]] ; do
             else metadata_option="-metadata:s:v:0"
             fi
             # if adding a slate: request metadata
-            MEDIAID4SLATE=$(_readingestlog "media ID slate")
             if [[ "${ADDSLATE}" == "Y" ]] ; then
+                MEDIAID4SLATE=$(_readingestlog "media ID slate")
                 if [ -z "${MEDIAID4SLATE}" ] ; then
                     cowsay "MediaID?"
                     echo -n ":: "
@@ -355,7 +359,7 @@ while [[ "${@}" != "" ]] ; do
             MIDDLEOPTIONS+=(-movflags faststart)
             MIDDLEOPTIONS+=(-pix_fmt yuv420p)
             MIDDLEOPTIONS+=(-c:v libx264)
-            MIDDLEOPTIONS+=(-bufsize 1835k)
+            # MIDDLEOPTIONS+=(-bufsize 1835k)
             MIDDLEOPTIONS+=(-f mp4)
             if [[ "${OUTPUT_TYPE}" == "youtube" ]] ; then
                 MIDDLEOPTIONS+=(-crf 18)
@@ -367,6 +371,7 @@ while [[ "${@}" != "" ]] ; do
                     MIDDLEOPTIONS+=(-maxrate 8760k)
                 fi
             else
+                MIDDLEOPTIONS+=(-crf 23)
                 if [ "${FILESECONDS%.*}" -gt "7200" ] ; then
                     MIDDLEOPTIONS+=(-maxrate 800k)
                 elif [ "${FILESECONDS%.*}" -gt "3600" ] ; then
@@ -414,21 +419,14 @@ while [[ "${@}" != "" ]] ; do
             MIDDLEOPTIONS+=(-lmax 200000)
             MIDDLEOPTIONS+=(-aspect "${ASPECT}")
             if  [[ "${WIDTH}" == 720 && "${HEIGHT}" == 486 ]] ; then
-                _add_video_filter "fieldorder=bff"
                 _add_video_filter "crop=720:480:0:4"
-                _add_video_filter "setdar=${ASPECT}${TIMECODEOVERLAY}"
-            elif  [[ "${WIDTH}" == 720 && "${HEIGHT}" == 480 ]] ; then
-                _add_video_filter "fieldorder=bff"
-                _add_video_filter "setdar=${ASPECT}${TIMECODEOVERLAY}"
             elif  [[ "${WIDTH}" == 720 && "${HEIGHT}" == 512 ]] ; then
-                _add_video_filter "fieldorder=bff"
                 _add_video_filter "crop=720:480:0:32"
-                _add_video_filter "setdar=${ASPECT}${TIMECODEOVERLAY}"
-            else
-                _add_video_filter "fieldorder=bff"
+            elif  [[ "${WIDTH}" != 720 && "${HEIGHT}" != 480 ]] ; then
                 _add_video_filter "scale=720:480:interl=1"
-                _add_video_filter "setdar=${ASPECT}${TIMECODEOVERLAY}"
             fi
+            _add_video_filter "fieldorder=bff"
+            _add_video_filter "setdar=${ASPECT}"
         elif [[ "${OUTPUT_TYPE}" == "podcast" ]] ; then
             MIDDLEOPTIONS+=(-movflags faststart)
             MIDDLEOPTIONS+=(-pix_fmt yuv420p)
@@ -436,7 +434,7 @@ while [[ "${@}" != "" ]] ; do
             MIDDLEOPTIONS+=(-b:v 1500k)
             MIDDLEOPTIONS+=(-maxrate:v 3000k)
             MIDDLEOPTIONS+=(-minrate:v 375k)
-            MIDDLEOPTIONS+=(-bufsize:v 6000k)
+            # MIDDLEOPTIONS+=(-bufsize:v 6000k)
             _add_video_filter "yadif"
             _add_video_filter "scale=640:trunc(ow/dar/2)*2:interl=1"
         else
@@ -480,6 +478,7 @@ while [[ "${@}" != "" ]] ; do
             MIDDLEOPTIONS+=(-r:a 44100)
             MIDDLEOPTIONS+=(-sample_fmt s16p)
         elif [[ "${OUTPUT_TYPE}" == "podcast" ]] ; then
+            _get_audio_mapping "${SOURCEFILE}"
             MIDDLEOPTIONS+=("${AUDIOMAPPING_FFMPEG[@]}")
             MIDDLEOPTIONS+=(-c:a aac -strict -2)
             MIDDLEOPTIONS+=(-b:a 96k)

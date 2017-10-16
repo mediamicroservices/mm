@@ -11,7 +11,7 @@ _usage(){
     _report -d "makepodcast is an alias for the updated function makederiv (options below)."
     _report -d "You can create a podcast with makederiv by typing: 'makederiv -T podcast [options] [input]'."
     _report -d "Or continue to use makepodcast using the valid options below."
-    . "${SCRIPTDIR}/makederiv" -h
+    "${SCRIPTDIR}/makederiv" -h
 }
 [ "${#}" = 0 ] && _usage
 "${SCRIPTDIR}/makederiv" -T podcast "${@}"

@@ -536,7 +536,7 @@ if [ "${MAKEACCESSCOPIES}" == "Y" ] ; then
     # make copy for youtube
     unset MAKEDERIVOPTS
     [ "${DELIVERACCESSCOPIES}" = "Y" ] && MAKEDERIVOPTS=(-Y -d "${YOUTUBEDELIVER}")
-    "${SCRIPTDIR}/makederiv" -T youtube "${MAKEYOUTUBEOPTS[@]}" "${OUTDIR_INGESTFILE}/${MEDIAID}"
+    "${SCRIPTDIR}/makederiv" -T youtube "${MAKEDERIVOPTS[@]}" "${OUTDIR_INGESTFILE}/${MEDIAID}"
 
     # make podcast
     if [ $(echo "${MEDIAID}" | grep -E "${REGEX4PODCAST}") ] ; then

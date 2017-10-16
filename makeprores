@@ -11,7 +11,7 @@ _usage(){
     _report -d "makeprores is an alias for the updated function makederiv (options below)."
     _report -d "You can create a ProRes file with makederiv by typing: 'makederiv -T prores [options] [input]'."
     _report -d "Or continue to use makeprores using the valid options below."
-    . "${SCRIPTDIR}/makederiv" -h
+    "${SCRIPTDIR}/makederiv" -h
 }
 [ "${#}" = 0 ] && _usage
 "${SCRIPTDIR}/makederiv" -T prores "${@}"

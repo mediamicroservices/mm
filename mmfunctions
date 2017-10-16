@@ -651,7 +651,6 @@ _check_dependencies(){
 }
 
 _initialize_make(){
-    _check_dependencies "${DEPENDENCIES[@]}"
     DELIVERDIR=""
     DRYRUN=false
     EMAILADDRESS=""
@@ -1170,7 +1169,7 @@ _get_timecode_overlay(){
     else
         TIMECODEESACPE="01\\:00\\:00;00"
     fi
-    TIMECODEOVERLAY=",drawtext=fontfile=/System/Library/Fonts/Monaco.dfont:timecode='${TIMECODEESACPE}':r=30000/1001:fontcolor=white:fontsize=24:shadowx=2:shadowy=2:box=1:boxcolor=gray@0.8:x=w/2-tw/2:y=h*0.8"
+    TIMECODEOVERLAY="drawtext=fontfile=/System/Library/Fonts/Monaco.dfont:timecode='${TIMECODEESACPE}':r=30000/1001:fontcolor=white:fontsize=24:shadowx=2:shadowy=2:box=1:boxcolor=gray@0.8:x=w/2-tw/2:y=h*0.8"
 }
 
 _get_maxdvdbitrate(){
@@ -1441,8 +1440,13 @@ _prep_volume_adjustment(){
         if [ ! "${LOUD_ADJ}" ] ; then
             _get_volume_adjustment "${SOURCEFILE}"
         fi
-        _report -dt "Integrated loudness for $(basename "${INPUT_MOVIE}") is ${measured_I} LUFS. Reference is -24 LUFS. Will adjust by ${LOUD_ADJ} LUFS"
-        _add_audio_filter "loudnorm=measured_I=${measured_I}:measured_LRA=${measured_LRA}:measured_TP=${measured_TP}:measured_thresh=${measured_thresh}:offset=${target_offset}:linear=true:print_format=summary"
+        if [[ "${measured_I}" == "inf" ]] || [[ "${measured_I}" == "-inf" ]] ; then
+            VOLADJUST="N"
+            _report -wt "Integrated loudness for $(basename "${INPUT_MOVIE}") is ${measured_I} LUFS. Volume adjustment cannot be completed."
+        else 
+            _report -dt "Integrated loudness for $(basename "${INPUT_MOVIE}") is ${measured_I} LUFS. Reference is -24 LUFS. Will adjust by ${LOUD_ADJ} LUFS"
+            _add_audio_filter "loudnorm=measured_I=${measured_I}:measured_LRA=${measured_LRA}:measured_TP=${measured_TP}:measured_thresh=${measured_thresh}:offset=${target_offset}:linear=true:print_format=summary"
+        fi
     fi
 }
 
