@@ -12,7 +12,7 @@ fi
 
 _usage(){
     echo
-    echo "$(basename "${0}") ${VERSION}"
+    echo "$(basename "${0}")"
     echo "  -t set configuration file using the CLI"
     exit
 }
@@ -22,7 +22,7 @@ REQUIRED_VARIABLES=("OUTDIR_INGESTFILE" "OUTDIR_INGESTXDCAM" "OUTDIR_PAPER" "AIP
 
 OPTIND=1
 
-while getopts ":F:abth" OPT ; do
+while getopts ":F:ath" OPT ; do
     case "${OPT}" in
         F) FORMULA="${OPTARG}" ;;
         a) RUNPASHUA="Y" ;;
