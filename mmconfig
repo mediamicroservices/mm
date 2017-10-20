@@ -11,10 +11,11 @@ if [[ "$(uname -s)" = "Darwin" ]] ; then
 fi
 
 _usage(){
-    echo
-    echo "$(basename "${0}")"
-    echo "  -t set configuration file using the CLI"
-    exit
+    cat <<EOS
+$(basename "${0}")
+  -a  set configuration file using the GUI (default on macOS)
+  -t  set configuration file using the CLI
+EOS
 }
 
 # local variables
@@ -22,14 +23,12 @@ REQUIRED_VARIABLES=("OUTDIR_INGESTFILE" "OUTDIR_INGESTXDCAM" "OUTDIR_PAPER" "AIP
 
 OPTIND=1
 
-while getopts ":F:ath" OPT ; do
+while getopts ":ath" OPT ; do
     case "${OPT}" in
-        F) FORMULA="${OPTARG}" ;;
         a) RUNPASHUA="Y" ;;
         t) RUNPASHUA="N" ;;
-        h) _usage ;;
-        :) echo "Option -${OPTARG} requires an argument" ; exit 1 ;;
-        *) echo "bad option -${OPTARG}" ; _usage ;;
+        h) _usage ; exit 0 ;;
+        *) echo "bad option -${OPTARG}" ; _usage ; exit 1 ;;
     esac
 done
 
