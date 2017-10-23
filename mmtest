@@ -67,7 +67,7 @@ _checksumreport(){
     else
         _report -wt "Checksums do not match."
         _report -w "Checksum expected: $EXPECTED_CHECKSUM"
-        _report -w "Checksum generated: $ACTUAL_CHECKSUM" 
+        _report -w "Checksum generated: $ACTUAL_CHECKSUM"
         FAILEDCHECKSUMS+="$OUTPUT_RELATIVE_PATH "
     fi
 }

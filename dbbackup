@@ -45,15 +45,13 @@ while getopts "hec" opt ; do
     esac
 done
 
-
 FILES=$(ls -rt "$SQL_BACKUP_DIR"/"$DATABASE_NAME"_backup_*.sql.gz)
 FILE_COUNT=$(echo "$FILES" | wc -l)
 OLDEST_FILE=$(echo "$FILES" | head -n 1)
 BACKUP_FILE=${SQL_BACKUP_DIR}/"$DATABASE_NAME"_backup_`date +"%m-%d-%Y_%H-%M-%S"`.sql
 
-
 if [ "$FILE_COUNT" -ge "$COPIES_NUMBER" ] ; then
-    rm "$OLDEST_FILE" 
+    rm "$OLDEST_FILE"
 fi
 
 mysqldump --login-path="$SQL_LOGIN_PATH" "$DATABASE_NAME" > "$BACKUP_FILE"

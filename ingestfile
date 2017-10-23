@@ -89,7 +89,6 @@ fi
 [ -z "${PODCASTDELIVER}" ] && { echo "A directory for podcast delivery must be set. Use [ -w /path/to/deliver/podcastfiles] or run mmconfig to set PODCASTDELIVER." ; exit 1 ;};
 [ -z "${YOUTUBEDELIVER}" ] && { echo "A directory for youtube delivery must be set. Use [ -y /path/to/deliver/youtubefiles] or run mmconfig to set YOUTUBEDELIVER." ; exit 1 ;};
 
-
 #pashua interface settings
 CONF="
 # Set transparency: 0 is transparent, 1 is opaque

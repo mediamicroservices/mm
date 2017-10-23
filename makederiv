@@ -122,7 +122,7 @@ while [[ "${@}" != "" ]] ; do
          SUFFIX="_PODCAST"
      fi
      _report_to_db
-     
+
     _set_up_output
     if [[ "${OUTPUT_TYPE}" == "dvd" ]] || [[ "${OUTPUT_TYPE}" == "broadcast" ]] ; then
         INPUTOPTIONS+=(-y)
@@ -130,7 +130,7 @@ while [[ "${@}" != "" ]] ; do
         INPUTOPTIONS+=(-vsync 0)
     fi
     INPUTOPTIONS+=(-nostdin)
-        
+
     # get information on the input
     _get_height "${SOURCEFILE}"
     _get_width "${SOURCEFILE}"
@@ -140,7 +140,7 @@ while [[ "${@}" != "" ]] ; do
     _get_audiostreamcount "${SOURCEFILE}"
     _get_dar "${SOURCEFILE}"
     _get_sar "${SOURCEFILE}"
-    
+
     # set in and out times if used; ignore out time if a slate is being created
     if [[ -f "${INGESTLOG}" && "${ISOBJECT}" = "Y" ]] ; then
         INTIME=$(_readingestlog "intime")
@@ -157,7 +157,7 @@ while [[ "${@}" != "" ]] ; do
             MIDDLEOPTIONS+=(-to "${OUTTIME}")
         fi
     fi
-    
+
     # encoding options
     if [[ "${VIDEOSTREAMCOUNT}" -gt 0 ]] ; then
         if [[ "${CODEC_TAG_STRING}" == "mjp2" ]] ; then
@@ -511,7 +511,7 @@ while [[ "${@}" != "" ]] ; do
         MIDDLEOPTIONS+=(-map "[with_slate_video]" -map "[with_slate_stereo1]" -map "[with_slate_mono1]" -map "[with_slate_mono2]")
         fi
     fi
-    
+
     # temporary output set for dvd to allow mpeg -> iso transition
     if [[ "${OUTPUT_TYPE}" == "dvd" ]] ; then
         OUTPUT_TMP="$OUTPUT"
@@ -533,7 +533,7 @@ while [[ "${@}" != "" ]] ; do
         _run_critical_event mkisofs -f -dvd-video -udf -V "${volname:0:32}" -v -v -o "${OUTPUT}"  "${OUTPUTDIR}/${MEDIAID%.*}" 2> "${LOGDIR}/mkisofs_$(_get_iso8601_c)_$(basename ${0})_${VERSION}.txt"
         _run rm -r "${OUTPUTDIR}/${MEDIAID%.*}/"
     fi
-    
+
     echo
     _summarize_make
     if [[ "${OUTPUT_TYPE}" == "broadcast" ]] && [[ -z "${MAKEBROADCAST_DELIVERY_EMAIL_TO}" ]] ; then

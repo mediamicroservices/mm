@@ -4,7 +4,6 @@
 SCRIPTDIR=$(dirname $(which "${0}"))
 . "${SCRIPTDIR}/mmfunctions" || { echo "Missing '${SCRIPTDIR}/mmfunctions'. Exiting." ; exit 1 ;};
 
-
 while [ "${*}" != "" ] ; do
     INPUT="${1}"
     shift

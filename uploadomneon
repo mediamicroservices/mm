@@ -53,7 +53,6 @@ while getopts ":h" OPT; do
 done
 shift $(( ${OPTIND} - 1 ))
 
-
 if [ ! "${TMPDIR}" ] ; then
     _report -wt "The temporary directory must be set and be available. Run 'mmconfig'."
     exit 1

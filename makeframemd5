@@ -56,5 +56,3 @@ while [ "${*}" != "" ] ; do
     done)
     rm "${FILELIST}"
 done
-                
-
