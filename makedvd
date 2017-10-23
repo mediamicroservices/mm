@@ -1,172 +1,17 @@
 #!/bin/bash
 # makedvd
-VERSION="1.0"
+# v 2.0 integrate with new microservice makederiv to streamline derivative creation
+VERSION="2.0"
 SCRIPTDIR=$(dirname $(which "${0}"))
 . "${SCRIPTDIR}/mmfunctions" || { echo "Missing '${SCRIPTDIR}/mmfunctions'. Exiting." ; exit 1 ;};
-DEPENDENCIES=(ffmpeg ffprobe dvdauthor mkisofs)
-_initialize_make
-SUFFIX=""
-EXTENSION="iso"
 
 _usage(){
     echo
-    echo "$(basename "${0}") ${VERSION}"
-    echo "This application will create a DVD .iso file from a video file or package input with the following options."
-    echo "Dependencies: ${DEPENDENCIES[@]}"
-    echo "Usage: $(basename ${0}) [ -v dvd_label_prefix ] fileorpackage1 [ fileorpackage2 ...]"
-    echo "  -l (only use the left channel of the first audio track)"
-    echo "  -r (only use the right channel of the first audio track)"
-    echo "  -v dvdlabelprefix (optional)"
-    echo "  -d directory ( directory to deliver the resulting file to )"
-    echo "  -o directory ( directory to write the resulting file to )"
-    echo "  -n (dry-run mode, show the commands that would be run but don't do anything)"
-    echo "  -e emailaddress ( send an email about the delivery, only valid if -d is used )"
-    echo "  -E emailaddress ( send an email about process outcome )"
-    echo "  -h ( display this help )"
     echo
-    exit
+    _report -d "makedvd is an alias for the updated function makederiv (options below)."
+    _report -d "You can create a DVD with makederiv by typing: 'makederiv -T dvd [options] [input]'."
+    _report -d "Or continue to use makedvd using the valid options below."
+    "${SCRIPTDIR}/makederiv" -h
 }
 [ "${#}" = 0 ] && _usage
-
-user_input="${*}"
-# command-line options to set mediaid and original variables
-OPTIND=1
-while getopts ":lrv:o:d:e:E:nth" OPT ; do
-    case "${OPT}" in
-        l) AUDIOMAP="L";;
-        r) AUDIOMAP="R";;
-        v) DVDLABELPREFIX="${OPTARG}";;
-        o) OUTPUTDIR_FORCED="${OPTARG}" && _check_outputdir_forced ;;
-        d) DELIVERDIR="${OPTARG}" && _check_deliverdir ;;
-        e) EMAILADDRESS_DELIVERY="${OPTARG}" && check_emailaddress "${EMAILADDRESS_DELIVERY}" ;;
-        E) EMAILADDRESS_OUTCOME="${OPTARG}" && check_emailaddress "${EMAILADDRESS_OUTCOME}" ;;
-        t) TCBURN=Y;;
-        n) DRYRUN=true;;
-        h) _usage ;;
-        *) echo "bad option -${OPTARG}" ; _usage ;;
-        :) echo "Option -${OPTARG} requires an argument" ; exit 1 ;;
-    esac
-done
-shift $(( ${OPTIND} - 1 ))
-
-while [ "${*}" != "" ] ; do
-    # get context about the input
-    INPUT="${1}"
-    shift
-    if [ -z "${OUTPUTDIR_FORCED}" ] ; then
-        [ -d "${INPUT}" ] && { OUTPUTDIR="${INPUT}/objects/access/dvd" && LOGDIR="${INPUT}/metadata/logs" ;};
-        [ -f "${INPUT}" ] && { OUTPUTDIR=$(dirname "${INPUT}")"/access/dvd" && LOGDIR="$(dirname "${INPUT}")/access/logs" ;};
-        [ ! "${OUTPUTDIR}" ] && { OUTPUTDIR="${INPUT}/objects/access/dvd" && LOGDIR="${INPUT}/metadata/logs" ;};
-    else
-        OUTPUTDIR="${OUTPUTDIR_FORCED}"
-        LOGDIR="${OUTPUTDIR}/logs"
-    fi
-    _unset_variables
-    _find_input "${INPUT}"
-    MEDIAID=$(basename "${INPUT}" | cut -d. -f1)
-    _report_to_db
-
-    _set_up_output
-
-    # get information on the input
-    _get_height "${SOURCEFILE}"
-    _get_width "${SOURCEFILE}"
-    _get_dar "${SOURCEFILE}"
-    DARRATIO=$(echo "scale=3 ; ${DAR}" | bc)
-    if [ $(echo "scale=5 ; ${DARRATIO} > 1.5" | bc -l) = 1 ] ;then
-        ASPECT="16/9"
-        DVDASPECT="16:9"
-    else
-        ASPECT="4/3"
-        DVDASPECT="4:3"
-    fi
-    _get_maxdvdbitrate "${SOURCEFILE}"
-
-    # clear local arrays
-    _get_videostreamcount "${SOURCEFILE}"
-    _get_audiostreamcount "${SOURCEFILE}"
-
-    # encoding options
-    INPUTOPTIONS+=" -y"
-    INPUTOPTIONS+=(-nostdin)
-    if [[ "${VIDEOSTREAMCOUNT}" > 0 ]] ; then
-        _get_codectagstring "${SOURCEFILE}"
-        TIMECODEOVERLAY=""
-        if [ "${TCBURN}" = "Y" ] ; then
-            _get_timecode_overlay "${SOURCEFILE}"
-        fi
-        if [[ "${CODEC_TAG_STRING}" == "mjp2" ]] ; then
-             INPUTOPTIONS+=(-vcodec libopenjpeg)
-        fi
-        MIDDLEOPTIONS+=(-r:v ntsc)
-        MIDDLEOPTIONS+=(-c:v mpeg2video)
-        MIDDLEOPTIONS+=(-c:a ac3)
-        MIDDLEOPTIONS+=(-f dvd)
-        MIDDLEOPTIONS+=(-bf 2)
-        MIDDLEOPTIONS+=(-qscale:v 2)
-        MIDDLEOPTIONS+=(-mbd rd)
-        MIDDLEOPTIONS+=(-s 720x480)
-        MIDDLEOPTIONS+=(-pix_fmt yuv420p)
-        MIDDLEOPTIONS+=(-g 18)
-        MIDDLEOPTIONS+=(-b:v "${MAXDVDBITRATE}")
-        MIDDLEOPTIONS+=(-bt 400k)
-        MIDDLEOPTIONS+=(-top 0)
-        MIDDLEOPTIONS+=(-flags +ildct+ilme)
-        MIDDLEOPTIONS+=(-maxrate "${MAXDVDBITRATE}")
-        MIDDLEOPTIONS+=(-minrate 0)
-        MIDDLEOPTIONS+=(-bufsize 3600k)
-        MIDDLEOPTIONS+=(-packetsize 2048)
-        MIDDLEOPTIONS+=(-muxrate 10080000)
-        MIDDLEOPTIONS+=(-lmin 1)
-        MIDDLEOPTIONS+=(-lmax 200000)
-        MIDDLEOPTIONS+=(-aspect "${ASPECT}")
-        if  [[ "${WIDTH}" == 720 && "${HEIGHT}" == 486 ]] ; then
-            _add_video_filter "fieldorder=bff"
-            _add_video_filter "crop=720:480:0:4"
-            _add_video_filter "setdar=${ASPECT}${TIMECODEOVERLAY}"
-        elif  [[ "${WIDTH}" == 720 && "${HEIGHT}" == 480 ]] ; then
-            _add_video_filter "fieldorder=bff"
-            _add_video_filter "setdar=${ASPECT}${TIMECODEOVERLAY}"
-        elif  [[ "${WIDTH}" == 720 && "${HEIGHT}" == 512 ]] ; then
-            _add_video_filter "fieldorder=bff"
-            _add_video_filter "crop=720:480:0:32"
-            _add_video_filter "setdar=${ASPECT}${TIMECODEOVERLAY}"
-        else
-            _add_video_filter "fieldorder=bff"
-            _add_video_filter "scale=720:480:interl=1"
-            _add_video_filter "setdar=${ASPECT}${TIMECODEOVERLAY}"
-        fi
-    else
-        _report -wt "You can't make a dvd from this file. Exiting."
-        _writeerrorlog "makedvd" "The script was unable to create dvd from this file."
-        exit 1
-    fi
-    if [[ "${AUDIOSTREAMCOUNT}" > 0 ]] ; then
-        MIDDLEOPTIONS+=(-b:a 448000)
-        MIDDLEOPTIONS+=(-ar 48000)
-        _get_audio_index "${SOURCEFILE}"
-        _get_audio_mapping "${SOURCEFILE}"
-    fi
-    _prep_ffmpeg_log
-    # making the initial mpeg2 for the dvd
-    if [ "${CONCATSOURCE}" != "" ] ; then
-        FFMPEGINPUT="${CONCATSOURCE}"
-    fi
-
-    _filter_to_middle_option
-
-    _run_critical_event ffmpeg ${INPUTOPTIONS[@]} "${FFMPEGINPUT[@]}" ${MIDDLEOPTIONS[@]} "${OUTPUTDIR}/${MEDIAID%.*}.mpeg"
-    # Making DVD VIDEO_TS folder, chapters every 5 minutes, dvdauthor will ignore chapter markers greater than duration
-    export VIDEO_FORMAT=NTSC
-    _run_critical dvdauthor --title -v "ntsc+${DVDASPECT}" -a ac3+en -c 0,5:00,10:00,15:00,20:00,25:00,30:00,35:00,40:00,45:00,50:00,55:00,1:00:00,1:05:00,1:10:00,1:15:00,1:20:00,1:25:00,1:30:00,1:35:00,1:40:00,1:45:00,1:50:00,1:55:00,2:00:00,2:05:00,2:10:00,2:15:00,2:20:00,2:25:00,2:30:00,2:35:00,2:40:00,2:45:00,2:50:00,2:55:00,3:00:00,3:05:00,3:10:00,3:15:00,3:20:00,3:25:00,3:30:00,3:35:00,3:40:00,3:45:00,3:50:00,3:55:00 -f "${OUTPUTDIR}/${MEDIAID%.*}.mpeg" -o "${OUTPUTDIR}/${MEDIAID%.*}/" 2> "${LOGDIR}/dvdauthor_$(_get_iso8601_c)_$(basename ${0})_${VERSION}.txt"
-    _run rm "${OUTPUTDIR}/${MEDIAID%.*}.mpeg"
-    _run_critical_event dvdauthor -T -o "${OUTPUTDIR}/${MEDIAID%.*}/"
-    # Making DVD image file.
-    volname=$(echo "${DVDLABELPREFIX}${MEDIAID}")
-    _run_critical_event mkisofs -f -dvd-video -udf -V "${volname:0:32}" -v -v -o "${OUTPUT}"  "${OUTPUTDIR}/${MEDIAID%.*}" 2> "${LOGDIR}/mkisofs_$(_get_iso8601_c)_$(basename ${0})_${VERSION}.txt"
-    _run rm -r "${OUTPUTDIR}/${MEDIAID%.*}/"
-    echo
-    _summarize_make
-    _deliver_output
-    _log -e
-done
+"${SCRIPTDIR}/makederiv" -T dvd "${@}"
