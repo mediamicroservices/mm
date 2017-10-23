@@ -221,7 +221,6 @@ MAKEYOUTUBE_DELIVERY_EMAIL_TO.label = Please enter the email account (or multipl
 MAKEYOUTUBE_DELIVERY_EMAIL_TO.width = 125
 MAKEYOUTUBE_DELIVERY_EMAIL_TO.default = ${MAKEYOUTUBE_DELIVERY_EMAIL_TO}
 
-
 # MAKEBROADCAST_DELIVERY_EMAIL_TO
 MAKEBROADCAST_DELIVERY_EMAIL_TO.x = 600
 MAKEBROADCAST_DELIVERY_EMAIL_TO.y = 350
@@ -301,8 +300,6 @@ PERCEPTUAL_HASH.type = checkbox
 PERCEPTUAL_HASH.label = Generate video fingerprint?
 PERCEPTUAL_HASH.tooltip = This will create perceptual fingerprints of the input video stream.
 PERCEPTUAL_HASH.default = ${PERCEPTUAL_HASH}
-
-
 
 # Add a cancel button with default label
 cb.type=cancelbutton

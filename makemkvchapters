@@ -51,7 +51,7 @@ while [ "${*}" != "" ] ; do
         while [[ "${CHAPTER_NAME}" != 'q' && "${STARTTIME}" != 'q' && "${ENDTIME}" != 'q' && "${LINKEDSEGMENT}" != 'q' ]] ; do
             _ask_for_chapter
         done
-        
+
 _report "Start and end times must be in HH:MM:SS.mmm or S.mmm format. Note mmm is milliseconds and not frames."
 
 echo "<?xml version='1.0' encoding='UTF-8'?>

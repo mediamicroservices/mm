@@ -212,7 +212,6 @@ if editing in the terminal, use this option to leave the configuration file edit
 
 ***
 
-
 ## Database Instructions
 
 Media Microservices can be integrated with a database for the capture of a variety of preservation metadata generated through the mm workflow. Currently the MM Database supports PREMIS event information, fixity information, perceptual hashes for video files, mediainfo output and ingest logs.
@@ -311,7 +310,6 @@ To view the specific ffmpeg encoding options for each file, view the sourcecode 
 * if you are running ingestfile on digitized video files that have additional logs from digitization, and you need to set the in and out times for the file to be trimmed, you can use option -p. Your command will look like:  `ingestfile -p [file]`. This option does not have a GUI, so you will input information when prompted into the command line, including setting in and out times and dragging in any logs from digitization. Note that this option does not deliver to AIP storage, instead it keeps the AIP in the original directory.
 * if you would like to create an AIP but not have the file delivered to the omneon server or any of the access copies delivered, you can use option -n. Your command will look like:  `ingestfile -n [file]`.
 * if you would like to only deliver the AIP to the omneon server and AIP storage, you can use -i. Your command will look like:  `ingestfile -i [file]`.
-
 
 * here's two gifs of ingestfile
 <img src="https://github.com/mediamicroservices/mm/blob/master/Resources/ingestfile.gif" width="500">

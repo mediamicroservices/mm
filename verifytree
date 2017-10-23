@@ -93,7 +93,7 @@ while [ "${*}" != "" ] ; do
         #looks for any directories that are not access, service, or captions within the objects directory
         _runtest "There are directories other than access and service in the objects directory!" xml sel -t -v "/tree/directory/directory[@name='objects']/directory[@name!='access' and @name!='service' and @name!='captions']/@name" -n "${TEMPTREE}"
         #makes sure there is an object in the objects directory
-        _runtest -i "There isn't an object in the objects directory!" xml sel -t -v "/tree/directory/directory[@name='objects']/file[count(@name)>0]/@name" -n "${TEMPTREE}" 
+        _runtest -i "There isn't an object in the objects directory!" xml sel -t -v "/tree/directory/directory[@name='objects']/file[count(@name)>0]/@name" -n "${TEMPTREE}"
         #looks for any directories within access directory that are not dvd, images, mp3, podcast, or youtube_up
         _runtest "There are unexpected directories in the access directory." xml sel -t -v "/tree/directory/directory[@name='objects']/directory[@name='access']/directory[@name!='dvd' and @name!='images' and @name!='mp3' and @name!='podcast' and @name!='youtube_up']/@name" -n "${TEMPTREE}"
         #looks for unexpected files in youtube_up directory
@@ -129,7 +129,7 @@ while [ "${*}" != "" ] ; do
 
         #makes sure no file names contain colons
         _runtest "There are improperly named files in this package!" xml sel -t -v "//file[contains(@name,':')]/@name" -n  "${TEMPTREE}"
-        
+
         #finds any hidden files
         _runtest "There are hidden files in this package!" xml sel -t -v "//file[starts-with(@name,'.')]/@name" -n  "${TEMPTREE}"
     fi
