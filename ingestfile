@@ -113,7 +113,7 @@ fi
 [ -z "${OUTDIR_INGESTFILE}" ] && { echo "The processing directory must be set. Use [ -p /path/to/processing/directory ] or run mmconfig to set OUTDIR_INGESTFILE." ; exit 1 ;};
 [ -z "${AIP_STORAGE}" ] && { echo "The AIP Storage directory must be set. Use [ -a /path/to/AIP/storage/directory ] or run mmconfig to set AIP_STORAGE." ; exit 1 ;};
 [ -z "${PODCASTDELIVER}" ] && { echo "A directory for podcast delivery must be set. Use [ -w /path/to/deliver/podcastfiles] or run mmconfig to set PODCASTDELIVER." ; exit 1 ;};
-[ -z "${YOUTUBEDELIVER}" ] && { echo "A directory for youtube delivery must be set. Use [ -y /path/to/deliver/youtubefiles] or run mmconfig to set YOUTUBEDELIVER." ; exit 1 ;};
+# [ -z "${YOUTUBEDELIVER}" ] && { echo "A directory for youtube delivery must be set. Use [ -y /path/to/deliver/youtubefiles] or run mmconfig to set YOUTUBEDELIVER." ; exit 1 ;};
 
 #pashua interface settings
 CONF="
@@ -420,7 +420,7 @@ LOGDIR="${OUTDIR_INGESTFILE}/${MEDIAID}/metadata/logs"
 _run _mkdir2 "${LOGDIR}"
 INGESTLOG="${LOGDIR}/capture.log"
 
-# check for or create a RESOURCESPACEDELIVER directory
+# check for or create a 
 RESOURCESPACEDELIVER="${OUTDIR_INGESTFILE}/resourcespace_output"
 if [ ! -d "${RESOURCESPACEDELIVER}" ] && [ "${SILENT_RUNNING}" == "Y" ] ; then
     _run_critical _mkdir2 "${RESOURCESPACEDELIVER}"
@@ -536,17 +536,18 @@ if [ ! -z "${FORMULA}" ] ; then
 fi
 #create slate version first and upload to omneon
 if [ "${SLATE_CHOICE}" = "Y" ] ; then
-    "${SCRIPTDIR}/makederiv" -T broadcast -s "${MMAKEDERIVOPTS[@]}" "${OUTDIR_INGESTFILE}/${MEDIAID}"
+    "${SCRIPTDIR}/makederiv" -T broadcast -s "${MAKEDERIVOPTS[@]}" "${OUTDIR_INGESTFILE}/${MEDIAID}"
     if [ "${DELIVERYTOOMNEON}" == "Y" ] ; then
         _report -dt "STATUS Uploading ${OBJECTSDIR}/service/${MEDIAID%.*}_SLATE.mov to the OMNEON."
         "${SCRIPTDIR}/uploadomneon" "${OBJECTSDIR}/service/${MEDIAID%.*}_SLATE.mov"
         _email_delivery "${MAKEBROADCAST_DELIVERY_EMAIL_TO}"
     fi
+
 fi
 
 # make copy for broadcast
 if [ -z "${SILENT_RUNNING}" ] ; then 
-"${SCRIPTDIR}/makederiv" -T broadcast "${MAKEDERIVOPTS[@]}" "${OUTDIR_INGESTFILE}/${MEDIAID}"
+    "${SCRIPTDIR}/makederiv" -T broadcast "${MAKEDERIVOPTS[@]}" "${OUTDIR_INGESTFILE}/${MEDIAID}"
 fi
 
 # upload broadcast copy
@@ -571,24 +572,24 @@ if [ "${MAKEACCESSCOPIES}" == "Y" ] ; then
     "${SCRIPTDIR}/makewaveform" "${OUTDIR_INGESTFILE}/${MEDIAID}"
 
     if [ -z "${SILENT_RUNNING}" ] ; then
-    # make copy for youtube
-    unset MAKEDERIVOPTS
-    [ "${DELIVERACCESSCOPIES}" = "Y" ] && MAKEDERIVOPTS=(-Y -d "${YOUTUBEDELIVER}")
-    "${SCRIPTDIR}/makederiv" -T youtube "${MAKEDERIVOPTS[@]}" "${OUTDIR_INGESTFILE}/${MEDIAID}"
-
-    # make podcast
-    if [ $(echo "${MEDIAID}" | grep -E "${REGEX4PODCAST}") ] ; then
-        _report -dt "${MEDIAID} qualifies for podcast creation."
+        # make copy for youtube
         unset MAKEDERIVOPTS
-        [ "${DELIVERACCESSCOPIES}" == "Y" ] && MAKEDERIVOPTS=(-d "${PODCASTDELIVER}")
-        "${SCRIPTDIR}/makederiv" -T podcast "${MAKEDERIVOPTS[@]}" "${OUTDIR_INGESTFILE}/${MEDIAID}"
+        [ "${DELIVERACCESSCOPIES}" = "Y" ] && MAKEDERIVOPTS=(-Y -d "${YOUTUBEDELIVER}")
+        "${SCRIPTDIR}/makederiv" -T youtube "${MAKEDERIVOPTS[@]}" "${OUTDIR_INGESTFILE}/${MEDIAID}"
 
-    else
-        _report -dt "${MEDIAID} does NOT qualify for podcast creation, skipping."
-        _writeerrorlog "makederiv" -T podcast "${MEDIAID} did not qualify for podcast creation and was skipped."
-    fi
-    # make dvd
-    "${SCRIPTDIR}/makederiv" -T dvd "${OUTDIR_INGESTFILE}/${MEDIAID}"
+        # make podcast
+        if [ $(echo "${MEDIAID}" | grep -E "${REGEX4PODCAST}") ] ; then
+            _report -dt "${MEDIAID} qualifies for podcast creation."
+            unset MAKEDERIVOPTS
+            [ "${DELIVERACCESSCOPIES}" == "Y" ] && MAKEDERIVOPTS=(-d "${PODCASTDELIVER}")
+            "${SCRIPTDIR}/makederiv" -T podcast "${MAKEDERIVOPTS[@]}" "${OUTDIR_INGESTFILE}/${MEDIAID}"
+
+        else
+            _report -dt "${MEDIAID} does NOT qualify for podcast creation, skipping."
+            _writeerrorlog "makederiv" -T podcast "${MEDIAID} did not qualify for podcast creation and was skipped."
+        fi
+        # make dvd
+        "${SCRIPTDIR}/makederiv" -T dvd "${OUTDIR_INGESTFILE}/${MEDIAID}"
 
     else
         unset MAKERESOURCESPACEOPTS
@@ -622,10 +623,10 @@ _writeingestlog "datetime_end" "$(_get_iso8601)"
 # move and cleanup
 if [[ "${DELIVERYTOAIPSTORAGE}" == "Y" ]] ; then
     if [ "${AIP_STORAGE}" != "${OUTDIR_INGESTFILE}" ] ; then
-    "${SCRIPTDIR}/migratefiles" -r -o "${AIP_STORAGE}" "${OUTDIR_INGESTFILE}/${MEDIAID}"
-    RSYNC_ERR="${?}"
-    [ $(du -s "${OUTDIR_INGESTFILE}/${MEDIAID}" | awk '{print $1}') = "0" ] && rm -r "${OUTDIR_INGESTFILE}/${MEDIAID}"
-    _report -dt "STATUS Done. Final package has been delivered to ${AIP_STORAGE}/${MEDIAID}"
+        "${SCRIPTDIR}/migratefiles" -r -o "${AIP_STORAGE}" "${OUTDIR_INGESTFILE}/${MEDIAID}"
+        RSYNC_ERR="${?}"
+        [ $(du -s "${OUTDIR_INGESTFILE}/${MEDIAID}" | awk '{print $1}') = "0" ] && rm -r "${OUTDIR_INGESTFILE}/${MEDIAID}"
+        _report -dt "STATUS Done. Final package has been delivered to ${AIP_STORAGE}/${MEDIAID}"
     else echo "As Target directory is same as Input directory, files were not migrated."
     fi
 fi
