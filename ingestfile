@@ -113,7 +113,6 @@ fi
 [ -z "${PODCASTDELIVER}" ] && { echo "A directory for podcast delivery must be set. Use [ -w /path/to/deliver/podcastfiles] or run mmconfig to set PODCASTDELIVER." ; exit 1 ;};
 # [ -z "${YOUTUBEDELIVER}" ] && { echo "A directory for youtube delivery must be set. Use [ -y /path/to/deliver/youtubefiles] or run mmconfig to set YOUTUBEDELIVER." ; exit 1 ;};
 
-
 #pashua interface settings
 CONF="
 # Set transparency: 0 is transparent, 1 is opaque
@@ -543,16 +542,16 @@ else
     fi
 fi
 
-unset MAKEBROADCASTOPTS
-[ "${AUDIODECISION}" == "Only use left of the first audio track [for 21st Century]" -o "${AUDIODECISION}" == "left" ] && MAKEBROADCASTOPTS+=(-l)
-[ "${AUDIODECISION}" == "Only use right of the first audio track" ] && MAKEBROADCASTOPTS+=(-r)
-[ "${CROPDECISION}" == "Examine the video and auto-crop out black borders (slower)" ] && MAKEBROADCASTOPTS+=(-c)
+unset MAKEDERIVOPTS
+[ "${AUDIODECISION}" == "Only use left of the first audio track [for 21st Century]" -o "${AUDIODECISION}" == "left" ] && MAKEDERIVOPTS+=(-l)
+[ "${AUDIODECISION}" == "Only use right of the first audio track" ] && MAKEDERIVOPTS+=(-r)
+[ "${CROPDECISION}" == "Examine the video and auto-crop out black borders (slower)" ] && MAKEDERIVOPTS+=(-c)
 if [ ! -z "${FORMULA}" ] ; then
-    MAKEBROADCASTOPTS+=(-F "${FORMULA}")
+    MAKEDERIVOPTS+=(-F "${FORMULA}")
 fi
 #create slate version first and upload to omneon
 if [ "${SLATE_CHOICE}" = "Y" ] ; then
-    "${SCRIPTDIR}/makebroadcast" -s "${MAKEBROADCASTOPTS[@]}" "${OUTDIR_INGESTFILE}/${MEDIAID}"
+    "${SCRIPTDIR}/makederiv" -T broadcast -s "${MMAKEDERIVOPTS[@]}" "${OUTDIR_INGESTFILE}/${MEDIAID}"
     if [ "${DELIVERYTOOMNEON}" == "Y" ] ; then
         _report -dt "STATUS Uploading ${OBJECTSDIR}/service/${MEDIAID%.*}_SLATE.mov to the OMNEON."
         "${SCRIPTDIR}/uploadomneon" "${OBJECTSDIR}/service/${MEDIAID%.*}_SLATE.mov"
@@ -563,7 +562,7 @@ fi
 
 # make copy for broadcast
 if [ -z "${SILENT_RUNNING}" ] ; then 
-    "${SCRIPTDIR}/makebroadcast" "${MAKEBROADCASTOPTS[@]}" "${OUTDIR_INGESTFILE}/${MEDIAID}"
+    "${SCRIPTDIR}/makederiv" -T broadcast "${MAKEDERIVOPTS[@]}" "${OUTDIR_INGESTFILE}/${MEDIAID}"
 fi
 
 # upload broadcast copy
@@ -578,7 +577,7 @@ if [ "${MAKEACCESSCOPIES}" == "Y" ] ; then
     _report -dt "STATUS Making access copies."
 
     # makemp3
-    "${SCRIPTDIR}/makemp3" "${OUTDIR_INGESTFILE}/${MEDIAID}"
+    "${SCRIPTDIR}/makederiv" -T mp3 "${OUTDIR_INGESTFILE}/${MEDIAID}"
 
     # makeframes
     unset MAKEFRAMESOPTS
@@ -590,31 +589,30 @@ if [ "${MAKEACCESSCOPIES}" == "Y" ] ; then
 
     if [ -z "${SILENT_RUNNING}" ] ; then
         # makeyoutube
-        unset MAKEYOUTUBEOPTS
-        [ "${DELIVERACCESSCOPIES}" = "Y" ] && MAKEYOUTUBEOPTS=(-Y -d "${YOUTUBEDELIVER}")
-        "${SCRIPTDIR}/makeyoutube" "${MAKEYOUTUBEOPTS[@]}" "${OUTDIR_INGESTFILE}/${MEDIAID}"
+        unset MAKEDERIVOPTS
+        [ "${DELIVERACCESSCOPIES}" = "Y" ] && MAKEDERIVOPTS=(-Y -d "${YOUTUBEDELIVER}")
+        "${SCRIPTDIR}/makederiv" -T youtube "${MAKEDERIVOPTS[@]}" "${OUTDIR_INGESTFILE}/${MEDIAID}"
 
         # makepodcast
         if [ $(echo "${MEDIAID}" | grep -E "${REGEX4PODCAST}") ] ; then
             _report -dt "${MEDIAID} qualifies for podcast creation."
-            unset MAKEPODCASTOPTS
-            [ "${DELIVERACCESSCOPIES}" == "Y" ] && MAKEPODCASTOPTS=(-d "${PODCASTDELIVER}")
-            "${SCRIPTDIR}/makepodcast" "${MAKEPODCASTOPTS[@]}" "${OUTDIR_INGESTFILE}/${MEDIAID}"
+            unset MAKEDERIVOPTS
+            [ "${DELIVERACCESSCOPIES}" == "Y" ] && MAKEDERIVOPTS=(-d "${PODCASTDELIVER}")
+            "${SCRIPTDIR}/makederiv" -T podcast "${MAKEDERIVOPTS[@]}" "${OUTDIR_INGESTFILE}/${MEDIAID}"
 
         else
             _report -dt "${MEDIAID} does NOT qualify for podcast creation, skipping."
-            _writeerrorlog "makepodcast" "${MEDIAID} did not qualify for podcast creation and was skipped."
+            _writeerrorlog "makederiv" "${MEDIAID} did not qualify for podcast creation and was skipped."
         fi
         
         # makedvd
-        "${SCRIPTDIR}/makedvd" "${OUTDIR_INGESTFILE}/${MEDIAID}"
+        "${SCRIPTDIR}/makederiv" -T dvd "${OUTDIR_INGESTFILE}/${MEDIAID}"
     
     else
-        unset MAKERESOURCESPACEOPTS
-        MAKERESOURCESPACEOPTS=(-d "${RESOURCESPACEDELIVER}")
-        "${SCRIPTDIR}/makeresourcespace" "${MAKERESOURCESPACEOPTS[@]}" "${OUTDIR_INGESTFILE}/${MEDIAID}"
+        unset MAKEDERIVOPTS
+        MAKEDERIVOPTS=(-d "${RESOURCESPACEDELIVER}")
+        "${SCRIPTDIR}/makederiv" -T resourcespace "${MAKEDERIVOPTS[@]}" "${OUTDIR_INGESTFILE}/${MEDIAID}"
     fi
-
 fi
 
 # makemetadata

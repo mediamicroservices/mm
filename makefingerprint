@@ -29,7 +29,7 @@ while [ "${*}" != "" ] ; do
     SIGNATURE="${MEDIAID}""${SUFFIX}"."${EXTENSION}"
     _run_critical_event ffmpeg "${FFMPEGINPUT[@]}" -vf signature=format=xml:filename="${FINGERDIR}/${SIGNATURE}" -map 0:v -f null -
     FINGERPRINT_XML="${FINGERDIR}/${SIGNATURE}"
-    
+
     #Report to DB
     if [ "${PERCEPTUAL_HASH}" = "1" ] && [ "${PREMIS_DB}" = "Y" ]; then
         _fingerprint_to_db

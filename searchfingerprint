@@ -34,7 +34,6 @@ if ! [ "${1}" ] ; then
     _usage
 fi
 
-
 while [ "${*}" != "" ] ; do
     #Set up input and temp files
     INPUT="${1}"
