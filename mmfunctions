@@ -540,9 +540,11 @@ _get_frame_count(){
             _report -dt "The frame count according to the container is: ${CONTAINERFRAMECOUNT}"
             _report -dt "The frame count according to the video track is: ${VIDEOTRACKFRAMECOUNT}"
             _report -wt "warning - there are discrepancies between the container frame count and video track frame count. This could result in the desynchronization of audio and video."
-            echo "Enter q to quit, any other key to continue: "
-            read A2
-            [[ "${A2}" = "q" ]] && exit 0
+            if [ -z "${SILENT_RUNNING}" ] ; then 
+                echo "Enter q to quit, any other key to continue: "
+                read A2
+                [[ "${A2}" = "q" ]] && exit 0
+            fi
         fi
     fi
 }

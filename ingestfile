@@ -33,9 +33,10 @@ _usage(){
     echo "  -p Preservation mode- to be used when packaging digitized material and digitization logs. Does not make any deliveries, and creates the package in the same directory as the input."
     echo "  -n (do not make any deliveries except for sending the final package to ${AIP_STORAGE}.)"
     echo "  -i PSA Mode- to be used when packaging PSA files. Does not make any deliveries except for sending the final package to ${DELIVERYTOOMNEON}."
-    echo "  -u Enter the name of the operator. This also requires the flags -I for input file path and -m for media id.${NL}Triggers Silent-running mode which only makes a resourcespace access copy and delivers the package to the AIP delivery directory.${NL}All user-interactive functions are suppressed--NOTE: warnings are logged rather than requiring further direction from operator."
+    echo "  -u Enter the name of the operator. "
     echo "  -I Enter the path to the input file"
     echo "  -m Set mediaID"
+    echo "  -s Use SILENT_RUNNING mode. This also requires the flags -u for the operator name, -I for input file path, and -m for media id.${NL}SILENT_RUNNING suppresses user input, makes a resourcespace access copy and delivers the package to the AIP delivery directory.${NL}All user-interactive functions are suppressed--NOTE: warnings are logged rather than requiring further direction from operator."
     echo "  -h display this help"
     echo
     exit
@@ -44,16 +45,17 @@ _usage(){
 user_input="${*}"
 OPTIND=1
 
-while getopts ":F:pnheiu:I:m:" OPT ; do
+while getopts ":F:pnheiu:I:m:s" OPT ; do
     case "${OPT}" in
         F) FORMULA="${OPTARG}";;
         e) EDIT_MODE="N" ;;
         p) PRESERVATION_MODE="Y" ; DELIVERYTOOMNEON="N" ; DELIVERACCESSCOPIES="N" ; DELIVERYTOAIPSTORAGE="N" ;;
         n) DELIVERYTOOMNEON="N" ; DELIVERACCESSCOPIES="N" ;;
         i) DELIVERYTOOMNEON="Y" ; DELIVERACCESSCOPIES="N" ; DELIVERYTOAIPSTORAGE="Y" ;;
-        u) SILENT_RUNNING="Y" ; OPERATOR="${OPTARG}" ;;
+        u) OP="${OPTARG}" ;;
         I) INPUT="${OPTARG}" ;;
         m) MEDIAID="${OPTARG}" ;;
+        s) SILENT_RUNNING="Y" ;;
         h) _usage ;;
         *) echo "bad option -${OPTARG}" ; _usage ;;
         :) echo "Option -${OPTARG} requires an argument" ;  _writeerrorlog "ingestfile" "You used an invalid option and the script had to exit" ; exit 1 ;;
@@ -93,7 +95,7 @@ else
     exit 1
 fi
 
-if [ "${SILENT_RUNNING}" == "Y" ] && [[ "${OPERATOR}" == "" || "${INPUT}" == "" || "${MEDIAID}" == "" ]] ; then
+if [ "${SILENT_RUNNING}" == "Y" ] && [[ "${OP}" == "" || "${INPUT}" == "" || "${MEDIAID}" == "" ]] ; then
     echo "You must specify each of: operator name, input filepath, media id. Please assign a value to each of these and try again. :)"
     _report -wt "You tried to use ingestfile in SILENT_RUNNING mode and failed to specify one of the necessary variables: Operator name, input file path, and media id."
     exit 1
@@ -252,20 +254,12 @@ if
     echo "ERROR The MEDIA ID must only contain capital letters, numbers, hyphen and underscore"
     echo "Please reenter valid ID"
     MEDIAID=""
-    if [ -z "${SILENT_RUNNING}" ] ; then
-        _ask_mediaid
-    else
-        exit 1
-    fi
+    _ask_mediaid
 fi
 
-    if [ -z "${SILENT_RUNNING}" ] ; then
-        # interview the operator
-        _ask_operator
-        _ask_mediaid
-    fi
+    _ask_operator
+    _ask_mediaid
 
-    ## check for existing output
     if [ -d "${OUTDIR_INGESTFILE}/${MEDIAID}" ] ; then
         _report -wt "It looks like ${MEDIAID} was already ingested. If you want to overwrite the existing one please delete ${OUTDIR_INGESTFILE}/${MEDIAID} first and then try again."
         exit 1
@@ -292,42 +286,48 @@ fi
         read NOTVIDRESPONSE
         [ "${NOTVIDRESPONSE}" == "q" ] && exit 0
     fi
-    if [ "${AUDIODECISION}" = "" ] && [ "${SILENT_RUNNING}" = "" ] ; then
-        _report -q "Select an audio strategy? "
-        PS3="Selection? "
-        select AUDIODECISION in "Default audio mapping [first audio track used for stereo output]" "Only use left of the first audio track [for 21st Century]" "Only use right of the first audio track"
-        do
-            break
-        done
+    
+    if [ -z "${SILENT_RUNNING}" ] ; then
+
+        if [ "${AUDIODECISION}" = "" ] ; then
+            _report -q "Select an audio strategy? "
+            PS3="Selection? "
+            select AUDIODECISION in "Default audio mapping [first audio track used for stereo output]" "Only use left of the first audio track [for 21st Century]" "Only use right of the first audio track"
+            do
+                break
+            done
+        fi
+
+        if [ "${CROPDECISION}" = "" ] ; then
+            _report -q "Select a cropping strategy? "
+            PS3="Selection? "
+            select CROPDECISION in "Do not crop." "Examine the video and auto-crop out black borders (slower)"
+            do
+                break
+            done
+        fi
+
+        if [ "${FORMULA}" = "" ] ; then
+            _report -q "Select an optional formula for unusual cases? "
+            _report -d "In most cases, select 'none'. To force the input file to be interpreted as top or bottom field first interlacement, select tff or bff. To stretch the input video to 1920x1080 HD frame size, select 'hds'. To squish into Standard Definition, select 'sds'."
+            PS3="Selection? "
+            select FORMULA in "none" "check interlacement" "tff" "bff" "hds" "sds"
+            do
+                break
+            done
+        fi
+
+        if [ "${CLEANUPDECISION}" = "" ] ; then
+            _report -q "Select a cleanup strategy? "
+            PS3="Selection? "
+            select CLEANUPDECISION in "Leave source file where it is." "Remove source file after successful ingest"
+            do
+                break
+            done
+        fi
+
     fi
 
-    if [ "${CROPDECISION}" = "" ] && [ "${SILENT_RUNNING}" = "" ] ; then
-        _report -q "Select a cropping strategy? "
-        PS3="Selection? "
-        select CROPDECISION in "Do not crop." "Examine the video and auto-crop out black borders (slower)"
-        do
-            break
-        done
-    fi
-
-    if [ "${FORMULA}" = "" ] && [ "${SILENT_RUNNING}" = "" ] ; then
-        _report -q "Select an optional formula for unusual cases? "
-        _report -d "In most cases, select 'none'. To force the input file to be interpreted as top or bottom field first interlacement, select tff or bff. To stretch the input video to 1920x1080 HD frame size, select 'hds'. To squish into Standard Definition, select 'sds'."
-        PS3="Selection? "
-        select FORMULA in "none" "check interlacement" "tff" "bff" "hds" "sds"
-        do
-            break
-        done
-    fi
-
-    if [ "${CLEANUPDECISION}" = "" ] && [ "${SILENT_RUNNING}" = "" ] ; then
-        _report -q "Select a cleanup strategy? "
-        PS3="Selection? "
-        select CLEANUPDECISION in "Leave source file where it is." "Remove source file after successful ingest"
-        do
-            break
-        done
-    fi
     if [ "${CLEANUPDECISION}" = "Remove source file after successful ingest" ] ; then
         CLEANUP_CHOICE="Y"
     else
@@ -414,14 +414,12 @@ if [ "${PHASECHECKTEST}" = "Y" ] ; then
     fi
 fi
 
+echo "BUUUUUUUUUUUUTS"
+
 #frame count test- will ask operator for what to do if there is a discrepancy between the container frame count and the video track frame count.
-if ! -z _get_frame_count "${INPUT}" && [ "${SILENT_RUNNING}" == "Y" ] ; then
-    _report -dt "The frame count according to the container is: ${CONTAINERFRAMECOUNT}"
-    _report -dt "The frame count according to the video track is: ${VIDEOTRACKFRAMECOUNT}"
-    _report -wt "warning! - there are discrepancies between the container frame count and video track frame count. This could result in the desynchronization of audio and video."
-elif [ -z "${SILENT_RUNNING}" ] ; then
-    _get_frame_count "${INPUT}"
-fi 
+_get_frame_count "${INPUT}"
+
+echo "BLURRRRRRRRRPS"
 
 # set up package directories
 OBJECTSDIR="${OUTDIR_INGESTFILE}/${MEDIAID}/objects"
@@ -534,6 +532,7 @@ if [ "${FROM}" == "${TO}" -a "${CLEANUP_CHOICE}" == "Y" ] ; then
         _run_critical mv -v -n "${FILES[@]}" "${LOGDIR}/"
     fi
 else
+    echo "BTUTUTUEUEUUUXUXU"
     _report -dt "STATUS Copying the original file to library storage at ${OBJECTSDIR}."
     LOGFILE="${LOGDIR}/rsync_$(_get_iso8601_c)_$(basename ${0})_${VERSION}.txt"
     "${SCRIPTDIR}/migratefiles" -l "${LOGFILE}" -o "${OBJECTSDIR}" "${INPUT}"
