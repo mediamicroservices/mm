@@ -249,7 +249,7 @@ if [[ "${cb}" -eq 1 ]] ; then
 fi
 
 if
-    [ ! -z $(echo "${MEDIAID}" | grep -v "^[A-Z0-9_-]*$") ] ; then
+    [ ! -z $(echo "${MEDIAID}" | grep -v "^[a-zA-Z0-9_-]*$") ] ; then
     echo "ERROR The MEDIA ID must only contain capital letters, numbers, hyphen and underscore"
     echo "Please reenter valid ID"
     MEDIAID=""
@@ -273,6 +273,7 @@ fi
 
     # Check if file is being modified
     INPUT_DATE=$(getfileinfo "${INPUT}" | grep modified | cut -d' ' -f2-)
+    sleep .05
     CURRENT_DATE=$(date -j "+%m/%d/%Y %H:%M:%S")
     if [ "${INPUT_DATE}" = "${CURRENT_DATE}" ] ; then
         _report -w "WARNING: Input is currently being modified. Exiting."
@@ -541,7 +542,6 @@ if [ "${SLATE_CHOICE}" = "Y" ] ; then
         "${SCRIPTDIR}/uploadomneon" "${OBJECTSDIR}/service/${MEDIAID%.*}_SLATE.mov"
         _email_delivery "${MAKEBROADCAST_DELIVERY_EMAIL_TO}"
     fi
-
 fi
 
 # make copy for broadcast
