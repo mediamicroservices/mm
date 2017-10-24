@@ -23,7 +23,6 @@ Mediamicroservices includes a script for database backup.  This can be either ru
 
 To configure database backup use the command `dbbackup -e`. This will open the config file in a terminal editor. Set the neccessary variables to your desired values.
 
-
 ## Database structure
 The Database is divided into six tables with the following structure:
 
@@ -88,8 +87,6 @@ __Stores fingerprints (perceptual hash information).__
 Searches the LTO schema information stored in the database. Input for standard search can consist either of a Tape ID or a Media ID. If the `-c` flag is used, input is a file to be compared against information stored in the DB. Input file will be compared for modification time, file size and file name.
 
 Usage: searchlto [-h] (help) [-c] (compares an input file to file information stored in DB) [-f] (shows full schema) [Input]
-
-
 
 #### searchfingerprint
 

@@ -31,12 +31,12 @@ while [ "${*}" != "" ] ; do
     _report_to_db
     echo "The input is: ${INPUT}"
     echo "The target is: ${TARGET}"
-    
+
     if [ "${INPUT}/" == "${TARGET}" ] ; then
         echo "Due to the Target location and the Input location being the same, files will not be migrated."
         exit 0
     fi
-    
+
     shift
     if [ -z "${LOGFILE}" ] ; then
         LOGFILE="${HOME}/migrate.log"
