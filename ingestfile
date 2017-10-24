@@ -113,7 +113,7 @@ fi
 [ -z "${OUTDIR_INGESTFILE}" ] && { echo "The processing directory must be set. Use [ -p /path/to/processing/directory ] or run mmconfig to set OUTDIR_INGESTFILE." ; exit 1 ;};
 [ -z "${AIP_STORAGE}" ] && { echo "The AIP Storage directory must be set. Use [ -a /path/to/AIP/storage/directory ] or run mmconfig to set AIP_STORAGE." ; exit 1 ;};
 [ -z "${PODCASTDELIVER}" ] && { echo "A directory for podcast delivery must be set. Use [ -w /path/to/deliver/podcastfiles] or run mmconfig to set PODCASTDELIVER." ; exit 1 ;};
-# [ -z "${YOUTUBEDELIVER}" ] && { echo "A directory for youtube delivery must be set. Use [ -y /path/to/deliver/youtubefiles] or run mmconfig to set YOUTUBEDELIVER." ; exit 1 ;};
+[ -z "${YOUTUBEDELIVER}" ] && { echo "A directory for youtube delivery must be set. Use [ -y /path/to/deliver/youtubefiles] or run mmconfig to set YOUTUBEDELIVER." ; exit 1 ;};
 
 #pashua interface settings
 CONF="
@@ -249,7 +249,7 @@ if [[ "${cb}" -eq 1 ]] ; then
 fi
 
 if
-    [ ! -z $(echo "${MEDIAID}" | grep -v "^[a-zA-Z0-9_-]*$") ] ; then
+    [ ! -z $(echo "${MEDIAID}" | grep -v "^[A-Z0-9_-]*$") ] ; then
     echo "ERROR The MEDIA ID must only contain capital letters, numbers, hyphen and underscore"
     echo "Please reenter valid ID"
     MEDIAID=""
@@ -273,7 +273,6 @@ fi
 
     # Check if file is being modified
     INPUT_DATE=$(getfileinfo "${INPUT}" | grep modified | cut -d' ' -f2-)
-    sleep .05
     CURRENT_DATE=$(date -j "+%m/%d/%Y %H:%M:%S")
     if [ "${INPUT_DATE}" = "${CURRENT_DATE}" ] ; then
         _report -w "WARNING: Input is currently being modified. Exiting."
@@ -409,12 +408,8 @@ if [ "${PHASECHECKTEST}" = "Y" ] ; then
     fi
 fi
 
-echo "BUUUUUUUUUUUUTS"
-
 #frame count test- will ask operator for what to do if there is a discrepancy between the container frame count and the video track frame count.
 _get_frame_count "${INPUT}"
-
-echo "BLURRRRRRRRRPS"
 
 # set up package directories
 OBJECTSDIR="${OUTDIR_INGESTFILE}/${MEDIAID}/objects"
@@ -424,7 +419,7 @@ LOGDIR="${OUTDIR_INGESTFILE}/${MEDIAID}/metadata/logs"
 _run _mkdir2 "${LOGDIR}"
 INGESTLOG="${LOGDIR}/capture.log"
 
-# check for or create a 
+# check for or create a RESOURCESPACEDELIVER directory
 RESOURCESPACEDELIVER="${OUTDIR_INGESTFILE}/resourcespace_output"
 if [ ! -d "${RESOURCESPACEDELIVER}" ] && [ "${SILENT_RUNNING}" == "Y" ] ; then
     _run_critical _mkdir2 "${RESOURCESPACEDELIVER}"
@@ -523,7 +518,6 @@ if [ "${FROM}" == "${TO}" -a "${CLEANUP_CHOICE}" == "Y" ] ; then
         _run_critical mv -v -n "${FILES[@]}" "${LOGDIR}/"
     fi
 else
-    echo "BTUTUTUEUEUUUXUXU"
     _report -dt "STATUS Copying the original file to library storage at ${OBJECTSDIR}."
     LOGFILE="${LOGDIR}/rsync_$(_get_iso8601_c)_$(basename ${0})_${VERSION}.txt"
     "${SCRIPTDIR}/migratefiles" -l "${LOGFILE}" -o "${OBJECTSDIR}" "${INPUT}"
