@@ -100,6 +100,11 @@ else
     echo "No matches for specified output type."
     _usage
 fi
+if [[ "${OUTPUT_TYPE}" == "waveform" ]] ; then
+    OUTPUT_CAT="metadata"
+else
+    OUTPUT_CAT="objects"
+fi
 _check_dependencies "${DEPENDENCIES[@]}"
 
 while [[ "${@}" != "" ]] ; do
@@ -107,9 +112,9 @@ while [[ "${@}" != "" ]] ; do
     INPUT="${1}"
     shift
     if [ -z "${OUTPUTDIR_FORCED}" ] ; then
-        [ -d "${INPUT}" ] && { OUTPUTDIR="${INPUT}/objects/${RELATIVEPATH}" && LOGDIR="${INPUT}/metadata/logs/${OUTPUT_TYPE}" ;};
+        [ -d "${INPUT}" ] && { OUTPUTDIR="${INPUT}/${OUTPUT_CAT}/${RELATIVEPATH}" && LOGDIR="${INPUT}/metadata/logs/${OUTPUT_TYPE}" ;};
         [ -f "${INPUT}" ] && { OUTPUTDIR=$(dirname "${INPUT}")"/${RELATIVEPATH}" && LOGDIR="$(dirname "${INPUT}")/${RELATIVEPATH}/logs/${OUTPUT_TYPE}" ;};
-        [ ! "${OUTPUTDIR}" ] && { OUTPUTDIR="${INPUT}/objects/${RELATIVEPATH}" && LOGDIR="${INPUT}/metadata/logs/${OUTPUT_TYPE}" ;};
+        [ ! "${OUTPUTDIR}" ] && { OUTPUTDIR="${INPUT}/${OUTPUT_CAT}/${RELATIVEPATH}" && LOGDIR="${INPUT}/metadata/logs/${OUTPUT_TYPE}" ;};
     else
         OUTPUTDIR="${OUTPUTDIR_FORCED}"
         LOGDIR="${OUTPUTDIR}/logs/${OUTPUT_TYPE}"
