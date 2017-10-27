@@ -40,7 +40,6 @@ table of contents
     * [makeprores](https://github.com/mediamicroservices/mm#makeprores)
     * [makeqctoolsreport]()
     * [makeresourcespace](https://github.com/mediamicroservices/mm#makeresourcespace)
-    * [makeslate](https://github.com/mediamicroservices/mm#makeslate)
     * [makeyoutube](https://github.com/mediamicroservices/mm#makeyoutube)
     * [migratefiles](https://github.com/mediamicroservices/mm#migratefiles)
     * [qatesting](https://github.com/mediamicroservices/mm#qatesting)
@@ -393,9 +392,6 @@ To view the specific ffmpeg encoding options for each file, view the sourcecode 
     * If you use option n, your command will look like this: `makeresourcespace -n [input]`.
     * If you use option e, your command will look like this: `makeresourcespace -e -d [path/to/directory] [input]`.
     * If you use option -E, your command will look like this: `makeresourcespace -E [input]`.
-
-#### makeslate
-* makeslate creates a slate to be inserted before a broadcast program begins. To use makeslate at your own institution, you will have to manually edit the file based on your institutional needs. makeslate writes a short .mov file to your desktop. to run makeslate, your command will look like this: `makeslate [input]`.
 
 #### makeyoutube
 * makeyoutube creates a high quality h264 file from a video file or package input. Your command will look like this: `makeyoutube [input]`.
