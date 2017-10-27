@@ -28,10 +28,10 @@ mp3/sample1.mp3,75fa2d6089c74de3e0f7e2cfdf422c59
 mp3/sample2.mp3,ff34154e7c334f1073b826687357fbc9
 mp3/sample3.mp3,65bea5b801253b4275afe02970bb5886
 mp3/sample4.mp3,7fa7bd8a195d39bca8be77ecb25d8a13
-pod/sample1_PODCAST.mov,d451a78e089f275f44c3515a5d9a2ade
-pod/sample2_PODCAST.mov,e344406b135ccddc0a873cfbbbdb6789
-pod/sample3_PODCAST.mov,d97562443bb3f4e33025a79ead750a11
-pod/sample4_PODCAST.mov,cc55e1ddcc4e0ba726f1fccf791a4c8b"
+pod/sample1_podcast.mov,d451a78e089f275f44c3515a5d9a2ade
+pod/sample2_podcast.mov,e344406b135ccddc0a873cfbbbdb6789
+pod/sample3_podcast.mov,d97562443bb3f4e33025a79ead750a11
+pod/sample4_podcast.mov,cc55e1ddcc4e0ba726f1fccf791a4c8b"
 
 # make test folders
 ROOTDIR="/tmp/testmakederiv$(date +%Y%m%d%H%M%S)"
@@ -97,7 +97,7 @@ for file in `cat /tmp/list.txt` ; do
     OUTPUT_RELATIVE_PATH=$(echo "${OUTPUT}" | sed "s:${ROOTDIR}/::g")
     _checksumreport
     "${SCRIPTDIR}/makederiv" -T podcast -o "${POD_TESTDIR}" -E "${EMAILADDRESS_OUTCOME}" "$file"
-    OUTPUT="${POD_TESTDIR}/$(basename "${file%.*}_PODCAST.mov")"
+    OUTPUT="${POD_TESTDIR}/$(basename "${file%.*}_podcast.mov")"
     OUTPUT_RELATIVE_PATH=$(echo "${OUTPUT}" | sed "s:${ROOTDIR}/::g")
     _checksumreport
 done
