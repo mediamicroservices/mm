@@ -1,87 +1,17 @@
 #!/bin/bash
 # makewaveform, makes a visual representation of the primary audio of the input
+# v 2.0 integrate with new microservice makederiv to streamline derivative creation
 VERSION="1.0"
 SCRIPTDIR=$(dirname $(which "${0}"))
 . "${SCRIPTDIR}/mmfunctions" || { echo "Missing '${SCRIPTDIR}/mmfunctions'. Exiting." ; exit 1 ;};
-DEPENDENCIES=(ffmpeg ffprobe)
-_initialize_make
-SUFFIX="_waveform"
-EXTENSION="png"
-RELATIVEPATH="depictions"
 
 _usage(){
     echo
-    echo "$(basename "${0}") ${VERSION}"
-    echo "This application will create a visual representation of the primary audio of the input."
-    echo "Dependencies: ${DEPENDENCIES[@]}"
-    echo "Usage: $(basename ${0}) [ -d /path/to/deliver/to/ ] fileorpackage1 [ fileorpackage2 ...]"
-    echo "  -d directory ( directory to deliver the resulting file to )"
-    echo "  -o directory ( directory to write the resulting file to )"
-    echo "  -n (dry-run mode, show the commands that would be run but don't do anything)"
-    echo "  -e emailaddress ( send an email about the delivery, only valid if -d is used )"
-    echo "  -E emailaddress ( send an email about process outcome )"
-    echo "  -h ( display this help )"
     echo
-    exit
+    _report -d "makewaveform is an alias for the updated function makederiv (options below)."
+    _report -d "You can create a a visual representation of the primary audio of the input with makederiv by typing: 'makederiv -T waveform [options] [input]'."
+    _report -d "Or continue to use makewaveform using the valid options below."
+    "${SCRIPTDIR}/makederiv" -h
 }
 [ "${#}" = 0 ] && _usage
-
-user_input="${*}"
-# command-line options to set mediaid and original variables
-OPTIND=1
-while getopts ":o:d:e:E:nh" OPT ; do
-    case "${OPT}" in
-        o) OUTPUTDIR_FORCED="${OPTARG}" && _check_outputdir_forced ;;
-        d) DELIVERDIR="${OPTARG}" && _check_deliverdir ;;
-        e) EMAILADDRESS_DELIVERY="${OPTARG}" && check_emailaddress "${EMAILADDRESS_DELIVERY}" ;;
-        E) EMAILADDRESS_OUTCOME="${OPTARG}" && check_emailaddress "${EMAILADDRESS_OUTCOME}" ;;
-        n) DRYRUN=true;;
-        h) _usage ;;
-        *) echo "bad option -${OPTARG}" ; _usage ;;
-        :) echo "Option -${OPTARG} requires an argument" ; _writeerrorlog "makewaveform" "The option selected required an argument and none was provided. The script had to exit." ; exit 1 ;;
-    esac
-done
-shift $(( ${OPTIND} - 1 ))
-
-while [ "${*}" != "" ] ; do
-    # get context about the input
-    INPUT="${1}"
-    shift
-    if [ -z "${OUTPUTDIR_FORCED}" ] ; then
-        [ -d "${INPUT}" ] && { OUTPUTDIR="$INPUT/metadata/${RELATIVEPATH}" && LOGDIR="${INPUT}/metadata/logs" ;};
-        [ -f "${INPUT}" ] && { OUTPUTDIR=$(dirname "${INPUT}")"/${RELATIVEPATH}" && LOGDIR="$(dirname "${INPUT}")/${RELATIVEPATH}/logs" ;};
-        [ ! "${OUTPUTDIR}" ] && { OUTPUTDIR="${INPUT}/metadata/${RELATIVEPATH}" && LOGDIR="${INPUT}/metadata/logs" ;};
-    else
-        OUTPUTDIR="${OUTPUTDIR_FORCED}"
-        LOGDIR="${OUTPUTDIR}/logs"
-    fi
-    _unset_variables
-    _find_input "${INPUT}"
-    MEDIAID=$(basename "${INPUT}" | cut -d. -f1)
-    _report_to_db
-
-    _set_up_output
-
-    # encoding options
-    _get_audiostreamcount "${SOURCEFILE}"
-    INPUTOPTIONS+=(-nostdin)
-    if [[ "${AUDIOSTREAMCOUNT}" > 0 ]] ; then
-        MIDDLEOPTIONS+=(-vn)
-        MIDDLEOPTIONS+=(-frames:v 1)
-        _add_audio_filter "showwavespic=split_channels=1:scale=log:s=1920x240:colors=purple|blue|green|red"
-    else
-        continue
-    fi
-    _prep_ffmpeg_log
-    if [ "${CONCATSOURCE}" != "" ] ; then
-        FFMPEGINPUT="${CONCATSOURCE}"
-    fi
-
-    _filter_to_middle_option
-
-    _run_critical_event ffmpeg "${INPUTOPTIONS[@]}" "${FFMPEGINPUT[@]}" "${MIDDLEOPTIONS[@]}" "${OUTPUT}"
-    echo
-    _summarize_make
-    _deliver_output "${MAKEYOUTUBE_DELIVERY_EMAIL_TO}"
-    _log -e
-done
+"${SCRIPTDIR}/makederiv" -T waveform "${@}"

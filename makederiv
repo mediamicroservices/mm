@@ -20,6 +20,7 @@ _usage(){
         echo "      dvd (iso)"
         echo "      mp3 (mp3)"
         echo "      podcast (mov)"
+        echo "      waveform (png)"
         echo "  -l (only use the left channel of the first audio track)"
         echo "  -r (only use the right channel of the first audio track)"
         echo "  -t (burn timecode overlay)"
@@ -92,6 +93,9 @@ elif [[ "${OUTPUT_TYPE}" == "mp3" ]] ; then
 elif [[ "${OUTPUT_TYPE}" == "podcast" ]] ; then
     EXTENSION="mov"
     RELATIVEPATH="access/podcast"
+elif [[ "${OUTPUT_TYPE}" == "waveform" ]] ; then
+    EXTENSION="png"
+    RELATIVEPATH="depictions"
 else
     echo "No matches for specified output type."
     _usage
@@ -115,18 +119,19 @@ while [[ "${@}" != "" ]] ; do
 
     MEDIAID=$(basename "${INPUT}" | cut -d. -f1)
     INGESTLOG="${LOGDIR}/capture.log"
-     if [ "${ADDSLATE}" = "Y" ] ; then
+     if [[ "${ADDSLATE}" = "Y" ]]; then
          SUFFIX="_SLATE"
-     fi
-     if [ "${OUTPUT_TYPE}" == "podcast" ] ; then
+     elif [[ "${OUTPUT_TYPE}" == "podcast" ]] ; then
          SUFFIX="_podcast"
+     elif [[ "${OUTPUT_TYPE}" == "waveform" ]] ; then
+         SUFFIX="_waveform"
      fi
      _report_to_db
 
     _set_up_output
     if [[ "${OUTPUT_TYPE}" == "dvd" ]] || [[ "${OUTPUT_TYPE}" == "broadcast" ]] ; then
         INPUTOPTIONS+=(-y)
-    elif [[ "${OUTPUT_TYPE}" != "mp3" ]] && [[ "${OUTPUT_TYPE}" != "podcast" ]] ; then
+    elif [[ "${OUTPUT_TYPE}" != "mp3" ]] && [[ "${OUTPUT_TYPE}" != "podcast" ]] && [[ "${OUTPUT_TYPE}" != "waveform" ]] ; then
         INPUTOPTIONS+=(-vsync 0)
     fi
     INPUTOPTIONS+=(-nostdin)
@@ -437,6 +442,8 @@ while [[ "${@}" != "" ]] ; do
             # MIDDLEOPTIONS+=(-bufsize:v 6000k)
             _add_video_filter "yadif"
             _add_video_filter "scale=640:trunc(ow/dar/2)*2:interl=1"
+        elif [[ "${OUTPUT_TYPE}" == "mp3" ]] || [[ "${OUTPUT_TYPE}" == "waveform" ]] ; then
+            _report -wt "No video stream associated with derivative type."
         else
             echo "Invalid video derivative type."
         fi
@@ -482,6 +489,14 @@ while [[ "${@}" != "" ]] ; do
             MIDDLEOPTIONS+=("${AUDIOMAPPING_FFMPEG[@]}")
             MIDDLEOPTIONS+=(-c:a aac -strict -2)
             MIDDLEOPTIONS+=(-b:a 96k)
+        elif [[ "${OUTPUT_TYPE}" == "waveform" ]] ; then
+            if [[ "${AUDIOSTREAMCOUNT}" > 0 ]] ; then
+                MIDDLEOPTIONS+=(-vn)
+                MIDDLEOPTIONS+=(-frames:v 1)
+                _add_audio_filter "showwavespic=split_channels=1:scale=log:s=1920x240:colors=purple|blue|green|red"
+            else
+                continue
+            fi
         else
             echo "Invalid audio derivative type."
         fi
