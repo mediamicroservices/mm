@@ -1,6 +1,6 @@
 #!/bin/bash
 # mmtest, regression test for edits to "make" scripts
-# does not test dvd derivatives or previously DVD-only options; iso file checksums cannot match consistently
+# does not test dvd derivatives or DVD-specific options; iso file checksums cannot match consistently
 VERSION="1.0"
 SCRIPTDIR=$(dirname $(which "${0}"))
 . "${SCRIPTDIR}/mmfunctions" || { echo "Missing '${SCRIPTDIR}/mmfunctions'. Exiting." ; exit 1 ;};
@@ -107,6 +107,6 @@ else
 fi
 
 # delete all test files after 10 minutes
-echo "mmtest will delete test files from /tmp in 1 minute; press control-C to keep files in /tmp folder."
-sleep 60 && rm -r "${ROOTDIR}"
+echo "mmtest will delete test files from /tmp in 5 minute; press control-C to keep files in /tmp folder."
+sleep 300 && rm -r "${ROOTDIR}"
 
