@@ -107,6 +107,6 @@ else
 fi
 
 # delete all test files after 10 minutes
-echo "mmtest will delete test files from /tmp in 5 minute; press control-C to keep files in /tmp folder."
+echo "mmtest will delete test files from /tmp in 5 minutes; press control-C to keep files in /tmp folder."
 sleep 300 && rm -r "${ROOTDIR}"
 
