@@ -7,31 +7,31 @@ SCRIPTDIR=$(dirname $(which "${0}"))
 DEPENDENCIES=(ffmpeg ffprobe)
 _initialize_make
 
-# expected checksums values - last updated 10/20/17 02:30 PM
-FIXITY_TABLE="youtube/sample1.mp4,410712a4d7257b3c8a97e02a5b2f201f
-youtube/sample2.mp4,2a697aacb36c4410c569bf166f3f6e8d
-youtube/sample3.mp4,6bd650e8e866172571b10081116e8454
-youtube/sample4.mp4,9e1785bf9cf8bf9c68e54dcb04e0597d
-broadcast/sample1_SLATE.mov,324387df9854dae4d311bfc18710fc48
-broadcast/sample2_SLATE.mov,a55ab285829e06475b338a5bbcc773fb
-broadcast/sample3_SLATE.mov,551c0f57dff021b5025d63c97b1b1ff9
-broadcast/sample4_SLATE.mov,ec17629154ed6d923cb719a04ce3f1db
-prores/sample1.mov,2cf8bd842c52419a9999702f26f529ff
-prores/sample2.mov,3b392a8793189a9ec22364f8735660a3
-prores/sample3.mov,d7fef5955a9c266a3399c5da3e965179
-prores/sample4.mov,2c178c9527dbbe1f825a1142b595caf9
-resourcespace/sample1.mp4,87a53afaf17bfca9d7dd3fd32631de3c
-resourcespace/sample2.mp4,ee376d9bcd2041652758c2679ee06970
-resourcespace/sample3.mp4,9f5fc9c23a8cc57f465d7a1054bd8e9b
-resourcespace/sample4.mp4,5402392946f3fe37cd25c2969f520bc1
-mp3/sample1.mp3,75fa2d6089c74de3e0f7e2cfdf422c59
-mp3/sample2.mp3,ff34154e7c334f1073b826687357fbc9
-mp3/sample3.mp3,65bea5b801253b4275afe02970bb5886
-mp3/sample4.mp3,7fa7bd8a195d39bca8be77ecb25d8a13
-pod/sample1_podcast.mov,d451a78e089f275f44c3515a5d9a2ade
-pod/sample2_podcast.mov,e344406b135ccddc0a873cfbbbdb6789
-pod/sample3_podcast.mov,d97562443bb3f4e33025a79ead750a11
-pod/sample4_podcast.mov,cc55e1ddcc4e0ba726f1fccf791a4c8b"
+# expected checksums values - last updated 11/01/17 10:30 AM
+FIXITY_TABLE="youtube/sample1.mp4,daddcda3c254f47fb8574593e039d49b
+youtube/sample2.mp4,55a4c1af304ef6dde3654a7f6787cac1
+youtube/sample3.mp4,ee32b13478c444b1db1f0f9bffeac85a
+youtube/sample4.mp4,72894c083e33102df9a5d59910ff4aec
+broadcast/sample1_SLATE.mov,7f9d5acea14b420790eb7a394b88bec6
+broadcast/sample2_SLATE.mov,873c06b9b7b276b885b62fe40f7abc5a
+broadcast/sample3_SLATE.mov,78fde441a7d6351030ccbc68cd29ff4b
+broadcast/sample4_SLATE.mov,e1b37d30d1c1fcbf6d89059cecae5530
+prores/sample1.mov,71e37fce1d20b656e38f9fecaa7edd81
+prores/sample2.mov,d0b25fb25a726f2e6ef1754a16c0f213
+prores/sample3.mov,8c218fadc3e2dfdd203898ee77203d24
+prores/sample4.mov,809e04823b78fe35eb43a535e0f357d9
+resourcespace/sample1.mp4,6e4356cd53d51da65a5b3321e6596daf
+resourcespace/sample2.mp4,d1a0dd31d1b6c89788a3fa2cda25028b
+resourcespace/sample3.mp4,cc311e4b56ac247c2a7de3edf3b2ffeb
+resourcespace/sample4.mp4,9124e05edc8167b203a90c8a92541748
+mp3/sample1.mp3,00cee68ae656845a1738dd03593715ba
+mp3/sample2.mp3,e883cc300b183378c1f111bbb720e73c
+mp3/sample3.mp3,904544749ed92f670f5e7119968899fe
+mp3/sample4.mp3,6f03e9a204ef540f0cc3d6f541b872e1
+pod/sample1_podcast.mov,2c80a4682bc429db5913e8be2e51f4e5
+pod/sample2_podcast.mov,12a574b58936fb058913e17f0010595b
+pod/sample3_podcast.mov,063d1b113eee3acece7355f8d49c825c
+pod/sample4_podcast.mov,945b4762beb1951ec3d7e2669368065e"
 
 # make test folders
 ROOTDIR="/tmp/testmakederiv$(date +%Y%m%d%H%M%S)"
@@ -46,14 +46,13 @@ LOGDIR="$BR_TESTDIR/logs/broadcast"
 mkdir -p "$ROOTDIR" "${TESTDIR}" "${YT_TESTDIR}" "${BR_TESTDIR}" "${PR_TESTDIR}" "${RS_TESTDIR}" "${MP3_TESTDIR}" "${POD_TESTDIR}" "${LOGDIR}"
 
 # create test files
-ffmpeg -f lavfi -i testsrc2=r=25:s=320x240 -f lavfi -i "aevalsrc=exprs=sin(440*2*PI*t)|sin(44*2*PI*t):s=48000:c=stereo" -map 0 -map 1 -t 5 -c:v ffv1 -c:a flac -y "$TESTDIR/sample1.mkv"
-ffmpeg -f lavfi -i testsrc2=r=30000/1001:s=1920x1080 -f lavfi -i "aevalsrc=exprs=cos(440*2*PI*t)|sin(44*2*PI*t):s=48000:c=stereo" -map 0 -map 1 -t 5 -c:v ffv1 -c:a flac -y "$TESTDIR/sample2.mkv"
-ffmpeg -f lavfi -i mandelbrot=r=25:s=320x240 -f lavfi -i "aevalsrc=exprs=sin(440*2*PI*t)|cos(44*2*PI*t):s=48000:c=stereo" -map 0 -map 1 -t 5 -c:v ffv1 -c:a flac -y "$TESTDIR/sample3.mkv"
-ffmpeg -f lavfi -i testsrc=r=25:s=720x480 -f lavfi -i "aevalsrc=exprs=cos(440*2*PI*t)|cos(44*2*PI*t):s=48000:c=stereo" -map 0 -map 1 -t 5 -c:v ffv1 -c:a flac -y "$TESTDIR/sample4.mkv"
+ffmpeg -f lavfi -i testsrc2=r=25:s=320x240 -f lavfi -i "aevalsrc=exprs=sin(440*2*PI*t)|sin(44*2*PI*t):s=48000:c=stereo" -map 0 -map 1 -t 5 -c:v ffv1 -c:a flac -y "$TESTDIR/sample1.nut"
+ffmpeg -f lavfi -i testsrc2=r=30000/1001:s=1920x1080 -f lavfi -i "aevalsrc=exprs=cos(440*2*PI*t)|sin(44*2*PI*t):s=48000:c=stereo" -map 0 -map 1 -t 5 -c:v ffv1 -c:a flac -y "$TESTDIR/sample2.nut"
+ffmpeg -f lavfi -i mandelbrot=r=25:s=320x240 -f lavfi -i "aevalsrc=exprs=sin(440*2*PI*t)|cos(44*2*PI*t):s=48000:c=stereo" -map 0 -map 1 -t 5 -c:v ffv1 -c:a flac -y "$TESTDIR/sample3.nut"
+ffmpeg -f lavfi -i testsrc=r=25:s=720x480 -f lavfi -i "aevalsrc=exprs=cos(440*2*PI*t)|cos(44*2*PI*t):s=48000:c=stereo" -map 0 -map 1 -t 5 -c:v ffv1 -c:a flac -y "$TESTDIR/sample4.nut"
 
 # set slate options
 INGESTLOG="$LOGDIR/capture.log" ; touch "$INGESTLOG"
-echo "ingestlog is $INGESTLOG"
 _writeingestlog "media ID slate" "mediaID"
 _writeingestlog "Series Title" "Series Title"
 _writeingestlog "Episode Title" "Episode Title"
@@ -74,14 +73,12 @@ _checksumreport(){
 
 find "$TESTDIR" -type f ! -name '.*' > /tmp/list.txt
 for file in `cat /tmp/list.txt` ; do
-    mkvpropedit --delete segment-uid "$file" # standardizes Matroska test files
     "${SCRIPTDIR}/makederiv" -T youtube -Y -l -o "${YT_TESTDIR}" "$file"
     OUTPUT="${YT_TESTDIR}/$(basename "${file%.*}.mp4")"
     OUTPUT_RELATIVE_PATH=$(echo "${OUTPUT}" | sed "s:${ROOTDIR}/::g")
     _checksumreport
     "${SCRIPTDIR}/makederiv" -T broadcast -F tff -s -c -o "${BR_TESTDIR}" "$file"
     OUTPUT="${BR_TESTDIR}/$(basename "${file%.*}_SLATE.mov")"
-    echo "INGESTLOG is $INGESTLOG"
     OUTPUT_RELATIVE_PATH=$(echo "${OUTPUT}" | sed "s:${ROOTDIR}/::g")
     _checksumreport
     "${SCRIPTDIR}/makederiv" -T prores -o "${PR_TESTDIR}" "$file"
