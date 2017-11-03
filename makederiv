@@ -37,7 +37,7 @@ _usage(){
         echo "  FOR YOUTUBE USE ONLY:"
         echo "      -Y (attempt to use uploadyoutube on the resulting file)"
         echo "  FOR DVD USE ONLY:"
-        echo "      -p dvdlabelprefix (optional)"
+        echo "      -p dvdlabelprefix (overrides label set in mmconfig)"
         exit
 }
 
