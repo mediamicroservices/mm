@@ -83,11 +83,11 @@ while [ "${*}" != "" ] ; do
 
             _filter_to_middle_option
 
-            _run_critical ffmpeg ${INPUTOPTIONS[@]} -i "${SOURCEFILE}"  ${MIDDLEOPTIONS[@]} "${OUTPUTDIR}/${SOURCEFILENAME%.*}${SUFFIX}.mov" -f framemd5 -an "${LOGDIR}/${SOURCEFILENAME%.*}.framemd5"
+            _run_critical ffmpeg ${INPUTOPTIONS[@]} -i "${SOURCEFILE}"  ${MIDDLEOPTIONS[@]} "${OUTPUTDIR}/${SOURCEFILENAME%.*}${SUFFIX}.mkv" -f framemd5 -an "${LOGDIR}/${SOURCEFILENAME%.*}.framemd5"
             if [ "${CODEC_TAG_STRING}" == "2vuy" ] ; then
-                _run_critical ffmpeg ${INPUTOPTIONS[@]} -i "${OUTPUTDIR}/${SOURCEFILENAME%.*}${SUFFIX}.mov" -f framemd5 -pix_fmt uyvy422 -an "${LOGDIR}/${SOURCEFILENAME%.*}${SUFFIX}.framemd5"
+                _run_critical ffmpeg ${INPUTOPTIONS[@]} -i "${OUTPUTDIR}/${SOURCEFILENAME%.*}${SUFFIX}.mkv" -f framemd5 -pix_fmt uyvy422 -an "${LOGDIR}/${SOURCEFILENAME%.*}${SUFFIX}.framemd5"
             else
-                _run_critical ffmpeg ${INPUTOPTIONS[@]} ${INPUTOPTIONSFRAMEMD5[@]} -i "${OUTPUTDIR}/${SOURCEFILENAME%.*}${SUFFIX}.mov" -f framemd5 -an "${LOGDIR}/${SOURCEFILENAME%.*}${SUFFIX}.framemd5"
+                _run_critical ffmpeg ${INPUTOPTIONS[@]} ${INPUTOPTIONSFRAMEMD5[@]} -i "${OUTPUTDIR}/${SOURCEFILENAME%.*}${SUFFIX}.mkv" -f framemd5 -an "${LOGDIR}/${SOURCEFILENAME%.*}${SUFFIX}.framemd5"
             fi
             if [ $(grep -v "^#" "${LOGDIR}/${SOURCEFILENAME%.*}.framemd5" | md5 -q) = $(grep -v "^#" "${LOGDIR}/${SOURCEFILENAME%.*}${SUFFIX}.framemd5" | md5 -q) ] ; then
                 _report -dt "Everything looks safe. Going to delete the original."
