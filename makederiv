@@ -119,7 +119,7 @@ while [[ "${@}" != "" ]] ; do
          SUFFIX="_SLATE"
      fi
      if [ "${OUTPUT_TYPE}" == "podcast" ] ; then
-         SUFFIX="_PODCAST"
+         SUFFIX="_podcast"
      fi
      _report_to_db
 
