@@ -26,6 +26,8 @@ table of contents
     * [fix_rewrap](https://github.com/mediamicroservices/mm#fix_rewrap)
     * [fix_volume](https://github.com/mediamicroservices/mm#fix_volume)
     * [ingestfile](https://github.com/mediamicroservices/mm#ingestfile)
+    * [makederiv](https://github.com/mediamicroservices/mm#makederiv) 
+        * (formerly: makebroadcast, makedvd, makemp3, makepodcast, makeprores, makeresourcespace, makewaveform, makeyoutube)
     * [makebroadcast](https://github.com/mediamicroservices/mm#makebroadcast)
     * [makedvd](https://github.com/mediamicroservices/mm#makedvd)
     * [makefingerprint](https://github.com/mediamicroservices/mm/#makefingerprint)
@@ -40,9 +42,9 @@ table of contents
     * [makeprores](https://github.com/mediamicroservices/mm#makeprores)
     * [makeqctoolsreport]()
     * [makeresourcespace](https://github.com/mediamicroservices/mm#makeresourcespace)
-    * [makeslate](https://github.com/mediamicroservices/mm#makeslate)
     * [makeyoutube](https://github.com/mediamicroservices/mm#makeyoutube)
     * [migratefiles](https://github.com/mediamicroservices/mm#migratefiles)
+    * [mmtest](https://github.com/mediamicroservices/mm#mmtest)
     * [qatesting](https://github.com/mediamicroservices/mm#qatesting)
     * [quickcompare](https://github.com/mediamicroservices/mm#quickcompare)
     * [removeDSStore](https://github.com/mediamicroservices/mm#removedsstore)
@@ -248,13 +250,6 @@ the input is the package, directory, or file that you are working with
 
 Across all mediamicroservices, you can always receive the usage information by typing the microservice and -h. Your command will look like this: `[microservice] -h`.
 
-makepodcast, makebroadcast, makeflv, make prores, makeresourcespace, makeyoutube, and makedvd also share the following options:
-
-* if you want to specify a directory for the file to be delivered to, use the -d option, and follow -d with the directory path. Your command will look like this: `[microservice] -d [directory/path] [input]`. This option delivers a copy of the resulting file to a specific location, in addition to the default OUTPUTDIR.
-* if you want to specify a directory for the file to be written directly to, use -o. Your command will look like this: `[microservice] -o [directory/path] [input]`.
-* if you want to run makebroadcast in "dry-run" mode, which means that the commands will be shown in the terminal but not run, use -n. Your command will look like this: `makebroadcast -n [input]`.
-* if you want to send email notifications about the delivery of a file, and you set the email variables, you can use option e or E. option e will send an email about the delivery but only if -d is also used. Your command will look like this: `[microservice] -d [directory/path] -e [input]`. If you want to send an email about the process outcomes, use E. Your command will look like this: `[microservice] -E [input]`.
-
 To view the specific ffmpeg encoding options for each file, view the sourcecode of the microservice directly on GitHub or using a text editor on your computer.
 
 #### aipupgrade
@@ -316,36 +311,75 @@ To view the specific ffmpeg encoding options for each file, view the sourcecode 
 <img src="https://github.com/mediamicroservices/mm/blob/master/Resources/ingestfilegui.gif" width="500">
 
 #### makebroadcast
-* makebroadcast creates a file suitable for broadcast or editing from the input of a file or package. Your command will look like this: `makebroadcast [input]`.
-* if you would like to use only the left or right channel of first audio track, use options r or l. Your command will look like this:  makebroadcast -l [input] for left or  `makebroadcast -r [input]` for right.
-* if you want to apply a formula that will override the defualt ffmpeg settings, use option F. Your command will look like this: `makebroadcast -F [formula] [input]`.
-* if you want to run the video through a crop detection filter and crop the video during transcoding, use option c. Your command will look like this: `makebroadcast -c [input]`.
-* if you want to run the video through a volume adjustment filter, then adjust the volume accordingly during transcoding, use option v. This process will be slower. Defaults to ${VOLADJUST} variable set in mmconfig. Your command will look like this: `makebroadcast -v Y` OR `N [input]`.
-* makebroadcast has options d, o, n, e, E. To reread what those options mean, return to [section header](https://github.com/mediamicroservices/mm#mediamicroservices-functions-and-instructions-for-use).
-    * If you use options o or d, your command will look like this: `makebroadcast -o OR -d [path/to/directory] [input]`.
-    * If you use option n, your command will look like this: `makebroadcast -n [input]`.
-    * If you use option e, your command will look like this: `makebroadcast -e -d [path/to/directory] [input]`. If you use option -E, your command will look like this: `makebroadcast -E [input]`.
+* makebroadcast is an alias for the updated umbrella function [makederiv](https://github.com/mediamicroservices/mm#makederiv). It creates a file suitable for broadcast or editing from the input of a file or package. 
+* You can create a derivative file suitable for broadcast with makederiv by typing: `makederiv -T broadcast [input]`.
+* You can also create an identical derivative file by typing: `makebroadcast [input]`, which will route your command through makederiv.
+* Both makederiv and makebroadcast may use the full list of options under [makederiv](https://github.com/mediamicroservices/mm#makederiv).
+
+#### makederiv
+* makederiv creates several types of derivative files from a video file or package input (list below). Your command will look like this: `makederiv -T [derivativetype] [input]`. It was created to streamline the editing process and standardize options for the many types of derivatives these microservices make. Deprecated commands (e.g. `makeyoutube [file]`) may still be used; they are rerouted through makederiv.
+* Option T specifies the derivative type and is required. Derivative types are:
+    * broadcast: creates an .mov file suitable for broadcast or editing
+    * dvd: creates a DVD .iso file
+    * mp3: creates an .mp3 file
+    * podcast: creates an .mov Quicktime file that is suitable for podcasting
+    * prores: creates a ProRes/Quicktime .mov file
+    * resourcespace: creates a high quality H264 .mp4 file suitable for uploading to resourcespace
+    * waveform: makes a .png visual representation of the primary audio of the input
+    * youtube: creates a high quality H264 .mp4 file suitable for uploading to youtube
+        * youtube and resourcespace are similar, but youtube takes much higher maximum audio and video bit rates (resulting in a larger final filesize). youtube also takes the variable MAKEYOUTUBE_DELIVERY_EMAIL_TO, set in mmconfig.
+* Every derivative type in makederiv also takes the following options: l, r, t, v, d, o, e, E, n, h. Options can be combined, and the order of the options does not matter, as long as they are in between "makederiv" and your input. Some options require an argument following immediately after the option flag (e.g., -d must be followed with the path of the directory you specify: `-d [directory/path]`); these arguments are detailed below.
+    * h: receive the usage information, including the list of the options below.
+        * Your command will look like this: `[makederiv] -h`
+    * l: only use the left channel of the first audio track.
+        * Your command will look like this: `makederiv -T [derivativetype] -l [input]`
+    * r: only use the right channel of the first audio track.
+        * Your command will look like this: `makederiv -T [derivativetype] -r [input]`
+    * t: burn timecode overlay (starts at 01:00:00;00)
+        * Your command will look like this: `makederiv -T [derivativetype] -t [input]`
+    * v: run the video through a volume adjustment filter, then adjust the volume accordingly during transcoding. This process will be slower. You must specify Y (yes) or N (no). Specifying this option will override the ${VOLADJUST} variable set in mmconfig.
+        * Your command will look like this: `makederiv -T [derivativetype] -v Y [input]` or this: `makederiv -T [derivativetype] -v N [input]`
+    * d: specify a directory for the file to be delivered to. Must be followed with the directory path. This option delivers a copy of the resulting file to a specific location, in addition to the default output directory in makederiv.
+        * Your command will look like this: `makederiv -T [derivativetype] -d [directory/path] [input]`
+    * o: specify a directory for the file to be written directly to.
+        * Your command will look like this: `makederiv -T [derivativetype] -o [directory/path] [input
+    * e: send email notifications about the delivery of a file. Must be used with option d.
+        * Your command will look like this: `makederiv -T [derivativetype] -d [directory/path] -e [input]`
+    * E: send an email about the process outcomes.
+        * Your command will look like this: `makederiv -T [derivativetype] -E [input]`
+    * n: test making a derivative in "dry-run" mode, which means that the commands will be shown in the terminal but not run.
+        * Your command will look like this: `makederiv -T [derivativetype] -n [input]`
+    * broadcast derivatives also take the following options: F, s, c
+        * F: apply a video formula and override default ffmpeg settings. 
+            * Formulas include: tff, bff, hds, sds. To view the specific ffmpeg encoding options for each formula, view the makederiv sourcecode directly on GitHub or using a text editor on your computer.
+            * Your command will look like this: `makederiv -T broadcast -F [formula] [input]`
+        * s: create a slate, which adds color bars and a slate to the beginning of the file and 30 seconds of black at the end. This option will ask for a media ID, series title, and episode title unless these have been specified in [ingestfile](https://github.com/mediamicroservices/mm#mediamicroservices-functions-and-instructions-for-use#ingestfile).
+            * Your command will look like this: `makederiv -T broadcast -s [input]`
+        * c: run the video through a crop detection filter and crop the video during transcoding.
+            * Your command will look like this: `makederiv -T broadcast -c [input]`
+    * youtube derivatives also take the following option: Y
+        * Y: attempt to use uploadyoutube on the resulting file.
+            * Your command will look like this: `makederiv -T youtube -Y [input]`
+    * dvd derivatives also take the following option: p
+        * p: add a DVD label prefix. Must be followed with the prefix you want to use.
+            * Your command will look like this: `makederiv -T dvd -p [dvdlabelprefix] [input]`
 
 #### makedvd
-* makedvd creates a DVD .iso file from a video file or package input. Your command will look like makedvd [input]. A file run with no additional options will be a .iso file in a directory called access, which is created by the script in the same location as the file input. A package input run with no additional options will behave similarly, in that the access directory will be created inside the package (if it is not already there), and will hold the DVD .iso file.
-* if you would like to use only the left or right channel of first audio track, your command will look like this: `makedvd -l [input]` for left or `makedvd -r [input]` for right.
-* if you would like to add the DVDLABELPREFIX, which you set as a varible in mmconfig, you will want to use option v. Your command will look like this: `makedvd -v [input]`.
-* makedvd has options d, o, n, e, E. To reread what those options mean, return to [section header](https://github.com/mediamicroservices/mm#mediamicroservices-functions-and-instructions-for-use).
-    * If you use options o or d, your command will look like this: `makedvd -o` OR `-d [path/to/directory] [input]`.
-    * If you use option n, your command will look like this: `makedvd -n [input]`.
-    * If you use option e, your command will look like this: `makedvd -e -d [path/to/directory] [input]`.
-    * If you use option -E, your command will look like this: `makedvd -E [input]`.
+* makedvd is an alias for the updated umbrella function [makederiv](https://github.com/mediamicroservices/mm#makederiv). It creates a DVD .iso file from a video file or package input.
+* You can create a DVD .iso file with makederiv by typing: `makederiv -T dvd [input]`.
+* You can also create an identical derivative file by typing: `makedvd [input]`, which will route your command through makederiv.
+* Both makederiv and makedvd may use the full list of options under [makederiv](https://github.com/mediamicroservices/mm#makederiv).
 
 #### makefingerprint
 * makefingerprint creates perceptual hashes from input video files and packages. It is also capable of reporting fingerprint information into a centralized database set up through mm.
 
 #### makeflv
 * makeflv creates a flash file from a video file or package input. Your command will look like this: `makeflv [input]`.
-* makeflv has options d, o, n, e, E. To reread what those options mean, return to [section header](https://github.com/mediamicroservices/mm#mediamicroservices-functions-and-instructions-for-use).
+* makeflv has options d, o, n, e, E. To read what those options mean, see [makederiv](https://github.com/mediamicroservices/mm#makederiv).
     * If you use options o or d, your command will look like this: `makeflv -o` OR `-d [path/to/directory] [input]`.
     * If you use option n, your command will look like this: `makeflv -n [input]`.
     * If you use option e, your command will look like this: `makeflv -e -d [path/to/directory] [input]`.
-    * If you use option -E, your command will look like this: `makeflv -E [input]`.
+    * If you use option E, your command will look like this: `makeflv -E [input]`.
 
 #### makeframemd5
 * Creates a frame md5 for video files in target package. Relies on package structure used in mm.
@@ -365,50 +399,50 @@ To view the specific ffmpeg encoding options for each file, view the sourcecode 
 * makemets creates a mets.xml file that documents the structure of an archival information package created by ingestfile. The mets file also includes information from the dfxml file created in the makemetadata process.
 
 #### makemp3
-* makemp3 creates an mp3 file from a video file or package input. Your command will look like this: makemp3 [input].
-* if you want to specify a directory for the file to be written directly to, use option o. Your command will look like this: `makemp3 -o [directory/path] [input]`
+* makemp3 is an alias for the updated umbrella function [makederiv](https://github.com/mediamicroservices/mm#makederiv). It creates an mp3 file from a video file or package input.
+* You can create an mp3 file with makederiv by typing: `makederiv -T mp3 [input]`.
+* You can also create an identical derivative file by typing: `makemp3 [input]`, which will route your command through makederiv.
+* Both makederiv and makemp3 may use the full list of options under [makederiv](https://github.com/mediamicroservices/mm#makederiv).
 
 #### makepodcast
-* makepodcast creates a Quicktime file that is suitable for podcasting from a video file or package input. Your command will look like this: makepodcast [input].
-* makepodcast has options d, o, n, e, E. To reread what those options mean, return to [section header](https://github.com/mediamicroservices/mm#mediamicroservices-functions-and-instructions-for-use).
-    * If you use options o or d, your command will look like this: `makepodcast -o OR -d [path/to/directory] [input]`.
-    * If you use option n, your command will look like this: `makepodcast -n [input]`.
-    * If you use option e, your command will look like this: `makepodcast -e -d [path/to/directory] [input]`.
-    * If you use option -E, your command will look like this: `makepodcast -E [input]`.
+* makepodcast is an alias for the updated umbrella function [makederiv](https://github.com/mediamicroservices/mm#makederiv). It creates a Quicktime file that is suitable for podcasting from a video file or package input.
+* You can create a file for podcasting with makederiv by typing: `makederiv -T podcast [input]`.
+* You can also create an identical derivative file by typing: `makepodcast [input]`, which will route your command through makederiv.
+* Both makederiv and makepodcast may use the full list of options under [makederiv](https://github.com/mediamicroservices/mm#makederiv).
 
 ####  makeprores
-* makeprores creates a prores/quicktime file from a video file or package input. Your command will look like this: makeprores [input].
-* makeprores has options d, o, n, e, E. To reread what those options mean, return to [section header](https://github.com/mediamicroservices/mm#mediamicroservices-functions-and-instructions-for-use).
-    * If you use options o or d, your command will look like this: `makeprores -o` OR `-d [path/to/directory] [input]`.
-    * If you use option n, your command will look like this: `makeprores -n [input]`.
-    * If you use option e, your command will look like this: `makeprores -e -d [path/to/directory] [input]`.
-    * If you use option -E, your command will look like this: `makeprores -E [input]`.
+* makeprores is an alias for the updated umbrella function [makederiv](https://github.com/mediamicroservices/mm#makederiv). It creates a prores/quicktime file from a video file or package input.
+* You can create a prores/quicktime file with makederiv by typing: `makederiv -T prores [input]`.
+* You can also create an identical derivative file by typing: `makeprores [input]`, which will route your command through makederiv.
+* Both makederiv and makeprores may use the full list of options under [makederiv](https://github.com/mediamicroservices/mm#makederiv).
 
 #### makeresourcespace
-* makeresourcespace creates a high quality h264 file from a video file or package input. Your commmand will look like this: uploadyoutube [input].
-* if you would like to use only the left or right channel of first audio track, use options r or l. Your command will look like this: makeresourcespace -l [input] for left or makeresourcespace -r [input] for right.
-* if you want to run the video through a volume adjustment filter, then adjust the volume accordingly during transcoding, use option v. This process will be slower. Defaults to ${VOLADJUST} variable set in mmconfig. Your command will look like this: makeresourcespace -v Y OR N [input].
-* makeresourcespace has options d, o, n, e, E. To reread what those options mean, return to [section header](https://github.com/mediamicroservices/mm#mediamicroservices-functions-and-instructions-for-use).
-    * If you use options o or d, your command will look like this: `makeresourcespace -o OR -d [path/to/directory] [input]`.
-    * If you use option n, your command will look like this: `makeresourcespace -n [input]`.
-    * If you use option e, your command will look like this: `makeresourcespace -e -d [path/to/directory] [input]`.
-    * If you use option -E, your command will look like this: `makeresourcespace -E [input]`.
-
-#### makeslate
-* makeslate creates a slate to be inserted before a broadcast program begins. To use makeslate at your own institution, you will have to manually edit the file based on your institutional needs. makeslate writes a short .mov file to your desktop. to run makeslate, your command will look like this: `makeslate [input]`.
+* makeresourcespace is an alias for the updated umbrella function [makederiv](https://github.com/mediamicroservices/mm#makederiv). It creates a high quality h264 file from a video file or package input.
+* You can create a file for resourcespace with makederiv by typing: `makederiv -T resourcespace [input]`.
+* You can also create an identical derivative file by typing: `makeresourcespace [input]`, which will route your command through makederiv.
+* Both makederiv and makeresourcespace may use the full list of options under [makederiv](https://github.com/mediamicroservices/mm#makederiv).
 
 #### makeyoutube
-* makeyoutube creates a high quality h264 file from a video file or package input. Your command will look like this: `makeyoutube [input]`.
-* if you would like to use only the left or right channel of first audio track, use options r or l. Your command will look like this: `makeyoutube -l [input]` for left or `makeyoutube -r [input]` for right.
-* if you want to run the video through a volume adjustment filter, then adjust the volume accordingly during transcoding, use option v. This process will be slower. Defaults to ${VOLADJUST} variable set in mmconfig. Your command will look like this: `makeyoutube -v Y` OR `N [input]`.
-* makeyoutube has options d, o, n, e, E. To reread what those options mean, return to [section header](https://github.com/mediamicroservices/mm#mediamicroservices-functions-and-instructions-for-use).
-    * If you use options o or d, your command will look like this: `makeyoutube -o` OR `-d [path/to/directory] [input]`.
-    * If you use option n, your command will look like this: `makeyoutube -n [input]`.
-    * If you use option e, your command will look like this:` makeyoutube -e -d [path/to/directory] [input]`.
-    * If you use option -E, your command will look like this: `makeyoutube -E [input]`.
+* makeyoutube is an alias for the updated umbrella function [makederiv](https://github.com/mediamicroservices/mm#makederiv). It creates a high quality h264 file from a video file or package input.
+* You can create a file for youtube with makederiv by typing: `makederiv -T youtube [input]`.
+* You can also create an identical derivative file by typing: `makeyoutube [input]`, which will route your command through makederiv.
+* Both makederiv and makeyoutube may use the full list of options under [makederiv](https://github.com/mediamicroservices/mm#makederiv).
 
 #### migratefiles
 * migratefiles is a script that uses rsync to move files, and creates a log documenting the checksum, time, and file paths of files migrated. migratefiles expects a directory input. To use migrate files, type the command `migratefiles -o [destination] [input]`
+
+#### mmtest
+* mmtest is a regression test that will test whether tinkering with the derivative creation process changes the character of the derivative files. mmtest generates simple test files, creates derivatives of these files with makederiv, and checks the checksums of the generated derivatives against a set of expected checksums. Once the test completes, it will report which checksums did not match as expected to help debug.
+    * The expected checksums are from files created with derivative "make" microservices (e.g. makeyoutube, makemp3) in [mm_v2.3.1](https://github.com/mediamicroservices/mm/releases/tag/mm_v2.3.1), just before the introduction of makederiv. This choice assumes those "make" microservices created the desired derivative files.
+    * mmtest tests the following derivatives:
+        * broadcast
+        * mp3
+        * podcast (removed -bufsize flag to get consistent test files)
+        * prores
+        * resourcespace (removed -bufsize flag to get consistent test files)
+        * youtube (removed -bufsize flag to get consistent test files)
+    * mmtest does not test dvd derivatives, as iso file checksums cannot match consistently.
+* To run mmtest, type: `mmtest`
 
 #### qatesting
 * QA testing performs a series on tests on one or multiple video inputs and outputs the results into the terminal. Your command will look like this: `qatesting [input] [input1] [input2]`
