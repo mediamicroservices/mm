@@ -96,9 +96,6 @@ _makebroadcastcopies(){
     if [ "${SLATE}" == "Yes" ] ; then
         "${SCRIPTDIR}/makederiv" -T broadcast -s "${MAKEDERIVOPTS[@]}" "${OUTDIR_INGESTFILE}/${MEDIAID}"
     fi
-    if [ "${DELIVERYTOOMNEON}" == "Y" ] ; then
-        _delivertoomneon
-    fi
 }
 
 _deliveraccesscopies(){
@@ -113,7 +110,7 @@ _makeaccesscopies(){
     "${SCRIPTDIR}/makederiv" -T dvd "${OUTDIR_INGESTFILE}/${MEDIAID}"
     "${SCRIPTDIR}/makederiv" -T waveform "${OUTDIR_INGESTFILE}/${MEDIAID}"
     "${SCRIPTDIR}/makederiv" -T youtube "${MAKEDERIVOPTS[@]}" "${YOUTUBEOPTS[@]}" "${OUTDIR_INGESTFILE}/${MEDIAID}"
-    "${SCRIPTDIR}/makeframes" "${FRAMESOPTS[@]}" "${OUTDIR_INGESTFILE}/${MEDIAID}"
+    "${SCRIPTDIR}/makederiv" -T frames "${MAKEDERIVOPTS[@]}" "${FRAMESOPTS[@]}" "${OUTDIR_INGESTFILE}/${MEDIAID}"
     if [ $(echo "${MEDIAID}" | grep -E "${REGEX4PODCAST}") ] ; then
         _report -dt "${MEDIAID} qualifies for podcast creation."
         "${SCRIPTDIR}/makederiv" -T podcast "${MAKEDERIVOPTS[@]}" "${PODCASTOPTS[@]}" "${OUTDIR_INGESTFILE}/${MEDIAID}"
@@ -126,7 +123,6 @@ _makeaccesscopies(){
 _makemetadatapackage(){
     "${SCRIPTDIR}/makemetadata" "${OUTDIR_INGESTFILE}/${MEDIAID}"
     "${SCRIPTDIR}/checksumpackage" "${OUTDIR_INGESTFILE}/${MEDIAID}"
-    _writeingestlog "datetime_end" "$(_get_iso8601)"
     "${SCRIPTDIR}/makefingerprint" "${OUTDIR_INGESTFILE}/${MEDIAID}"
 }
 
@@ -484,7 +480,7 @@ fi
 
 # run ingestfile options
 _get_frame_count "${INPUT}"
-if [ "${PRIORITY}" = "Put in queue" ] ; then
+if [[ "${PRIORITY}" == "Put in queue" ]] ; then
     _add_mediaid_to_queue
 fi
 if [[ "${FORMULA}" == "check interlacement" ]] ; then
@@ -493,10 +489,6 @@ fi
 MEDIAID4SLATE="${MEDIAID}"
 if [[ "${SLATE}" == "Yes" ]] ; then
     _ask_slate
-    INGESTLOG="$LOGDIR/capture.log" ; touch "$INGESTLOG"
-    _writeingestlog "media ID slate" "mediaID"
-    _writeingestlog "Series Title" "Series Title"
-    _writeingestlog "Episode Title" "Episode Title"
 fi
 
 # set derivative options
@@ -532,51 +524,10 @@ else
     fi
 fi
 
-_log -b
+# write log, cleanup
 _writecapturelog
-
-# move and cleanup
 echo "${RSYNC_ERR}"
 [ "${CLEANUPDECISION}" == "Remove source file after successful ingest" ] && _cleanup_sourcefile
 [ "${PRIORITY}" == "Put in queue" ] && _remove_mediaid_from_queue
-_report_to_db
-_log -e
-o "${MEDIAID}" | grep -E "${REGEX4IA}") ] ; then
-    if [ $(which uploadia) ] ; then
-        _report -dt "Attempting to run uploadia and upload to Internet Archive"
-        uploadia "${OUTDIR_INGESTFILE}/${MEDIAID}/objects/access/youtube_up/${MEDIAID}.mp4" "${OUTDIR_INGESTFILE}/${MEDIAID}/objects/access/dvd/${MEDIAID}.iso"
-    fi
-fi
-
-# more logging
 _writeingestlog "datetime_end" "$(_get_iso8601)"
-
-# fingerprint
-"${SCRIPTDIR}/makefingerprint" "${OUTDIR_INGESTFILE}/${MEDIAID}"
-
-# move and cleanup
-if [[ "${DELIVERYTOAIPSTORAGE}" == "Y" ]] ; then
-    if [ "${AIP_STORAGE}" != "${OUTDIR_INGESTFILE}" ] ; then
-    "${SCRIPTDIR}/migratefiles" -r -o "${AIP_STORAGE}" "${OUTDIR_INGESTFILE}/${MEDIAID}"
-    RSYNC_ERR="${?}"
-    [ $(du -s "${OUTDIR_INGESTFILE}/${MEDIAID}" | awk '{print $1}') = "0" ] && rm -r "${OUTDIR_INGESTFILE}/${MEDIAID}"
-    _report -dt "STATUS Done. Final package has been delivered to ${AIP_STORAGE}/${MEDIAID}"
-    else echo "As Target directory is same as Input directory, files were not migrated."
-    fi
-fi
-echo "${RSYNC_ERR}"
-
-if [[ "${CLEANUP_CHOICE}" == "Y" ]] ; then
-    if [ -n "${RSYNC_ERR}" ] && [ "${RSYNC_ERR}" -gt "0" ] ; then
-        echo "${RSYNC_ERR}"
-        _report -wt "Cancelling requested deletion of source file, not looking safe."
-    else
-        _report -dt "Removing the source file from ${INPUT} as requested."
-        _run rm -f "${INPUT}"
-    fi
-fi
-
-# clean up queue
-[ "${PRIORITY}" == "put in queue" ] && _remove_mediaid_from_queue
 _report_to_db
-_log -e
