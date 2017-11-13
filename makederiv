@@ -189,24 +189,8 @@ while [[ "${@}" != "" ]] ; do
             fi
             # if adding a slate: request metadata
             if [[ "${ADDSLATE}" == "Y" ]] ; then
-                MEDIAID4SLATE=$(_readingestlog "media ID slate")
-                if [ -z "${MEDIAID4SLATE}" ] ; then
-                    cowsay "MediaID?"
-                    echo -n ":: "
-                    read -r MEDIAID4SLATE
-                fi
-                SERIESTITLE=$(_readingestlog "Series Title")
-                if [ -z "${SERIESTITLE}" ] ; then
-                    cowsay -t "Series Title?"
-                    echo -n ":: "
-                    read -r SERIESTITLE
-                fi
-                EPISODETITLE=$(_readingestlog "Episode Title")
-                if [ -z "${EPISODETITLE}" ] ; then
-                    cowsay -s "Episode Title?"
-                    echo -n ":: "
-                    read -r EPISODETITLE
-                fi
+                _read_slate
+                _ask_slate
                 SLATE_MEDIAID=$(_maketemp)
                 echo "${MEDIAID4SLATE}" > "${SLATE_MEDIAID}"
                 SLATE_SERIES=$(_maketemp)
