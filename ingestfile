@@ -120,7 +120,6 @@ _makeaccesscopies(){
 _makemetadatapackage(){
     "${SCRIPTDIR}/makemetadata" "${OUTDIR_INGESTFILE}/${MEDIAID}"
     "${SCRIPTDIR}/checksumpackage" "${OUTDIR_INGESTFILE}/${MEDIAID}"
-    _writeingestlog "datetime_end" "$(_get_iso8601)"
     "${SCRIPTDIR}/makefingerprint" "${OUTDIR_INGESTFILE}/${MEDIAID}"
 }
 
@@ -593,5 +592,5 @@ fi
 
 # clean up queue
 [ "${PRIORITY}" == "put in queue" ] && _remove_mediaid_from_queue
+_writeingestlog "datetime_end" "$(_get_iso8601)"
 _report_to_db
-_log -e
