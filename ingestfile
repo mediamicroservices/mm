@@ -95,7 +95,7 @@ _makebroadcastcopies(){
     fi
 }
 
-_deliveraccesscopies(){
+_deliveraccessopts(){
     YOUTUBEOPTS=(-Y -d "${YOUTUBEDELIVER}")
     FRAMESOPTS=(-d "${YOUTUBEDELIVER}")
     PODCASTOPTS=(-d "${PODCASTDELIVER}")
@@ -554,6 +554,7 @@ if [ ! -z "${FORMULA}" ] ; then
     MAKEDERIVOPTS+=(-F "${FORMULA}")
 fi
 
+# run modes
 if [[ "${MODE}" == "preservation" ]] ; then
     _reset_directory
     if [[ "${INPUT#*.}" = "mkv" ]] ; then
@@ -569,16 +570,14 @@ if [[ "${MODE}" == "preservation" ]] ; then
 else
     _blackframetest
     _makebroadcastcopies
+    if [[ "${MODE}" != "psa" ]] ; then
+        _deliveraccessopts
+    fi
     _makeaccesscopies
     _makemetadatapackage
+    _delivertoia
     _delivertoaipstorage
-    if [[ "${MODE}" != "psa" ]] ; then
-        _deliveraccesscopies
-        _delivertoia
-    fi
 fi
-
-_delivertoia
 
 # move and cleanup
 if [[ "${DELIVERYTOAIPSTORAGE}" == "Y" ]] ; then
