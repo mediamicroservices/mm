@@ -96,9 +96,13 @@ _makebroadcastcopies(){
     if [ "${SLATE}" == "Yes" ] ; then
         "${SCRIPTDIR}/makederiv" -T broadcast -s "${MAKEDERIVOPTS[@]}" "${OUTDIR_INGESTFILE}/${MEDIAID}"
     fi
+    # resetting/moving ingestlog - changed in _write_slate but need to keep info written in makederiv (inelegant, sorry)
+    LOGDIR="${OUTDIR_INGESTFILE}/${MEDIAID}/metadata/logs"
+    mv "${LOGDIR}/broadcast/capture.log" "${LOGDIR}/capture.log"
+    INGESTLOG="${LOGDIR}/capture.log"
 }
 
-_deliveraccesscopies(){
+_deliveraccessopts(){
     YOUTUBEOPTS=(-Y -d "${YOUTUBEDELIVER}")
     FRAMESOPTS=(-d "${YOUTUBEDELIVER}")
     PODCASTOPTS=(-d "${PODCASTDELIVER}")
@@ -155,9 +159,7 @@ _delivertoia(){
 }
 
 _writecapturelog(){
-    echo -e "${LOG}" >> "${INGESTLOG}"
     _writeingestlog "media ID" "${MEDIAID}"
-    _writeingestlog "media ID slate" "${MEDIAID4SLATE}"
     _writeingestlog "operator" "${OP}"
     _writeingestlog "input" "${INPUT}"
     _writeingestlog "processing_directory" "${OUTDIR_INGESTFILE}"
@@ -171,10 +173,7 @@ _writecapturelog(){
     _writeingestlog "user_name" "$(whoami)"
     _writeingestlog "operating_system_version" "$(uname -v)"
     _writeingestlog "datetime_start" "$(_get_iso8601)"
-    _writeingestlog "Series Title" "${SERIESTITLE}"
-    _writeingestlog "Episode Title" "${EPISODETITLE}"
     _writeingestlog "made this" "ingestfile"
-    _writeingestlog "Interlacement test" "${INTERLACETEST}"
     if [ -n "$(cat "${PHASEREPORT}" | xargs)" ] ; then
     	_writeingestlog "Out_of_phase_audio_ranges" "$(cat "${PHASEREPORT}" | xargs)"
     else
@@ -478,28 +477,23 @@ else
     fi
 fi
 
-# run ingestfile options
+# run universal options
 _get_frame_count "${INPUT}"
-if [[ "${PRIORITY}" == "Put in queue" ]] ; then
-    _add_mediaid_to_queue
-fi
-if [[ "${FORMULA}" == "check interlacement" ]] ; then
-    _get_interlacement_full "${INPUT}"
-fi
-MEDIAID4SLATE="${MEDIAID}"
-if [[ "${SLATE}" == "Yes" ]] ; then
-    _write_slate
-    _read_slate
-    _ask_slate
-fi
-
-# set derivative options
 unset MAKEDERIVOPTS
 [ "${AUDIODECISION}" == "Only use left of the first audio track [for 21st Century]" ] && MAKEDERIVOPTS+=(-l)
 [ "${AUDIODECISION}" == "Only use right of the first audio track" ] && MAKEDERIVOPTS+=(-r)
 [ "${CROPDECISION}" == "Examine the video and auto-crop out black borders (slower)" ] && MAKEDERIVOPTS+=(-c)
 [ ! -z "${FORMULA}" ] && MAKEDERIVOPTS+=(-F "${FORMULA}")
+[ "${PRIORITY}" == "Put in queue" ] && _add_mediaid_to_queue
+[ "${FORMULA}" == "check interlacement" ] && _get_interlacement_full "${INPUT}"
+if [[ "${SLATE}" == "Yes" ]] ; then
+    MEDIAID4SLATE="${MEDIAID}"
+    _ask_slate
+    _write_slate
+fi
+_writecapturelog
 
+# run modes
 if [[ "${MODE}" == "preservation" ]] ; then
     _reset_directory
     if [[ "${INPUT#*.}" = "mkv" ]] ; then
@@ -516,20 +510,21 @@ else
     _blackframetest
     _phasechecktest
     _makebroadcastcopies
+    if [[ "${MODE}" != "psa" ]] ; then
+        _deliveraccessopts
+    fi
     _makeaccesscopies
     _makemetadatapackage
+    _writeingestlog "datetime_end" "$(_get_iso8601)"
     _delivertoomneon
-    _delivertoaipstorage
     if [[ "${MODE}" != "psa" ]] ; then
-        _deliveraccesscopies
         _delivertoia
+        _delivertoaipstorage
     fi
 fi
 
-# write log, cleanup
-_writecapturelog
+# cleanup
 echo "${RSYNC_ERR}"
 [ "${CLEANUPDECISION}" == "Remove source file after successful ingest" ] && _cleanup_sourcefile
 [ "${PRIORITY}" == "Put in queue" ] && _remove_mediaid_from_queue
-_writeingestlog "datetime_end" "$(_get_iso8601)"
 _report_to_db

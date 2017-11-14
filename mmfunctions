@@ -587,7 +587,7 @@ _ask_digitization_logs(){
 }
 
 _ask_slate(){
-    if [ -z "${MEDIAID4SLATE}" ] ; then
+    if [[ -z "${MEDIAID4SLATE}" ]] ; then
         cowsay "MediaID?"
         echo -n ":: "
         read -r MEDIAID4SLATE
@@ -607,14 +607,14 @@ _ask_slate(){
 _write_slate(){
     INGESTLOG="$LOGDIR/broadcast/capture.log" ; touch "${INGESTLOG}"
     _writeingestlog "media ID slate" "${MEDIAID4SLATE}"
-    _writeingestlog "Series Title" "${SERIESTITLE}"
-    _writeingestlog "Episode Title" "${EPISODETITLE}"
+    _writeingestlog "series title" "${SERIESTITLE}"
+    _writeingestlog "episode title" "${EPISODETITLE}"
 }
 
 _read_slate(){
     MEDIAID4SLATE=$(_readingestlog "media ID slate")
-    SERIESTITLE=$(_readingestlog "Series Title")
-    EPISODETITLE=$(_readingestlog "Episode Title")
+    SERIESTITLE=$(_readingestlog "series title")
+    EPISODETITLE=$(_readingestlog "episode title")
 }
 
 _reset_directory(){
