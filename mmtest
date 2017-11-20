@@ -42,7 +42,7 @@ PR_TESTDIR="$ROOTDIR/prores"
 RS_TESTDIR="$ROOTDIR/resourcespace"
 MP3_TESTDIR="$ROOTDIR/mp3"
 POD_TESTDIR="$ROOTDIR/pod"
-LOGDIR="$BR_TESTDIR/logs/broadcast"
+LOGDIR="$BR_TESTDIR/logs"
 mkdir -p "$ROOTDIR" "${TESTDIR}" "${YT_TESTDIR}" "${BR_TESTDIR}" "${PR_TESTDIR}" "${RS_TESTDIR}" "${MP3_TESTDIR}" "${POD_TESTDIR}" "${LOGDIR}"
 
 # create test files
@@ -52,10 +52,10 @@ ffmpeg -f lavfi -i mandelbrot=r=25:s=320x240 -f lavfi -i "aevalsrc=exprs=sin(440
 ffmpeg -f lavfi -i testsrc=r=25:s=720x480 -f lavfi -i "aevalsrc=exprs=cos(440*2*PI*t)|cos(44*2*PI*t):s=48000:c=stereo" -map 0 -map 1 -t 5 -c:v ffv1 -c:a flac -y "$TESTDIR/sample4.nut"
 
 # set slate options
-INGESTLOG="$LOGDIR/capture.log" ; touch "$INGESTLOG"
-_writeingestlog "media ID slate" "mediaID"
-_writeingestlog "Series Title" "Series Title"
-_writeingestlog "Episode Title" "Episode Title"
+MEDIAID4SLATE="mediaID"
+SERIESTITLE="Series Title"
+EPISODETITLE="Episode Title"
+_write_slate
 
 # run checksum tests
 _checksumreport(){

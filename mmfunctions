@@ -27,7 +27,7 @@ _check_for_lto_md5_flags(){
 }
 
 _check_for_lto_index_dir(){
-    if [ -z "${LTO_INDEX_DIR}" ] ; then
+    if [ ! -d "${LTO_INDEX_DIR}" ] ; then
         LTO_INDEX_DIR="${HOME}/Documents/lto_indexes"
     fi
 }
@@ -418,11 +418,11 @@ _log(){
     OPTIND=1
     while getopts ":beacw" OPT; do
         case "${OPT}" in
-            b) STATUS="start" ;;              # script is beginning
-            e) STATUS="end"   ;;              # script is ending
-            a) STATUS="abort" ;;              # script is aborted
-            c) STATUS="comment" ;;            # comment about what script is doing
-            w) STATUS="warning" ;;            # warning information
+            b) STATUS="start" ;;                # script is beginning
+            e) STATUS="end" ;;                  # script is ending
+            a) STATUS="cancel" ;;               # script is canceled
+            c) STATUS="comment" ;;              # comment about what script is doing
+            w) STATUS="warning" ;;              # warning information
         esac
     done
     shift $(( ${OPTIND} - 1 ))
@@ -586,6 +586,37 @@ _ask_digitization_logs(){
     [ ! -z "${FILES}" ] && log+="digitization_logs: ${FILES}\n"
 }
 
+_ask_slate(){
+    if [[ -z "${MEDIAID4SLATE}" ]] ; then
+        cowsay "MediaID?"
+        echo -n ":: "
+        read -r MEDIAID4SLATE
+    fi
+    if [[ -z "${SERIESTITLE}" ]] ; then
+        cowsay -t "Series Title?"
+        echo -n ":: "
+        read SERIESTITLE
+    fi
+    if [[ -z "${EPISODETITLE}" ]] ; then
+        cowsay -s "Episode Title?"
+        echo -n ":: "
+        read EPISODETITLE
+    fi
+}
+
+_write_slate(){
+    INGESTLOG="$LOGDIR/broadcast/capture.log" ; touch "${INGESTLOG}"
+    _writeingestlog "media ID slate" "${MEDIAID4SLATE}"
+    _writeingestlog "series title" "${SERIESTITLE}"
+    _writeingestlog "episode title" "${EPISODETITLE}"
+}
+
+_read_slate(){
+    MEDIAID4SLATE=$(_readingestlog "media ID slate")
+    SERIESTITLE=$(_readingestlog "series title")
+    EPISODETITLE=$(_readingestlog "episode title")
+}
+
 _reset_directory(){
     if [ "${PRESERVATION_MODE}" == "Y" ] ; then
         OUTDIR_INGESTFILE=$(dirname "${INPUT}")
@@ -643,7 +674,7 @@ _check_dependencies(){
     done
     if [[ "${DEPS_OK}" = "NO" ]]; then
         _report -wt "Unmet dependencies"
-        _report -wt "Aborting!"
+        _report -wt "Canceling process!"
         exit 1
     else
         return 0
@@ -656,9 +687,9 @@ _initialize_make(){
     EMAILADDRESS=""
     OUTPUTDIR_FORCED=""
     _cleanup(){
-        _log -a "Process aborted"
+        _log -a "Process canceled"
         echo
-        _report -wts "THE PROCESS WAS ABORTED"
+        _report -wts "THE PROCESS WAS CANCELED"
         exit 1
     }
     trap _cleanup SIGHUP SIGINT SIGTERM
@@ -773,7 +804,7 @@ _deliver_output(){
     # argument 1 if used should be the email to report delivery to
     EMAILTO="${1}"
     if [ "${DELIVERDIR}" ] ; then
-        echo DELIVERING OUTPUT ACTIVITED with "${DELIVERDIR}"
+        echo DELIVERING OUTPUT ACTIVATED with "${DELIVERDIR}"
         _report -dt "Delivering ${OUTPUT} to ${DELIVERDIR}"
         _run cp -av "${OUTPUT}" "${DELIVERDIR}/"
         DELIVER_EXIT_STATUS="${?}"
