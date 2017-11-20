@@ -418,11 +418,11 @@ _log(){
     OPTIND=1
     while getopts ":beacw" OPT; do
         case "${OPT}" in
-            b) STATUS="start" ;;              # script is beginning
-            e) STATUS="end"   ;;              # script is ending
-            a) STATUS="cancel" ;;            # script is canceled
-            c) STATUS="comment" ;;            # comment about what script is doing
-            w) STATUS="warning" ;;            # warning information
+            b) STATUS="start" ;;                # script is beginning
+            e) STATUS="end" ;;                  # script is ending
+            a) STATUS="cancel" ;;               # script is canceled
+            c) STATUS="comment" ;;              # comment about what script is doing
+            w) STATUS="warning" ;;              # warning information
         esac
     done
     shift $(( ${OPTIND} - 1 ))
