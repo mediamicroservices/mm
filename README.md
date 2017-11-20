@@ -27,7 +27,7 @@ table of contents
     * [fix_volume](https://github.com/mediamicroservices/mm#fix_volume)
     * [ingestfile](https://github.com/mediamicroservices/mm#ingestfile)
     * [makederiv](https://github.com/mediamicroservices/mm#makederiv) 
-        * (formerly: makebroadcast, makedvd, makemp3, makepodcast, makeprores, makeresourcespace, makewaveform, makeyoutube)
+        * (formerly: makebroadcast, makedvd, makeframes, makemp3, makepodcast, makeprores, makeresourcespace, makewaveform, makeyoutube)
     * [makebroadcast](https://github.com/mediamicroservices/mm#makebroadcast)
     * [makedvd](https://github.com/mediamicroservices/mm#makedvd)
     * [makefingerprint](https://github.com/mediamicroservices/mm/#makefingerprint)
@@ -321,6 +321,7 @@ To view the specific ffmpeg encoding options for each file, view the sourcecode 
 * Option T specifies the derivative type and is required. Derivative types are:
     * broadcast: creates an .mov file suitable for broadcast or editing
     * dvd: creates a DVD .iso file
+	* frames: creates 10 still images from a video file or package input
     * mp3: creates an .mp3 file
     * podcast: creates an .mov Quicktime file that is suitable for podcasting
     * prores: creates a ProRes/Quicktime .mov file
@@ -385,7 +386,10 @@ To view the specific ffmpeg encoding options for each file, view the sourcecode 
 * Creates a frame md5 for video files in target package. Relies on package structure used in mm.
 
 #### makeframes
-* makeframes creates 10 still images from a video file or package input. Your command will look like:  makeframes [input]. To deliver still images to a specific directory, use this command  `ingestfile -d [path/to/directory] [input]`.
+* makeframes is an alias for the updated umbrella function [makederiv](https://github.com/mediamicroservices/mm#makederiv). It creates 10 still images from a video file or package input.
+* You can create 10 .tiff images with makederiv by typing: `makederiv -T frames [input]`.
+* You can also create an identical derivative file by typing: `makeframes [input]`, which will route your command through makederiv.
+* Both makederiv and makeframes may use the full list of options under [makederiv](https://github.com/mediamicroservices/mm#makederiv).
 
 #### makelossless
 * makelossless losslessly transcodes a video file or package input. Your command will look like this: makelossless [input].

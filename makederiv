@@ -21,6 +21,7 @@ _usage(){
         echo "      mp3 (mp3)"
         echo "      podcast (mov)"
         echo "      waveform (png)"
+        echo "      frames (tiff)"
         echo "  -l (only use the left channel of the first audio track)"
         echo "  -r (only use the right channel of the first audio track)"
         echo "  -t (burn timecode overlay)"
@@ -96,6 +97,9 @@ elif [[ "${OUTPUT_TYPE}" == "podcast" ]] ; then
 elif [[ "${OUTPUT_TYPE}" == "waveform" ]] ; then
     EXTENSION="png"
     RELATIVEPATH="depictions"
+elif [[ "${OUTPUT_TYPE}" == "frames" ]] ; then
+    EXTENSION="tiff"
+    RELATIVEPATH="access/images"
 else
     echo "No matches for specified output type."
     _usage
@@ -447,6 +451,10 @@ while [[ "${@}" != "" ]] ; do
             # MIDDLEOPTIONS+=(-bufsize:v 6000k)
             _add_video_filter "yadif"
             _add_video_filter "scale=640:trunc(ow/dar/2)*2:interl=1"
+        elif [[ "${OUTPUT_TYPE}" == "frames" ]] ; then
+            MIDDLEOPTIONS+=(-frames:v 1)
+            _add_video_filter "yadif"
+            _add_video_filter "thumbnail=100"
         elif [[ "${OUTPUT_TYPE}" == "mp3" ]] || [[ "${OUTPUT_TYPE}" == "waveform" ]] ; then
             _report -wt "No video stream associated with derivative type."
         else
@@ -539,7 +547,33 @@ while [[ "${@}" != "" ]] ; do
     fi
 
     _filter_to_middle_option
-    _run_critical_event ffmpeg "${INPUTOPTIONS[@]}" "${FFMPEGINPUT[@]}" "${MIDDLEOPTIONS[@]}" "${OUTPUT}"
+    # frames process
+    if [[ "${OUTPUT_TYPE}" == "frames" ]] ; then
+        IMAGECOUNT=10
+        DURATION=$(ffprobe 2>/dev/null "${SOURCEFILE}" -show_format | grep duration | cut -d= -f2)
+        for (( IMAGENUMBER=1; IMAGENUMBER<=${IMAGECOUNT}; IMAGENUMBER++)) ; do
+            START=$(echo "( ${DURATION} / ( ${IMAGECOUNT} + 1 )) * ${IMAGENUMBER}" | bc)
+            echo "duration ${DURATION}"
+            echo "IMAGECOUNT $IMAGECOUNT"
+            echo "image # $IMAGENUMBER"
+            echo "start $START"
+            SUFFIX="_${IMAGENUMBER}"
+            _set_up_output
+            _report -d "Making frame ${IMAGENUMBER} of ${IMAGECOUNT}  - dur:${DURATION} start:${START} - ${OUTPUT}"
+            if [ "${CONCATSOURCE}" != "" ] ; then
+                FFMPEGINPUT="${CONCATSOURCE}"
+            fi
+            _run_critical_event ffmpeg -y "${INPUTOPTIONS[@]}" -v warning -ss "${START}" "${FFMPEGINPUT[@]}" "${MIDDLEOPTIONS[@]}" "${OUTPUT}"
+        done
+        echo
+        if [ -d "${DELIVERDIR}" ] ; then
+            _report -dt "Delivering output"
+            _run mkdir -p "${DELIVERDIR}/${MEDIAID}_images/"
+            _run cp -av "${OUTPUTDIR}/" "${DELIVERDIR}/${MEDIAID}_images/"
+        fi
+    else
+        _run_critical_event ffmpeg "${INPUTOPTIONS[@]}" "${FFMPEGINPUT[@]}" "${MIDDLEOPTIONS[@]}" "${OUTPUT}"
+    fi
 
     # DVD VIDEO_TS folder process: chapters every 5 minutes, dvdauthor will ignore chapter markers greater than duration
     if [[ "${OUTPUT_TYPE}" == "dvd" ]] ; then
