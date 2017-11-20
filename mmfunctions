@@ -420,7 +420,7 @@ _log(){
         case "${OPT}" in
             b) STATUS="start" ;;              # script is beginning
             e) STATUS="end"   ;;              # script is ending
-            a) STATUS="abandon" ;;            # script is abandoned
+            a) STATUS="cancel" ;;            # script is canceled
             c) STATUS="comment" ;;            # comment about what script is doing
             w) STATUS="warning" ;;            # warning information
         esac
@@ -674,7 +674,7 @@ _check_dependencies(){
     done
     if [[ "${DEPS_OK}" = "NO" ]]; then
         _report -wt "Unmet dependencies"
-        _report -wt "Abandoning process!"
+        _report -wt "Canceling process!"
         exit 1
     else
         return 0
@@ -687,9 +687,9 @@ _initialize_make(){
     EMAILADDRESS=""
     OUTPUTDIR_FORCED=""
     _cleanup(){
-        _log -a "Process abandoned"
+        _log -a "Process canceled"
         echo
-        _report -wts "THE PROCESS WAS ABANDONED"
+        _report -wts "THE PROCESS WAS CANCELED"
         exit 1
     }
     trap _cleanup SIGHUP SIGINT SIGTERM
