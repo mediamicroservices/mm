@@ -326,6 +326,20 @@ SLATE.option = Yes
 SLATE.option = No
 SLATE.width = 100
 
+# slate information: series title
+SERIESTITLE.x = 20
+SERIESTITLE.y = 300
+SERIESTITLE.type = textfield
+SERIESTITLE.label = If adding slate, please enter a series title:
+SERIESTITLE.width = 300
+
+# slate information: episode title
+EPISODETITLE.x = 20
+EPISODETITLE.y = 240
+EPISODETITLE.type = textfield
+EPISODETITLE.label = If adding slate, please enter an episode title:
+EPISODETITLE.width = 300
+
 # formula
 FORMULA.x = 20
 FORMULA.y = 180
@@ -381,6 +395,8 @@ if [ "${EDIT_MODE}" == "Y" ] ; then
     echo "  AUDIODECISION = ${AUDIODECISION}"
     echo "  CROPDECISION = ${CROPDECISION}"
     echo "  SLATE = ${SLATE}"
+    echo "  SERIESTITLE = ${SERIESTITLE}"
+    echo "  EPISODETITLE = ${EPISODETITLE}"
     echo "  FORMULA = ${FORMULA}"
     echo "  CLEANUPDECISION = ${CLEANUPDECISION}"
     echo "  PRIORITY = ${PRIORITY}"
@@ -449,19 +465,19 @@ fi
             break
         done
     fi
-
 if [ "${SLATE}" == "Yes" ] ; then
+    if [ "${SERIESTITLE}" = "" ] ; then
     cowsay -t "Series Title?"
     echo -n ":: "
     read SERIESTITLE
-
+    fi
+    if [ "${EPISODETITLE}" = "" ] ; then
     cowsay -s "Episode Title?"
     echo -n ":: "
     read EPISODETITLE
-
+    fi
     MEDIAID4SLATE="${MEDIAID}"
 fi
-
 # blackframe analysis, in/out time settings requests, ask for digitization logs
 if [ "${PRESERVATION_MODE}" == "Y" ] ; then
     _reset_directory
