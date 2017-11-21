@@ -150,6 +150,15 @@ _delivertoaipstorage(){
     fi
 }
 
+_delivertoia(){
+    if [ $(echo "${MEDIAID}" | grep -E "${REGEX4IA}") ] ; then
+        if [ $(which uploadia) ] ; then
+            _report -dt "Attempting to run uploadia and upload to Internet Archive"
+            uploadia "${OUTDIR_INGESTFILE}/${MEDIAID}/objects/access/youtube_up/${MEDIAID}.mp4" "${OUTDIR_INGESTFILE}/${MEDIAID}/objects/access/dvd/${MEDIAID}.iso"
+        fi
+    fi
+}
+
 _cleanup(){
     _log -a "Process aborted"
     _remove_mediaid_from_queue
@@ -567,14 +576,7 @@ if [ "${MAKEACCESSCOPIES}" == "Y" ] ; then
 fi
 
 _makemetadatapackage
-
-#uploadia
-if [ $(echo "${MEDIAID}" | grep -E "${REGEX4IA}") ] ; then
-    if [ $(which uploadia) ] ; then
-        _report -dt "Attempting to run uploadia and upload to Internet Archive"
-        uploadia "${OUTDIR_INGESTFILE}/${MEDIAID}/objects/access/youtube_up/${MEDIAID}.mp4" "${OUTDIR_INGESTFILE}/${MEDIAID}/objects/access/dvd/${MEDIAID}.iso"
-    fi
-fi
+_delivertoia
 
 # move and cleanup
 if [[ "${DELIVERYTOAIPSTORAGE}" == "Y" ]] ; then
