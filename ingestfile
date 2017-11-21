@@ -86,6 +86,17 @@ _blackframetest(){
     fi
 }
 
+_phasechecktest(){
+    _report -dt "Checking audio phase for $(basename "${INPUT}")"
+    _get_phase_warning "${INPUT}"
+    if [ "${PHASE_ERROR}" -gt "0" ] ; then
+        _report -w "WARNING - There are ${PHASE_ERROR} sections of out-of-phase audio"
+        _report -qn "Enter q to quit, any other key to continue: "
+        read A3
+        [ "${A3}" == "q" ] && exit 0
+    fi
+}
+
 _cleanup(){
     _log -a "Process aborted"
     _remove_mediaid_from_queue
@@ -374,14 +385,7 @@ else
 fi
 
 if [ "${PHASECHECKTEST}" = "Y" ] ; then
-    _report -dt "Checking audio phase for $(basename "${INPUT}")"
-    _get_phase_warning "${INPUT}"
-    if [ "${PHASE_ERROR}" -gt "0" ] ; then
-        _report -w "There are ${PHASE_ERROR} sections of out-of-phase audio!"
-        _report -qn "Enter q to quit, any other key to continue: "
-        read A3
-        [ "${A3}" == "q" ] && exit 0
-    fi
+    _phasechecktest
 fi
 
 #frame count test- will ask operator for what to do if there is a discrepancy between the container frame count and the video track frame count.
