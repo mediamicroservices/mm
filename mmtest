@@ -105,8 +105,8 @@ else
     _report -wt "Checksums did not match for the following derivative files:"
     _report -w "$FAILEDCHECKSUMS"
 fi
+echo "This regression test was built on FFmpeg version 3.4 and may return mismatches when used with other versions. You are running FFmpeg version $(ffmpeg -version | grep "ffmpeg version" | awk '{print $3}')."
 
 # delete all test files after 10 minutes
 echo "mmtest will delete test files from /tmp in 5 minutes; press control-C to keep files in /tmp folder."
 sleep 300 && rm -r "${ROOTDIR}"
-
