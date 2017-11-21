@@ -215,6 +215,18 @@ _cleanup_sourcefile(){
     fi
 }
 
+_run_storage_checks(){
+    # for existing output
+    if [ -d "${OUTDIR_INGESTFILE}/${MEDIAID}" ] ; then
+        _report -wt "It looks like ${MEDIAID} was already ingested. If you want to overwrite the existing one, please delete ${OUTDIR_INGESTFILE}/${MEDIAID} first and then try again."
+        exit 1
+    fi
+    if [ -d "${AIP_STORAGE}/${MEDIAID}" ] ; then
+        _report -wt "It looks like ${MEDIAID} was already ingested. If you want to overwrite the existing one, please delete ${AIP_STORAGE}/${MEDIAID} first and then try again."
+        exit 1
+    fi
+}
+
 trap _cleanup SIGHUP SIGINT SIGTERM
 
 # check environment
@@ -371,16 +383,7 @@ fi
     # interview the operator
     _ask_operator
     _ask_mediaid
-
-    ## check for existing output
-    if [ -d "${OUTDIR_INGESTFILE}/${MEDIAID}" ] ; then
-        _report -wt "It looks like ${MEDIAID} was already ingested. If you want to overwrite the existing one please delete ${OUTDIR_INGESTFILE}/${MEDIAID} first and then try again."
-        exit 1
-    fi
-    if [ -d "${AIP_STORAGE}/${MEDIAID}" ] ; then
-        _report -wt "It looks like ${MEDIAID} was already ingested. If you want to overwrite the existing one please delete ${AIP_STORAGE}/${MEDIAID} first and then try again."
-        exit 1
-    fi
+    _run_storage_checks
     _ask_input
 
     # Check if file is being modified
