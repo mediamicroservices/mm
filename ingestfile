@@ -3,7 +3,6 @@
 # select an audiovisual file, package it, and transcode it
 VERSION="1.0"
 REQUIRECONFIG="Y"
-DOCHECKSUMS="Y"
 FORMULA=""
 INTIME=""
 OUTTIME=""
@@ -132,6 +131,13 @@ _makeaccesscopies(){
         _writeerrorlog "makederiv" -T podcast "${MEDIAID} did not qualify for podcast creation and was skipped."
     fi
     "${SCRIPTDIR}/makederiv" -T dvd "${OUTDIR_INGESTFILE}/${MEDIAID}"
+}
+
+_makemetadatapackage(){
+    "${SCRIPTDIR}/makemetadata" "${OUTDIR_INGESTFILE}/${MEDIAID}"
+    "${SCRIPTDIR}/checksumpackage" "${OUTDIR_INGESTFILE}/${MEDIAID}"
+    _writeingestlog "datetime_end" "$(_get_iso8601)"
+    "${SCRIPTDIR}/makefingerprint" "${OUTDIR_INGESTFILE}/${MEDIAID}"
 }
 
 _cleanup(){
@@ -550,13 +556,7 @@ if [ "${MAKEACCESSCOPIES}" == "Y" ] ; then
     _makeaccesscopies
 fi
 
-# makemetadata
-"${SCRIPTDIR}/makemetadata" "${OUTDIR_INGESTFILE}/${MEDIAID}"
-
-# checksums
-if [ "${DOCHECKSUMS}" = "Y" ] ; then
-    "${SCRIPTDIR}/checksumpackage" "${OUTDIR_INGESTFILE}/${MEDIAID}"
-fi
+_makemetadatapackage
 
 #uploadia
 if [ $(echo "${MEDIAID}" | grep -E "${REGEX4IA}") ] ; then
@@ -565,12 +565,6 @@ if [ $(echo "${MEDIAID}" | grep -E "${REGEX4IA}") ] ; then
         uploadia "${OUTDIR_INGESTFILE}/${MEDIAID}/objects/access/youtube_up/${MEDIAID}.mp4" "${OUTDIR_INGESTFILE}/${MEDIAID}/objects/access/dvd/${MEDIAID}.iso"
     fi
 fi
-
-# more logging
-_writeingestlog "datetime_end" "$(_get_iso8601)"
-
-# fingerprint
-"${SCRIPTDIR}/makefingerprint" "${OUTDIR_INGESTFILE}/${MEDIAID}"
 
 # move and cleanup
 if [[ "${DELIVERYTOAIPSTORAGE}" == "Y" ]] ; then
