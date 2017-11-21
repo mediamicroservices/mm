@@ -97,7 +97,7 @@ _phasechecktest(){
 }
 
 _makebroadcastcopies(){
-    if [ "${SLATE_CHOICE}" = "Y" ] ; then
+    if [ "${SLATE}" == "Yes" ] ; then
         "${SCRIPTDIR}/makederiv" -T broadcast -s "${MAKEDERIVOPTS[@]}" "${OUTDIR_INGESTFILE}/${MEDIAID}"
         if [ "${DELIVERYTOOMNEON}" == "Y" ] ; then
             _report -dt "STATUS Uploading ${OBJECTSDIR}/service/${MEDIAID%.*}_SLATE.mov to the OMNEON."
@@ -450,14 +450,7 @@ fi
         done
     fi
 
-if [ "${SLATE}" = "Yes" ] ; then
-    SLATE_CHOICE="Y"
-else
-    SLATE_CHOICE="N"
-fi
-
-if [ "${SLATE_CHOICE}" == "Y" ] ; then
-
+if [ "${SLATE}" == "Yes" ] ; then
     cowsay -t "Series Title?"
     echo -n ":: "
     read SERIESTITLE
