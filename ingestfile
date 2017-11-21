@@ -515,13 +515,7 @@ LOGDIR="${OUTDIR_INGESTFILE}/${MEDIAID}/metadata/logs"
 _run _mkdir2 "${LOGDIR}"
 INGESTLOG="${LOGDIR}/capture.log"
 
-#performing interlacement test if formula is none- only to be used in specific edge cases, answer should be no in most cases.
 if [[ "${FORMULA}" == "check interlacement" ]] ; then
-        INTERLACE_CHOICE="Y"
-fi
-
-#perform interlacement test
-if [[ "${INTERLACE_CHOICE}" == "Y" ]] ; then
     _get_interlacement_full "${INPUT}"
 fi
 
