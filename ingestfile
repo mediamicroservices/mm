@@ -465,19 +465,19 @@ fi
             break
         done
     fi
-if [ "${SLATE}" == "Yes" ] ; then
-    if [ "${SERIESTITLE}" = "" ] ; then
-    cowsay -t "Series Title?"
-    echo -n ":: "
-    read SERIESTITLE
+    if [ "${SLATE}" == "Yes" ] ; then
+        if [ "${SERIESTITLE}" = "" ] ; then
+            cowsay -t "Series Title?"
+            echo -n ":: "
+            read SERIESTITLE
+        fi
+        if [ "${EPISODETITLE}" = "" ] ; then
+            cowsay -s "Episode Title?"
+            echo -n ":: "
+            read EPISODETITLE
+        fi
+        MEDIAID4SLATE="${MEDIAID}"
     fi
-    if [ "${EPISODETITLE}" = "" ] ; then
-    cowsay -s "Episode Title?"
-    echo -n ":: "
-    read EPISODETITLE
-    fi
-    MEDIAID4SLATE="${MEDIAID}"
-fi
 # blackframe analysis, in/out time settings requests, ask for digitization logs
 if [ "${PRESERVATION_MODE}" == "Y" ] ; then
     _reset_directory
