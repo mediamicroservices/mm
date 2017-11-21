@@ -227,7 +227,7 @@ fi
 [ -z "${PODCASTDELIVER}" ] && { echo "A directory for podcast delivery must be set. Use [ -w /path/to/deliver/podcastfiles] or run mmconfig to set PODCASTDELIVER." ; exit 1 ;};
 [ -z "${YOUTUBEDELIVER}" ] && { echo "A directory for youtube delivery must be set. Use [ -y /path/to/deliver/youtubefiles] or run mmconfig to set YOUTUBEDELIVER." ; exit 1 ;};
 
-#pashua interface settings
+# pashua interface settings
 CONF="
 # Set transparency: 0 is transparent, 1 is opaque
 *.transparency=1.00
@@ -249,21 +249,21 @@ OP.type = textfield
 OP.label = Please enter your name:
 OP.width = 270
 
-# Media ID
+# media ID
 MEDIAID.x = 20
 MEDIAID.y = 480
 MEDIAID.type = textfield
 MEDIAID.label = Please enter a unique MEDIA ID:
 MEDIAID.width = 270
 
-# Input file
+# input file
 INPUT.x = 20
 INPUT.y = 420
 INPUT.type = openbrowser
 INPUT.label = Select your file:
 INPUT.width=400
 
-# Audio Strategy
+# audio strategy
 AUDIODECISION.x = 20
 AUDIODECISION.y = 360
 AUDIODECISION.type = combobox
@@ -275,7 +275,7 @@ AUDIODECISION.option = Only use left of the first audio track [for 21st Century]
 AUDIODECISION.option = Only use right of the first audio track
 AUDIODECISION.width = 400
 
-# Cropping Strategy
+# cropping strategy
 CROPDECISION.x = 20
 CROPDECISION.y = 300
 CROPDECISION.type = combobox
@@ -286,7 +286,7 @@ CROPDECISION.option = Do not crop
 CROPDECISION.option = Examine the video and auto-crop out black borders (slower)
 CROPDECISION.width = 400
 
-# Adding Slate
+# adding slate
 SLATE.x = 20
 SLATE.y = 240
 SLATE.type = combobox
@@ -295,7 +295,7 @@ SLATE.option = Yes
 SLATE.option = No
 SLATE.width = 100
 
-# Optional Formula
+# formula
 FORMULA.x = 20
 FORMULA.y = 180
 FORMULA.type = combobox
@@ -311,7 +311,7 @@ FORMULA.option = hds
 FORMULA.option = sds
 FORMULA.width = 100
 
-# Cleanup Strategy
+# cleanup decision
 CLEANUPDECISION.x = 20
 CLEANUPDECISION.y = 120
 CLEANUPDECISION.type = combobox
@@ -322,7 +322,7 @@ CLEANUPDECISION.option = Leave source file where it is
 CLEANUPDECISION.option = Remove source file after successful ingest
 CLEANUPDECISION.width = 300
 
-# multitasking strategy
+# priority
 PRIORITY.x = 20
 PRIORITY.y = 60
 PRIORITY.type = combobox
