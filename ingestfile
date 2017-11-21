@@ -205,6 +205,16 @@ _cleanup(){
     exit 1
 }
 
+_cleanup_sourcefile(){
+    if [ -n "${RSYNC_ERR}" ] && [ "${RSYNC_ERR}" -gt "0" ] ; then
+        echo "${RSYNC_ERR}"
+        _report -wt "Cancelling requested deletion of source file, not looking safe."
+    else
+        _report -dt "Removing the source file from ${INPUT} as requested."
+        _run rm -f "${INPUT}"
+    fi
+}
+
 trap _cleanup SIGHUP SIGINT SIGTERM
 
 # check environment
@@ -581,13 +591,7 @@ fi
 echo "${RSYNC_ERR}"
 
 if [[ "${CLEANUP_CHOICE}" == "Y" ]] ; then
-    if [ -n "${RSYNC_ERR}" ] && [ "${RSYNC_ERR}" -gt "0" ] ; then
-        echo "${RSYNC_ERR}"
-        _report -wt "Cancelling requested deletion of source file, not looking safe."
-    else
-        _report -dt "Removing the source file from ${INPUT} as requested."
-        _run rm -f "${INPUT}"
-    fi
+    _cleanup_sourcefile
 fi
 
 # clean up queue
