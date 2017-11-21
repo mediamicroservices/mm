@@ -208,10 +208,8 @@ _cleanup(){
 trap _cleanup SIGHUP SIGINT SIGTERM
 
 # check environment
-if [ -d "$(pwd)" ] ; then
-    echo ":)"
-else
-    _report -w "you're in a directory that doesn't actually exist. The script exited and you need to cd into a different directory. ¯\_(ツ)_/¯ "
+if [ ! -d "$(pwd)" ] ; then
+    _report -w "You're in a directory that doesn't actually exist. The script exited and you need to cd into a different directory. ¯\_(ツ)_/¯ "
     exit 1
 fi
 [ -z "${OUTDIR_INGESTFILE}" ] && { echo "The processing directory must be set. Use [ -p /path/to/processing/directory ] or run mmconfig to set OUTDIR_INGESTFILE." ; exit 1 ;};
