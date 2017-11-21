@@ -439,12 +439,6 @@ fi
             break
         done
     fi
-    if [ "${CLEANUPDECISION}" = "Remove source file after successful ingest" ] ; then
-        CLEANUP_CHOICE="Y"
-    else
-        CLEANUP_CHOICE="N"
-    fi
-
     if [ "${PRIORITY}" = "" ] ; then
         _report -q "Select a multitasking strategy?"
         PS3="Selection? "
@@ -552,7 +546,7 @@ if [ ! -f "${INPUT}" ] ; then
 fi
 
 # either rsync or mv the input into the package
-if [ "${FROM}" == "${TO}" -a "${CLEANUP_CHOICE}" == "Y" ] ; then
+if [ "${FROM}" == "${TO}" -a "${CLEANUPDECISION}" == "Remove source file after successful ingest" ] ; then
     _report -dt "Because ${INPUT} and ${OBJECTSDIR} are on the same filesystem and preservation mode is enabled we will mv rather than rsync."
     _run_critical mv -v -n "${INPUT}" "${OBJECTSDIR}/"
     if [ ! "${#FILES[@]}" = 0 ] ; then
@@ -591,7 +585,7 @@ if [[ "${DELIVERYTOAIPSTORAGE}" == "Y" ]] ; then
 fi
 echo "${RSYNC_ERR}"
 
-if [[ "${CLEANUP_CHOICE}" == "Y" ]] ; then
+if [[ "${CLEANUPDECISION}" = "Remove source file after successful ingest" ]] ; then
     _cleanup_sourcefile
 fi
 
