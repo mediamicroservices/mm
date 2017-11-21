@@ -237,35 +237,35 @@ CONF="
 
 # intro text
 intro.x = 20
-intro.y = 600
+intro.y = 720
 intro.width = 500
 intro.type = text
 intro.text = Ingest file options. Leave the option blank to be prompted.
 
 # ask operator
 OP.x = 20
-OP.y = 540
+OP.y = 660
 OP.type = textfield
 OP.label = Please enter your name:
-OP.width = 270
+OP.width = 300
 
 # media ID
 MEDIAID.x = 20
-MEDIAID.y = 480
+MEDIAID.y = 600
 MEDIAID.type = textfield
-MEDIAID.label = Please enter a unique MEDIA ID:
-MEDIAID.width = 270
+MEDIAID.label = Please enter a unique MEDIA ID (capital letters, numbers, hyphens and underscores only).
+MEDIAID.width = 300
 
 # input file
 INPUT.x = 20
-INPUT.y = 420
+INPUT.y = 540
 INPUT.type = openbrowser
 INPUT.label = Select your file:
 INPUT.width=400
 
 # audio strategy
 AUDIODECISION.x = 20
-AUDIODECISION.y = 360
+AUDIODECISION.y = 480
 AUDIODECISION.type = combobox
 AUDIODECISION.label = Select an audio strategy:
 AUDIODECISION.default = Default audio mapping [first audio track used for stereo output]
@@ -277,7 +277,7 @@ AUDIODECISION.width = 400
 
 # cropping strategy
 CROPDECISION.x = 20
-CROPDECISION.y = 300
+CROPDECISION.y = 420
 CROPDECISION.type = combobox
 CROPDECISION.label = Select a cropping strategy:
 CROPDECISION.default = Do not crop
@@ -288,7 +288,7 @@ CROPDECISION.width = 400
 
 # adding slate
 SLATE.x = 20
-SLATE.y = 240
+SLATE.y = 360
 SLATE.type = combobox
 SLATE.label = Do you want to create a service copy with a slate?
 SLATE.option = Yes
@@ -299,7 +299,7 @@ SLATE.width = 100
 FORMULA.x = 20
 FORMULA.y = 180
 FORMULA.type = combobox
-FORMULA.label = Select an optional formula for unusual cases. In most cases select none.
+FORMULA.label = Select a formula for unusual cases (optional).
 FORMULA.tooltip = To force the input file to be interpreted as top or bottom field first interlacement, select tff or bff. To stretch the input video to 1920x1080 HD frame size, select 'HDS'.
 FORMULA.default = none
 FORMULA.option =
@@ -309,7 +309,7 @@ FORMULA.option = tff
 FORMULA.option = bff
 FORMULA.option = hds
 FORMULA.option = sds
-FORMULA.width = 100
+FORMULA.width = 300
 
 # cleanup decision
 CLEANUPDECISION.x = 20
@@ -331,7 +331,7 @@ PRIORITY.default = put in queue
 PRIORITY.option =
 PRIORITY.option = put in queue
 PRIORITY.option = start now
-PRIORITY.width = 125
+PRIORITY.width = 300
 
 # Add a cancel button with default label
 cb.type=cancelbutton
