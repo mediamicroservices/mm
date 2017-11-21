@@ -411,7 +411,6 @@ fi
             break
         done
     fi
-
     if [ "${CROPDECISION}" = "" ] ; then
         _report -q "Select a cropping strategy?"
         PS3="Selection: "
@@ -420,7 +419,6 @@ fi
             break
         done
     fi
-
     if [ "${FORMULA}" = "" ] ; then
         _report -q "Select an optional formula for unusual cases?"
         _report -d "(In most cases, select 'none'. To force the input file to be interpreted as top or bottom field first interlacement, select tff or bff. To stretch the input video to 1920x1080 HD frame size, select 'hds'. To squish into Standard Definition, select 'sds'.)"
@@ -430,10 +428,8 @@ fi
             break
         done
     fi
-
     if [ "${CLEANUPDECISION}" = "" ] ; then
         _report -q "Select a cleanup strategy?"
-        PS3="Selection? "
         select CLEANUPDECISION in "Leave source file where it is." "Remove source file after successful ingest"
         do
             break
@@ -441,16 +437,13 @@ fi
     fi
     if [ "${PRIORITY}" = "" ] ; then
         _report -q "Select a multitasking strategy?"
-        PS3="Selection? "
         select PRIORITY in "put in queue" "start now"
         do
             break
         done
     fi
-
     if [ "${SLATE}" = "" ] ; then
         _report -q "Do you want to create a service copy with a slate?"
-        PS3="Selection? "
         select SLATE in "Yes" "No"
         do
             break
