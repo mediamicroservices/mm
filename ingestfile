@@ -199,9 +199,9 @@ _writecapturelog(){
 }
 
 _cleanup(){
-    _log -a "Process aborted"
+    _log -a "Process canceled"
     _remove_mediaid_from_queue
-    [ -d "${OUTDIR_INGESTFILE}/${MEDIAID}" ] && mv "${OUTDIR_INGESTFILE}/${MEDIAID}" "${OUTDIR_INGESTFILE}/${MEDIAID}_aborted_ingest_$(_get_iso8601_c)"
+    [ -d "${OUTDIR_INGESTFILE}/${MEDIAID}" ] && mv "${OUTDIR_INGESTFILE}/${MEDIAID}" "${OUTDIR_INGESTFILE}/${MEDIAID}_canceled_ingest_$(_get_iso8601_c)"
     exit 1
 }
 
