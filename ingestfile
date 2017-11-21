@@ -399,8 +399,8 @@ fi
         [ "${NOTVIDRESPONSE}" == "q" ] && exit 0
     fi
     if [ "${AUDIODECISION}" = "" ] ; then
-        _report -q "Select an audio strategy? "
-        PS3="Selection? "
+        _report -q "Select an audio strategy?"
+        PS3="Selection: "
         select AUDIODECISION in "Default audio mapping [first audio track used for stereo output]" "Only use left of the first audio track [for 21st Century]" "Only use right of the first audio track"
         do
             break
@@ -408,8 +408,8 @@ fi
     fi
 
     if [ "${CROPDECISION}" = "" ] ; then
-        _report -q "Select a cropping strategy? "
-        PS3="Selection? "
+        _report -q "Select a cropping strategy?"
+        PS3="Selection: "
         select CROPDECISION in "Do not crop." "Examine the video and auto-crop out black borders (slower)"
         do
             break
@@ -417,9 +417,9 @@ fi
     fi
 
     if [ "${FORMULA}" = "" ] ; then
-        _report -q "Select an optional formula for unusual cases? "
-        _report -d "In most cases, select 'none'. To force the input file to be interpreted as top or bottom field first interlacement, select tff or bff. To stretch the input video to 1920x1080 HD frame size, select 'hds'. To squish into Standard Definition, select 'sds'."
-        PS3="Selection? "
+        _report -q "Select an optional formula for unusual cases?"
+        _report -d "(In most cases, select 'none'. To force the input file to be interpreted as top or bottom field first interlacement, select tff or bff. To stretch the input video to 1920x1080 HD frame size, select 'hds'. To squish into Standard Definition, select 'sds'.)"
+        PS3="Selection: "
         select FORMULA in "none" "check interlacement" "tff" "bff" "hds" "sds"
         do
             break
@@ -427,7 +427,7 @@ fi
     fi
 
     if [ "${CLEANUPDECISION}" = "" ] ; then
-        _report -q "Select a cleanup strategy? "
+        _report -q "Select a cleanup strategy?"
         PS3="Selection? "
         select CLEANUPDECISION in "Leave source file where it is." "Remove source file after successful ingest"
         do
@@ -441,7 +441,7 @@ fi
     fi
 
     if [ "${PRIORITY}" = "" ] ; then
-        _report -q "Select a multitasking strategy? "
+        _report -q "Select a multitasking strategy?"
         PS3="Selection? "
         select PRIORITY in "put in queue" "start now"
         do
@@ -450,7 +450,7 @@ fi
     fi
 
     if [ "${SLATE}" = "" ] ; then
-        _report -q "Do you want to create a service copy with a slate? "
+        _report -q "Do you want to create a service copy with a slate?"
         PS3="Selection? "
         select SLATE in "Yes" "No"
         do
