@@ -140,6 +140,16 @@ _makemetadatapackage(){
     "${SCRIPTDIR}/makefingerprint" "${OUTDIR_INGESTFILE}/${MEDIAID}"
 }
 
+_delivertoaipstorage(){
+    if [ "${AIP_STORAGE}" != "${OUTDIR_INGESTFILE}" ] ; then
+    "${SCRIPTDIR}/migratefiles" -r -o "${AIP_STORAGE}" "${OUTDIR_INGESTFILE}/${MEDIAID}"
+    RSYNC_ERR="${?}"
+    [ $(du -s "${OUTDIR_INGESTFILE}/${MEDIAID}" | awk '{print $1}') = "0" ] && rm -r "${OUTDIR_INGESTFILE}/${MEDIAID}"
+    _report -dt "STATUS Done. Final package has been delivered to ${AIP_STORAGE}/${MEDIAID}"
+    else echo "As Target directory is same as Input directory, files were not migrated."
+    fi
+}
+
 _cleanup(){
     _log -a "Process aborted"
     _remove_mediaid_from_queue
@@ -568,13 +578,7 @@ fi
 
 # move and cleanup
 if [[ "${DELIVERYTOAIPSTORAGE}" == "Y" ]] ; then
-    if [ "${AIP_STORAGE}" != "${OUTDIR_INGESTFILE}" ] ; then
-    "${SCRIPTDIR}/migratefiles" -r -o "${AIP_STORAGE}" "${OUTDIR_INGESTFILE}/${MEDIAID}"
-    RSYNC_ERR="${?}"
-    [ $(du -s "${OUTDIR_INGESTFILE}/${MEDIAID}" | awk '{print $1}') = "0" ] && rm -r "${OUTDIR_INGESTFILE}/${MEDIAID}"
-    _report -dt "STATUS Done. Final package has been delivered to ${AIP_STORAGE}/${MEDIAID}"
-    else echo "As Target directory is same as Input directory, files were not migrated."
-    fi
+    _delivertoaipstorage
 fi
 echo "${RSYNC_ERR}"
 
