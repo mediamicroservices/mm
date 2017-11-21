@@ -68,6 +68,24 @@ _remove_mediaid_from_queue(){
     mv "${QUEUEFILE}_tmp" "${QUEUEFILE}"
 }
 
+_blackframetest(){
+    _black_at_ends "${INPUT}"
+    if [ "${HEAD_BLACK}" -gt "30" ] ; then
+        _report -wt "WARNING - There are at least ${HEAD_BLACK} frames of black at the beginning of ${INPUT}"
+        _report -qn "Enter q to quit, any other key to continue: "
+        read A1
+        [ "${A1}" == "q" ] && exit 0
+        _ask_intime
+    fi
+    if [ "${TAIL_BLACK}" -gt "30" ] ; then
+        _report -wt "WARNING - There are at least ${TAIL_BLACK} frames of black at the end of ${INPUT}"
+        _report -qn "Enter q to quit, any other key to continue: "
+        read A2
+        [ "${A2}" == "q" ] && exit 0
+        _ask_outtime
+    fi
+}
+
 _cleanup(){
     _log -a "Process aborted"
     _remove_mediaid_from_queue
@@ -351,21 +369,7 @@ if [ "${PRESERVATION_MODE}" == "Y" ] ; then
 
 else
     if [ "${BLACKFRAMETEST}" = "Y" ] ; then
-        _black_at_ends "${INPUT}"
-        if [ "${HEAD_BLACK}" -gt "30" ] ; then
-            _report -wt "WARNING - There are at least ${HEAD_BLACK} frames of black at the beginning of ${INPUT}"
-            _report -qn "Enter q to quit, any other key to continue: "
-            read A1
-            [ "${A1}" == "q" ] && exit 0
-            _ask_intime
-        fi
-        if [ "${TAIL_BLACK}" -gt "30" ] ; then
-            _report -wt "WARNING - There are at least ${TAIL_BLACK} frames of black at the end of ${INPUT}"
-            _report -qn "Enter q to quit, any other key to continue: "
-            read A2
-            [ "${A2}" == "q" ] && exit 0
-            _ask_outtime
-        fi
+        _blackframetest
     fi
 fi
 
