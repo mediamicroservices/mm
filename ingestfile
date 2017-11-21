@@ -97,6 +97,21 @@ _phasechecktest(){
     fi
 }
 
+_makebroadcastcopies(){
+    if [ "${SLATE_CHOICE}" = "Y" ] ; then
+        "${SCRIPTDIR}/makederiv" -T broadcast -s "${MAKEDERIVOPTS[@]}" "${OUTDIR_INGESTFILE}/${MEDIAID}"
+        if [ "${DELIVERYTOOMNEON}" == "Y" ] ; then
+            _report -dt "STATUS Uploading ${OBJECTSDIR}/service/${MEDIAID%.*}_SLATE.mov to the OMNEON."
+            "${SCRIPTDIR}/uploadomneon" "${OBJECTSDIR}/service/${MEDIAID%.*}_SLATE.mov"
+        fi
+    fi
+    "${SCRIPTDIR}/makederiv" -T broadcast "${MAKEDERIVOPTS[@]}" "${OUTDIR_INGESTFILE}/${MEDIAID}"
+    if [ "${DELIVERYTOOMNEON}" == "Y" ] ; then
+        _report -dt "STATUS Uploading ${OBJECTSDIR}/service/${MEDIAID%.*}.mov to the OMNEON."
+        "${SCRIPTDIR}/uploadomneon" "${OBJECTSDIR}/service/${MEDIAID%.*}.mov"
+    fi
+}
+
 _cleanup(){
     _log -a "Process aborted"
     _remove_mediaid_from_queue
@@ -505,26 +520,7 @@ unset MAKEDERIVOPTS
 if [ ! -z "${FORMULA}" ] ; then
     MAKEDERIVOPTS+=(-F "${FORMULA}")
 fi
-#create slate version first and upload to omneon
-if [ "${SLATE_CHOICE}" = "Y" ] ; then
-    "${SCRIPTDIR}/makederiv" -T broadcast -s "${MMAKEDERIVOPTS[@]}" "${OUTDIR_INGESTFILE}/${MEDIAID}"
-    if [ "${DELIVERYTOOMNEON}" == "Y" ] ; then
-        _report -dt "STATUS Uploading ${OBJECTSDIR}/service/${MEDIAID%.*}_SLATE.mov to the OMNEON."
-        "${SCRIPTDIR}/uploadomneon" "${OBJECTSDIR}/service/${MEDIAID%.*}_SLATE.mov"
-        _email_delivery "${MAKEBROADCAST_DELIVERY_EMAIL_TO}"
-    fi
-
-fi
-
-# make copy for broadcast
-"${SCRIPTDIR}/makederiv" -T broadcast "${MAKEDERIVOPTS[@]}" "${OUTDIR_INGESTFILE}/${MEDIAID}"
-
-# upload broadcast copy
-if [ "${DELIVERYTOOMNEON}" == "Y" ] ; then
-    _report -dt "STATUS Uploading ${OBJECTSDIR}/service/${MEDIAID%.*}.mov to the OMNEON."
-    "${SCRIPTDIR}/uploadomneon" "${OBJECTSDIR}/service/${MEDIAID%.*}.mov"
-    _email_delivery "${MAKEBROADCAST_DELIVERY_EMAIL_TO}"
-fi
+_makebroadcastcopies
 
 # make access copies
 if [ "${MAKEACCESSCOPIES}" == "Y" ] ; then
