@@ -159,6 +159,45 @@ _delivertoia(){
     fi
 }
 
+_writecapturelog(){
+    echo -e "${LOG}" >> "${INGESTLOG}"
+    _writeingestlog "media ID" "${MEDIAID}"
+    _writeingestlog "media ID slate" "${MEDIAID4SLATE}"
+    _writeingestlog "operator" "${OP}"
+    _writeingestlog "input" "${INPUT}"
+    _writeingestlog "processing_directory" "${OUTDIR_INGESTFILE}"
+    _writeingestlog "audiodecision" "${AUDIODECISION}"
+    _writeingestlog "cropdecision" "${CROPDECISION}"
+    _writeingestlog "cleanupdecision" "${CLEANUPDECISION}"
+    _writeingestlog "formula" "${FORMULA}"
+    _writeingestlog "ingest_process_dir" "${OUTDIR_INGESTFILE}"
+    _writeingestlog "ingest_process_dir_freespace" "$(df -h "${OUTDIR_INGESTFILE}" | tail -n1 | awk '{print $4}')"
+    _writeingestlog "computer_name" "$(uname -n)"
+    _writeingestlog "user_name" "$(whoami)"
+    _writeingestlog "operating_system_version" "$(uname -v)"
+    _writeingestlog "datetime_start" "$(_get_iso8601)"
+    _writeingestlog "Series Title" "${SERIESTITLE}"
+    _writeingestlog "Episode Title" "${EPISODETITLE}"
+    _writeingestlog "made this" "ingestfile"
+    _writeingestlog "Interlacement test" "${INTERLACETEST}"
+    if [ -n "$(cat "${PHASEREPORT}" | xargs)" ] ; then
+        _writeingestlog "Out_of_phase_audio_ranges" "$(cat "${PHASEREPORT}" | xargs)"
+    else
+        _writeingestlog "Out_of_phase_audio_ranges" "None"
+    fi
+    if [ "${INTIME}" ] ; then
+        _writeingestlog "intime" "${INTIME}"
+    fi
+    if [ "${OUTTIME}" ] ; then
+        _writeingestlog "outtime" "${OUTTIME}"
+    fi
+    if [ "${PRESERVATION_MODE}" == "Y" ] ; then
+        _writeingestlog "package type" "Preservation-Video"
+    else
+        _writeingestlog "package type" "Production"
+    fi
+}
+
 _cleanup(){
     _log -a "Process aborted"
     _remove_mediaid_from_queue
@@ -489,48 +528,7 @@ if [ "${PRIORITY}" = "put in queue" ] ; then
 fi
 
 _log -b
-
-#writing out variable values to the capture.log file
-echo -e "${LOG}" >> "${INGESTLOG}"
-_writeingestlog "media ID" "${MEDIAID}"
-_writeingestlog "media ID slate" "${MEDIAID4SLATE}"
-_writeingestlog "operator" "${OP}"
-_writeingestlog "input" "${INPUT}"
-_writeingestlog "processing_directory" "${OUTDIR_INGESTFILE}"
-_writeingestlog "audiodecision" "${AUDIODECISION}"
-_writeingestlog "cropdecision" "${CROPDECISION}"
-_writeingestlog "cleanupdecision" "${CLEANUPDECISION}"
-_writeingestlog "formula" "${FORMULA}"
-_writeingestlog "ingest_process_dir" "${OUTDIR_INGESTFILE}"
-_writeingestlog "ingest_process_dir_freespace" "$(df -h "${OUTDIR_INGESTFILE}" | tail -n1 | awk '{print $4}')"
-_writeingestlog "computer_name" "$(uname -n)"
-_writeingestlog "user_name" "$(whoami)"
-_writeingestlog "operating_system_version" "$(uname -v)"
-_writeingestlog "datetime_start" "$(_get_iso8601)"
-_writeingestlog "Series Title" "${SERIESTITLE}"
-_writeingestlog "Episode Title" "${EPISODETITLE}"
-_writeingestlog "made this" "ingestfile"
-_writeingestlog "Interlacement test" "${INTERLACETEST}"
-
-if [ -n "$(cat "${PHASEREPORT}" | xargs)" ] ; then
-	_writeingestlog "Out_of_phase_audio_ranges" "$(cat "${PHASEREPORT}" | xargs)"
-else
-    _writeingestlog "Out_of_phase_audio_ranges" "None"
-fi
-
-if [ "${INTIME}" ] ; then
-    _writeingestlog "intime" "${INTIME}"
-fi
-if [ "${OUTTIME}" ] ; then
-    _writeingestlog "outtime" "${OUTTIME}"
-fi
-
-#log package type
-if [ "${PRESERVATION_MODE}" == "Y" ] ; then
-    _writeingestlog "package type" "Preservation-Video"
-else
-    _writeingestlog "package type" "Production"
-fi
+_writecapturelog
 
 # rsync
 FROM=$(_get_filesystem "${INPUT}")
