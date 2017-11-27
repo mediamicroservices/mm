@@ -610,5 +610,4 @@ fi
 
 # clean up queue
 [ "${PRIORITY}" == "put in queue" ] && _remove_mediaid_from_queue
-_writeingestlog "datetime_end" "$(_get_iso8601)"
 _report_to_db
