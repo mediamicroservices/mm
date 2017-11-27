@@ -29,7 +29,7 @@ while getopts ":pienh" OPT ; do
         p) MODE="preservation" ;;
         i) MODE="psa" ;;
         n) MODE="local" ;;
-        e) MODE="terminal" ;;
+        e) TERMINAL_MODE="Y" ;;
         h) _usage ;;
         *) echo "bad option -${OPTARG}" ; _usage ;;
         :) echo "Option -${OPTARG} requires an argument" ;  _writeerrorlog "ingestfile" "You used an invalid option and the script had to exit" ; exit 1 ;;
@@ -380,7 +380,7 @@ cb.type=cancelbutton
 ";
 
 # run gui
-if [ "${MODE}" != "terminal" ] ; then
+if [ "${TERMINAL_MODE}" != "Y" ] ; then
     PASHUA_CONFIGFILE=`/usr/bin/mktemp /tmp/pashua_XXXXXXXXX`
     echo "${CONF}" > "${PASHUA_CONFIGFILE}"
     _pashua_run
