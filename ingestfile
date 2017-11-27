@@ -2,19 +2,6 @@
 # ingestfile
 # select an audiovisual file, package it, and transcode it
 VERSION="1.0"
-REQUIRECONFIG="Y"
-FORMULA=""
-INTIME=""
-OUTTIME=""
-CLEANUP_CHOICE="N"
-MAKEACCESSCOPIES="Y"       # use 'Y' for yes or any other character for no
-BLACKFRAMETEST="Y"         # use 'Y' for yes or any other character for no
-PHASECHECKTEST="Y"         # use 'Y' for yes or any other character for no
-DELIVERYTOOMNEON="Y"       # use 'Y' for yes or any other character for no
-DELIVERACCESSCOPIES="Y"    # use 'Y' for yes or any other character for no
-DELIVERYTOAIPSTORAGE="Y"   # use 'Y' for yes or any other character for no
-EDIT_MODE="Y"
-
 QUEUEFILE="${HOME}/Desktop/queue.txt"
 SCRIPTDIR=$(dirname "${0}")
 . "${SCRIPTDIR}/mmfunctions" || { echo "Missing '${SCRIPTDIR}/mmfunctions'. Exiting." ; exit 1 ;};
@@ -25,11 +12,10 @@ _usage(){
     echo "This script will run an interactive interview and then process an input file accordingly."
     echo "Dependencies: ${DEPENDENCIES[@]}"
     echo "Usage: $(basename ${0}) [ -options ]"
-    echo "   default uses a graphical user interface for interactive component of inputing file and media ID, setting volume adjustment, formula, and slate creation."
-    echo "  -e Uses the terminal interface for interactive component of inputing file and Media ID, volume adjustment, formula, and slate creation."
-    echo "  -p Preservation mode- to be used when packaging digitized material and digitization logs. Does not make any deliveries, and creates the package in the same directory as the input."
-    echo "  -n (do not make any deliveries except for sending the final package to ${AIP_STORAGE}.)"
-    echo "  -i PSA Mode- to be used when packaging PSA files. Does not make any deliveries except for sending the final package to ${DELIVERYTOOMNEON}."
+    echo "  Default mode: presents a graphical user interface to specify file, media ID, and other options. Automatically creates broadcast and access copies, and delivers packages to ${OMNEONPATH}, ${PODCASTDELIVER}, ${YOUTUBEDELIVER}, and ${AIP_STORAGE}."
+    echo "  -p Preservation mode: formula to be used when packaging digitized material and digitization logs. Creates access copies, but does not make any deliveries, and creates the package in the same directory as the input."
+    echo "  -i PSA mode: formula to be used when packaging PSA files. Creates access copies, but does not make any deliveries except for sending the final package to ${DELIVERYTOOMNEON}."
+    echo "  -t Terminal mode: user specifies file, media ID, and other options through interactive terminal interface prompts."
     echo "  -h display this help"
     echo
     exit
@@ -38,13 +24,11 @@ _usage(){
 user_input="${*}"
 OPTIND=1
 
-while getopts ":F:pnhei" OPT ; do
+while getopts ":pith" OPT ; do
     case "${OPT}" in
-        F) FORMULA="${OPTARG}";;
-        e) EDIT_MODE="N" ;;
-        p) PRESERVATION_MODE="Y" ; DELIVERYTOOMNEON="N" ; DELIVERACCESSCOPIES="N" ; DELIVERYTOAIPSTORAGE="N" ;;
-        n) DELIVERYTOOMNEON="N" ; DELIVERACCESSCOPIES="N" ;;
-        i) DELIVERYTOOMNEON="Y" ; DELIVERACCESSCOPIES="N" ; DELIVERYTOAIPSTORAGE="Y" ;;
+        p) MODE="preservation" ;;
+        i) MODE="psa" ;;
+        t) MODE="terminal" ;;
         h) _usage ;;
         *) echo "bad option -${OPTARG}" ; _usage ;;
         :) echo "Option -${OPTARG} requires an argument" ;  _writeerrorlog "ingestfile" "You used an invalid option and the script had to exit" ; exit 1 ;;
@@ -191,7 +175,7 @@ _writecapturelog(){
     if [ "${OUTTIME}" ] ; then
         _writeingestlog "outtime" "${OUTTIME}"
     fi
-    if [ "${PRESERVATION_MODE}" == "Y" ] ; then
+    if [ "${MODE}" == "preservation" ] ; then
         _writeingestlog "package type" "Preservation-Video"
     else
         _writeingestlog "package type" "Production"
@@ -383,8 +367,8 @@ cb.type=cancelbutton
 
 ";
 
-# edit mode
-if [ "${EDIT_MODE}" == "Y" ] ; then
+# run gui
+if [ "${MODE}" != "terminal" ] ; then
     PASHUA_CONFIGFILE=`/usr/bin/mktemp /tmp/pashua_XXXXXXXXX`
     echo "${CONF}" > "${PASHUA_CONFIGFILE}"
     _pashua_run
@@ -570,15 +554,31 @@ unset MAKEDERIVOPTS
 if [ ! -z "${FORMULA}" ] ; then
     MAKEDERIVOPTS+=(-F "${FORMULA}")
 fi
-_makebroadcastcopies
 
-# make access copies
-if [ "${MAKEACCESSCOPIES}" == "Y" ] ; then
-    [ "${DELIVERACCESSCOPIES}" = "Y" ] && _deliveraccesscopies
+if [[ "${MODE}" == "preservation" ]] ; then
+    _reset_directory
+    if [[ "${INPUT#*.}" = "mkv" ]] ; then
+        "${SCRIPTDIR}/makemkvchapters" "${INPUT}"
+    else
+        _ask_intime
+        _ask_outtime
+    fi
+    _ask_digitization_logs
+    _makebroadcastcopies
     _makeaccesscopies
+    _makemetadatapackage
+else
+    _blackframetest
+    _makebroadcastcopies
+    _makeaccesscopies
+    _makemetadatapackage
+    _delivertoaipstorage
+    if [[ "${MODE}" != "psa" ]] ; then
+        _deliveraccesscopies
+        _delivertoia
+    fi
 fi
 
-_makemetadatapackage
 _delivertoia
 
 # move and cleanup
