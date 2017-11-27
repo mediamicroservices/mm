@@ -6,6 +6,10 @@ QUEUEFILE="${HOME}/Desktop/queue.txt"
 SCRIPTDIR=$(dirname "${0}")
 . "${SCRIPTDIR}/mmfunctions" || { echo "Missing '${SCRIPTDIR}/mmfunctions'. Exiting." ; exit 1 ;};
 
+# the mode associates the script with a particular set of microservices and options
+# here the default mode is set which may be replaced with ingestfile options
+MODE="default"
+
 _usage(){
     echo
     echo "$(basename "${0}") ${VERSION}"
@@ -484,8 +488,17 @@ fi
         fi
         MEDIAID4SLATE="${MEDIAID}"
     fi
-# blackframe analysis, in/out time settings requests, ask for digitization logs
-if [ "${PRESERVATION_MODE}" == "Y" ] ; then
+
+# MICROSERVICES BEFORE PROCESSING
+if [ "${MODE}" == "default" || "${MODE}" == "psa" || "${MODE}" == "local" ] ; then
+    _blackframetest
+    _phasechecktest
+    _get_frame_count "${INPUT}"
+    if [[ "${FORMULA}" == "check interlacement" ]] ; then
+        _get_interlacement_full "${INPUT}"
+    fi
+elif [ "${MODE}" == "preservation" ] ; then
+    _ask_digitization_logs
     _reset_directory
     if [[ "${INPUT#*.}" = "mkv" ]] ; then
         "${SCRIPTDIR}/makemkvchapters" "${INPUT}"
@@ -493,24 +506,12 @@ if [ "${PRESERVATION_MODE}" == "Y" ] ; then
         _ask_intime
         _ask_outtime
     fi
-    _ask_digitization_logs
-    PHASECHECKTEST="N"
-
-else
-    if [ "${BLACKFRAMETEST}" = "Y" ] ; then
-        _blackframetest
-    fi
-fi
-
-if [ "${PHASECHECKTEST}" = "Y" ] ; then
+    _blackframetest
     _phasechecktest
-fi
-
-#frame count test- will ask operator for what to do if there is a discrepancy between the container frame count and the video track frame count.
-_get_frame_count "${INPUT}"
-
-if [[ "${FORMULA}" == "check interlacement" ]] ; then
-    _get_interlacement_full "${INPUT}"
+    _get_frame_count "${INPUT}"
+    if [[ "${FORMULA}" == "check interlacement" ]] ; then
+        _get_interlacement_full "${INPUT}"
+    fi
 fi
 
 # queue handling
@@ -535,8 +536,6 @@ _setup_package
 _writecapturelog
 
 # rsync
-FROM=$(_get_filesystem "${INPUT}")
-TO=$(_get_filesystem "${OBJECTSDIR}/")
 # make sure the input is still there
 if [ ! -f "${INPUT}" ] ; then
     _report -wt "The input file is no longer available! Where did $(basename "${INPUT}") go? Please redo."
@@ -547,6 +546,8 @@ if [ ! -f "${INPUT}" ] ; then
 fi
 
 # either rsync or mv the input into the package
+FROM=$(_get_filesystem "${INPUT}")
+TO=$(_get_filesystem "${OBJECTSDIR}/")
 if [ "${FROM}" == "${TO}" -a "${CLEANUPDECISION}" == "Remove source file after successful ingest" ] ; then
     _report -dt "Because ${INPUT} and ${OBJECTSDIR} are on the same filesystem and preservation mode is enabled we will mv rather than rsync."
     _run_critical mv -v -n "${INPUT}" "${OBJECTSDIR}/"
@@ -570,53 +571,39 @@ if [ ! -z "${FORMULA}" ] ; then
     MAKEDERIVOPTS+=(-F "${FORMULA}")
 fi
 
-# run modes
+# SELECT MICROSERVICES PER MODE
 if [[ "${MODE}" == "preservation" ]] ; then
-    _reset_directory
-    if [[ "${INPUT#*.}" = "mkv" ]] ; then
-        "${SCRIPTDIR}/makemkvchapters" "${INPUT}"
-    else
-        _ask_intime
-        _ask_outtime
-    fi
-    _ask_digitization_logs
+    _makebroadcastcopies
+    _makeaccesscopies
+    _delivertoia
+    _makemetadatapackage
+    _writeingestlog "datetime_end" "$(_get_iso8601)"
+    _delivertoaipstorage
+elif [[ "${MODE}" == "psa" ]] ; then
+    _makebroadcastcopies
+    _delivertoomneon
+    _makeaccesscopies
+    _makemetadatapackage
+    _writeingestlog "datetime_end" "$(_get_iso8601)"
+    _delivertoaipstorage
+elif [[ "${MODE}" == "local" ]] ; then
     _makebroadcastcopies
     _makeaccesscopies
     _makemetadatapackage
     _writeingestlog "datetime_end" "$(_get_iso8601)"
-if [[ "${MODE}" == "psa" ]] || [[ "${MODE}" == "local" ]] ; then
-    _makebroadcastcopies
-    _makeaccesscopies
-    _makemetadatapackage
-    _writeingestlog "datetime_end" "$(_get_iso8601)"
-    if [[ "${MODE}" == "psa" ]] ; then
-        _delivertoomneon
-    else
-        _delivertoaipstorage
 else
-    _blackframetest
+    # presuming 'default' mode
     _makebroadcastcopies
+    _delivertoomneon
     _deliveraccessopts
     _makeaccesscopies
+    _delivertoia
     _makemetadatapackage
-
-    _delivertoomneon
-    _delivertoia
-    _delivertoaipstorage
     _writeingestlog "datetime_end" "$(_get_iso8601)"
-    _delivertoia
     _delivertoaipstorage
+    if [[ "${CLEANUPDECISION}" = "Remove source file after successful ingest" ]] ; then
+        _cleanup_sourcefile
     fi
-fi
-
-# move and cleanup
-if [[ "${DELIVERYTOAIPSTORAGE}" == "Y" ]] ; then
-    _delivertoaipstorage
-fi
-echo "${RSYNC_ERR}"
-
-if [[ "${CLEANUPDECISION}" = "Remove source file after successful ingest" ]] ; then
-    _cleanup_sourcefile
 fi
 
 # clean up queue
