@@ -52,6 +52,13 @@ _remove_mediaid_from_queue(){
     mv "${QUEUEFILE}_tmp" "${QUEUEFILE}"
 }
 
+_ask_digitization_logs(){
+    _report -qn "Drag in any logs from digitization: "
+    read -e -a FILES
+    [[ "$FILES[0]" = "q" ]] && exit 0
+    [ ! -z "${FILES}" ] && log+="digitization_logs: ${FILES}\n"
+}
+
 _blackframetest(){
     _black_at_ends "${INPUT}"
     if [ "${HEAD_BLACK}" -gt "30" ] ; then
@@ -226,6 +233,11 @@ _run_input_file_checks(){
         read NOTVIDRESPONSE
         [ "${NOTVIDRESPONSE}" == "q" ] && exit 0
     fi
+}
+
+_reset_directory(){
+    OUTDIR_INGESTFILE=$(dirname "${INPUT}")
+    _report -dt "I'm going to place the AIP in the same directory as the original input file."
 }
 
 trap _cleanup SIGHUP SIGINT SIGTERM

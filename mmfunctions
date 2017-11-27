@@ -579,20 +579,6 @@ _ask_input(){
     fi
 }
 
-_ask_digitization_logs(){
-    _report -qn "Drag in any logs from digitization: "
-    read -e -a FILES
-    [[ "$FILES[0]" = "q" ]] && exit 0
-    [ ! -z "${FILES}" ] && log+="digitization_logs: ${FILES}\n"
-}
-
-_reset_directory(){
-    if [ "${PRESERVATION_MODE}" == "Y" ] ; then
-        OUTDIR_INGESTFILE=$(dirname "${INPUT}")
-        _report -dt "I'm going to place the AIP in the same directory as the original input file."
-    fi
-}
-
 _ask_intime(){
     # TIME_REGEX tests for either S.mmm or HH:MM:SS.mmm time formats where HH is two digit hour, MM is two digit minute, S is number of seconds, SS is two digit seconds, and .mmm is milliseconds from between 0 and 3 decimals
     TIME_REGEX="^\([0-9]\+\(\.[0-9]\{1,3\}\)\?\|[0-9]\{2\}:[0-5][0-9]:[0-5][0-9]\(\.[0-9]\{1,3\}\)\?\)$"
