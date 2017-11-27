@@ -580,6 +580,7 @@ if [[ "${MODE}" == "preservation" ]] ; then
     _writeingestlog "datetime_end" "$(_get_iso8601)"
     _delivertoaipstorage
 elif [[ "${MODE}" == "psa" ]] ; then
+    DELIVERYTOOMNEON="Y"
     _makebroadcastcopies
     _delivertoomneon
     _makeaccesscopies
@@ -593,6 +594,7 @@ elif [[ "${MODE}" == "local" ]] ; then
     _writeingestlog "datetime_end" "$(_get_iso8601)"
 else
     # presuming 'default' mode
+    DELIVERYTOOMNEON="Y"
     _makebroadcastcopies
     _delivertoomneon
     _deliveraccessopts
