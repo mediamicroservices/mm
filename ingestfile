@@ -490,6 +490,7 @@ fi
     fi
 
 # MICROSERVICES BEFORE PROCESSING
+_setup_package
 if [[ "${MODE}" == "preservation" ]] ; then
     _ask_digitization_logs
     _reset_directory
@@ -533,7 +534,6 @@ if [ "${PRIORITY}" = "put in queue" ] ; then
 fi
 
 _log -b
-_setup_package
 _writecapturelog
 
 # rsync
