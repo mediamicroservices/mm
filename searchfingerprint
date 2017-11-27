@@ -75,7 +75,7 @@ while [ "${*}" != "" ] ; do
 
     #Create Fingerprint
     ffmpeg -f concat -safe 0 -i "${IO}" -vf signature=format=xml:filename="${TEMPFINGERPRINT}" -map 0:v -f null -
-    xml sel -N "m=urn:mpeg:mpeg7:schema:2001" -t -m "m:Mpeg7/m:DescriptionUnit/m:Descriptor/m:VideoSignatureRegion/m:VSVideoSegment" -v m:StartFrameOfSegment -o ':' -v m:EndFrameOfSegment -o ':' -m m:BagOfWords -v "translate(.,' ','')" -o ':' -b -n "${TEMPFINGERPRINT}" > "${TEMPFINGERPRINT_SORTED}"
+    "${XMLSTARLET}" sel -N "m=urn:mpeg:mpeg7:schema:2001" -t -m "m:Mpeg7/m:DescriptionUnit/m:Descriptor/m:VideoSignatureRegion/m:VSVideoSegment" -v m:StartFrameOfSegment -o ':' -v m:EndFrameOfSegment -o ':' -m m:BagOfWords -v "translate(.,' ','')" -o ':' -b -n "${TEMPFINGERPRINT}" > "${TEMPFINGERPRINT_SORTED}"
 
     #Sort extract relevant values from fingerprint and sort for parsing
     (IFS=$'\n'
