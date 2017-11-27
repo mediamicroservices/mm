@@ -583,7 +583,6 @@ if [[ "${MODE}" == "preservation" ]] ; then
 elif [[ "${MODE}" == "psa" ]] ; then
     DELIVERYTOOMNEON="Y"
     _makebroadcastcopies
-    _delivertoomneon
     _makeaccesscopies
     _makemetadatapackage
     _writeingestlog "datetime_end" "$(_get_iso8601)"
@@ -597,7 +596,6 @@ else
     # presuming 'default' mode
     DELIVERYTOOMNEON="Y"
     _makebroadcastcopies
-    _delivertoomneon
     _deliveraccessopts
     _makeaccesscopies
     _delivertoia
