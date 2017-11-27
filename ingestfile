@@ -240,6 +240,16 @@ _reset_directory(){
     _report -dt "I'm going to place the AIP in the same directory as the original input file."
 }
 
+_setup_package(){
+    # set up package directories
+    OBJECTSDIR="${OUTDIR_INGESTFILE}/${MEDIAID}/objects"
+    _run_critical _mkdir2 "${OBJECTSDIR}"
+
+    LOGDIR="${OUTDIR_INGESTFILE}/${MEDIAID}/metadata/logs"
+    _run _mkdir2 "${LOGDIR}"
+    INGESTLOG="${LOGDIR}/capture.log"
+}
+
 trap _cleanup SIGHUP SIGINT SIGTERM
 
 # check environment
@@ -499,14 +509,6 @@ fi
 #frame count test- will ask operator for what to do if there is a discrepancy between the container frame count and the video track frame count.
 _get_frame_count "${INPUT}"
 
-# set up package directories
-OBJECTSDIR="${OUTDIR_INGESTFILE}/${MEDIAID}/objects"
-_run_critical _mkdir2 "${OBJECTSDIR}"
-
-LOGDIR="${OUTDIR_INGESTFILE}/${MEDIAID}/metadata/logs"
-_run _mkdir2 "${LOGDIR}"
-INGESTLOG="${LOGDIR}/capture.log"
-
 if [[ "${FORMULA}" == "check interlacement" ]] ; then
     _get_interlacement_full "${INPUT}"
 fi
@@ -529,6 +531,7 @@ if [ "${PRIORITY}" = "put in queue" ] ; then
 fi
 
 _log -b
+_setup_package
 _writecapturelog
 
 # rsync
