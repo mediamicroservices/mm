@@ -174,5 +174,5 @@ while [ "${*}" != "" ] ; do
 done
 #Play footage from input for which possible matches were found
 if ! [ "${MODE}" = 'text' ] ; then
-    ffplay -hide_banner -loglevel panic -f concat -safe 0 -i "${VISUALRESULTS}" -vf drawtext=fontcolor=white:box=1:boxcolor=black@.4:fontsize=20:fontfile="/Library/Fonts/Andale Mono.ttf":textfile="${DRAWTEXT}"
+    ffplay -hide_banner -loglevel panic -f concat -safe 0 -i "${VISUALRESULTS}" -vf drawtext=fontcolor=white:box=1:boxcolor=black@.4:fontsize=20:fontfile="${FFMPEGFONTPATH}":textfile="${DRAWTEXT}"
 fi
