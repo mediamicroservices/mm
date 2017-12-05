@@ -429,7 +429,7 @@ fi
     _run_storage_checks
     _ask_input
     _run_input_file_checks
-    if [ "${AUDIODECISION}" = "" ] ; then
+    if [[ -z "${AUDIODECISION}" ]] ; then
         _report -q "Select an audio strategy?"
         PS3="Selection: "
         select AUDIODECISION in "Default audio mapping [first audio track used for stereo output]" "Only use left of the first audio track [for 21st Century]" "Only use right of the first audio track"
@@ -437,7 +437,7 @@ fi
             break
         done
     fi
-    if [ "${CROPDECISION}" = "" ] ; then
+    if [[ -z "${CROPDECISION}" ]] ; then
         _report -q "Select a cropping strategy?"
         PS3="Selection: "
         select CROPDECISION in "Do not crop." "Examine the video and auto-crop out black borders (slower)"
@@ -445,7 +445,7 @@ fi
             break
         done
     fi
-    if [ "${FORMULA}" = "" ] ; then
+    if [[ -z "${FORMULA}" ]] ; then
         _report -q "Select an optional formula for unusual cases?"
         _report -d "(In most cases, select 'none'. To force the input file to be interpreted as top or bottom field first interlacement, select tff or bff. To stretch the input video to 1920x1080 HD frame size, select 'hds'. To squish into Standard Definition, select 'sds'.)"
         PS3="Selection: "
@@ -454,34 +454,34 @@ fi
             break
         done
     fi
-    if [ "${CLEANUPDECISION}" = "" ] ; then
+    if [[ -z "${CLEANUPDECISION}" ]] ; then
         _report -q "Select a cleanup strategy?"
         select CLEANUPDECISION in "Leave source file where it is." "Remove source file after successful ingest"
         do
             break
         done
     fi
-    if [ "${PRIORITY}" = "" ] ; then
+    if [[ -z "${PRIORITY}" ]] ; then
         _report -q "Select a multitasking strategy?"
         select PRIORITY in "put in queue" "start now"
         do
             break
         done
     fi
-    if [ "${SLATE}" = "" ] ; then
+    if [[ -z "${SLATE}" ]] ; then
         _report -q "Do you want to create a service copy with a slate?"
         select SLATE in "Yes" "No"
         do
             break
         done
     fi
-    if [ "${SLATE}" == "Yes" ] ; then
-        if [ "${SERIESTITLE}" = "" ] ; then
+    if [[ "${SLATE}" == "Yes" ]] ; then
+        if [[ -z "${SERIESTITLE}" ]] ; then
             cowsay -t "Series Title?"
             echo -n ":: "
             read SERIESTITLE
         fi
-        if [ "${EPISODETITLE}" = "" ] ; then
+        if [[ -z "${EPISODETITLE}" ]] ; then
             cowsay -s "Episode Title?"
             echo -n ":: "
             read EPISODETITLE
