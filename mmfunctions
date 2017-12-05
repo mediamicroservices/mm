@@ -16,9 +16,11 @@ fi
 if [[ "$(uname -s)" = "Darwin" ]] ; then
     FFMPEGFONTPATH='/Library/Fonts/Andale Mono.ttf'
     XMLSTARLET='xml'
-else
+elif [[ "$(uname -s)" = "Linux" ]] ; then
     FFMPEGFONTPATH='/usr/share/fonts/truetype/liberation/LiberationSans-Regular.ttf'
     XMLSTARLET='xmlstarlet'
+else
+    echo "Warning: Unsupported system detected. Certain configurations not set. This may cause errors for some scripts."
 fi
 
 _cleanup_mount_dir(){
