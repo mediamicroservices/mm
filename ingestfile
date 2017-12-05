@@ -193,7 +193,7 @@ _writecapturelog(){
     fi
 }
 
-_cleanup(){
+_cleanup_ingest(){
     _log -a "Process canceled"
     _remove_mediaid_from_queue
     [ -d "${OUTDIR_INGESTFILE}/${MEDIAID}" ] && mv "${OUTDIR_INGESTFILE}/${MEDIAID}" "${OUTDIR_INGESTFILE}/${MEDIAID}_canceled_ingest_$(_get_iso8601_c)"
@@ -542,7 +542,7 @@ if [ ! -f "${INPUT}" ] ; then
     _report -wt "The input file is no longer available! Where did $(basename "${INPUT}") go? Please redo."
     _writeerrorlog "ingestfile" "The input file, $(basename "${INPUT}"), was no longer available, so ingest file could not continue."
     # clean up queue
-    [ "${PRIORITY}" == "put in queue" ] && _cleanup
+    [ "${PRIORITY}" == "put in queue" ] && _cleanup_ingest
     exit 1
 fi
 
