@@ -586,12 +586,12 @@ elif [[ "${MODE}" == "psa" ]] ; then
     _makeaccesscopies
     _makemetadatapackage
     _writeingestlog "datetime_end" "$(_get_iso8601)"
-    _delivertoaipstorage
 elif [[ "${MODE}" == "local" ]] ; then
     _makebroadcastcopies
     _makeaccesscopies
     _makemetadatapackage
     _writeingestlog "datetime_end" "$(_get_iso8601)"
+    _delivertoaipstorage
 else
     # presuming 'default' mode
     DELIVERYTOOMNEON="Y"
