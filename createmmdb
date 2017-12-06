@@ -84,7 +84,7 @@ echo "Please enter the name of user to be created"
 read -r USER_NAME
 echo "Please enter the password for the new user"
 read -r USER_PASSWORD
-echo "Please enter the location of user to be created"
+echo "Please enter the location (IP address) of user to be created. To create a user on a locally installed database type: localhost"
 read -r USER_HOST
 echo "Please enter mysql root password"
 mysql_config_editor set --login-path=tempsetting --host=localhost --user=root --password
