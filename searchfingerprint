@@ -40,6 +40,7 @@ while [ "${*}" != "" ] ; do
     shift
 
     #Confirm input is a video file
+    unset VIDEOCHECK
     if [[ "$(uname -s)" = Darwin ]] ; then
         VIDEOCHECK='file -Ib'
     elif [[ "$(uname -s)" = Linux ]] ; then
