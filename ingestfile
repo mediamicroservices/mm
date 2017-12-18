@@ -5,6 +5,20 @@ VERSION="1.0"
 QUEUEFILE="${HOME}/Desktop/queue.txt"
 SCRIPTDIR=$(dirname "${0}")
 . "${SCRIPTDIR}/mmfunctions" || { echo "Missing '${SCRIPTDIR}/mmfunctions'. Exiting." ; exit 1 ;};
+_initialize_make
+
+# assigns variables from temporary ingest file if present (for use with ingestfiletest)
+if [ -f "${TEMP_INGEST}" ] ; then
+    INGESTLOG="${TEMP_INGEST}"
+    OP="$(_readingestlog "OPERATOR")"
+    INPUT="$(_readingestlog "INPUT")"
+    AUDIODECISION="$(_readingestlog "AUDIODECISION")"
+    CROPDECISION="$(_readingestlog "CROPDECISION")"
+    SLATE=$(_readingestlog "SLATE")
+    FORMULA="$(_readingestlog "AUDIODECISION")"
+    CLEANUPDECISION="$(_readingestlog "CLEANUPDECISION")"
+    PRIORITY="$(_readingestlog "PRIORITY")"
+fi
 
 # the mode associates the script with a particular set of microservices and options
 # here the default mode is set which may be replaced with ingestfile options

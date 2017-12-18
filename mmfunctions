@@ -1,7 +1,12 @@
 # assign variables
 SCRIPTNAME=$(basename "${0}")
 SCRIPTDIR=$(dirname "${0}")
-MM_CONFIG_FILE="${SCRIPTDIR}/mm.conf"
+if [ -f "${TEMP_MMCONFIG}" ] ; then
+    # for use in ingestfiletest; prevents test files from going to permanent storage
+    MM_CONFIG_FILE="${TEMP_MMCONFIG}"
+else
+    MM_CONFIG_FILE="${SCRIPTDIR}/mm.conf"
+fi
 WHAT_IS_THIS="mediamicroservices"
 
 # load configuration file
@@ -1234,6 +1239,7 @@ _get_volume_adjustment(){
     target_offset=""
     LOUD_ADJ=""
     INPUT_MOVIE="${1}"
+    echo "INPUT_MOVIE is ${1}"
     _report -dt "Getting loudness data for $(basename "${INPUT_MOVIE}") ..."
     LOUDNESS_DATA=$(ffmpeg -i "${1}" -vn -filter_complex "${AUDIOFILTERCHAIN},loudnorm=print_format=json" -f null - 2>&1)
     VOLUME_EXIT_CODE="${?}"
@@ -1414,7 +1420,8 @@ _set_up_output(){
 
 _prep_volume_adjustment(){
     unset VOLADJ
-    if [[ "${VOLADJUST}" != "N" ]] ; then
+    echo "INGESTLOG is ${INGESTLOG}"
+        if [[ "${VOLADJUST}" != "N" ]] ; then
         if [[ -f "${INGESTLOG}" ]] ; then
             measured_I=$(_readingestlog "r128_integrated_loudness")
             measured_LRA=$(_readingestlog "r128_loudness_range")
@@ -1426,6 +1433,7 @@ _prep_volume_adjustment(){
         if [ ! "${LOUD_ADJ}" ] ; then
             _get_volume_adjustment "${SOURCEFILE}"
         fi
+        echo "SOURCEFILE is $SOURCEFILE"
         if [[ "${measured_I}" == "inf" ]] || [[ "${measured_I}" == "-inf" ]] ; then
             VOLADJUST="N"
             _report -wt "Integrated loudness for $(basename "${INPUT_MOVIE}") is ${measured_I} LUFS. Volume adjustment cannot be completed."

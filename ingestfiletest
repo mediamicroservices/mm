@@ -1,0 +1,169 @@
+#!/bin/bash
+# ingestfiletest
+# regression test for ingestfile; tests default, -p, -i, and -n ingest modes in edit/terminal mode (-e)
+# please press "enter" at the interactive prompts in preservation mode
+
+VERSION="1.0"
+SCRIPTDIR=$(dirname $(which "${0}"))
+. "${SCRIPTDIR}/mmfunctions" || { echo "Missing '${SCRIPTDIR}/mmfunctions'. Exiting." ; exit 1 ;};
+_initialize_make
+
+_cleanuptest(){
+    _report -wt "Process cancelled"
+    _report -wt "Removing TEMP_MMCONFIG and TEMP_INGEST files."
+    if [[ -f "${TEMP_MMCONFIG}" ]] ; then
+        rm -v "${TEMP_MMCONFIG}"
+    fi
+    if [[ -f "${TEMP_INGEST}" ]] ; then
+        rm -v "${TEMP_INGEST}"
+    fi
+    exit 1
+}
+
+trap _cleanuptest SIGHUP SIGINT SIGTERM
+
+# expected checksum values for checksum.md5 file
+FIXITY_TABLE="default,f4b88c9ad53a28d5072f4dc537f812da
+preservation,9202cf3d549502db206ef6dc91fcbee9
+psa,bc75d9aa4e9ed8a073ef84987f1be944
+local,56ae6da019aaea25552fb94174368f4d"
+
+# create test file
+TESTDIR="/tmp/ingestfiletest$(date +%Y%m%d%H%M%S)"
+mkdir -p "$TESTDIR"
+ffmpeg -f lavfi -i mandelbrot=r=25:s=320x240 -f lavfi -i "aevalsrc=exprs=sin(440*2*PI*t)|cos(44*2*PI*t):s=48000:c=stereo" -map 0 -map 1 -t 5 -c:v ffv1 -c:a flac -y "$TESTDIR/sample.nut"
+sleep 1
+
+# assign directories
+OUTDIR_INGESTFILE="$TESTDIR"
+OMNEONPATH="$TESTDIR/OMNEON"
+AIP_STORAGE="$TESTDIR/AIP_STORAGE"
+YOUTUBEDELIVER="$TESTDIR/YOUTUBEDELIVER"
+PODCASTDELIVER="$TESTDIR/PODCASTDELIVER"
+mkdir -p "$OMNEONPATH" "$AIP_STORAGE" "$YOUTUBEDELIVER" "$PODCASTDELIVER"
+
+# local functions
+_fixityreport(){
+    CHECKSUMFILE="$PACKAGE/metadata/checksum.md5"
+    # does not check dvd file, as .iso checksums do not match from derivative to derivative
+    ACTUAL_CHECKSUM=$(cat $CHECKSUMFILE | grep -v .iso | sort | md5)
+    EXPECTED_CHECKSUM=$(echo "${FIXITY_TABLE}" | grep "$MODE" | cut -d , -f 2)
+    if [[ "$ACTUAL_CHECKSUM" == "$EXPECTED_CHECKSUM" ]] ; then
+        _report -dt "Checksum match on $PACKAGE/metadata/checksum.md5"
+    else
+        _report -wt "Checksums for $PACKAGE/metadata/checksum.md5 do not match."
+        FAILEDCHECKSUMS+="$MODE "
+    fi
+    echo "PACKAGE is $PACKAGE"
+    verifytree "$PACKAGE"
+    if [[ $? -eq 0 ]] ; then
+        _report -dt "Package directory structure verified: $MODE"
+    else
+        FAILEDTREES+="$MODE "
+    fi
+    verifypackage "$PACKAGE"
+    if [[ $? -ne 0 ]] ; then
+        _report -wt "One or more $MODE derivatives failed policy test."
+        FAILEDPACKAGES+="$MODE "
+    fi
+}
+
+_unsetlocalvariables(){
+    unset MODE
+    unset MEDIAID
+    unset PACKAGE
+}
+
+# set temp mmconfig (to keep test files in /tmp)
+TEMP_MMCONFIG=$(_maketemp)
+cat <<EOF >> "$TEMP_MMCONFIG"
+OUTDIR_INGESTFILE=$OUTDIR_INGESTFILE
+OMNEONPATH=$OMNEONPATH
+AIP_STORAGE=$AIP_STORAGE
+PODCASTDELIVER=$PODCASTDELIVER
+YOUTUBEDELIVER=$YOUTUBEDELIVER
+REGEX4PODCAST=.
+EOF
+export TEMP_MMCONFIG="${TEMP_MMCONFIG}"
+
+# set test variables (for import into ingestfile)
+TEMP_INGEST=$(_maketemp)
+cat <<EOF >> "$TEMP_INGEST"
+OPERATOR: TEST
+INPUT: $TESTDIR/sample.nut
+AUDIODECISION: Default audio mapping [first audio track used for stereo output]
+CROPDECISION: Do not crop
+SLATE: No
+media ID slate: TEST
+Series Title: TEST
+Episode Title: TEST
+FORMULA: none
+CLEANUPDECISION: Leave source file where it is
+PRIORITY: put in queue
+EOF
+export TEMP_INGEST="${TEMP_INGEST}"
+
+# default mode (terminal)
+MODE="default"
+export MEDIAID="TESTDEFAULT"
+PACKAGE="${AIP_STORAGE}/${MEDIAID}"
+./ingestfile -e "$TESTDIR/sample.nut"
+_fixityreport
+_unsetlocalvariables
+
+# preservation mode
+MODE="preservation"
+export MEDIAID="TESTPRES"
+PACKAGE="${OUTDIR_INGESTFILE}/${MEDIAID}"
+./ingestfile -p -e "$TESTDIR/sample.nut"
+_fixityreport
+_unsetlocalvariables
+
+# psa mode
+MODE="psa"
+export MEDIAID="TESTPSA"
+PACKAGE="${AIP_STORAGE}/${MEDIAID}"
+./ingestfile -i -e "$TESTDIR/sample.nut"
+_fixityreport
+_unsetlocalvariables
+
+# local mode
+MODE="local"
+export MEDIAID="TESTLOCAL"
+PACKAGE="${AIP_STORAGE}/${MEDIAID}"
+./ingestfile -n -e "$TESTDIR/sample.nut"
+_fixityreport
+_unsetlocalvariables
+
+# summary report
+if [[ -z "$FAILEDCHECKSUMS" ]] ; then
+    _report -dt "All generated and expected checksums match."
+else
+    _report -wt "Checksums did not match expected in $CHECKSUMFILE for these modes: $FAILEDCHECKSUMS"
+fi
+if [[ -z "$FAILEDTREES" ]] ; then
+    _report -dt "All package directory structures passed verifytree policy test."
+else
+    _report -wt "One or more package directories failed verifytree policy test in these modes: $FAILEDTREES"
+fi
+if [[ -z "$FAILEDPACKAGES" ]] ; then
+    _report -dt "All derivatives passed verifypackage policy tests."
+else
+    _report -wt "One or more derivatives failed verifypackage policy test in these modes: $FAILEDPACKAGES"
+fi
+if [[ -d "${AIP_STORAGE}/TESTDEFAULT" ]] && [[ -d "${AIP_STORAGE}/TESTPSA" ]] && [[ -d "${AIP_STORAGE}/TESTLOCAL" ]] ; then
+    _report -dt "Packages delivered to AIP storage as appropriate."
+else
+    _report -wt "One or more packages were not delivered to AIP storage at $AIP_STORAGE."
+fi
+if [[ -f "${YOUTUBEDELIVER}/TESTDEFAULT.mp4" ]] && [[ -d "${YOUTUBEDELIVER}/TESTDEFAULT_images" ]] && [[ -f "${PODCASTDELIVER}/TESTDEFAULT_podcast.mov" ]] ; then
+    _report -dt "All derivatives delivered successfully (only applies to default mode)."
+else
+    _report -wt "One or more derivatives were not delivered to the proper directories (only applies to default mode)."
+fi
+
+# clean up
+rm TEMP_MMCONFIG
+rm TEMP_INGEST
+echo "ingestfiletest will delete test files from /tmp in 5 minutes; press control-C to keep files in /tmp folder."
+sleep 300 && rm -r "${OUTDIR_INGESTFILE}"
