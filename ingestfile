@@ -525,24 +525,21 @@ if [ "${MAKEACCESSCOPIES}" == "Y" ] ; then
     "${SCRIPTDIR}/makederiv" -T mp3 "${OUTDIR_INGESTFILE}/${MEDIAID}"
 
     # makeframes
-    unset MAKEFRAMESOPTS
     [ "${DELIVERACCESSCOPIES}" = "Y" ] && MAKEFRAMESOPTS=(-d "${YOUTUBEDELIVER}")
-    "${SCRIPTDIR}/makeframes" "${MAKEFRAMESOPTS[@]}" "${OUTDIR_INGESTFILE}/${MEDIAID}"
+    "${SCRIPTDIR}/makeframes" "${MAKEDERIVOPTS[@]}" "${MAKEFRAMESOPTS[@]}" "${OUTDIR_INGESTFILE}/${MEDIAID}"
 
     # make waveform
     "${SCRIPTDIR}/makewaveform" "${OUTDIR_INGESTFILE}/${MEDIAID}"
 
     # make copy for youtube
-    unset MAKEDERIVOPTS
-    [ "${DELIVERACCESSCOPIES}" = "Y" ] && MAKEDERIVOPTS=(-Y -d "${YOUTUBEDELIVER}")
-    "${SCRIPTDIR}/makederiv" -T youtube "${MAKEDERIVOPTS[@]}" "${OUTDIR_INGESTFILE}/${MEDIAID}"
+    [ "${DELIVERACCESSCOPIES}" = "Y" ] && MAKEYOUTUBEOPTS=(-Y -d "${YOUTUBEDELIVER}")
+    "${SCRIPTDIR}/makederiv" -T youtube "${MAKEDERIVOPTS[@]}" "${MAKEYOUTUBEOPTS[@]}" "${OUTDIR_INGESTFILE}/${MEDIAID}"
 
     # make podcast
     if [ $(echo "${MEDIAID}" | grep -E "${REGEX4PODCAST}") ] ; then
         _report -dt "${MEDIAID} qualifies for podcast creation."
-        unset MAKEDERIVOPTS
-        [ "${DELIVERACCESSCOPIES}" == "Y" ] && MAKEDERIVOPTS=(-d "${PODCASTDELIVER}")
-        "${SCRIPTDIR}/makederiv" -T podcast "${MAKEDERIVOPTS[@]}" "${OUTDIR_INGESTFILE}/${MEDIAID}"
+        [ "${DELIVERACCESSCOPIES}" == "Y" ] && MAKEPODCASTOPTS=(-d "${PODCASTDELIVER}")
+        "${SCRIPTDIR}/makederiv" -T podcast "${MAKEDERIVOPTS[@]}" "${MAKEPODCASTOPTS[@]}" "${OUTDIR_INGESTFILE}/${MEDIAID}"
 
     else
         _report -dt "${MEDIAID} does NOT qualify for podcast creation, skipping."
