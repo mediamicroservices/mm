@@ -18,8 +18,8 @@ _usage(){
     echo "Usage: $(basename ${0}) [ -options ]"
     echo "  Default mode: presents a graphical user interface to specify file, media ID, and other options. Automatically creates broadcast and access copies, and delivers packages to ${OMNEONPATH}, ${PODCASTDELIVER}, ${YOUTUBEDELIVER}, and ${AIP_STORAGE}."
     echo "  -p Preservation mode: formula to be used when packaging digitized material and digitization logs. Creates access copies, but does not make any deliveries, and creates the package in the same directory as the input."
-    echo "  -i PSA mode: formula to be used when packaging PSA files. Creates access copies, but does not make any deliveries except for sending the final package to ${DELIVERYTOOMNEON}."
-    echo "  -n Local mode: formula to be used when making local or test packages. Does not make any deliveries except for sending the final package to ${AIP_STORAGE}."
+    echo "  -i PSA mode: formula to be used when packaging PSA files. Creates access copies, but does not make any deliveries except for sending the final package to ${DELIVERYTOOMNEON} and ${AIP_STORAGE}."
+    echo "  -n Local mode: formula to be used when making local or test packages. Does not make any deliveries."
     echo "  -e Edit/terminal mode: user specifies file, media ID, and other options through interactive terminal interface prompts."
     echo "  -h display this help"
     echo
@@ -579,13 +579,13 @@ if [[ "${MODE}" == "preservation" ]] ; then
     _delivertoia
     _makemetadatapackage
     _writeingestlog "datetime_end" "$(_get_iso8601)"
-    _delivertoaipstorage
 elif [[ "${MODE}" == "psa" ]] ; then
     DELIVERYTOOMNEON="Y"
     _makebroadcastcopies
     _makeaccesscopies
     _makemetadatapackage
     _writeingestlog "datetime_end" "$(_get_iso8601)"
+    _delivertoaipstorage
 elif [[ "${MODE}" == "local" ]] ; then
     _makebroadcastcopies
     _makeaccesscopies
