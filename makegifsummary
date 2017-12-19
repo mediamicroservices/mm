@@ -86,11 +86,11 @@ while [ "${*}" != "" ] ; do
             FFMPEGINPUT="${CONCATSOURCE}"
         fi
 
-        _run_critical_event ffmpeg -y ${INPUTOPTIONS[@]} -v warning -ss "$START" "${FFMPEGINPUT[@]}" "${MIDDLEOPTIONS[@]}" "${TEMPIMAGES}.${IMAGENUMBER}.png"
+        _run_critical_event ffmpeg -nostdin -y ${INPUTOPTIONS[@]} -v warning -ss "$START" "${FFMPEGINPUT[@]}" "${MIDDLEOPTIONS[@]}" "${TEMPIMAGES}.${IMAGENUMBER}.png"
     done
     PALETTE="$(_maketemp)"
-    ffmpeg -f image2 -framerate 6 -i "${TEMPIMAGES}.%01d.png" -vf palettegen "${PALETTE}.png"
-    ffmpeg -f image2 -framerate 6 -i "${TEMPIMAGES}.%01d.png" -i "${PALETTE}.png" -filter_complex paletteuse "${OUTPUT}"
+    ffmpeg -nostdin -f image2 -framerate 6 -i "${TEMPIMAGES}.%01d.png" -vf palettegen "${PALETTE}.png"
+    ffmpeg -nostdin -f image2 -framerate 6 -i "${TEMPIMAGES}.%01d.png" -i "${PALETTE}.png" -filter_complex paletteuse "${OUTPUT}"
     echo
     if [ -d "${DELIVERDIR}" ] ; then
         _report -dt "Delivering output"
