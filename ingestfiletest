@@ -54,7 +54,6 @@ _fixityreport(){
         _report -wt "Checksums for $PACKAGE/metadata/checksum.md5 do not match."
         FAILEDCHECKSUMS+="$MODE "
     fi
-    echo "PACKAGE is $PACKAGE"
     verifytree "$PACKAGE"
     if [[ $? -eq 0 ]] ; then
         _report -dt "Package directory structure verified: $MODE"
