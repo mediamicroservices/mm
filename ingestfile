@@ -34,6 +34,7 @@ _usage(){
     echo "  -p Preservation mode: formula to be used when packaging digitized material and digitization logs. Creates access copies, but does not make any deliveries, and creates the package in the same directory as the input."
     echo "  -i PSA mode: formula to be used when packaging PSA files. Creates access copies, but does not make any deliveries except for sending the final package to ${DELIVERYTOOMNEON} and ${AIP_STORAGE}."
     echo "  -n Local mode: formula to be used when making local or test packages. Does not make any deliveries."
+    echo "  -a Audio mode: formula for ingesting audio, similar to preservation mode. Creates access copies, but does not make any deliveries, and creates the package in the same directory as the input."
     echo "  -e Edit/terminal mode: user specifies file, media ID, and other options through interactive terminal interface prompts."
     echo "  -h display this help"
     echo
@@ -42,11 +43,12 @@ _usage(){
 
 user_input="${*}"
 OPTIND=1
-while getopts ":pienh" OPT ; do
+while getopts ":pienah" OPT ; do
     case "${OPT}" in
         p) MODE="preservation" ;;
         i) MODE="psa" ;;
         n) MODE="local" ;;
+        a) MODE="audio" ;;
         e) TERMINAL_MODE="Y" ;;
         h) _usage ;;
         *) echo "bad option -${OPTARG}" ; _usage ;;
@@ -246,10 +248,12 @@ _run_input_file_checks(){
     fi
     # here is where we would insert an option for searching for directory.
     # if file is a video
-    if [ ! $(_is_video "${INPUT}") ] ; then
-        _report -qnt "WARNING: ${INPUT} is not recognized as a video file. Please press q to quit, any other key to continue (if you know what you're doing):"
-        read NOTVIDRESPONSE
-        [ "${NOTVIDRESPONSE}" == "q" ] && exit 0
+    if [[ "${MODE}" != "audio" ]] ; then
+        if [ ! $(_is_video "${INPUT}") ] ; then
+            _report -qnt "WARNING: ${INPUT} is not recognized as a video file. Please press q to quit, any other key to continue (if you know what you're doing):"
+            read NOTVIDRESPONSE
+            [ "${NOTVIDRESPONSE}" == "q" ] && exit 0
+        fi
     fi
 }
 
@@ -520,7 +524,7 @@ if [[ "${MODE}" == "preservation" ]] ; then
     if [[ "${FORMULA}" == "check interlacement" ]] ; then
         _get_interlacement_full "${INPUT}"
     fi
-else
+elif [[ "${MODE}" != "audio" ]] ; then
     # presumes default, psa, or local mode
     _blackframetest
     _phasechecktest
@@ -602,6 +606,11 @@ elif [[ "${MODE}" == "psa" ]] ; then
     _delivertoaipstorage
 elif [[ "${MODE}" == "local" ]] ; then
     _makebroadcastcopies
+    _makeaccesscopies
+    _makemetadatapackage
+    _writeingestlog "datetime_end" "$(_get_iso8601)"
+    _delivertoaipstorage
+elif [[ "${MODE}" == "audio" ]] ; then
     _makeaccesscopies
     _makemetadatapackage
     _writeingestlog "datetime_end" "$(_get_iso8601)"
