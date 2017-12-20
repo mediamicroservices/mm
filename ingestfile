@@ -77,6 +77,26 @@ _ask_digitization_logs(){
     read -e -a FILES
     [[ "$FILES[0]" = "q" ]] && exit 0
     [ ! -z "${FILES}" ] && log+="digitization_logs: ${FILES}\n"
+
+# spreadsheet fields are currently CUNY-specific
+_parse_spreadsheet(){
+    DIGITIZATIONLOG=$(_maketemp)
+    paste -d"*" <(ssconvert -T  Gnumeric_html:xhtml_range "${FILES}" fd://1 | xml fo | xml select --no-doc-namespace -t -m "_:html/_:body/_:table[1]/_:tr[1]/_:td" -v "." -n) <(ssconvert -T  Gnumeric_html:xhtml_range "${FILES}" fd://1 | xml fo | xml select --no-doc-namespace -t -m "_:html/_:body/_:table[1]/_:tr[_:td[1]='${MEDIAID}']/_:td" -v "." -n) | sed "s/*/\: /g" | tee "${DIGITIZATIONLOG}"
+    cat "${DIGITIZATIONLOG}" >> "${INGESTLOG}"
+    OBJECTSOUNDFIELD=$(_readingestlog "object soundfield")
+    DECKHEADSETTING=$(_readingestlog "deck head setting")
+    SAMPLINGRATE=$(_readingestlog "adda converter sr setting")
+    if [[ "${OBJECTSOUNDFIELD}" == "Mono" ]] && [[ "${DECKHEADSETTING}" == "Two-track head" ]] ; then
+        AUDIODECISION="Only use left of the first audio track [for 21st Century]"
+    elif [[ "${OBJECTSOUNDFIELD}" == "Stereo" ]] ; then
+        AUDIODECISION="Default audio mapping [first audio track used for stereo output]"
+    fi
+    if [[ "${SAMPLINGRATE}" == "96k" ]]; then
+        SAMPLINGRATE=96000
+    elif [[ "${SAMPLINGRATE}" == "48k" ]]; then
+        SAMPLINGRATE=48000
+    fi
+}
 }
 
 _blackframetest(){
@@ -451,6 +471,10 @@ fi
     _run_storage_checks
     _ask_input
     _run_input_file_checks
+    if [[ "${MODE}" == "audio" ]] ; then
+        _ask_digitization_logs
+        _parse_spreadsheet
+    fi
     if [[ -z "${AUDIODECISION}" ]] ; then
         _report -q "Select an audio strategy?"
         PS3="Selection: "
