@@ -486,6 +486,7 @@ fi
     _run_storage_checks
     _ask_input
     _run_input_file_checks
+    _setup_package
     if [[ "${MODE}" == "audio" ]] ; then
         _ask_digitization_logs
         _parse_spreadsheet
@@ -552,7 +553,6 @@ fi
     fi
 
 # MICROSERVICES BEFORE PROCESSING
-_setup_package
 if [[ "${MODE}" == "preservation" ]] ; then
     _ask_digitization_logs
     _reset_directory
