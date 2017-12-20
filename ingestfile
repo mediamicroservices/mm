@@ -312,6 +312,7 @@ _setup_package(){
 }
 
 trap _cleanup SIGHUP SIGINT SIGTERM
+trap _cleanup_ingest SIGHUP SIGINT SIGTERM
 
 # check environment
 if [ ! -d "$(pwd)" ] ; then
