@@ -97,6 +97,21 @@ _parse_spreadsheet(){
         SAMPLINGRATE=48000
     fi
 }
+
+_get_xmp_info(){
+    WAV="${INPUT}"
+    XMP_SIZE=$(mediaconch -mt "${WAV}" | xmlstarlet sel -N "mt=https://mediaarea.net/mediatrace" -t -m "mt:MediaTrace/mt:media/mt:block[@name='Wave']/mt:block[@name='_PMX']" -v "mt:block[@name='Header']/mt:data[@name='Size']" -n)
+    XMP_OFFSET=$(mediaconch -mt "${WAV}" | xmlstarlet sel -N "mt=https://mediaarea.net/mediatrace" -t -m "mt:MediaTrace/mt:media/mt:block[@name='Wave']/mt:block[@name='_PMX']" -v "mt:data/@offset" -n)
+    XMP_OFFSET=$(echo "${XMP_OFFSET} + 1" | bc)
+    XMP_DATA=$(tail -c "+${XMP_OFFSET}" "$WAV" | head -c "${XMP_SIZE}" | xml fo)
+    GET_INFO=$(echo "${XMP_DATA}" | xmlstarlet sel -N rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#" -N xmpDM="http://ns.adobe.com/xmp/1.0/DynamicMedia/" -t -m "//rdf:li[@rdf:parseType='Resource'][xmpDM:trackName='CuePoint Markers']" -o "inSample:" -v "xmpDM:markers/rdf:Seq/rdf:li[@rdf:parseType='Resource']/xmpDM:startTime" -n -o "durationSample:" -v "xmpDM:markers/rdf:Seq/rdf:li[@rdf:parseType='Resource']/xmpDM:duration" -n)
+    INSAMPLE=$(echo "${XMP_DATA}" | xmlstarlet sel -N rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#" -N xmpDM="http://ns.adobe.com/xmp/1.0/DynamicMedia/" -t -m "//rdf:li[@rdf:parseType='Resource'][xmpDM:trackName='CuePoint Markers']" -v "xmpDM:markers/rdf:Seq/rdf:li[@rdf:parseType='Resource']/xmpDM:startTime" -n)
+    DURATIONSAMPLE=$(echo "${XMP_DATA}" | xmlstarlet sel -N rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#" -N xmpDM="http://ns.adobe.com/xmp/1.0/DynamicMedia/" -t -m "//rdf:li[@rdf:parseType='Resource'][xmpDM:trackName='CuePoint Markers']" -v "xmpDM:markers/rdf:Seq/rdf:li[@rdf:parseType='Resource']/xmpDM:duration" -n)
+    echo "${GET_INFO}"
+    INTIME=$(echo "scale=4; ${INSAMPLE}/${SAMPLINGRATE}" | bc)
+    DURATION=$(echo "scale=4; ${DURATIONSAMPLE}/${SAMPLINGRATE}" | bc)
+    OUTTIME=$(echo "scale=4; ${INSAMPLE}+${DURATION}" | bc)
+    echo "The intime in samples is $INTIME, the outtime in seconds is $OUTTIME, and the duration in seconds is $DURATION."
 }
 
 _blackframetest(){
@@ -474,6 +489,7 @@ fi
     if [[ "${MODE}" == "audio" ]] ; then
         _ask_digitization_logs
         _parse_spreadsheet
+        _get_xmp_info
     fi
     if [[ -z "${AUDIODECISION}" ]] ; then
         _report -q "Select an audio strategy?"
