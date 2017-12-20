@@ -76,7 +76,8 @@ _ask_digitization_logs(){
     _report -qn "Drag in any logs from digitization: "
     read -e -a FILES
     [[ "$FILES[0]" = "q" ]] && exit 0
-    [ ! -z "${FILES}" ] && log+="digitization_logs: ${FILES}\n"
+    [[ ! -z "${FILES}" ]] && _writeingestlog "digitization_logs: ${FILES}\n"
+}
 
 # spreadsheet fields are currently CUNY-specific
 _parse_spreadsheet(){
