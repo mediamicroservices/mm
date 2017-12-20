@@ -132,23 +132,27 @@ _deliveraccessopts(){
 _makeaccesscopies(){
     _report -dt "STATUS Making access copies."
     "${SCRIPTDIR}/makederiv" -T mp3 "${OUTDIR_INGESTFILE}/${MEDIAID}"
-    "${SCRIPTDIR}/makeframes" "${FRAMESOPTS[@]}" "${OUTDIR_INGESTFILE}/${MEDIAID}"
     "${SCRIPTDIR}/makederiv" -T waveform "${OUTDIR_INGESTFILE}/${MEDIAID}"
-    "${SCRIPTDIR}/makederiv" -T youtube "${MAKEDERIVOPTS[@]}" "${YOUTUBEOPTS[@]}" "${OUTDIR_INGESTFILE}/${MEDIAID}"
-    if [ $(echo "${MEDIAID}" | grep -E "${REGEX4PODCAST}") ] ; then
-        _report -dt "${MEDIAID} qualifies for podcast creation."
-        "${SCRIPTDIR}/makederiv" -T podcast "${MAKEDERIVOPTS[@]}" "${PODCASTOPTS[@]}" "${OUTDIR_INGESTFILE}/${MEDIAID}"
-    else
-        _report -dt "${MEDIAID} does NOT qualify for podcast creation, skipping."
-        _writeerrorlog "makederiv" -T podcast "${MEDIAID} did not qualify for podcast creation and was skipped."
+    if [ "${MODE}" != "audio" ] ; then
+        "${SCRIPTDIR}/makeframes" "${FRAMESOPTS[@]}" "${OUTDIR_INGESTFILE}/${MEDIAID}"
+        "${SCRIPTDIR}/makederiv" -T youtube "${MAKEDERIVOPTS[@]}" "${YOUTUBEOPTS[@]}" "${OUTDIR_INGESTFILE}/${MEDIAID}"
+        if [ $(echo "${MEDIAID}" | grep -E "${REGEX4PODCAST}") ] ; then
+            _report -dt "${MEDIAID} qualifies for podcast creation."
+            "${SCRIPTDIR}/makederiv" -T podcast "${MAKEDERIVOPTS[@]}" "${PODCASTOPTS[@]}" "${OUTDIR_INGESTFILE}/${MEDIAID}"
+        else
+            _report -dt "${MEDIAID} does NOT qualify for podcast creation, skipping."
+            _writeerrorlog "makederiv" -T podcast "${MEDIAID} did not qualify for podcast creation and was skipped."
+        fi
+        "${SCRIPTDIR}/makederiv" -T dvd "${OUTDIR_INGESTFILE}/${MEDIAID}"
     fi
-    "${SCRIPTDIR}/makederiv" -T dvd "${OUTDIR_INGESTFILE}/${MEDIAID}"
 }
 
 _makemetadatapackage(){
     "${SCRIPTDIR}/makemetadata" "${OUTDIR_INGESTFILE}/${MEDIAID}"
     "${SCRIPTDIR}/checksumpackage" "${OUTDIR_INGESTFILE}/${MEDIAID}"
-    "${SCRIPTDIR}/makefingerprint" "${OUTDIR_INGESTFILE}/${MEDIAID}"
+    if [[ "${MODE}" != "audio" ]] ; then
+        "${SCRIPTDIR}/makefingerprint" "${OUTDIR_INGESTFILE}/${MEDIAID}"
+    fi
 }
 
 _delivertoaipstorage(){
@@ -455,7 +459,7 @@ fi
             break
         done
     fi
-    if [[ -z "${CROPDECISION}" ]] ; then
+    if [[ -z "${CROPDECISION}" ]] && [[ "${MODE}" != "audio" ]] ; then
         _report -q "Select a cropping strategy?"
         PS3="Selection: "
         select CROPDECISION in "Do not crop." "Examine the video and auto-crop out black borders (slower)"
@@ -463,7 +467,7 @@ fi
             break
         done
     fi
-    if [[ -z "${FORMULA}" ]] ; then
+    if [[ -z "${FORMULA}" ]] && [[ "${MODE}" != "audio" ]] ; then
         _report -q "Select an optional formula for unusual cases?"
         _report -d "(In most cases, select 'none'. To force the input file to be interpreted as top or bottom field first interlacement, select tff or bff. To stretch the input video to 1920x1080 HD frame size, select 'hds'. To squish into Standard Definition, select 'sds'.)"
         PS3="Selection: "
@@ -486,7 +490,7 @@ fi
             break
         done
     fi
-    if [[ -z "${SLATE}" ]] ; then
+    if [[ -z "${SLATE}" ]] && [[ "${MODE}" != "audio" ]] ; then
         _report -q "Do you want to create a service copy with a slate?"
         select SLATE in "Yes" "No"
         do
