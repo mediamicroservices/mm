@@ -21,6 +21,7 @@ _usage(){
         echo "      mp3 (mp3)"
         echo "      podcast (mov)"
         echo "      waveform (png)"
+        echo "      spectrum (png)"
         echo "  -l (only use the left channel of the first audio track)"
         echo "  -r (only use the right channel of the first audio track)"
         echo "  -t (burn timecode overlay)"
@@ -96,11 +97,14 @@ elif [[ "${OUTPUT_TYPE}" == "podcast" ]] ; then
 elif [[ "${OUTPUT_TYPE}" == "waveform" ]] ; then
     EXTENSION="png"
     RELATIVEPATH="depictions"
+elif [[ "${OUTPUT_TYPE}" == "spectrum" ]] ; then
+    EXTENSION="png"
+    RELATIVEPATH="depictions"
 else
     echo "No matches for specified output type."
     _usage
 fi
-if [[ "${OUTPUT_TYPE}" == "waveform" ]] ; then
+if [[ "${OUTPUT_TYPE}" == "waveform" ]] || [[ "${OUTPUT_TYPE}" == "spectrum" ]] ; then
     OUTPUT_CAT="metadata"
 else
     OUTPUT_CAT="objects"
@@ -130,13 +134,15 @@ while [[ "${@}" != "" ]] ; do
          SUFFIX="_podcast"
      elif [[ "${OUTPUT_TYPE}" == "waveform" ]] ; then
          SUFFIX="_waveform"
+     elif [[ "${OUTPUT_TYPE}" == "spectrum" ]] ; then
+         SUFFIX="_spectrum"
      fi
      _report_to_db
 
     _set_up_output
     if [[ "${OUTPUT_TYPE}" == "dvd" ]] || [[ "${OUTPUT_TYPE}" == "broadcast" ]] ; then
         INPUTOPTIONS+=(-y)
-    elif [[ "${OUTPUT_TYPE}" != "mp3" ]] && [[ "${OUTPUT_TYPE}" != "podcast" ]] && [[ "${OUTPUT_TYPE}" != "waveform" ]] ; then
+    elif [[ "${OUTPUT_TYPE}" != "mp3" ]] && [[ "${OUTPUT_TYPE}" != "podcast" ]] && [[ "${OUTPUT_TYPE}" != "waveform" ]] && [[ "${OUTPUT_TYPE}" != "spectrum" ]] ; then
         INPUTOPTIONS+=(-vsync 0)
     fi
     INPUTOPTIONS+=(-nostdin)
@@ -447,8 +453,8 @@ while [[ "${@}" != "" ]] ; do
             # MIDDLEOPTIONS+=(-bufsize:v 6000k)
             _add_video_filter "yadif"
             _add_video_filter "scale=640:trunc(ow/dar/2)*2:interl=1"
-        elif [[ "${OUTPUT_TYPE}" == "mp3" ]] || [[ "${OUTPUT_TYPE}" == "waveform" ]] ; then
-            _report -wt "No video stream associated with derivative type."
+        elif [[ "${OUTPUT_TYPE}" == "mp3" ]] || [[ "${OUTPUT_TYPE}" == "waveform" ]] || [[ "${OUTPUT_TYPE}" == "spectrum" ]] ; then
+            _report -t "No video stream associated with derivative type."
         else
             echo "Invalid video derivative type."
         fi
@@ -499,6 +505,14 @@ while [[ "${@}" != "" ]] ; do
                 MIDDLEOPTIONS+=(-vn)
                 MIDDLEOPTIONS+=(-frames:v 1)
                 _add_audio_filter "showwavespic=split_channels=1:scale=log:s=1920x240:colors=purple|blue|green|red"
+            else
+                continue
+            fi
+        elif [[ "${OUTPUT_TYPE}" == "spectrum" ]] ; then
+            if [[ "${AUDIOSTREAMCOUNT}" > 0 ]] ; then
+                MIDDLEOPTIONS+=(-vn)
+                MIDDLEOPTIONS+=(-frames:v 1)
+                _add_audio_filter "showspectrumpic=scale=log:s=1920x240:color=fruit"
             else
                 continue
             fi
