@@ -491,8 +491,10 @@ fi
     _setup_package
     if [[ "${MODE}" == "audio" ]] ; then
         _ask_digitization_logs
-        _parse_spreadsheet
-        _get_xmp_info
+        if [[ -f ${FILES} ]] ; then
+            _parse_spreadsheet
+            _get_xmp_info
+        fi
     fi
     if [[ -z "${AUDIODECISION}" ]] ; then
         _report -q "Select an audio strategy?"
