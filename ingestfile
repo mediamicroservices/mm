@@ -34,6 +34,7 @@ _usage(){
     echo "  -p Preservation mode: formula to be used when packaging digitized material and digitization logs. Creates access copies, but does not make any deliveries, and creates the package in the same directory as the input."
     echo "  -i PSA mode: formula to be used when packaging PSA files. Creates access copies, but does not make any deliveries except for sending the final package to ${DELIVERYTOOMNEON} and ${AIP_STORAGE}."
     echo "  -n Local mode: formula to be used when making local or test packages. Does not make any deliveries."
+    echo "  -a Audio mode: formula for ingesting audio, similar to preservation mode. Creates access copies, but does not make any deliveries, and creates the package in the same directory as the input."
     echo "  -e Edit/terminal mode: user specifies file, media ID, and other options through interactive terminal interface prompts."
     echo "  -h display this help"
     echo
@@ -42,11 +43,12 @@ _usage(){
 
 user_input="${*}"
 OPTIND=1
-while getopts ":pienh" OPT ; do
+while getopts ":pienah" OPT ; do
     case "${OPT}" in
         p) MODE="preservation" ;;
         i) MODE="psa" ;;
         n) MODE="local" ;;
+        a) MODE="audio" ;;
         e) TERMINAL_MODE="Y" ;;
         h) _usage ;;
         *) echo "bad option -${OPTARG}" ; _usage ;;
@@ -74,7 +76,43 @@ _ask_digitization_logs(){
     _report -qn "Drag in any logs from digitization: "
     read -e -a FILES
     [[ "$FILES[0]" = "q" ]] && exit 0
-    [ ! -z "${FILES}" ] && log+="digitization_logs: ${FILES}\n"
+    [[ ! -z "${FILES}" ]] && _writeingestlog "digitization_logs: ${FILES}\n"
+}
+
+# spreadsheet fields are currently CUNY-specific
+_parse_spreadsheet(){
+    DIGITIZATIONLOG=$(_maketemp)
+    paste -d"*" <(ssconvert -T  Gnumeric_html:xhtml_range "${FILES}" fd://1 | xml fo | xml select --no-doc-namespace -t -m "_:html/_:body/_:table[1]/_:tr[1]/_:td" -v "." -n) <(ssconvert -T  Gnumeric_html:xhtml_range "${FILES}" fd://1 | xml fo | xml select --no-doc-namespace -t -m "_:html/_:body/_:table[1]/_:tr[_:td[1]='${MEDIAID}']/_:td" -v "." -n) | sed "s/*/\: /g" | tee "${DIGITIZATIONLOG}"
+    cat "${DIGITIZATIONLOG}" >> "${INGESTLOG}"
+    OBJECTSOUNDFIELD=$(_readingestlog "object soundfield")
+    DECKHEADSETTING=$(_readingestlog "deck head setting")
+    SAMPLINGRATE=$(_readingestlog "adda converter sr setting")
+    if [[ "${OBJECTSOUNDFIELD}" == "Mono" ]] && [[ "${DECKHEADSETTING}" == "Two-track head" ]] ; then
+        AUDIODECISION="Only use left of the first audio track [for 21st Century]"
+    elif [[ "${OBJECTSOUNDFIELD}" == "Stereo" ]] ; then
+        AUDIODECISION="Default audio mapping [first audio track used for stereo output]"
+    fi
+    if [[ "${SAMPLINGRATE}" == "96k" ]]; then
+        SAMPLINGRATE=96000
+    elif [[ "${SAMPLINGRATE}" == "48k" ]]; then
+        SAMPLINGRATE=48000
+    fi
+}
+
+_get_xmp_info(){
+    WAV="${INPUT}"
+    XMP_SIZE=$(mediaconch -mt "${WAV}" | xmlstarlet sel -N "mt=https://mediaarea.net/mediatrace" -t -m "mt:MediaTrace/mt:media/mt:block[@name='Wave']/mt:block[@name='_PMX']" -v "mt:block[@name='Header']/mt:data[@name='Size']" -n)
+    XMP_OFFSET=$(mediaconch -mt "${WAV}" | xmlstarlet sel -N "mt=https://mediaarea.net/mediatrace" -t -m "mt:MediaTrace/mt:media/mt:block[@name='Wave']/mt:block[@name='_PMX']" -v "mt:data/@offset" -n)
+    XMP_OFFSET=$(echo "${XMP_OFFSET} + 1" | bc)
+    XMP_DATA=$(tail -c "+${XMP_OFFSET}" "$WAV" | head -c "${XMP_SIZE}" | xml fo)
+    GET_INFO=$(echo "${XMP_DATA}" | xmlstarlet sel -N rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#" -N xmpDM="http://ns.adobe.com/xmp/1.0/DynamicMedia/" -t -m "//rdf:li[@rdf:parseType='Resource'][xmpDM:trackName='CuePoint Markers']" -o "inSample:" -v "xmpDM:markers/rdf:Seq/rdf:li[@rdf:parseType='Resource']/xmpDM:startTime" -n -o "durationSample:" -v "xmpDM:markers/rdf:Seq/rdf:li[@rdf:parseType='Resource']/xmpDM:duration" -n)
+    INSAMPLE=$(echo "${XMP_DATA}" | xmlstarlet sel -N rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#" -N xmpDM="http://ns.adobe.com/xmp/1.0/DynamicMedia/" -t -m "//rdf:li[@rdf:parseType='Resource'][xmpDM:trackName='CuePoint Markers']" -v "xmpDM:markers/rdf:Seq/rdf:li[@rdf:parseType='Resource']/xmpDM:startTime" -n)
+    DURATIONSAMPLE=$(echo "${XMP_DATA}" | xmlstarlet sel -N rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#" -N xmpDM="http://ns.adobe.com/xmp/1.0/DynamicMedia/" -t -m "//rdf:li[@rdf:parseType='Resource'][xmpDM:trackName='CuePoint Markers']" -v "xmpDM:markers/rdf:Seq/rdf:li[@rdf:parseType='Resource']/xmpDM:duration" -n)
+    echo "${GET_INFO}"
+    INTIME=$(echo "scale=4; ${INSAMPLE}/${SAMPLINGRATE}" | bc)
+    DURATION=$(echo "scale=4; ${DURATIONSAMPLE}/${SAMPLINGRATE}" | bc)
+    OUTTIME=$(echo "scale=4; ${INSAMPLE}+${DURATION}" | bc)
+    echo "The intime in samples is $INTIME, the outtime in seconds is $OUTTIME, and the duration in seconds is $DURATION."
 }
 
 _blackframetest(){
@@ -130,23 +168,27 @@ _deliveraccessopts(){
 _makeaccesscopies(){
     _report -dt "STATUS Making access copies."
     "${SCRIPTDIR}/makederiv" -T mp3 "${OUTDIR_INGESTFILE}/${MEDIAID}"
-    "${SCRIPTDIR}/makeframes" "${FRAMESOPTS[@]}" "${OUTDIR_INGESTFILE}/${MEDIAID}"
     "${SCRIPTDIR}/makederiv" -T waveform "${OUTDIR_INGESTFILE}/${MEDIAID}"
-    "${SCRIPTDIR}/makederiv" -T youtube "${MAKEDERIVOPTS[@]}" "${YOUTUBEOPTS[@]}" "${OUTDIR_INGESTFILE}/${MEDIAID}"
-    if [ $(echo "${MEDIAID}" | grep -E "${REGEX4PODCAST}") ] ; then
-        _report -dt "${MEDIAID} qualifies for podcast creation."
-        "${SCRIPTDIR}/makederiv" -T podcast "${MAKEDERIVOPTS[@]}" "${PODCASTOPTS[@]}" "${OUTDIR_INGESTFILE}/${MEDIAID}"
-    else
-        _report -dt "${MEDIAID} does NOT qualify for podcast creation, skipping."
-        _writeerrorlog "makederiv" -T podcast "${MEDIAID} did not qualify for podcast creation and was skipped."
+    if [ "${MODE}" != "audio" ] ; then
+        "${SCRIPTDIR}/makeframes" "${FRAMESOPTS[@]}" "${OUTDIR_INGESTFILE}/${MEDIAID}"
+        "${SCRIPTDIR}/makederiv" -T youtube "${MAKEDERIVOPTS[@]}" "${YOUTUBEOPTS[@]}" "${OUTDIR_INGESTFILE}/${MEDIAID}"
+        if [ $(echo "${MEDIAID}" | grep -E "${REGEX4PODCAST}") ] ; then
+            _report -dt "${MEDIAID} qualifies for podcast creation."
+            "${SCRIPTDIR}/makederiv" -T podcast "${MAKEDERIVOPTS[@]}" "${PODCASTOPTS[@]}" "${OUTDIR_INGESTFILE}/${MEDIAID}"
+        else
+            _report -dt "${MEDIAID} does NOT qualify for podcast creation, skipping."
+            _writeerrorlog "makederiv" -T podcast "${MEDIAID} did not qualify for podcast creation and was skipped."
+        fi
+        "${SCRIPTDIR}/makederiv" -T dvd "${OUTDIR_INGESTFILE}/${MEDIAID}"
     fi
-    "${SCRIPTDIR}/makederiv" -T dvd "${OUTDIR_INGESTFILE}/${MEDIAID}"
 }
 
 _makemetadatapackage(){
     "${SCRIPTDIR}/makemetadata" "${OUTDIR_INGESTFILE}/${MEDIAID}"
     "${SCRIPTDIR}/checksumpackage" "${OUTDIR_INGESTFILE}/${MEDIAID}"
-    "${SCRIPTDIR}/makefingerprint" "${OUTDIR_INGESTFILE}/${MEDIAID}"
+    if [[ "${MODE}" != "audio" ]] ; then
+        "${SCRIPTDIR}/makefingerprint" "${OUTDIR_INGESTFILE}/${MEDIAID}"
+    fi
 }
 
 _delivertoaipstorage(){
@@ -246,10 +288,12 @@ _run_input_file_checks(){
     fi
     # here is where we would insert an option for searching for directory.
     # if file is a video
-    if [ ! $(_is_video "${INPUT}") ] ; then
-        _report -qnt "WARNING: ${INPUT} is not recognized as a video file. Please press q to quit, any other key to continue (if you know what you're doing):"
-        read NOTVIDRESPONSE
-        [ "${NOTVIDRESPONSE}" == "q" ] && exit 0
+    if [[ "${MODE}" != "audio" ]] ; then
+        if [ ! $(_is_video "${INPUT}") ] ; then
+            _report -qnt "WARNING: ${INPUT} is not recognized as a video file. Please press q to quit, any other key to continue (if you know what you're doing):"
+            read NOTVIDRESPONSE
+            [ "${NOTVIDRESPONSE}" == "q" ] && exit 0
+        fi
     fi
 }
 
@@ -269,6 +313,7 @@ _setup_package(){
 }
 
 trap _cleanup SIGHUP SIGINT SIGTERM
+trap _cleanup_ingest SIGHUP SIGINT SIGTERM
 
 # check environment
 if [ ! -d "$(pwd)" ] ; then
@@ -443,6 +488,14 @@ fi
     _run_storage_checks
     _ask_input
     _run_input_file_checks
+    _setup_package
+    if [[ "${MODE}" == "audio" ]] ; then
+        _ask_digitization_logs
+        if [[ -f ${FILES} ]] ; then
+            _parse_spreadsheet
+            _get_xmp_info
+        fi
+    fi
     if [[ -z "${AUDIODECISION}" ]] ; then
         _report -q "Select an audio strategy?"
         PS3="Selection: "
@@ -451,7 +504,7 @@ fi
             break
         done
     fi
-    if [[ -z "${CROPDECISION}" ]] ; then
+    if [[ -z "${CROPDECISION}" ]] && [[ "${MODE}" != "audio" ]] ; then
         _report -q "Select a cropping strategy?"
         PS3="Selection: "
         select CROPDECISION in "Do not crop." "Examine the video and auto-crop out black borders (slower)"
@@ -459,7 +512,7 @@ fi
             break
         done
     fi
-    if [[ -z "${FORMULA}" ]] ; then
+    if [[ -z "${FORMULA}" ]] && [[ "${MODE}" != "audio" ]] ; then
         _report -q "Select an optional formula for unusual cases?"
         _report -d "(In most cases, select 'none'. To force the input file to be interpreted as top or bottom field first interlacement, select tff or bff. To stretch the input video to 1920x1080 HD frame size, select 'hds'. To squish into Standard Definition, select 'sds'.)"
         PS3="Selection: "
@@ -482,7 +535,7 @@ fi
             break
         done
     fi
-    if [[ -z "${SLATE}" ]] ; then
+    if [[ -z "${SLATE}" ]] && [[ "${MODE}" != "audio" ]] ; then
         _report -q "Do you want to create a service copy with a slate?"
         select SLATE in "Yes" "No"
         do
@@ -504,7 +557,6 @@ fi
     fi
 
 # MICROSERVICES BEFORE PROCESSING
-_setup_package
 if [[ "${MODE}" == "preservation" ]] ; then
     _ask_digitization_logs
     _reset_directory
@@ -520,7 +572,7 @@ if [[ "${MODE}" == "preservation" ]] ; then
     if [[ "${FORMULA}" == "check interlacement" ]] ; then
         _get_interlacement_full "${INPUT}"
     fi
-else
+elif [[ "${MODE}" != "audio" ]] ; then
     # presumes default, psa, or local mode
     _blackframetest
     _phasechecktest
@@ -602,6 +654,11 @@ elif [[ "${MODE}" == "psa" ]] ; then
     _delivertoaipstorage
 elif [[ "${MODE}" == "local" ]] ; then
     _makebroadcastcopies
+    _makeaccesscopies
+    _makemetadatapackage
+    _writeingestlog "datetime_end" "$(_get_iso8601)"
+    _delivertoaipstorage
+elif [[ "${MODE}" == "audio" ]] ; then
     _makeaccesscopies
     _makemetadatapackage
     _writeingestlog "datetime_end" "$(_get_iso8601)"
