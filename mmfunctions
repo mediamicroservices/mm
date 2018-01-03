@@ -618,6 +618,100 @@ _ask_outtime(){
     done
 }
 
+_ask_photos(){
+    MEDIAID="${1}"
+    echo ""
+
+    _after_capture_process(){
+        PHOTOLOC="$(grep -a "^Saving file as" "${GPHOTO2LOG}" | sed 's/Saving file as //g')"
+        while [[ ! -f "$PHOTOLOC" ]] ; do
+            sleep 1
+            PHOTOLOC="$(grep -a "^Saving file as" "${GPHOTO2LOG}" | sed 's/Saving file as //g')"
+        done
+        _report -d "Captured ${PHOTOLOC}, opening..."
+        open "${PHOTOLOC}"
+        echo "" > "${GPHOTO2LOG}"
+        _report -q -n "Hit 'd' to discard $(basename ${PHOTOLOC}) or enter to continue: "
+        read answer
+        if [[ "${answer}" = "d" ]] ; then
+            rm -v "${PHOTOLOC}"
+        fi
+    }
+
+    _stop_ptpcamera(){
+        PID=$(ps ux | grep PTPCamera | grep -v grep | awk '{print $2}' | xargs)
+        if [[ -n "$PID" ]] ; then
+            _report -d "closing PTPCamera ($PID)"
+            killall PTPCamera
+        fi
+    }
+
+    _stop_gphoto(){
+        if [[ -n "${GPHOTO2_PID}" ]] ; then
+            if [[ $(ps -e | awk '{print $1}' | grep "^${GPHOTO2_PID}$") ]] ; then
+                _report -d "Shutting down gphoto2 (${GPHOTO2_PID})"
+                kill -9 "${GPHOTO2_PID}"
+            fi
+        fi
+    }
+
+    _stop_ptpcamera
+    trap _stop_gphoto SIGHUP SIGINT SIGTERM
+    MEDIAID="${1}"
+    _report -q -n "Hit enter to take a photograph ['q' to quit, 'f' when finished with photos]: "
+    read answer
+    if [[ "${answer}" = "q" ]] ; then
+        exit
+    elif [[ "${answer}" != "f" ]] ; then
+        gphoto2 --summary >/dev/null
+        GPHOTO_ERR="$?"
+        while [[ "${GPHOTO_ERR}" != "0" ]] ; do
+            echo -n "Camera appears to not be connected. Hit 'q' to quit, 'r' to retry, or return to skip: "
+            read answer
+            if [[ "${answer}" = "q" ]] ; then
+                _stop_gphoto
+                exit
+            elif [[ "${answer}" = "r" ]] ; then
+                _ask_photos "${MEDIAID}"
+            else
+                NEVERMIND=1
+            fi
+            gphoto2 --summary >/dev/null
+            GPHOTO_ERR="$?"
+        done
+        if [[ ! "$NEVERMIND" ]] ; then
+            GPHOTO2LOG=$(_maketemp)
+            _stop_ptpcamera
+            OBJ_PHOTO_DIR="${OUTDIR_INGESTFILE}/${MEDIAID}/metadata/depictions/object_photos"
+            _mkdir2 "${OBJ_PHOTO_DIR}"
+            gphoto2 --capture-image-and-download -I -1 --filename "${OBJ_PHOTO_DIR}/${MEDIAID}_photo_%03n.%C" > "${GPHOTO2LOG}" &
+            GPHOTO2_PID="${!}"
+            _after_capture_process
+            answer="x"
+            if [[ -n "${GPHOTO2_PID}" ]] ; then
+                _stop_ptpcamera
+                while [[ "${answer}" != "q" && "${answer}" != "f" ]] ; do
+                    _report -q -n "Hit enter to take another photograph ['q' to quit, 'f' when finished with photos]: "
+                    read answer
+                    if [[ "${answer}" = "q" ]] ; then
+                        _stop_gphoto
+                        exit
+                    elif [[ "${answer}" = "f" ]] ; then
+                        _stop_gphoto
+                        break
+                    else
+                        kill -SIGUSR1 "${GPHOTO2_PID}"
+                        _after_capture_process
+                    fi
+                done
+            else
+                _report -wt "Error: gphoto2 is not running."
+            fi
+        fi
+        _stop_gphoto
+    fi
+}
+
 _check_dependencies(){
     DEPS_OK=YES
     while [ "${*}" != "" ] ; do
