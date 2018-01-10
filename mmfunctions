@@ -1111,7 +1111,7 @@ _find_input (){
                   INPUTFILE="$1"
                 fi
                 printf "file " >> "${FFCONCATFILE}"
-                printf '%q' "${SOURCEFILE}" >> "${FFCONCATFILE}"
+                printf '%q' "${INPUTFILE}" >> "${FFCONCATFILE}"
                 echo >> "${FFCONCATFILE}"
                 echo "inpoint ${STARTTIME}" >> "${FFCONCATFILE}"
                 echo "outpoint ${ENDTIME}" >> "${FFCONCATFILE}"
