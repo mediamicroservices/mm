@@ -129,8 +129,6 @@ while [[ "${@}" != "" ]] ; do
     _set_up_output
     if [[ "${OUTPUT_TYPE}" == "dvd" ]] || [[ "${OUTPUT_TYPE}" == "broadcast" ]] ; then
         INPUTOPTIONS+=(-y)
-    elif [[ "${OUTPUT_TYPE}" != "mp3" ]] && [[ "${OUTPUT_TYPE}" != "podcast" ]] && [[ "${OUTPUT_TYPE}" != "waveform" ]] ; then
-        INPUTOPTIONS+=(-vsync 0)
     fi
     INPUTOPTIONS+=(-nostdin)
 
