@@ -485,13 +485,9 @@ while [[ "${@}" != "" ]] ; do
             MIDDLEOPTIONS+=(-c:a aac -strict -2)
             MIDDLEOPTIONS+=(-b:a 96k)
         elif [[ "${OUTPUT_TYPE}" == "waveform" ]] ; then
-            if [[ "${AUDIOSTREAMCOUNT}" > 0 ]] ; then
-                MIDDLEOPTIONS+=(-vn)
-                MIDDLEOPTIONS+=(-frames:v 1)
-                _add_audio_filter "showwavespic=split_channels=1:scale=log:s=1920x240:colors=purple|blue|green|red"
-            else
-                continue
-            fi
+            MIDDLEOPTIONS+=(-vn)
+            MIDDLEOPTIONS+=(-frames:v 1)
+            _add_audio_filter "showwavespic=split_channels=1:scale=log:s=1920x240:colors=purple|blue|green|red"
         else
             echo "Invalid audio derivative type."
         fi
