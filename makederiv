@@ -124,7 +124,7 @@ while [[ "${@}" != "" ]] ; do
 
     MEDIAID=$(basename "${INPUT}" | cut -d. -f1)
     INGESTLOG="${LOGDIR}/capture.log"
-     _report_to_db
+    _report_to_db
 
     _set_up_output
     if [[ "${OUTPUT_TYPE}" == "dvd" ]] || [[ "${OUTPUT_TYPE}" == "broadcast" ]] ; then
@@ -178,7 +178,8 @@ while [[ "${@}" != "" ]] ; do
             # set options for zeroing timecode if input is MXF
             if [[ "$INPUT" == *.mxf ]] ; then
                 metadata_option="-metadata"
-            else metadata_option="-metadata:s:v:0"
+            else
+                metadata_option="-metadata:s:v:0"
             fi
             # if adding a slate: request metadata
             if [[ "${ADDSLATE}" == "Y" ]] ; then
