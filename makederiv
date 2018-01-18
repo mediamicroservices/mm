@@ -72,38 +72,33 @@ DEPENDENCIES=(ffmpeg ffprobe)
 # set derivative extensions and paths
 if [[ "${OUTPUT_TYPE}" == "broadcast" ]] ; then
     EXTENSION="mov"
-    RELATIVEPATH="service"
+    RELATIVEPATH="objects/service"
 elif [[ "${OUTPUT_TYPE}" == "prores" ]] ; then
     EXTENSION="mov"
-    RELATIVEPATH="access/prores"
+    RELATIVEPATH="objects/access/prores"
 elif [[ "${OUTPUT_TYPE}" == "youtube" ]] ; then
     EXTENSION="mp4"
-    RELATIVEPATH="access/youtube_up"
+    RELATIVEPATH="objects/access/youtube_up"
 elif [[ "${OUTPUT_TYPE}" == "resourcespace" ]] ; then
     EXTENSION="mp4"
-    RELATIVEPATH="access/resourcespace"
+    RELATIVEPATH="objects/access/resourcespace"
 elif [[ "${OUTPUT_TYPE}" == "dvd" ]] ; then
     EXTENSION="iso"
-    RELATIVEPATH="access/dvd"
+    RELATIVEPATH="objects/access/dvd"
     DEPENDENCIES+=(dvdauthor mkisofs)
 elif [[ "${OUTPUT_TYPE}" == "mp3" ]] ; then
     EXTENSION="mp3"
-    RELATIVEPATH="access/mp3"
+    RELATIVEPATH="objects/access/mp3"
     DEPENDENCIES+=(normalize)
 elif [[ "${OUTPUT_TYPE}" == "podcast" ]] ; then
     EXTENSION="mov"
-    RELATIVEPATH="access/podcast"
+    RELATIVEPATH="objects/access/podcast"
 elif [[ "${OUTPUT_TYPE}" == "waveform" ]] ; then
     EXTENSION="png"
-    RELATIVEPATH="depictions"
+    RELATIVEPATH="metadata/depictions"
 else
     echo "No matches for specified output type."
     _usage
-fi
-if [[ "${OUTPUT_TYPE}" == "waveform" ]] ; then
-    OUTPUT_CAT="metadata"
-else
-    OUTPUT_CAT="objects"
 fi
 _check_dependencies "${DEPENDENCIES[@]}"
 
@@ -112,9 +107,9 @@ while [[ "${@}" != "" ]] ; do
     INPUT="${1}"
     shift
     if [ -z "${OUTPUTDIR_FORCED}" ] ; then
-        [ -d "${INPUT}" ] && { OUTPUTDIR="${INPUT}/${OUTPUT_CAT}/${RELATIVEPATH}" && LOGDIR="${INPUT}/metadata/logs/${OUTPUT_TYPE}" ;};
-        [ -f "${INPUT}" ] && { OUTPUTDIR=$(dirname "${INPUT}")"/${RELATIVEPATH}" && LOGDIR="$(dirname "${INPUT}")/${RELATIVEPATH}/logs/${OUTPUT_TYPE}" ;};
-        [ ! "${OUTPUTDIR}" ] && { OUTPUTDIR="${INPUT}/${OUTPUT_CAT}/${RELATIVEPATH}" && LOGDIR="${INPUT}/metadata/logs/${OUTPUT_TYPE}" ;};
+        [ -d "${INPUT}" ] && { OUTPUTDIR="${INPUT}/${RELATIVEPATH}" && LOGDIR="${INPUT}/metadata/logs/${OUTPUT_TYPE}" ;};
+        [ -f "${INPUT}" ] && { OUTPUTDIR=$(dirname "${INPUT}")"/$(basename "${RELATIVEPATH}")" && LOGDIR="$(dirname "${INPUT}")/$(basename "${RELATIVEPATH}")/logs/${OUTPUT_TYPE}" ;};
+        [ ! "${OUTPUTDIR}" ] && { OUTPUTDIR="${INPUT}/${RELATIVEPATH}" && LOGDIR="${INPUT}/metadata/logs/${OUTPUT_TYPE}" ;};
     else
         OUTPUTDIR="${OUTPUTDIR_FORCED}"
         LOGDIR="${OUTPUTDIR}/logs/${OUTPUT_TYPE}"
