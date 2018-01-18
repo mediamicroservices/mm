@@ -21,6 +21,7 @@ _usage(){
         echo "      mp3 (mp3)"
         echo "      podcast (mov)"
         echo "      waveform (png)"
+        echo "      showwaves (mp4)"
         echo "  -l (only use the left channel of the first audio track)"
         echo "  -r (only use the right channel of the first audio track)"
         echo "  -t (burn timecode overlay)"
@@ -101,6 +102,10 @@ elif [[ "${OUTPUT_TYPE}" == "waveform" ]] ; then
     EXTENSION="png"
     RELATIVEPATH="metadata/depictions"
     SUFFIX="_waveform"
+elif [[ "${OUTPUT_TYPE}" == "showwaves" ]] ; then
+    EXTENSION="mp4"
+    RELATIVEPATH="objects/access/showwaves"
+    SUFFIX="_showwaves"
 else
     echo "No matches for specified output type."
     _usage
@@ -488,6 +493,16 @@ while [[ "${@}" != "" ]] ; do
             MIDDLEOPTIONS+=(-vn)
             MIDDLEOPTIONS+=(-frames:v 1)
             _add_audio_filter "showwavespic=split_channels=1:scale=log:s=1920x240:colors=purple|blue|green|red"
+        elif [[ "${OUTPUT_TYPE}" == "showwaves" ]] ; then
+            MIDDLEOPTIONS+=(-vn)
+            _add_audio_filter "asplit[out0],showwaves=s=1280x720:mode=line:scale=lin,format=gray,negate[out1]"
+            MIDDLEOPTIONS+=(-c:v libx264)
+            MIDDLEOPTIONS+=(-pix_fmt yuv420p)
+            MIDDLEOPTIONS+=(-crf 24)
+            MIDDLEOPTIONS+=(-c:a aac)
+            MIDDLEOPTIONS+=(-ar 48000)
+            MIDDLEOPTIONS+=(-map "[out0]")
+            MIDDLEOPTIONS+=(-map "[out1]")
         else
             echo "Invalid audio derivative type."
         fi
