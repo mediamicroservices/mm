@@ -127,9 +127,7 @@ while [[ "${@}" != "" ]] ; do
     _report_to_db
 
     _set_up_output
-    if [[ "${OUTPUT_TYPE}" == "dvd" ]] || [[ "${OUTPUT_TYPE}" == "broadcast" ]] ; then
-        INPUTOPTIONS+=(-y)
-    fi
+    INPUTOPTIONS+=(-y)
     INPUTOPTIONS+=(-nostdin)
 
     # get information on the input
