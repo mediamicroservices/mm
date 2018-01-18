@@ -21,6 +21,7 @@ _usage(){
         echo "      mp3 (mp3)"
         echo "      podcast (mov)"
         echo "      waveform (png)"
+        echo "      showwaves (mp4)"
         echo "  -l (only use the left channel of the first audio track)"
         echo "  -r (only use the right channel of the first audio track)"
         echo "  -t (burn timecode overlay)"
@@ -72,38 +73,42 @@ DEPENDENCIES=(ffmpeg ffprobe)
 # set derivative extensions and paths
 if [[ "${OUTPUT_TYPE}" == "broadcast" ]] ; then
     EXTENSION="mov"
-    RELATIVEPATH="service"
+    RELATIVEPATH="objects/service"
+    if [[ "${ADDSLATE}" = "Y" ]]; then
+        SUFFIX="_SLATE"
+    fi
 elif [[ "${OUTPUT_TYPE}" == "prores" ]] ; then
     EXTENSION="mov"
-    RELATIVEPATH="access/prores"
+    RELATIVEPATH="objects/access/prores"
 elif [[ "${OUTPUT_TYPE}" == "youtube" ]] ; then
     EXTENSION="mp4"
-    RELATIVEPATH="access/youtube_up"
+    RELATIVEPATH="objects/access/youtube_up"
 elif [[ "${OUTPUT_TYPE}" == "resourcespace" ]] ; then
     EXTENSION="mp4"
-    RELATIVEPATH="access/resourcespace"
+    RELATIVEPATH="objects/access/resourcespace"
 elif [[ "${OUTPUT_TYPE}" == "dvd" ]] ; then
     EXTENSION="iso"
-    RELATIVEPATH="access/dvd"
+    RELATIVEPATH="objects/access/dvd"
     DEPENDENCIES+=(dvdauthor mkisofs)
 elif [[ "${OUTPUT_TYPE}" == "mp3" ]] ; then
     EXTENSION="mp3"
-    RELATIVEPATH="access/mp3"
+    RELATIVEPATH="objects/access/mp3"
     DEPENDENCIES+=(normalize)
 elif [[ "${OUTPUT_TYPE}" == "podcast" ]] ; then
     EXTENSION="mov"
-    RELATIVEPATH="access/podcast"
+    RELATIVEPATH="objects/access/podcast"
+    SUFFIX="_podcast"
 elif [[ "${OUTPUT_TYPE}" == "waveform" ]] ; then
     EXTENSION="png"
-    RELATIVEPATH="depictions"
+    RELATIVEPATH="metadata/depictions"
+    SUFFIX="_waveform"
+elif [[ "${OUTPUT_TYPE}" == "showwaves" ]] ; then
+    EXTENSION="mp4"
+    RELATIVEPATH="objects/access/showwaves"
+    SUFFIX="_showwaves"
 else
     echo "No matches for specified output type."
     _usage
-fi
-if [[ "${OUTPUT_TYPE}" == "waveform" ]] ; then
-    OUTPUT_CAT="metadata"
-else
-    OUTPUT_CAT="objects"
 fi
 _check_dependencies "${DEPENDENCIES[@]}"
 
@@ -112,9 +117,9 @@ while [[ "${@}" != "" ]] ; do
     INPUT="${1}"
     shift
     if [ -z "${OUTPUTDIR_FORCED}" ] ; then
-        [ -d "${INPUT}" ] && { OUTPUTDIR="${INPUT}/${OUTPUT_CAT}/${RELATIVEPATH}" && LOGDIR="${INPUT}/metadata/logs/${OUTPUT_TYPE}" ;};
-        [ -f "${INPUT}" ] && { OUTPUTDIR=$(dirname "${INPUT}")"/${RELATIVEPATH}" && LOGDIR="$(dirname "${INPUT}")/${RELATIVEPATH}/logs/${OUTPUT_TYPE}" ;};
-        [ ! "${OUTPUTDIR}" ] && { OUTPUTDIR="${INPUT}/${OUTPUT_CAT}/${RELATIVEPATH}" && LOGDIR="${INPUT}/metadata/logs/${OUTPUT_TYPE}" ;};
+        [ -d "${INPUT}" ] && { OUTPUTDIR="${INPUT}/${RELATIVEPATH}" && LOGDIR="${INPUT}/metadata/logs/${OUTPUT_TYPE}" ;};
+        [ -f "${INPUT}" ] && { OUTPUTDIR=$(dirname "${INPUT}")"/$(basename "${RELATIVEPATH}")" && LOGDIR="$(dirname "${INPUT}")/$(basename "${RELATIVEPATH}")/logs/${OUTPUT_TYPE}" ;};
+        [ ! "${OUTPUTDIR}" ] && { OUTPUTDIR="${INPUT}/${RELATIVEPATH}" && LOGDIR="${INPUT}/metadata/logs/${OUTPUT_TYPE}" ;};
     else
         OUTPUTDIR="${OUTPUTDIR_FORCED}"
         LOGDIR="${OUTPUTDIR}/logs/${OUTPUT_TYPE}"
@@ -124,21 +129,10 @@ while [[ "${@}" != "" ]] ; do
 
     MEDIAID=$(basename "${INPUT}" | cut -d. -f1)
     INGESTLOG="${LOGDIR}/capture.log"
-     if [[ "${ADDSLATE}" = "Y" ]]; then
-         SUFFIX="_SLATE"
-     elif [[ "${OUTPUT_TYPE}" == "podcast" ]] ; then
-         SUFFIX="_podcast"
-     elif [[ "${OUTPUT_TYPE}" == "waveform" ]] ; then
-         SUFFIX="_waveform"
-     fi
-     _report_to_db
+    _report_to_db
 
     _set_up_output
-    if [[ "${OUTPUT_TYPE}" == "dvd" ]] || [[ "${OUTPUT_TYPE}" == "broadcast" ]] ; then
-        INPUTOPTIONS+=(-y)
-    elif [[ "${OUTPUT_TYPE}" != "mp3" ]] && [[ "${OUTPUT_TYPE}" != "podcast" ]] && [[ "${OUTPUT_TYPE}" != "waveform" ]] ; then
-        INPUTOPTIONS+=(-vsync 0)
-    fi
+    INPUTOPTIONS+=(-y)
     INPUTOPTIONS+=(-nostdin)
 
     # get information on the input
@@ -185,7 +179,8 @@ while [[ "${@}" != "" ]] ; do
             # set options for zeroing timecode if input is MXF
             if [[ "$INPUT" == *.mxf ]] ; then
                 metadata_option="-metadata"
-            else metadata_option="-metadata:s:v:0"
+            else
+                metadata_option="-metadata:s:v:0"
             fi
             # if adding a slate: request metadata
             if [[ "${ADDSLATE}" == "Y" ]] ; then
@@ -495,13 +490,19 @@ while [[ "${@}" != "" ]] ; do
             MIDDLEOPTIONS+=(-c:a aac -strict -2)
             MIDDLEOPTIONS+=(-b:a 96k)
         elif [[ "${OUTPUT_TYPE}" == "waveform" ]] ; then
-            if [[ "${AUDIOSTREAMCOUNT}" > 0 ]] ; then
-                MIDDLEOPTIONS+=(-vn)
-                MIDDLEOPTIONS+=(-frames:v 1)
-                _add_audio_filter "showwavespic=split_channels=1:scale=log:s=1920x240:colors=purple|blue|green|red"
-            else
-                continue
-            fi
+            MIDDLEOPTIONS+=(-vn)
+            MIDDLEOPTIONS+=(-frames:v 1)
+            _add_audio_filter "showwavespic=split_channels=1:scale=log:s=1920x240:colors=purple|blue|green|red"
+        elif [[ "${OUTPUT_TYPE}" == "showwaves" ]] ; then
+            MIDDLEOPTIONS+=(-vn)
+            _add_audio_filter "asplit[out0],showwaves=s=1280x720:mode=line:scale=lin,format=gray,negate[out1]"
+            MIDDLEOPTIONS+=(-c:v libx264)
+            MIDDLEOPTIONS+=(-pix_fmt yuv420p)
+            MIDDLEOPTIONS+=(-crf 24)
+            MIDDLEOPTIONS+=(-c:a aac)
+            MIDDLEOPTIONS+=(-ar 48000)
+            MIDDLEOPTIONS+=(-map "[out0]")
+            MIDDLEOPTIONS+=(-map "[out1]")
         else
             echo "Invalid audio derivative type."
         fi
