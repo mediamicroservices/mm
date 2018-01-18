@@ -73,6 +73,9 @@ DEPENDENCIES=(ffmpeg ffprobe)
 if [[ "${OUTPUT_TYPE}" == "broadcast" ]] ; then
     EXTENSION="mov"
     RELATIVEPATH="objects/service"
+    if [[ "${ADDSLATE}" = "Y" ]]; then
+        SUFFIX="_SLATE"
+    fi
 elif [[ "${OUTPUT_TYPE}" == "prores" ]] ; then
     EXTENSION="mov"
     RELATIVEPATH="objects/access/prores"
@@ -93,9 +96,11 @@ elif [[ "${OUTPUT_TYPE}" == "mp3" ]] ; then
 elif [[ "${OUTPUT_TYPE}" == "podcast" ]] ; then
     EXTENSION="mov"
     RELATIVEPATH="objects/access/podcast"
+    SUFFIX="_podcast"
 elif [[ "${OUTPUT_TYPE}" == "waveform" ]] ; then
     EXTENSION="png"
     RELATIVEPATH="metadata/depictions"
+    SUFFIX="_waveform"
 else
     echo "No matches for specified output type."
     _usage
@@ -119,13 +124,6 @@ while [[ "${@}" != "" ]] ; do
 
     MEDIAID=$(basename "${INPUT}" | cut -d. -f1)
     INGESTLOG="${LOGDIR}/capture.log"
-     if [[ "${ADDSLATE}" = "Y" ]]; then
-         SUFFIX="_SLATE"
-     elif [[ "${OUTPUT_TYPE}" == "podcast" ]] ; then
-         SUFFIX="_podcast"
-     elif [[ "${OUTPUT_TYPE}" == "waveform" ]] ; then
-         SUFFIX="_waveform"
-     fi
      _report_to_db
 
     _set_up_output
