@@ -109,9 +109,9 @@ _get_xmp_info(){
     INSAMPLE=$(echo "${XMP_DATA}" | xmlstarlet sel -N rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#" -N xmpDM="http://ns.adobe.com/xmp/1.0/DynamicMedia/" -t -m "//rdf:li[@rdf:parseType='Resource'][xmpDM:trackName='CuePoint Markers']" -v "xmpDM:markers/rdf:Seq/rdf:li[@rdf:parseType='Resource']/xmpDM:startTime" -n)
     DURATIONSAMPLE=$(echo "${XMP_DATA}" | xmlstarlet sel -N rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#" -N xmpDM="http://ns.adobe.com/xmp/1.0/DynamicMedia/" -t -m "//rdf:li[@rdf:parseType='Resource'][xmpDM:trackName='CuePoint Markers']" -v "xmpDM:markers/rdf:Seq/rdf:li[@rdf:parseType='Resource']/xmpDM:duration" -n)
     echo "${GET_INFO}"
-    INTIME=$(echo "scale=4; ${INSAMPLE}/${SAMPLINGRATE}" | bc)
-    DURATION=$(echo "scale=4; ${DURATIONSAMPLE}/${SAMPLINGRATE}" | bc)
-    OUTTIME=$(echo "scale=4; ${INSAMPLE}+${DURATION}" | bc)
+    INTIME=$(echo "scale=4; ${INSAMPLE}/${SAMPLINGRATE}" | bc | awk '{printf "%f", $0}')
+    DURATION=$(echo "scale=4; ${DURATIONSAMPLE}/${SAMPLINGRATE}" | bc | awk '{printf "%f", $0}')
+    OUTTIME=$(echo "scale=4; ${INTIME}+${DURATION}" | bc | awk '{printf "%f", $0}')
     echo "The intime in samples is $INTIME, the outtime in seconds is $OUTTIME, and the duration in seconds is $DURATION."
 }
 
