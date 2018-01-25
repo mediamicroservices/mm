@@ -78,7 +78,7 @@ while [ "${*}" != "" ] ; do
         #looks for any directories in fileMeta that are not objects
         _runtest "There are directories in fileMeta that are not objects." xml sel -t -v "/tree/directory/directory[@name='metadata']/directory[@name='fileMeta']/directory[@name!='objects']/@name" -n "${TEMPTREE}"
         #looks for any directories in fileMeta objects subdirectory that are not access or service
-        _runtest "There are directories in the fileMeta objects directory that are not access or service." xml sel -t -v "/tree/directory/directory[@name='metadata']/directory[@name='fileMeta']/directory[@name='objects']/directory[@name!='access' and @name!='service']/@name" -n "${TEMPTREE}"
+        _runtest "There are directories in the fileMeta objects directory that are not access or service." xml sel -t -v "/tree/directory/directory[@name='metadata']/directory[@name='fileMeta']/directory[@name='objects']/directory[@name!='access' and @name!='service' and @name!='captions']/@name" -n "${TEMPTREE}"
         #and any files that aren't .txt, .xml, .json
         _runtest "There are files in the fileMeta objects directory that do not belong!" xml sel -t -v "/tree/directory/directory[@name='metadata']/directory[@name='fileMeta']/directory[@name='objects']/file[substring(@name,string-length(@name)-2)!='xml' and substring(@name,string-length(@name)-2)!='txt' and substring(@name,string-length(@name)-3)!='json']/@name" -n "${TEMPTREE}"
         #looks in fileMeta service subdirectory for that aren't .txt, .xml, .json
