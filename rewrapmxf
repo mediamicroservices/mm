@@ -30,12 +30,12 @@ while [ "${*}" != "" ] ; do
     SOURCEFILE="${1}"
     unset FFMPEG_OPTS
     FFMPEG_OPTS+=(-c:v copy)
-    FFMPEG_OPTS+=(-c:a copy)
+    FFMPEG_OPTS+=(-c:a pcm_s24le)
     FFMPEG_OPTS+=(-map 0:v)
     FFMPEG_OPTS+=(-map 0:a)
     FFMPEG_OPTS+=(-metadata timecode='00:00:00;00')
     EXTENSION="mxf"
-    OUTPUT_MOVIE="~/Desktop/$(basename "${SOURCEFILE%.*}").${EXTENSION}"
+    OUTPUT_MOVIE="${HOME}/Desktop/$(basename "${SOURCEFILE%.*}").${EXTENSION}"
     if [ -f "${OUTPUT_MOVIE}" ] ; then
         _report -wt "The intended output of $(basename "${0}") already exists. Skipping for now. Please delete ${OUTPUT_MOVIE} and rerun or figure out why you are trying to do this."
     else
