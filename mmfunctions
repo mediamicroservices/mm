@@ -17,6 +17,15 @@ elif [ ! "${CONFIG}" = "Y" -a "${REQUIRECONFIG}" = "Y" ] ; then
     exit 1
 fi
 
+#Setup differences for systems
+if [[ "$(uname -s)" = "Darwin" ]] ; then
+    FFMPEGFONTPATH='/Library/Fonts/Andale Mono.ttf'
+elif [[ "$(uname -s)" = "Linux" ]] ; then
+    FFMPEGFONTPATH='/usr/share/fonts/truetype/liberation/LiberationSans-Regular.ttf'
+else
+    echo "Warning: Unsupported system detected. Certain configurations not set. This may cause errors for some scripts."
+fi
+
 _cleanup_mount_dir(){
     if [ -d "${MOUNT_DIR}" ] ; then
         echo calling umount
@@ -91,7 +100,7 @@ _report_schema_db(){
         if [ -z "${xmlschema}" ] ; then
             xmlschema="$LTO_LOGS/${TAPE_SERIAL}.schema"
         fi
-        schema_sorted=$(xml sel -t -m ".//file" -v "concat(name,'|',length, '|', modifytime)" -o "|" -m "ancestor-or-self::directory" -v "name" -o "/" -b -n "${xmlschema}")
+        schema_sorted=$(xmlstarlet sel -t -m ".//file" -v "concat(name,'|',length, '|', modifytime)" -o "|" -m "ancestor-or-self::directory" -v "name" -o "/" -b -n "${xmlschema}")
         schema_tape=$(basename "${xmlschema}" | cut -d'.' -f1)
         IFS=$(echo -en "\n\b")
         (for i in ${schema_sorted}; do LINE=$i;
@@ -241,7 +250,7 @@ _db_error_check(){
 }
 
 _fingerprint_to_db(){
-VIDEOFINGERPRINT=$(xml sel -N "m=urn:mpeg:mpeg7:schema:2001" -t -m "m:Mpeg7/m:DescriptionUnit/m:Descriptor/m:VideoSignatureRegion/m:VSVideoSegment" -v m:StartFrameOfSegment -o ':' -v m:EndFrameOfSegment -o ':' -m m:BagOfWords -v "translate(.,' ','')" -o ':' -b -n "${FINGERPRINT_XML}")
+VIDEOFINGERPRINT=$(xmlstarlet sel -N "m=urn:mpeg:mpeg7:schema:2001" -t -m "m:Mpeg7/m:DescriptionUnit/m:Descriptor/m:VideoSignatureRegion/m:VSVideoSegment" -v m:StartFrameOfSegment -o ':' -v m:EndFrameOfSegment -o ':' -m m:BagOfWords -v "translate(.,' ','')" -o ':' -b -n "${FINGERPRINT_XML}")
 }
 
 _premis_event_list(){
@@ -1076,10 +1085,10 @@ _find_input (){
         fi
     elif [[ "${SOURCEFILE#*.}" = "mkv" ]] ; then
         # if the sorucefile is an mkv, then check if it has a Presentation Chapter Edition
-        if [[ -n $(mkvextract tags "${SOURCEFILE}" | xml sel -t -m "/Tags/Tag/Simple[String='Presentation']" -v String) ]] ; then
+        if [[ -n $(mkvextract tags "${SOURCEFILE}" | xmlstarlet sel -t -m "/Tags/Tag/Simple[String='Presentation']" -v String) ]] ; then
             _report -dt "The input file ($(basename "${SOURCEFILE}")) contains a Chapter Edition called 'Presentation', will use that for transcoding."
-            LISTCHAPTERS=$(mkvextract chapters "${SOURCEFILE}" | xml sel -t -m Chapters/EditionEntry[EditionFlagDefault='1']/ChapterAtom -v ChapterTimeStart -o "-" -v ChapterTimeEnd -o "-" -v ChapterSegmentUID -n -)
-            SegmentUIDs=$(mkvextract chapters "${SOURCEFILE}" | xml sel -t -m Chapters/EditionEntry[EditionFlagDefault='1']/ChapterAtom/ChapterSegmentUID -v . -n | sort -u)
+            LISTCHAPTERS=$(mkvextract chapters "${SOURCEFILE}" | xmlstarlet sel -t -m Chapters/EditionEntry[EditionFlagDefault='1']/ChapterAtom -v ChapterTimeStart -o "-" -v ChapterTimeEnd -o "-" -v ChapterSegmentUID -n -)
+            SegmentUIDs=$(mkvextract chapters "${SOURCEFILE}" | xmlstarlet sel -t -m Chapters/EditionEntry[EditionFlagDefault='1']/ChapterAtom/ChapterSegmentUID -v . -n | sort -u)
             if [[ -n "${LISTCHAPTERS}" ]]; then
               _report -d "Found this chapter list:"
               _report -d "${LISTCHAPTERS}"
