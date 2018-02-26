@@ -139,7 +139,7 @@ _report_fixity_db(){
         if [ -z "${lastrecord}" ] ; then
             lastrecord=$(echo "SELECT eventIdentifierValue FROM event WHERE objectIdentifierValue = '${MEDIA_ID}' AND eventDetail = '${eventDetail}' ORDER BY eventIdentifierValue DESC LIMIT 1" | mysql --login-path="${PREMIS_PROFILE}"  "${PREMIS_NAME}")
         fi
-        EVENT_ID_TRIM=$(echo $lastrecord | cut -d " " -f2)
+        EVENT_ID_TRIM=$(echo "$lastrecord" | cut -d " " -f2)
         IFS=$(echo -en "\n\b")
         (for i in ${db_fixity}; do LINE=$i;
             messageDigestHASH=$(echo "$LINE" | cut -c -32 )
