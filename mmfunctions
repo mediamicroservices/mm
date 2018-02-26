@@ -7,7 +7,6 @@ if [ -f "${TEMP_MMCONFIG}" ] ; then
 else
     MM_CONFIG_FILE="${SCRIPTDIR}/mm.conf"
 fi
-WHAT_IS_THIS="mediamicroservices"
 
 # load configuration file
 if [ -f "${MM_CONFIG_FILE}" ] ; then

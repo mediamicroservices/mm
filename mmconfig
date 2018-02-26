@@ -383,7 +383,7 @@ else
     done
 
     _report -d "(basename "${0}")"
-    _report -d "Set system variables for ${WHAT_IS_THIS}"
+    _report -d "Set system variables for mediamicroservices"
     echo
     _report -d "Notes:"
     _report -d "VOLADJUST must be set to 'Y' or 'N'"
