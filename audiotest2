@@ -1,0 +1,23 @@
+#!/bin/bash
+while [[ "${@}" != "" ]] ; do
+    PACKAGE="$1"
+    shift
+    PACKAGEBASE=$(basename "${PACKAGE}")
+    FILENAME=$(find "${PACKAGE}/objects" -maxdepth 2 -type f ! -name .DS_Store)
+    BASENAME=$(basename "${FILENAME}")
+    ffmpeg -y -i "$FILENAME" -filter_complex "asplit=7[a][b][c][d][e][f][g];\
+        [a]showwavespic=split_channels=1:scale=log:s=1920x1080:colors=purple|blue|green|red[a1];\
+        [b]showwavespic=split_channels=1:scale=log:s=1920x1080:colors=purple|blue|green|red[b1];\
+        [c]showspectrumpic=s=1920x1080:scale=log[c1];\
+        [d]showspectrumpic=s=1920x1080:scale=lin[d1];\
+        [e]loudnorm=tp=0,asetnsamples=6400,astats=metadata=1:reset=1,adrawgraph=m1=lavfi.astats.1.Max_difference:m2=adrawgraph=m1=lavfi.astats.1.Max_difference:min=0:max=0.1:slide=picture:s=1920x256,drawtext=fontfile=/Library/Fonts/Courier\ New.ttf:fontcolor=black:fontsize=24:text=Interstitial[e1];\
+        [f]astats=metadata=1:reset=1,adrawgraph=m1=lavfi.astats.1.DC_offset:m2=lavfi.astats.2.DC_offset:min=-0.2:max=0.2:slide=picture:s=1920x1080,drawtext=fontfile=/Library/Fonts/Courier\ New.ttf:fontcolor=black:fontsize=24:text='DC Offset'[f1];\
+        [g]astats=metadata=1:reset=1,adrawgraph=m1=lavfi.astats.1.Peak_level:m2=lavfi.astats.2.Peak_level:max=0:min=-70:slide=picture:s=1920x1080:slide=picture,drawtext=fontfile=/Library/Fonts/Courier\ New.ttf:fontcolor=black:fontsize=24:text='Peak Level'[g1]" \
+        -map "[a1]" ./"${PACKAGEBASE}_${BASENAME}_waveform_log.png" \
+        -map "[b1]" ./"${PACKAGEBASE}_${BASENAME}_waveform_lin.png" \
+        -map "[c1]" ./"${PACKAGEBASE}_${BASENAME}_spectrum_log.png" \
+        -map "[d1]" ./"${PACKAGEBASE}_${BASENAME}_spectrum_lin.png" \
+        -map "[e1]" ./"${PACKAGEBASE}_${BASENAME}_interstitial.png" \
+        -map "[f1]" ./"${PACKAGEBASE}_${BASENAME}_dcoffset.png" \
+        -map "[g1]" ./"${PACKAGEBASE}_${BASENAME}_peaklevel.png"
+done
