@@ -16,14 +16,6 @@ elif [ ! "${CONFIG}" = "Y" -a "${REQUIRECONFIG}" = "Y" ] ; then
     exit 1
 fi
 
-_cleanup_mount_dir(){
-    if [ -d "${MOUNT_DIR}" ] ; then
-        echo calling umount
-        umount "${MOUNT_DIR}"
-        rmdir "${MOUNT_DIR}"
-    fi
-}
-
 _check_for_lto_md5_flags(){
     if [ -z "${LTO_MD5_FLAGS}" ] ; then
         LTO_MD5_FLAGS="md5deep -rel"
