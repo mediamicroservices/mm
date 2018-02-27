@@ -249,36 +249,24 @@ _premis_event_list(){
         MEDIAINFO=$(_escape_for_db "$(cat "${METADIR}/fileMeta/objects/${MEDIA_ID}_mediainfo.xml")")
         CAPTURELOG=$(_escape_for_db "$(cat "${METADIR}/logs/capture.log")")
         MEDIA_ID="${MEDIAID}"
-    fi
-    if [ "$eventDetail" = "makebroadcast" ] ; then
+    elif [ "$eventDetail" = "makebroadcast" ] ; then
         eventType="creation"
-    fi
-    if [ "$eventDetail" = "makeyoutube" ] ; then
+    elif [ "$eventDetail" = "makeyoutube" ] ; then
         eventType="creation"
-    fi
-    if [ "$eventDetail" = "makemp3" ] ; then
+    elif [ "$eventDetail" = "makemp3" ] ; then
         eventType="creation"
-    fi
-    if [ "$eventDetail" = "makedvd" ] ; then
+    elif [ "$eventDetail" = "makedvd" ] ; then
         eventType="creation"
-    fi
-    if [ "$eventDetail" = "makeframes" ] ; then
+    elif [ "$eventDetail" = "makeframes" ] ; then
         eventType="creation"
-    fi
-    if [ "$eventDetail" = "makewaveform" ] ; then
+    elif [ "$eventDetail" = "makewaveform" ] ; then
         eventType="creation"
-    fi
-
-    if [ "$eventDetail" = "makefingerprint" ] ; then
+    elif [ "$eventDetail" = "makefingerprint" ] ; then
         eventType="creation"
         MEDIA_ID=$(basename "${SOURCEFILE}")
-    fi
-
-    if [ "$eventDetail" = "migratefiles" ] ; then
+    elif [ "$eventDetail" = "migratefiles" ] ; then
         eventType="replication"
-    fi
-
-    if [ "$eventDetail" = "checksumpackage" ] ; then
+    elif [ "$eventDetail" = "checksumpackage" ] ; then
         eventType="fixity"
         LOGDIR="${ABS_PATH}/${MEDIAID}/metadata/logs"
         INGESTLOG="${LOGDIR}/capture.log"
@@ -288,26 +276,22 @@ _premis_event_list(){
         if [ -z "${OP}" ] ; then
             OP="${USER}"
         fi
-    fi
-    if [ "$eventDetail" = "collectionchecksum" ] ; then
+    elif [ "$eventDetail" = "collectionchecksum" ] ; then
         eventType="fixity"
         db_fixity=$(cat "${TAPECHECKSUMFILE}")
         db_source="${TAPECHECKSUMFILE}"
-    fi
-    if [ "$eventDetail" = "writelto" ] ; then
+    elif [ "$eventDetail" = "writelto" ] ; then
         eventType="ingest"
         MEDIA_ID="${TAPE_SERIAL}"
         if [ "${VERIFY_CHECK}" = "Y" ] ; then
             eventDetail="writelto(VERIFY)"
         fi
-    fi
-    if [ "$eventDetail" = "verifylto" ] ; then
+    elif [ "$eventDetail" = "verifylto" ] ; then
         eventType="fixity"
         MEDIA_ID="${TAPE_SERIAL}"
         db_fixity=$(cat "${READBACKDIR}/${TAPE_SERIAL}_ReadBack_checksum_${VERIFYTIME}.md5")
         db_source="${READBACKDIR}/${TAPE_SERIAL}_ReadBack_checksum_${VERIFYTIME}.md5"
-    fi
-    if [ "$eventDetail" = "ingestcollectionchecksum" ] ; then
+    elif [ "$eventDetail" = "ingestcollectionchecksum" ] ; then
         eventType="ingest"
     fi
     #Escape ID for SQL
