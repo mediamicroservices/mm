@@ -1446,7 +1446,11 @@ _prep_ffmpeg_log(){
         if [ "${NOLOG}" = "Y" ] ; then
             _unset_ffreport
         else
-            export FFREPORT="file=${LOGDIR}/%p_%t_$(basename "${0}")_${VERSION}.txt"
+            if [[ -n "${OUTPUT_TYPE}" ]] ;then
+                export FFREPORT="file=${LOGDIR}/%p_%t_$(basename "${0}")_${OUTPUT_TYPE}_${VERSION}.txt"
+            else
+                export FFREPORT="file=${LOGDIR}/%p_%t_$(basename "${0}")_${VERSION}.txt"
+            fi
         fi
         INPUTOPTIONS+=(-v info)
         INPUTOPTIONS+=(-hide_banner)
