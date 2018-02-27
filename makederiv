@@ -469,7 +469,7 @@ while [[ "${@}" != "" ]] ; do
             fi
         elif [[ "${OUTPUT_TYPE}" == "resourcespace" ]] ; then
             _get_audio_mapping "${SOURCEFILE}"
-            MIDDLEOPTIONS+=(-c:a aac -strict -2)
+            MIDDLEOPTIONS+=(-c:a aac)
             MIDDLEOPTIONS+=(-ac 2)
             MIDDLEOPTIONS+=(-b:a 128k)
         elif [[ "${OUTPUT_TYPE}" == "dvd" ]] ; then
@@ -482,7 +482,7 @@ while [[ "${@}" != "" ]] ; do
             MIDDLEOPTIONS+=(-sample_fmt s16p)
         elif [[ "${OUTPUT_TYPE}" == "podcast" ]] ; then
             _get_audio_mapping "${SOURCEFILE}"
-            MIDDLEOPTIONS+=(-c:a aac -strict -2)
+            MIDDLEOPTIONS+=(-c:a aac)
             MIDDLEOPTIONS+=(-b:a 96k)
         elif [[ "${OUTPUT_TYPE}" == "waveform" ]] ; then
             MIDDLEOPTIONS+=(-vn)
