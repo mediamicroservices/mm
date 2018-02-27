@@ -236,7 +236,11 @@ VIDEOFINGERPRINT=$(xml sel -N "m=urn:mpeg:mpeg7:schema:2001" -t -m "m:Mpeg7/m:De
 }
 
 _premis_event_list(){
-    eventDetail=$(basename "${0}")
+    if [[ -n "${OUTPUT_TYPE}" ]] ;then
+        eventDetail="${OUTPUT_TYPE}"
+    else
+        eventDetail=$(basename "${0}")
+    fi
     eventType="${eventDetail}"
 
     if [ "$eventDetail" = "ingestfile" ] ; then
