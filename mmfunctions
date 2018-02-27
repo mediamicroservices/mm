@@ -1191,7 +1191,27 @@ _get_audio_mapping(){
         _add_audio_filter "aformat=channel_layouts=stereo"
     fi
     if [[ "${ADD_VOLADJ}" != "N" ]] ; then
-        _prep_volume_adjustment
+        unset VOLADJ
+        if [[ "${VOLADJUST}" != "N" ]] ; then
+            if [[ -f "${INGESTLOG}" ]] ; then
+                measured_I=$(_readingestlog "r128_integrated_loudness")
+                measured_LRA=$(_readingestlog "r128_loudness_range")
+                measured_TP=$(_readingestlog "measured_true_peak")
+                measured_thresh=$(_readingestlog "measured_threshold")
+                target_offset=$(_readingestlog "target_offset")
+                LOUD_ADJ=$(_readingestlog "loudness_adjustment")
+            fi
+            if [ ! "${LOUD_ADJ}" ] ; then
+                _get_volume_adjustment "${SOURCEFILE}"
+            fi
+            if [[ "${measured_I}" == "inf" ]] || [[ "${measured_I}" == "-inf" ]] ; then
+                VOLADJUST="N"
+                _report -wt "Integrated loudness for $(basename "${INPUT_MOVIE}") is ${measured_I} LUFS. Volume adjustment cannot be completed."
+            else
+                _report -dt "Integrated loudness for $(basename "${INPUT_MOVIE}") is ${measured_I} LUFS. Reference is -24 LUFS. Will adjust by ${LOUD_ADJ} LUFS"
+                _add_audio_filter "loudnorm=measured_I=${measured_I}:measured_LRA=${measured_LRA}:measured_TP=${measured_TP}:measured_thresh=${measured_thresh}:offset=${target_offset}:linear=true:print_format=summary"
+            fi
+        fi
     fi
     if [[ "${PBSMIX}" = "Y" ]] ; then
          _add_audio_filter "asplit[a][b];[a]aformat=channel_layouts=stereo[stereo1];[b]aformat=channel_layouts=mono,asplit[mono1][mono2]"
@@ -1492,30 +1512,6 @@ _set_up_output(){
         continue
     fi
     _mkdir2 "${OUTPUTDIR}"
-}
-
-_prep_volume_adjustment(){
-    unset VOLADJ
-    if [[ "${VOLADJUST}" != "N" ]] ; then
-        if [[ -f "${INGESTLOG}" ]] ; then
-            measured_I=$(_readingestlog "r128_integrated_loudness")
-            measured_LRA=$(_readingestlog "r128_loudness_range")
-            measured_TP=$(_readingestlog "measured_true_peak")
-            measured_thresh=$(_readingestlog "measured_threshold")
-            target_offset=$(_readingestlog "target_offset")
-            LOUD_ADJ=$(_readingestlog "loudness_adjustment")
-        fi
-        if [ ! "${LOUD_ADJ}" ] ; then
-            _get_volume_adjustment "${SOURCEFILE}"
-        fi
-        if [[ "${measured_I}" == "inf" ]] || [[ "${measured_I}" == "-inf" ]] ; then
-            VOLADJUST="N"
-            _report -wt "Integrated loudness for $(basename "${INPUT_MOVIE}") is ${measured_I} LUFS. Volume adjustment cannot be completed."
-        else
-            _report -dt "Integrated loudness for $(basename "${INPUT_MOVIE}") is ${measured_I} LUFS. Reference is -24 LUFS. Will adjust by ${LOUD_ADJ} LUFS"
-            _add_audio_filter "loudnorm=measured_I=${measured_I}:measured_LRA=${measured_LRA}:measured_TP=${measured_TP}:measured_thresh=${measured_thresh}:offset=${target_offset}:linear=true:print_format=summary"
-        fi
-    fi
 }
 
 _filter_to_middle_option(){
