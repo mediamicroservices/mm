@@ -1531,7 +1531,6 @@ _filter_to_middle_option(){
 _unset_variables(){
     unset INPUTOPTIONS
     unset MIDDLEOPTIONS
-    unset AUDIOMAPPING_FFMPEG
     unset MULTIMONO
     unset FIRSTMONO
     unset VIDEOFILTERCHAIN
