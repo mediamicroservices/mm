@@ -1,14 +1,14 @@
 # assign variables
 SCRIPTNAME=$(basename "${0}")
 SCRIPTDIR=$(dirname "${0}")
+
+# load configuration file
 if [ -f "${TEMP_MMCONFIG}" ] ; then
     # for use in ingestfiletest; prevents test files from going to permanent storage
     MM_CONFIG_FILE="${TEMP_MMCONFIG}"
 else
     MM_CONFIG_FILE="${SCRIPTDIR}/mm.conf"
 fi
-
-# load configuration file
 if [ -f "${MM_CONFIG_FILE}" ] ; then
     . "${MM_CONFIG_FILE}"
 elif [ ! "${CONFIG}" = "Y" -a "${REQUIRECONFIG}" = "Y" ] ; then
