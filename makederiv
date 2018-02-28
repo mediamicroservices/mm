@@ -452,14 +452,12 @@ while [[ "${@}" != "" ]] ; do
         _get_audio_index "${SOURCEFILE}"
         if [[ "${OUTPUT_TYPE}" == "broadcast" ]] ; then
             _get_audio_mapping -bv "${SOURCEFILE}"
-            MIDDLEOPTIONS+=("${AUDIOMAPPING_FFMPEG[@]}")
             MIDDLEOPTIONS+=(-acodec pcm_s24be)
             MIDDLEOPTIONS+=(-ar 48k)
         elif [[ "${OUTPUT_TYPE}" == "prores" ]] ; then
             MIDDLEOPTIONS+=(-map 0:a)
             MIDDLEOPTIONS+=(-c:a pcm_s16le)
         elif [[ "${OUTPUT_TYPE}" == "youtube" ]] ; then
-            MIDDLEOPTIONS+=("${AUDIOMAPPING_FFMPEG[@]}")
             MIDDLEOPTIONS+=(-c:a aac)
             MIDDLEOPTIONS+=(-ac 2)
             MIDDLEOPTIONS+=(-b:a 320k)
@@ -471,23 +469,20 @@ while [[ "${@}" != "" ]] ; do
             fi
         elif [[ "${OUTPUT_TYPE}" == "resourcespace" ]] ; then
             _get_audio_mapping "${SOURCEFILE}"
-            MIDDLEOPTIONS+=("${AUDIOMAPPING_FFMPEG[@]}")
-            MIDDLEOPTIONS+=(-c:a aac -strict -2)
+            MIDDLEOPTIONS+=(-c:a aac)
             MIDDLEOPTIONS+=(-ac 2)
             MIDDLEOPTIONS+=(-b:a 128k)
         elif [[ "${OUTPUT_TYPE}" == "dvd" ]] ; then
             MIDDLEOPTIONS+=(-b:a 448000)
             MIDDLEOPTIONS+=(-ar 48000)
         elif [[ "${OUTPUT_TYPE}" == "mp3" ]] ; then
-            MIDDLEOPTIONS+=("${AUDIOMAPPING_FFMPEG[@]}")
             MIDDLEOPTIONS+=(-map 0:a:0)
             MIDDLEOPTIONS+=(-ac 2)
             MIDDLEOPTIONS+=(-r:a 44100)
             MIDDLEOPTIONS+=(-sample_fmt s16p)
         elif [[ "${OUTPUT_TYPE}" == "podcast" ]] ; then
             _get_audio_mapping "${SOURCEFILE}"
-            MIDDLEOPTIONS+=("${AUDIOMAPPING_FFMPEG[@]}")
-            MIDDLEOPTIONS+=(-c:a aac -strict -2)
+            MIDDLEOPTIONS+=(-c:a aac)
             MIDDLEOPTIONS+=(-b:a 96k)
         elif [[ "${OUTPUT_TYPE}" == "waveform" ]] ; then
             MIDDLEOPTIONS+=(-vn)

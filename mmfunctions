@@ -1,29 +1,20 @@
 # assign variables
 SCRIPTNAME=$(basename "${0}")
 SCRIPTDIR=$(dirname "${0}")
+
+# load configuration file
 if [ -f "${TEMP_MMCONFIG}" ] ; then
     # for use in ingestfiletest; prevents test files from going to permanent storage
     MM_CONFIG_FILE="${TEMP_MMCONFIG}"
 else
     MM_CONFIG_FILE="${SCRIPTDIR}/mm.conf"
 fi
-WHAT_IS_THIS="mediamicroservices"
-
-# load configuration file
 if [ -f "${MM_CONFIG_FILE}" ] ; then
     . "${MM_CONFIG_FILE}"
 elif [ ! "${CONFIG}" = "Y" -a "${REQUIRECONFIG}" = "Y" ] ; then
     echo "The configuration file is not set. You must first create ${MM_CONFIG_FILE} by running mmconfig." 1>&2
     exit 1
 fi
-
-_cleanup_mount_dir(){
-    if [ -d "${MOUNT_DIR}" ] ; then
-        echo calling umount
-        umount "${MOUNT_DIR}"
-        rmdir "${MOUNT_DIR}"
-    fi
-}
 
 _check_for_lto_md5_flags(){
     if [ -z "${LTO_MD5_FLAGS}" ] ; then
@@ -140,7 +131,7 @@ _report_fixity_db(){
         if [ -z "${lastrecord}" ] ; then
             lastrecord=$(echo "SELECT eventIdentifierValue FROM event WHERE objectIdentifierValue = '${MEDIA_ID}' AND eventDetail = '${eventDetail}' ORDER BY eventIdentifierValue DESC LIMIT 1" | mysql --login-path="${PREMIS_PROFILE}"  "${PREMIS_NAME}")
         fi
-        EVENT_ID_TRIM=$(echo $lastrecord | cut -d " " -f2)
+        EVENT_ID_TRIM=$(echo "$lastrecord" | cut -d " " -f2)
         IFS=$(echo -en "\n\b")
         (for i in ${db_fixity}; do LINE=$i;
             messageDigestHASH=$(echo "$LINE" | cut -c -32 )
@@ -245,7 +236,11 @@ VIDEOFINGERPRINT=$(xml sel -N "m=urn:mpeg:mpeg7:schema:2001" -t -m "m:Mpeg7/m:De
 }
 
 _premis_event_list(){
-    eventDetail=$(basename "${0}")
+    if [[ -n "${OUTPUT_TYPE}" ]] ;then
+        eventDetail="${OUTPUT_TYPE}"
+    else
+        eventDetail=$(basename "${0}")
+    fi
     eventType="${eventDetail}"
 
     if [ "$eventDetail" = "ingestfile" ] ; then
@@ -254,36 +249,24 @@ _premis_event_list(){
         MEDIAINFO=$(_escape_for_db "$(cat "${METADIR}/fileMeta/objects/${MEDIA_ID}_mediainfo.xml")")
         CAPTURELOG=$(_escape_for_db "$(cat "${METADIR}/logs/capture.log")")
         MEDIA_ID="${MEDIAID}"
-    fi
-    if [ "$eventDetail" = "makebroadcast" ] ; then
+    elif [ "$eventDetail" = "makebroadcast" ] ; then
         eventType="creation"
-    fi
-    if [ "$eventDetail" = "makeyoutube" ] ; then
+    elif [ "$eventDetail" = "makeyoutube" ] ; then
         eventType="creation"
-    fi
-    if [ "$eventDetail" = "makemp3" ] ; then
+    elif [ "$eventDetail" = "makemp3" ] ; then
         eventType="creation"
-    fi
-    if [ "$eventDetail" = "makedvd" ] ; then
+    elif [ "$eventDetail" = "makedvd" ] ; then
         eventType="creation"
-    fi
-    if [ "$eventDetail" = "makeframes" ] ; then
+    elif [ "$eventDetail" = "makeframes" ] ; then
         eventType="creation"
-    fi
-    if [ "$eventDetail" = "makewaveform" ] ; then
+    elif [ "$eventDetail" = "makewaveform" ] ; then
         eventType="creation"
-    fi
-
-    if [ "$eventDetail" = "makefingerprint" ] ; then
+    elif [ "$eventDetail" = "makefingerprint" ] ; then
         eventType="creation"
         MEDIA_ID=$(basename "${SOURCEFILE}")
-    fi
-
-    if [ "$eventDetail" = "migratefiles" ] ; then
+    elif [ "$eventDetail" = "migratefiles" ] ; then
         eventType="replication"
-    fi
-
-    if [ "$eventDetail" = "checksumpackage" ] ; then
+    elif [ "$eventDetail" = "checksumpackage" ] ; then
         eventType="fixity"
         LOGDIR="${ABS_PATH}/${MEDIAID}/metadata/logs"
         INGESTLOG="${LOGDIR}/capture.log"
@@ -293,26 +276,22 @@ _premis_event_list(){
         if [ -z "${OP}" ] ; then
             OP="${USER}"
         fi
-    fi
-    if [ "$eventDetail" = "collectionchecksum" ] ; then
+    elif [ "$eventDetail" = "collectionchecksum" ] ; then
         eventType="fixity"
         db_fixity=$(cat "${TAPECHECKSUMFILE}")
         db_source="${TAPECHECKSUMFILE}"
-    fi
-    if [ "$eventDetail" = "writelto" ] ; then
+    elif [ "$eventDetail" = "writelto" ] ; then
         eventType="ingest"
         MEDIA_ID="${TAPE_SERIAL}"
         if [ "${VERIFY_CHECK}" = "Y" ] ; then
             eventDetail="writelto(VERIFY)"
         fi
-    fi
-    if [ "$eventDetail" = "verifylto" ] ; then
+    elif [ "$eventDetail" = "verifylto" ] ; then
         eventType="fixity"
         MEDIA_ID="${TAPE_SERIAL}"
         db_fixity=$(cat "${READBACKDIR}/${TAPE_SERIAL}_ReadBack_checksum_${VERIFYTIME}.md5")
         db_source="${READBACKDIR}/${TAPE_SERIAL}_ReadBack_checksum_${VERIFYTIME}.md5"
-    fi
-    if [ "$eventDetail" = "ingestcollectionchecksum" ] ; then
+    elif [ "$eventDetail" = "ingestcollectionchecksum" ] ; then
         eventType="ingest"
     fi
     #Escape ID for SQL
@@ -1212,7 +1191,27 @@ _get_audio_mapping(){
         _add_audio_filter "aformat=channel_layouts=stereo"
     fi
     if [[ "${ADD_VOLADJ}" != "N" ]] ; then
-        _prep_volume_adjustment
+        unset VOLADJ
+        if [[ "${VOLADJUST}" != "N" ]] ; then
+            if [[ -f "${INGESTLOG}" ]] ; then
+                measured_I=$(_readingestlog "r128_integrated_loudness")
+                measured_LRA=$(_readingestlog "r128_loudness_range")
+                measured_TP=$(_readingestlog "measured_true_peak")
+                measured_thresh=$(_readingestlog "measured_threshold")
+                target_offset=$(_readingestlog "target_offset")
+                LOUD_ADJ=$(_readingestlog "loudness_adjustment")
+            fi
+            if [ ! "${LOUD_ADJ}" ] ; then
+                _get_volume_adjustment "${SOURCEFILE}"
+            fi
+            if [[ "${measured_I}" == "inf" ]] || [[ "${measured_I}" == "-inf" ]] ; then
+                VOLADJUST="N"
+                _report -wt "Integrated loudness for $(basename "${INPUT_MOVIE}") is ${measured_I} LUFS. Volume adjustment cannot be completed."
+            else
+                _report -dt "Integrated loudness for $(basename "${INPUT_MOVIE}") is ${measured_I} LUFS. Reference is -24 LUFS. Will adjust by ${LOUD_ADJ} LUFS"
+                _add_audio_filter "loudnorm=measured_I=${measured_I}:measured_LRA=${measured_LRA}:measured_TP=${measured_TP}:measured_thresh=${measured_thresh}:offset=${target_offset}:linear=true:print_format=summary"
+            fi
+        fi
     fi
     if [[ "${PBSMIX}" = "Y" ]] ; then
          _add_audio_filter "asplit[a][b];[a]aformat=channel_layouts=stereo[stereo1];[b]aformat=channel_layouts=mono,asplit[mono1][mono2]"
@@ -1455,7 +1454,11 @@ _prep_ffmpeg_log(){
         if [ "${NOLOG}" = "Y" ] ; then
             _unset_ffreport
         else
-            export FFREPORT="file=${LOGDIR}/%p_%t_$(basename "${0}")_${VERSION}.txt"
+            if [[ -n "${OUTPUT_TYPE}" ]] ;then
+                export FFREPORT="file=${LOGDIR}/%p_%t_$(basename "${0}")_${OUTPUT_TYPE}_${VERSION}.txt"
+            else
+                export FFREPORT="file=${LOGDIR}/%p_%t_$(basename "${0}")_${VERSION}.txt"
+            fi
         fi
         INPUTOPTIONS+=(-v info)
         INPUTOPTIONS+=(-hide_banner)
@@ -1511,30 +1514,6 @@ _set_up_output(){
     _mkdir2 "${OUTPUTDIR}"
 }
 
-_prep_volume_adjustment(){
-    unset VOLADJ
-    if [[ "${VOLADJUST}" != "N" ]] ; then
-        if [[ -f "${INGESTLOG}" ]] ; then
-            measured_I=$(_readingestlog "r128_integrated_loudness")
-            measured_LRA=$(_readingestlog "r128_loudness_range")
-            measured_TP=$(_readingestlog "measured_true_peak")
-            measured_thresh=$(_readingestlog "measured_threshold")
-            target_offset=$(_readingestlog "target_offset")
-            LOUD_ADJ=$(_readingestlog "loudness_adjustment")
-        fi
-        if [ ! "${LOUD_ADJ}" ] ; then
-            _get_volume_adjustment "${SOURCEFILE}"
-        fi
-        if [[ "${measured_I}" == "inf" ]] || [[ "${measured_I}" == "-inf" ]] ; then
-            VOLADJUST="N"
-            _report -wt "Integrated loudness for $(basename "${INPUT_MOVIE}") is ${measured_I} LUFS. Volume adjustment cannot be completed."
-        else
-            _report -dt "Integrated loudness for $(basename "${INPUT_MOVIE}") is ${measured_I} LUFS. Reference is -24 LUFS. Will adjust by ${LOUD_ADJ} LUFS"
-            _add_audio_filter "loudnorm=measured_I=${measured_I}:measured_LRA=${measured_LRA}:measured_TP=${measured_TP}:measured_thresh=${measured_thresh}:offset=${target_offset}:linear=true:print_format=summary"
-        fi
-    fi
-}
-
 _filter_to_middle_option(){
     if [ -n "${VIDEOFILTERCHAIN}" -a -n "${AUDIOFILTERCHAIN}" ] ; then
         MIDDLEOPTIONS+=(-filter_complex ${VIDEOFILTERCHAIN}\;${AUDIOFILTERCHAIN})
@@ -1548,7 +1527,6 @@ _filter_to_middle_option(){
 _unset_variables(){
     unset INPUTOPTIONS
     unset MIDDLEOPTIONS
-    unset AUDIOMAPPING_FFMPEG
     unset MULTIMONO
     unset FIRSTMONO
     unset VIDEOFILTERCHAIN
