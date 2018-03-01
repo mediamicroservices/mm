@@ -299,11 +299,6 @@ _run_input_file_checks(){
     fi
 }
 
-_reset_directory(){
-    OUTDIR_INGESTFILE=$(dirname "${INPUT}")
-    _report -dt "I'm going to place the AIP in the same directory as the original input file."
-}
-
 _setup_package(){
     # set up package directories
     OBJECTSDIR="${OUTDIR_INGESTFILE}/${MEDIAID}/objects"
@@ -491,7 +486,8 @@ fi
     _ask_input
     _run_input_file_checks
     if [[ "${MODE}" == "preservation" ]] ; then
-        _reset_directory
+        OUTDIR_INGESTFILE=$(dirname "${INPUT}")
+        _report -dt "I'm going to place the AIP in the same directory as the original input file."
     fi
     _setup_package
     if [[ "${MODE}" == "audio" ]] ; then
@@ -565,8 +561,6 @@ fi
 # MICROSERVICES BEFORE PROCESSING
 if [[ "${MODE}" == "preservation" ]] ; then
     _ask_digitization_logs
-    OUTDIR_INGESTFILE=$(dirname "${INPUT}")
-    _report -dt "I'm going to place the AIP in the same directory as the original input file."
     if [[ "${INPUT#*.}" = "mkv" ]] ; then
         "${SCRIPTDIR}/makemkvchapters" "${INPUT}"
     else
