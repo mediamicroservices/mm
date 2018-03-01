@@ -1190,8 +1190,7 @@ _get_audio_mapping(){
     else
         _add_audio_filter "aformat=channel_layouts=stereo"
     fi
-    if [[ "${ADD_VOLADJ}" != "N" ]] ; then
-        if [[ "${VOLADJUST}" != "N" ]] ; then
+    if [[ "${ADD_VOLADJ}" != "N" && "${VOLADJUST}" != "N" && "${ISOBJECT}" = "Y" ]] ; then
             if [[ -f "${INGESTLOG}" ]] ; then
                 measured_I=$(_readingestlog "r128_integrated_loudness")
                 measured_LRA=$(_readingestlog "r128_loudness_range")
@@ -1210,7 +1209,6 @@ _get_audio_mapping(){
                 _report -dt "Integrated loudness for $(basename "${INPUT_MOVIE}") is ${measured_I} LUFS. Reference is -24 LUFS. Will adjust by ${LOUD_ADJ} LUFS"
                 _add_audio_filter "loudnorm=measured_I=${measured_I}:measured_LRA=${measured_LRA}:measured_TP=${measured_TP}:measured_thresh=${measured_thresh}:offset=${target_offset}:linear=true:print_format=summary"
             fi
-        fi
     fi
     if [[ "${PBSMIX}" = "Y" ]] ; then
          _add_audio_filter "asplit[a][b];[a]aformat=channel_layouts=stereo[stereo1];[b]aformat=channel_layouts=mono,asplit[mono1][mono2]"
