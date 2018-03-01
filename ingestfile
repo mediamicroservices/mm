@@ -490,6 +490,9 @@ fi
     _run_storage_checks
     _ask_input
     _run_input_file_checks
+    if [[ "${MODE}" == "preservation" ]] ; then
+        _reset_directory
+    fi
     _setup_package
     if [[ "${MODE}" == "audio" ]] ; then
         _ask_digitization_logs
@@ -562,15 +565,14 @@ fi
 # MICROSERVICES BEFORE PROCESSING
 if [[ "${MODE}" == "preservation" ]] ; then
     _ask_digitization_logs
-    _reset_directory
+    OUTDIR_INGESTFILE=$(dirname "${INPUT}")
+    _report -dt "I'm going to place the AIP in the same directory as the original input file."
     if [[ "${INPUT#*.}" = "mkv" ]] ; then
         "${SCRIPTDIR}/makemkvchapters" "${INPUT}"
     else
         _ask_intime
         _ask_outtime
     fi
-    _blackframetest
-    _phasechecktest
     _get_frame_count "${INPUT}"
     if [[ "${FORMULA}" == "check interlacement" ]] ; then
         _get_interlacement_full "${INPUT}"
@@ -645,7 +647,6 @@ fi
 if [[ "${MODE}" == "preservation" ]] ; then
     _makebroadcastcopies
     _makeaccesscopies
-    _delivertoia
     _makemetadatapackage
     _writeingestlog "datetime_end" "$(_get_iso8601)"
 elif [[ "${MODE}" == "psa" ]] ; then
