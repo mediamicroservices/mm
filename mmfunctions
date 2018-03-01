@@ -1191,7 +1191,6 @@ _get_audio_mapping(){
         _add_audio_filter "aformat=channel_layouts=stereo"
     fi
     if [[ "${ADD_VOLADJ}" != "N" ]] ; then
-        unset VOLADJ
         if [[ "${VOLADJUST}" != "N" ]] ; then
             if [[ -f "${INGESTLOG}" ]] ; then
                 measured_I=$(_readingestlog "r128_integrated_loudness")
