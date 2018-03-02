@@ -971,7 +971,6 @@ _find_input (){
     SOURCEFILE=""
     ISOBJECT=""
     unset FFMPEGINPUT
-    EXPECTEDSERVICEFILE="${1}/objects/service/$(basename "${1}").mov"
     if [ -f "${1}" ] ; then
         # if the input is a file then just `-i file`
         SOURCEFILE="${1}"
@@ -980,6 +979,7 @@ _find_input (){
     elif [ -d "${1}/objects" ] ; then
         if [[ -s "${EXPECTEDSERVICEFILE}" && "${ADDSLATE}" != "Y" ]] && ! [[ "$(basename "${0}")" = 'makeyoutube' ]] ; then
             # if the expectedservicefile exists and we should add a slate, then use the `-i expectedservicefile`
+        EXPECTEDSERVICEFILE="${1}/objects/service/$(basename "${1}").mov"
             ISOBJECT="N"
             SOURCEFILE="${EXPECTEDSERVICEFILE}"
             FFMPEGINPUT+=(-i)
