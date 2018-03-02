@@ -973,6 +973,7 @@ _find_input (){
     unset FFMPEGINPUT
     if [ -f "${1}" ] ; then
         # if the input is a file then just `-i file`
+        ISOBJECT="Y"
         SOURCEFILE="${1}"
         FFMPEGINPUT+=(-i)
         FFMPEGINPUT+=("${SOURCEFILE}")
