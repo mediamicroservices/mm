@@ -117,6 +117,7 @@ _check_dependencies "${DEPENDENCIES[@]}"
 while [[ "${@}" != "" ]] ; do
     # get context about the input
     INPUT="${1}"
+    _report -dt "==== Starting to make a ${OUTPUT_TYPE} copy from ${INPUT}. ===="
     shift
     if [ -z "${OUTPUTDIR_FORCED}" ] ; then
         [ -d "${INPUT}" ] && { OUTPUTDIR="${INPUT}/${RELATIVEPATH}" && LOGDIR="${INPUT}/metadata/logs" ;};
