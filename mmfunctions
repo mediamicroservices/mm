@@ -730,7 +730,7 @@ _initialize_make(){
 
 _check_deliverdir(){
     if [ ! -d "${DELIVERDIR}" ] ; then
-        _report -wt "The delivery directory, ${DELIVERDIR}, does not exist. Can not deliver the OUTPUT of $(basename "${0}")."
+        _report -wt "The delivery directory, ${DELIVERDIR}, does not exist. Can not deliver the OUTPUT of $(basename "${0}")(${OUTPUT_TYPE})."
         _writeerrorlog "_checkdeliverdir" "The specified delivery directory does not exist, and the output could not be delivered."
     fi
 }
