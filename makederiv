@@ -95,7 +95,6 @@ elif [[ "${OUTPUT_TYPE}" == "dvd" ]] ; then
 elif [[ "${OUTPUT_TYPE}" == "mp3" ]] ; then
     EXTENSION="mp3"
     RELATIVEPATH="objects/access/mp3"
-    DEPENDENCIES+=(normalize)
 elif [[ "${OUTPUT_TYPE}" == "podcast" ]] ; then
     PREFERRED_SOURCE="service"
     EXTENSION="mov"
