@@ -120,12 +120,12 @@ while [[ "${@}" != "" ]] ; do
     INPUT="${1}"
     shift
     if [ -z "${OUTPUTDIR_FORCED}" ] ; then
-        [ -d "${INPUT}" ] && { OUTPUTDIR="${INPUT}/${RELATIVEPATH}" && LOGDIR="${INPUT}/metadata/logs/${OUTPUT_TYPE}" ;};
-        [ -f "${INPUT}" ] && { OUTPUTDIR=$(dirname "${INPUT}")"/$(basename "${RELATIVEPATH}")" && LOGDIR="$(dirname "${INPUT}")/$(basename "${RELATIVEPATH}")/logs/${OUTPUT_TYPE}" ;};
-        [ ! "${OUTPUTDIR}" ] && { OUTPUTDIR="${INPUT}/${RELATIVEPATH}" && LOGDIR="${INPUT}/metadata/logs/${OUTPUT_TYPE}" ;};
+        [ -d "${INPUT}" ] && { OUTPUTDIR="${INPUT}/${RELATIVEPATH}" && LOGDIR="${INPUT}/metadata/logs" ;};
+        [ -f "${INPUT}" ] && { OUTPUTDIR=$(dirname "${INPUT}")"/$(basename "${RELATIVEPATH}")" && LOGDIR="$(dirname "${INPUT}")/$(basename "${RELATIVEPATH}")/logs" ;};
+        [ ! "${OUTPUTDIR}" ] && { OUTPUTDIR="${INPUT}/${RELATIVEPATH}" && LOGDIR="${INPUT}/metadata/logs" ;};
     else
         OUTPUTDIR="${OUTPUTDIR_FORCED}"
-        LOGDIR="${OUTPUTDIR}/logs/${OUTPUT_TYPE}"
+        LOGDIR="${OUTPUTDIR}/logs"
     fi
     _unset_variables
     _find_input "${INPUT}"
