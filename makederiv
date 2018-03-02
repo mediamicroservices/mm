@@ -84,9 +84,11 @@ elif [[ "${OUTPUT_TYPE}" == "youtube" ]] ; then
     EXTENSION="mp4"
     RELATIVEPATH="objects/access/youtube_up"
 elif [[ "${OUTPUT_TYPE}" == "resourcespace" ]] ; then
+    PREFERRED_SOURCE="service"
     EXTENSION="mp4"
     RELATIVEPATH="objects/access/resourcespace"
 elif [[ "${OUTPUT_TYPE}" == "dvd" ]] ; then
+    PREFERRED_SOURCE="service"
     EXTENSION="iso"
     RELATIVEPATH="objects/access/dvd"
     DEPENDENCIES+=(dvdauthor mkisofs)
@@ -95,6 +97,7 @@ elif [[ "${OUTPUT_TYPE}" == "mp3" ]] ; then
     RELATIVEPATH="objects/access/mp3"
     DEPENDENCIES+=(normalize)
 elif [[ "${OUTPUT_TYPE}" == "podcast" ]] ; then
+    PREFERRED_SOURCE="service"
     EXTENSION="mov"
     RELATIVEPATH="objects/access/podcast"
     SUFFIX="_podcast"
