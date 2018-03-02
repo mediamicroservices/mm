@@ -51,10 +51,10 @@ while getopts ":T:lrv:d:o:e:E:F:scYp:tnh" OPT ; do
         l) AUDIOMAP="L";;
         r) AUDIOMAP="R";;
         v) VOLADJUST="${OPTARG}";;
-        d) DELIVERDIR="${OPTARG}" && _check_deliverdir ;;
-        o) OUTPUTDIR_FORCED="${OPTARG}" && _check_outputdir_forced ;;
-        e) EMAILADDRESS_DELIVERY="${OPTARG}" && _check_emailaddress "${EMAILADDRESS_DELIVERY}" ;;
-        E) EMAILADDRESS_OUTCOME="${OPTARG}" && _check_emailaddress "${EMAILADDRESS_OUTCOME}" ;;
+        d) DELIVERDIR="${OPTARG}" && (_check_deliverdir) ;;
+        o) OUTPUTDIR_FORCED="${OPTARG}" && (_check_outputdir_forced) ;;
+        e) EMAILADDRESS_DELIVERY="${OPTARG}" && (_check_emailaddress "${EMAILADDRESS_DELIVERY}") ;;
+        E) EMAILADDRESS_OUTCOME="${OPTARG}" && (_check_emailaddress "${EMAILADDRESS_OUTCOME}") ;;
         F) FORMULA="${OPTARG}";;
         s) ADDSLATE="Y";;
         c) CROPDETECT="Y" ;;
