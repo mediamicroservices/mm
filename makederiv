@@ -446,7 +446,7 @@ while [[ "${@}" != "" ]] ; do
             _add_video_filter "yadif"
             _add_video_filter "scale=640:trunc(ow/dar/2)*2:interl=1"
         elif [[ "${OUTPUT_TYPE}" == "mp3" ]] || [[ "${OUTPUT_TYPE}" == "waveform" ]] ; then
-            _report -wt "No video stream associated with derivative type."
+            _report -dt "No video stream needed for ${OUTPUT_TYPE}."
         else
             echo "Invalid video derivative type."
         fi
