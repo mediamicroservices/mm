@@ -19,6 +19,7 @@ while [ "${*}" != "" ] ; do
         FINGERDIR="${OUTPUTDIR}/metadata/fingerprints"
     fi
     _unset_variables
+    PREFERRED_SOURCE="service"
     _find_input "${INPUT}"
     MEDIAID=$(basename "${INPUT}" | cut -d. -f1)
 
