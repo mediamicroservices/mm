@@ -1090,7 +1090,7 @@ _find_input (){
                     exit
                   fi
                 else
-                  INPUTFILE="$1"
+                  INPUTFILE="${SOURCEFILE}"
                 fi
                 printf "file " >> "${FFCONCATFILE}"
                 printf '%q' "${INPUTFILE}" >> "${FFCONCATFILE}"
