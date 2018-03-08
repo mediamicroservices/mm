@@ -11,7 +11,7 @@ while [ "${*}" != "" ] ; do
     PACKAGE="${1}"
     MEDIAID=$(basename "${PACKAGE}")
     shift
-#verify the makebroadcast file
+    #verify the makebroadcast file
     if [ -f "${PACKAGE}/objects/service/${MEDIAID}.mov" ] ; then
         STATUS=$(mediaconch -fx -p "${SCRIPTDIR}/makebroadcast_policies.xml" "${PACKAGE}/objects/service/${MEDIAID}.mov" | xml sel -N mc="https://mediaarea.net/mediaconch" -t -v mc:MediaConch/mc:media/mc:policy/@outcome -n)
         if [[ "$STATUS" = "pass!" ]] ; then
@@ -20,7 +20,7 @@ while [ "${*}" != "" ] ; do
           mediaconch -fs -p "${SCRIPTDIR}/makebroadcast_policies.xml" "${PACKAGE}/objects/service/${MEDIAID}.mov"
         fi
     fi
-#verify the makeyoutube file
+    #verify the makeyoutube file
     if [ -f "${PACKAGE}/objects/access/youtube_up/${MEDIAID}.mp4" ] ; then
         STATUS=$(mediaconch -fx -p "${SCRIPTDIR}/makeyoutube_policies.xml" "${PACKAGE}/objects/access/youtube_up/${MEDIAID}.mp4" | xml sel -N mc="https://mediaarea.net/mediaconch" -t -v mc:MediaConch/mc:media/mc:policy/@outcome -n)
         if [[ "$STATUS" = "pass!" ]] ; then
@@ -29,7 +29,7 @@ while [ "${*}" != "" ] ; do
             mediaconch -fs -p "${SCRIPTDIR}/makeyoutube_policies.xml" "${PACKAGE}/objects/access/youtube_up/${MEDIAID}.mp4"
         fi
     fi
-#verify the makedvd file
+    #verify the makedvd file
     if [ -f "${PACKAGE}/objects/access/dvd/${MEDIAID}.iso" ] ; then
         STATUS=$(mediaconch -fx -p "${SCRIPTDIR}/makedvd_policies.xml" "${PACKAGE}/objects/access/dvd/${MEDIAID}.iso" | xml sel -N mc="https://mediaarea.net/mediaconch" -t -v mc:MediaConch/mc:media/mc:policy/@outcome -n)
         if [[ "$STATUS" = "pass!" ]] ; then
