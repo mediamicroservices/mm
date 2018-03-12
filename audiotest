@@ -42,6 +42,6 @@ while [[ "${@}" != "" ]] ; do
     PHASEERROR=$(grep Parsed_ametadata /tmp/loud | paste - - | sed "s/lavfi.aphasemeter.phase=//g" | cut -d ":" -f 4 | awk '{print $1 "(" $5 ")"}' | xargs)
     INTERSTITIAL=$(ffprobe -f lavfi -i "amovie=${FILENAME},loudnorm=tp=0,astats=metadata=1:reset=1" -show_entries frame=pkt_pts_time:frame_tags=lavfi.astats.Overall.Max_difference -of csv 2>/dev/null | awk -F  "," '$3>=0.07' | awk -F  "," '{print $2 "(" $3 ")"}' | xargs)
 
-    echo "$(basename "$PACKAGE"),$(basename "$FILENAME"),$FILECOUNT,$image_count,$measured_I,$measured_LRA,$measured_TP,$measured_TP,$target_offset,$LOUD_ADJ,$SILENCE,$PHASEERROR,$INTERSTITIAL,$DURATION,$SAMPLERATE,$CHANNELS,$CODEC,$PEAKLEVEL1,$PEAKLEVEL2,$PEAKLEVELDIFF,$BITSCOPE,$DCOFFSET,$FLATFACTOR,$PEAKCOUNT,$bwfmetaedit"
+    echo "$(basename "$PACKAGE"),$(basename "$FILENAME"),$FILECOUNT,$image_count,$measured_I,$measured_LRA,$measured_TP,$measured_thresh,$target_offset,$LOUD_ADJ,$SILENCE,$PHASEERROR,$INTERSTITIAL,$DURATION,$SAMPLERATE,$CHANNELS,$CODEC,$PEAKLEVEL1,$PEAKLEVEL2,$PEAKLEVELDIFF,$BITSCOPE,$DCOFFSET,$FLATFACTOR,$PEAKCOUNT,$bwfmetaedit"
     
 done
