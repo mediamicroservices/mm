@@ -82,7 +82,7 @@ _ask_digitization_logs(){
 # spreadsheet fields are currently CUNY-specific
 _parse_spreadsheet(){
     DIGITIZATIONLOG=$(_maketemp)
-    paste -d"*" <(ssconvert -T  Gnumeric_html:xhtml_range "${FILES}" fd://1 | xml fo | xml select --no-doc-namespace -t -m "_:html/_:body/_:table[1]/_:tr[1]/_:td" -v "." -n) <(ssconvert -T  Gnumeric_html:xhtml_range "${FILES}" fd://1 | xml fo | xml select --no-doc-namespace -t -m "_:html/_:body/_:table[1]/_:tr[_:td[1]='${MEDIAID}']/_:td" -v "." -n) | sed "s/*/\: /g" | tee "${DIGITIZATIONLOG}"
+    paste -d"*" <(ssconvert -T Gnumeric_html:xhtml_range "${FILES}" fd://1 | xml fo | xml select --no-doc-namespace -t -m "_:html/_:body/_:table[1]/_:tr[1]/_:td" -v "." -n) <(ssconvert -T  Gnumeric_html:xhtml_range "${FILES}" fd://1 | xml fo | xml select --no-doc-namespace -t -m "_:html/_:body/_:table[1]/_:tr[_:td[1]='${MEDIAID}']/_:td" -v "." -n) | sed "s/*/\: /g" | tee "${DIGITIZATIONLOG}"
     cat "${DIGITIZATIONLOG}" >> "${INGESTLOG}"
     OBJECTSOUNDFIELD=$(_readingestlog "object soundfield")
     DECKHEADSETTING=$(_readingestlog "deck head setting")
@@ -100,11 +100,10 @@ _parse_spreadsheet(){
 }
 
 _get_xmp_info(){
-    WAV="${INPUT}"
-    XMP_SIZE=$(mediaconch -mt "${WAV}" | xmlstarlet sel -N "mt=https://mediaarea.net/mediatrace" -t -m "mt:MediaTrace/mt:media/mt:block[@name='Wave']/mt:block[@name='_PMX']" -v "mt:block[@name='Header']/mt:data[@name='Size']" -n)
-    XMP_OFFSET=$(mediaconch -mt "${WAV}" | xmlstarlet sel -N "mt=https://mediaarea.net/mediatrace" -t -m "mt:MediaTrace/mt:media/mt:block[@name='Wave']/mt:block[@name='_PMX']" -v "mt:data/@offset" -n)
+    XMP_SIZE=$(mediaconch -mt "${INPUT}" | xmlstarlet sel -N "mt=https://mediaarea.net/mediatrace" -t -m "mt:MediaTrace/mt:media/mt:block[@name='Wave']/mt:block[@name='_PMX']" -v "mt:block[@name='Header']/mt:data[@name='Size']" -n)
+    XMP_OFFSET=$(mediaconch -mt "${INPUT}" | xmlstarlet sel -N "mt=https://mediaarea.net/mediatrace" -t -m "mt:MediaTrace/mt:media/mt:block[@name='Wave']/mt:block[@name='_PMX']" -v "mt:data/@offset" -n)
     XMP_OFFSET=$(echo "${XMP_OFFSET} + 1" | bc)
-    XMP_DATA=$(tail -c "+${XMP_OFFSET}" "$WAV" | head -c "${XMP_SIZE}" | xml fo)
+    XMP_DATA=$(tail -c "+${XMP_OFFSET}" "${INPUT}" | head -c "${XMP_SIZE}" | xml fo)
     GET_INFO=$(echo "${XMP_DATA}" | xmlstarlet sel -N rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#" -N xmpDM="http://ns.adobe.com/xmp/1.0/DynamicMedia/" -t -m "//rdf:li[@rdf:parseType='Resource'][xmpDM:trackName='CuePoint Markers']" -o "inSample:" -v "xmpDM:markers/rdf:Seq/rdf:li[@rdf:parseType='Resource']/xmpDM:startTime" -n -o "durationSample:" -v "xmpDM:markers/rdf:Seq/rdf:li[@rdf:parseType='Resource']/xmpDM:duration" -n)
     INSAMPLE=$(echo "${XMP_DATA}" | xmlstarlet sel -N rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#" -N xmpDM="http://ns.adobe.com/xmp/1.0/DynamicMedia/" -t -m "//rdf:li[@rdf:parseType='Resource'][xmpDM:trackName='CuePoint Markers']" -v "xmpDM:markers/rdf:Seq/rdf:li[@rdf:parseType='Resource']/xmpDM:startTime" -n)
     DURATIONSAMPLE=$(echo "${XMP_DATA}" | xmlstarlet sel -N rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#" -N xmpDM="http://ns.adobe.com/xmp/1.0/DynamicMedia/" -t -m "//rdf:li[@rdf:parseType='Resource'][xmpDM:trackName='CuePoint Markers']" -v "xmpDM:markers/rdf:Seq/rdf:li[@rdf:parseType='Resource']/xmpDM:duration" -n)
