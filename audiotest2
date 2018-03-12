@@ -7,7 +7,7 @@ while [[ "${@}" != "" ]] ; do
     BASENAME=$(basename "${FILENAME}")
     ffmpeg -y -i "$FILENAME" -filter_complex "asplit=7[a][b][c][d][e][f][g];\
         [a]showwavespic=split_channels=1:scale=log:s=1920x1080:colors=purple|blue|green|red[a1];\
-        [b]showwavespic=split_channels=1:scale=log:s=1920x1080:colors=purple|blue|green|red[b1];\
+        [b]showwavespic=split_channels=1:scale=lin:s=1920x1080:colors=purple|blue|green|red[b1];\
         [c]showspectrumpic=s=1920x1080:scale=log[c1];\
         [d]showspectrumpic=s=1920x1080:scale=lin[d1];\
         [e]loudnorm=tp=0,asetnsamples=6400,astats=metadata=1:reset=1,adrawgraph=m1=lavfi.astats.1.Max_difference:m2=adrawgraph=m1=lavfi.astats.1.Max_difference:min=0:max=0.1:slide=picture:s=1920x256,drawtext=fontfile=/Library/Fonts/Courier\ New.ttf:fontcolor=black:fontsize=24:text=Interstitial[e1];\
