@@ -114,6 +114,30 @@ _get_xmp_info(){
     echo "The intime in samples is $INTIME, the outtime in seconds is $OUTTIME, and the duration in seconds is $DURATION."
 }
 
+_audioreport(){
+    ffmpeg -nostdin -i "${INPUT}" -vn -filter_complex "silencedetect,astats,loudnorm=print_format=json,agate=attack=0.01:release=0.01:ratio=9000,aphasemeter=r=0.2:video=0,ametadata=mode=print:key=lavfi.aphasemeter.phase:value=-0.18:function=less" -f null - 2>&1 |  tr "\r" "\n" > /tmp/loud
+    MEASURED_I=$(cat /tmp/loud | grep "input_i" | awk -F\" '{print $4}')
+    MEASURED_LRA=$(cat /tmp/loud | grep "input_lra" | awk -F\" '{print $4}')
+    MEASURED_TP=$(cat /tmp/loud | grep "input_tp" | awk -F\" '{print $4}')
+    MEASURED_THRESH=$(cat /tmp/loud | grep "input_thresh" | awk -F\" '{print $4}')
+    TARGET_OFFSET=$(cat /tmp/loud | grep "target_offset" | awk -F\" '{print $4}')
+    BWFMETAEDIT=$(bwfmetaedit "${INPUT}" 2>&1 | awk '{printf "%s+",$0} END {print ""}')
+    FLATFACTOR=$(cat /tmp/loud | grep "Flat factor: " | tail -n +3 | head -n 1 | cut -d ":" -f 2 | sed 's/ //g')
+    echo "  MEASURED_I = ${MEASURED_I}"
+    echo "  MEASURED_LRA = ${MEASURED_LRA}"
+    echo "  MEASURED_TP = ${MEASURED_TP}"
+    echo "  MEASURED_THRESH = ${MEASURED_THRESH}"
+    echo "  TARGET_OFFSET = ${TARGET_OFFSET}"
+    echo "  BWFMETAEDIT = ${BWFMETAEDIT}"
+    if [[ "${FLATFACTOR}" != 0.000000 ]] ; then
+        _report -wt "WARNING - There are ${FLATFACTOR} flat sections of waveform that may indicate clipped audio."
+        _report -qn "Enter q to quit, any other key to continue: "
+        read A4
+        [[ "${A4}" == "q" ]] && exit 0
+        _writeingestlog "Flat sections of audio waveform" "${FLATFACTOR}"
+    fi
+}
+
 _blackframetest(){
     _black_at_ends "${INPUT}"
     if [ "${HEAD_BLACK}" -gt "30" ] ; then
@@ -574,7 +598,9 @@ if [[ "${MODE}" == "preservation" ]] ; then
     if [[ "${FORMULA}" == "check interlacement" ]] ; then
         _get_interlacement_full "${INPUT}"
     fi
-elif [[ "${MODE}" != "audio" ]] ; then
+elif [[ "${MODE}" == "audio" ]] ; then
+    _audioreport
+else
     # presumes default, psa, or local mode
     _blackframetest
     _phasechecktest
