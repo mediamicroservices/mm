@@ -534,6 +534,7 @@ while [[ "${@}" != "" ]] ; do
         OUTPUT_TMP="$OUTPUT"
         OUTPUT="${OUTPUT%.iso}.mpeg"
     fi
+    MIDDLEOPTIONS+=(-metadata creation_time=now)
 
     _filter_to_middle_option
     _run_critical_event ffmpeg "${INPUTOPTIONS[@]}" "${FFMPEGINPUT[@]}" "${MIDDLEOPTIONS[@]}" "${OUTPUT}"
