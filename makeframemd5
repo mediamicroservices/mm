@@ -38,7 +38,7 @@ while [ "${*}" != "" ] ; do
     _set_up_framemd5
     cd "${PACKAGE_PATH}"
     FILELIST=$(_maketemp)
-    find "./objects" -type f ! -name ".*" ! -path "*/access/*" ! -path "*/service/*" > "${FILELIST}"
+    find "./objects" -type f "${OBJECTS_FIND_EXCLUSIONS[@]}" > "${FILELIST}"
     (IFS=$'\n'
     for FILE in $(cat "${FILELIST}") ; do
         VIDEOTEST=$(file -Ib "${FILE}" | grep 'video')
