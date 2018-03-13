@@ -659,6 +659,8 @@ _ask_photos(){
                 _ask_photos "${MEDIAID}"
             else
                 NEVERMIND=1
+                _report -d "Skipping capture process"
+                break
             fi
             gphoto2 --summary >/dev/null
             GPHOTO_ERR="$?"
