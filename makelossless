@@ -1,6 +1,6 @@
 #!/bin/bash
 # makelossless
-#this script is not actively maintained.
+
 VERSION="1.0"
 SCRIPTDIR=$(dirname $(which "${0}"))
 . "${SCRIPTDIR}/mmfunctions" || { echo "Missing '${SCRIPTDIR}/mmfunctions'. Exiting." ; exit 1 ;};
