@@ -2,6 +2,11 @@
 SCRIPTNAME=$(basename "${0}")
 SCRIPTDIR=$(dirname "${0}")
 
+OBJECTS_FIND_EXCLUSIONS=(! -name ".*")
+OBJECTS_FIND_EXCLUSIONS+=(! -path "*/access/*")
+OBJECTS_FIND_EXCLUSIONS+=(! -path "*/service/*")
+OBJECTS_FIND_EXCLUSIONS+=(! -path "*/trimmed_materials/*")
+
 # load configuration file
 if [ -f "${TEMP_MMCONFIG}" ] ; then
     # for use in ingestfiletest; prevents test files from going to permanent storage
@@ -991,7 +996,7 @@ _find_input (){
             ISOBJECT="Y"
             INPUTFILES=$(_maketemp)
             # find av files in a directory and output to a temp list
-            find "${1}/objects" -type f -size +0 ! -path "*/access/*" ! -path "*/service/*" ! -name ".DS_Store" | while read file ; do
+            find "${1}/objects" -type f -size +0 "${OBJECTS_FIND_EXCLUSIONS[@]}" | while read file ; do
                 streamcount=$(ffprobe -loglevel quiet "$file" -show_entries format=nb_streams -of default=nw=1:nk=1)
                 duration_ts=$(ffprobe -loglevel quiet "$file" -show_entries stream=duration_ts -of default=nw=1:nk=1)
                 if [[ "$streamcount" > 0  && "${duration_ts}" != 1 ]] ; then
