@@ -658,10 +658,13 @@ _ask_photos(){
     _stop_ptpcamera
     trap _stop_gphoto SIGHUP SIGINT SIGTERM
     MEDIAID="${1}"
-    _report -q -n "Hit enter to take a photograph ['q' to quit, 'f' when finished with photos]: "
+    _report -q -n "Hit enter to take a photograph [hit 'f' when finished taking photos, 's' or 'S' to skip this step, or 'q' to quit]: "
     read answer
     if [[ "${answer}" = "q" ]] ; then
         exit
+    elif [[ "${answer}" = "s" ]] || [[ "${answer}" = "S" ]] ; then
+        _stop_gphoto
+        _report -d "Skipping capture process"
     elif [[ "${answer}" != "f" ]] ; then
         gphoto2 --summary >/dev/null
         GPHOTO_ERR="$?"
