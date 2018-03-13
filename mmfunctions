@@ -669,7 +669,7 @@ _ask_photos(){
         gphoto2 --summary >/dev/null
         GPHOTO_ERR="$?"
         while [[ "${GPHOTO_ERR}" != "0" ]] ; do
-            echo -n "Camera appears to not be connected. Hit 'q' to quit, 'r' to retry, or return to skip: "
+            echo -n "Camera appears to not be connected. Hit 'r' to retry, 's' or 'S' to skip this step, or 'q' to quit: "
             read answer
             if [[ "${answer}" = "q" ]] ; then
                 _stop_gphoto
