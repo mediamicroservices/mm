@@ -165,6 +165,16 @@ while [[ "${@}" != "" ]] ; do
         fi
     fi
 
+    # read audio decision from ingestlog
+    if [[ -z "${AUDIOMAP}" && "${ISOBJECT}" = "Y" ]] ; then
+        AUDIODECISION="$(_readingestlog audiodecision)"
+        if [[ "${AUDIODECISION}" == "Only use left of the first audio track [for 21st Century]" ]] ; then
+            AUDIOMAP="L"
+        elif [[ "${AUDIODECISION}" == "Only use right of the first audio track" ]] ; then
+            AUDIOMAP="R"
+        fi
+    fi
+
     # encoding options
     if [[ "${VIDEOSTREAMCOUNT}" -gt 0 ]] ; then
         if [[ "${CODEC_TAG_STRING}" == "mjp2" ]] ; then
