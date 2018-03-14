@@ -629,9 +629,12 @@ else
     fi
 fi
 
+# set makederivopts
 unset MAKEDERIVOPTS
-[ "${CROPDECISION}" == "Examine the video and auto-crop out black borders (slower)" ] && MAKEDERIVOPTS+=(-c)
-if [ ! -z "${FORMULA}" ] ; then
+if [[ "${CROPDECISION}" == "Examine the video and auto-crop out black borders (slower)" ]] ; then
+    MAKEDERIVOPTS+=(-c)
+fi
+if [[ ! -z "${FORMULA}" ]] ; then
     MAKEDERIVOPTS+=(-F "${FORMULA}")
 fi
 
