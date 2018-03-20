@@ -21,6 +21,10 @@ _usage(){
 }
 [ "${#}" = 0 ] && _usage
 
+_get_ffv1_version(){
+    FFV1_VERSION=$(ffmpeg -debug 1 -i "${1}" -vframes 1 -f null - 2>&1 | grep -m 1 "^\[ffv1" | grep -o "ver:[^ ]*" | cut -d":" -f2)
+}
+
 # command-line options to set mediaid and original variables
 OPTIND=1
 while getopts ":jnh" OPT ; do
@@ -106,7 +110,13 @@ while [ "${*}" != "" ] ; do
             MIDDLEOPTIONS+=(-c:a copy)
         fi
         _get_codectagstring "${SOURCEFILE}"
-        if [[ "${CODEC_TAG_STRING}" == "2vuy" || "${CODEC_TAG_STRING}" == "v210" ]] ; then
+        if [[ "${CODEC_TAG_STRING}" == "ffv1" ]] ; then
+            _get_ffv1_version "${SOURCEFILE}"
+        fi
+        echo "hi ${FFV1_VERSION} ${CODEC_TAG_STRING}"
+        if [[ "${CODEC_TAG_STRING}" == "2vuy" || \
+              "${CODEC_TAG_STRING}" == "v210" || \
+             ("${CODEC_TAG_STRING}" == "FFV1" && "${FFV1_VERSION}" -lt "3") ]] ; then
             _report -dt "${SOURCEFILENAME} is ${CODEC_TAG_STRING}, starting encode"
             _run mkdir -p "${OUTPUTDIR}" "${LOGDIR}"
             _prep_ffmpeg_log
