@@ -106,9 +106,9 @@ while [ "${*}" != "" ] ; do
             MIDDLEOPTIONS+=(-c:a copy)
         fi
         _get_codectagstring "${SOURCEFILE}"
-        _run mkdir -p "${OUTPUTDIR}" "${LOGDIR}"
         if [ "${CODEC_TAG_STRING}" == "2vuy" -o "${CODEC_TAG_STRING}" == "v210" ] ; then
             _report -dt "${SOURCEFILENAME} is ${CODEC_TAG_STRING}, starting encode"
+            _run mkdir -p "${OUTPUTDIR}" "${LOGDIR}"
             _prep_ffmpeg_log
 
             _filter_to_middle_option
