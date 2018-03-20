@@ -95,7 +95,9 @@ while [ "${*}" != "" ] ; do
                 INPUTOPTIONSFRAMEMD5+=(-vcodec libopenjpeg)
                 SUFFIX="_j2k"
             else
-                MIDDLEOPTIONS+=(-c:v ffv1 -level 3 -g 1)
+                MIDDLEOPTIONS+=(-c:v ffv1)
+                MIDDLEOPTIONS+=(-level 3)
+                MIDDLEOPTIONS+=(-g 1)
                 SUFFIX="_ffv1"
             fi
             _add_video_filter "setfield=bff" # this is a presumption but much of the uncompressed input is bff but not probably labelled
