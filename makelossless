@@ -40,8 +40,36 @@ while [ "${*}" != "" ] ; do
     [ -d "${INPUT}" ] && LOGDIR="${INPUT}/metadata/logs"
     [ -f "${INPUT}" ] && LOGDIR="$(dirname "${INPUT}")/lossless/logs"
     [ ! "${LOGDIR}" ] && LOGDIR="${INPUT}/metadata/logs"
+    
+    INPUTFILES=$(_maketemp)
 
-    find "${INPUT}" -type f \( -iname "*.mov" -o -iname "*.avi" -o -iname "*.mxf" \) -print0 | while read -d $'\0' SOURCEFILE ; do
+    if [ -f "${INPUT}" ] ; then
+        streamcount=$(ffprobe -loglevel quiet "$file" -show_entries format=nb_streams -of default=nw=1:nk=1)
+        duration_ts=$(ffprobe -loglevel quiet "$file" -show_entries stream=duration_ts -of default=nw=1:nk=1)
+        if [[ "$streamcount" > 0  && "${duration_ts}" != 1 ]] ; then
+            _report -d "Input file: $file"
+            echo "$file" >> "${INPUTFILES}"
+        fi
+    elif [ -d "${INPUT}" ] ; then
+        # find av files in a directory and output to a temp list
+        find "${1}/objects" -type f -size +0 "${OBJECTS_FIND_EXCLUSIONS[@]}" | while read file ; do
+            streamcount=$(ffprobe -loglevel quiet "$file" -show_entries format=nb_streams -of default=nw=1:nk=1)
+            duration_ts=$(ffprobe -loglevel quiet "$file" -show_entries stream=duration_ts -of default=nw=1:nk=1)
+            if [[ "$streamcount" > 0  && "${duration_ts}" != 1 ]] ; then
+                _report -d "Input file: $file"
+                echo "$file" >> "${INPUTFILES}"
+            fi
+        done
+    else
+        _report -wt "Error: ${INPUT} is not a file or directory"
+        exit 1
+    fi
+    INPUTFILECOUNT=$(wc -l "${INPUTFILES}" | awk '{print $1}')
+    if [[ "${INPUTFILECOUNT}" = 0 ]] ; then
+        _report -w "Error no audiovisual input files were found."
+        exit 1
+    fi
+    while read SOURCEFILE ; do
         OUTPUTDIR=$(dirname "${SOURCEFILE}")
         SOURCEFILENAME=$(basename "${SOURCEFILE}")
 
@@ -102,7 +130,7 @@ while [ "${*}" != "" ] ; do
             continue
         fi
         _report -dt done with "${SOURCEFILE}"
-    done
+    done < "${INPUTFILES}"
     shift
     _log -e
 done
