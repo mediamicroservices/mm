@@ -5,6 +5,8 @@ SCRIPTDIR=$(dirname "${0}")
 unset DEPENDENCIES
 DEPENDENCIES=(mkvpropedit)
 _initialize_make
+FULL_EDITION_UID=$(echo ${RANDOM})
+PRESENTATION_EDITION_UID=$(echo ${RANDOM})
 
 _ask_for_chapter(){
     unset ChapterSegmentUID
@@ -61,14 +63,14 @@ echo "<?xml version='1.0' encoding='UTF-8'?>
     <EditionFlagOrdered>1</EditionFlagOrdered>
     <EditionFlagHidden>0</EditionFlagHidden>
     <EditionFlagDefault>1</EditionFlagDefault>
-    <EditionUID>3475548369</EditionUID>
+    <EditionUID>${PRESENTATION_EDITION_UID}</EditionUID>
     ${CHAPTER_LIST}
   </EditionEntry>
   <EditionEntry>
     <EditionFlagOrdered>1</EditionFlagOrdered>
     <EditionFlagHidden>0</EditionFlagHidden>
     <EditionFlagDefault>0</EditionFlagDefault>
-    <EditionUID>12338659363134957115</EditionUID>
+    <EditionUID>${FULL_EDITION_UID}</EditionUID>
     <ChapterAtom>
       <ChapterTimeStart>00:00:00.000000000</ChapterTimeStart>
       <ChapterFlagHidden>0</ChapterFlagHidden>
@@ -86,7 +88,7 @@ echo "<?xml version='1.0' encoding='UTF-8'?>
 <Tags>
   <Tag>
     <Targets>
-      <EditionUID>12338659363134957115</EditionUID>
+      <EditionUID>${FULL_EDITION_UID}</EditionUID>
       <TargetTypeValue>50</TargetTypeValue>
     </Targets>
     <Simple>
@@ -98,7 +100,7 @@ echo "<?xml version='1.0' encoding='UTF-8'?>
   </Tag>
   <Tag>
     <Targets>
-      <EditionUID>3475548369</EditionUID>
+      <EditionUID>${PRESENTATION_EDITION_UID}</EditionUID>
       <TargetTypeValue>50</TargetTypeValue>
     </Targets>
     <Simple>
