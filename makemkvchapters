@@ -65,7 +65,7 @@ echo "<?xml version='1.0' encoding='UTF-8'?>
     ${CHAPTER_LIST}
   </EditionEntry>
   <EditionEntry>
-    <EditionFlagOrdered>1</EditionFlagOrdered>
+    <EditionFlagOrdered>0</EditionFlagOrdered>
     <EditionFlagHidden>0</EditionFlagHidden>
     <EditionFlagDefault>0</EditionFlagDefault>
     <EditionUID>12338659363134957115</EditionUID>
@@ -74,10 +74,11 @@ echo "<?xml version='1.0' encoding='UTF-8'?>
       <ChapterFlagHidden>0</ChapterFlagHidden>
       <ChapterFlagEnabled>1</ChapterFlagEnabled>
       <ChapterDisplay>
-        <ChapterString>Full</ChapterString>
+        <ChapterString>Start of Recording</ChapterString>
         <ChapterLanguage>eng</ChapterLanguage>
       </ChapterDisplay>
     </ChapterAtom>
+    ${CHAPTER_LIST}
   </EditionEntry>
 </Chapters>" > "${MKVCHAPTERS_XML}"
 
