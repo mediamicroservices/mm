@@ -642,15 +642,15 @@ _ask_photos(){
     _stop_ptpcamera
     trap _stop_gphoto SIGHUP SIGINT SIGTERM
     MEDIAID="${1}"
-    _report -q -n "Hit enter to take a photograph ['q' to quit, 'f' when finished with photos]: "
+    _report -q -n "Hit enter to take a photograph ['q' to quit, 'f' when finished with photos, 's' or 'S' to skip this step]: "
     read answer
     if [[ "${answer}" = "q" ]] ; then
         exit
-    elif [[ "${answer}" != "f" ]] ; then
+    elif [[ "${answer}" != [fsS] ]] ; then
         gphoto2 --summary >/dev/null
         GPHOTO_ERR="$?"
         while [[ "${GPHOTO_ERR}" != "0" ]] ; do
-            echo -n "Camera appears to not be connected. Hit 'q' to quit, 'r' to retry, or return to skip: "
+            echo -n "Camera appears to not be connected. Hit 'q' to quit, 'r' to retry, 's' or 'S' to skip this step: "
             read answer
             if [[ "${answer}" = "q" ]] ; then
                 _stop_gphoto
