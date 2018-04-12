@@ -3,6 +3,7 @@
 _ss_to_hhmmss(){
     # if milliseconds are used it will round down to nearest second for instance 60.9, will return 1:00
     INT="${1%.*}"
+    [[ -z "$INT" ]] && INT="0"
     DEC="$(echo "${1#*.}" | head -c 3)"
     printf "%02d\:%02d\:%02d.${DEC}\n" $(($INT/3600)) $(($INT%3600/60)) $(($INT%60))
 }
