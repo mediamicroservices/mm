@@ -5,8 +5,10 @@ SCRIPTDIR=$(dirname "${0}")
 unset DEPENDENCIES
 DEPENDENCIES=(mkvpropedit)
 _initialize_make
+unset STARTTIME
 FULL_EDITION_UID=$(echo ${RANDOM})
 PRESENTATION_EDITION_UID=$(echo ${RANDOM})
+FULL_DURATION=$(mediainfo -f --Language=raw --Inform="General;%Duration/String3%" "${1}")
 
 echo "makemkvchapters creates ordered chapters in a Matroska file. Start and end times must be in HH:MM:SS.mmm format. Note mmm is milliseconds and not frames."
 
@@ -40,6 +42,10 @@ _ask_for_chapter(){
                       </ChapterDisplay>
                     </ChapterAtom>"
                     CHAPTER_LIST+="${CHAPTER}"
+                    PRES_END="${ENDTIME}"
+                    if [[ -z "${PRES_START}" ]] ; then
+                        PRES_START="${STARTTIME}"
+                    fi
                 fi
             fi
         fi
@@ -73,10 +79,22 @@ echo "<?xml version='1.0' encoding='UTF-8'?>
     <EditionUID>${FULL_EDITION_UID}</EditionUID>
     <ChapterAtom>
       <ChapterTimeStart>00:00:00.000000000</ChapterTimeStart>
+      <ChapterTimeEnd>${PRES_START}</ChapterTimeEnd>
       <ChapterFlagHidden>0</ChapterFlagHidden>
       <ChapterFlagEnabled>1</ChapterFlagEnabled>
       <ChapterDisplay>
-        <ChapterString>Full</ChapterString>
+        <ChapterString>Head of Recording</ChapterString>
+        <ChapterLanguage>eng</ChapterLanguage>
+      </ChapterDisplay>
+    </ChapterAtom>
+    ${CHAPTER_LIST}
+    <ChapterAtom>
+      <ChapterTimeStart>${PRES_END}</ChapterTimeStart>
+      <ChapterTimeEnd>${FULL_DURATION}</ChapterTimeEnd>
+      <ChapterFlagHidden>0</ChapterFlagHidden>
+      <ChapterFlagEnabled>1</ChapterFlagEnabled>
+      <ChapterDisplay>
+        <ChapterString>Tail of Recording</ChapterString>
         <ChapterLanguage>eng</ChapterLanguage>
       </ChapterDisplay>
     </ChapterAtom>
