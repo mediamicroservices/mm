@@ -22,6 +22,7 @@ _usage(){
         echo "      podcast (mov)"
         echo "      waveform (png)"
         echo "      showwaves (mp4)"
+        echo "  -m (only use the first track)"
         echo "  -l (only use the left channel of the first audio track)"
         echo "  -r (only use the right channel of the first audio track)"
         echo "  -t (burn timecode overlay)"
@@ -45,11 +46,12 @@ _usage(){
 
 user_input=${@}
 OPTIND=1
-while getopts ":T:lrv:d:o:e:E:F:scYp:tnh" OPT ; do
+while getopts ":T:lrmv:d:o:e:E:F:scYp:tnh" OPT ; do
     case "${OPT}" in
         T) OUTPUT_TYPE="${OPTARG}";;
         l) AUDIOMAP="L";;
         r) AUDIOMAP="R";;
+        m) AUDIOMAP="M";;
         v) VOLADJUST="${OPTARG}";;
         d) DELIVERDIR="${OPTARG}" && (_check_deliverdir) ;;
         o) OUTPUTDIR_FORCED="${OPTARG}" && (_check_outputdir_forced) ;;
@@ -172,6 +174,8 @@ while [[ "${@}" != "" ]] ; do
             AUDIOMAP="L"
         elif [[ "${AUDIODECISION}" == "Only use right of the first audio track" ]] ; then
             AUDIOMAP="R"
+        elif [[ "${AUDIODECISION}" == "Only use the first track" ]] ; then
+            AUDIOMAP="M"
         fi
     fi
 
