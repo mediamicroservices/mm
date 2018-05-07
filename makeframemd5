@@ -14,8 +14,9 @@ _usage(){
 [ "${#}" = 0 ] && _usage
 
 OPTIND=1
-while getopts ":h" OPT ; do
+while getopts ":rh" OPT ; do
     case "${OPT}" in
+        r) refile="Y" ;;
         h) _usage ;;
         *) echo "bad option -${OPTARG}" ; _usage ;;
     esac
@@ -35,6 +36,18 @@ OUTPUTDIR="./metadata/frameMD5s"
 while [ "${*}" != "" ] ; do
     PACKAGE_PATH="${1}"
     shift
+    if [[ "$refile" == "Y" ]] ; then
+        if [[ $(find "${PACKAGE_PATH}/metadata" ! -path "*/frameMD5s/*" -name "*_pre*.framemd5") ]] ; then
+            _report -d "Refiling some framemd5s for ${PACKAGE_PATH}."
+            _mkdir2 "${PACKAGE_PATH}/metadata/frameMD5s/trimmed_materials/"
+            find "${PACKAGE_PATH}/metadata" ! -path "*/frameMD5s/*" -name "*_pre*.framemd5" -exec mv -v -n "{}" "${PACKAGE_PATH}/metadata/frameMD5s/trimmed_materials/" \;
+        fi
+        if [[ $(find "${PACKAGE_PATH}/metadata" ! -path "*/frameMD5s/*" -name "*.framemd5") ]] ; then
+            _report -d "Refiling some framemd5s for ${PACKAGE_PATH}."
+            _mkdir2 "${PACKAGE_PATH}/metadata/frameMD5s"
+            find "${PACKAGE_PATH}/metadata" ! -path "*/frameMD5s/*" -name "*.framemd5" -exec mv -v -n "{}" "${PACKAGE_PATH}/metadata/frameMD5s/" \;
+        fi
+    else
     _set_up_framemd5
     cd "${PACKAGE_PATH}"
     FILELIST=$(_maketemp)
@@ -55,4 +68,5 @@ while [ "${*}" != "" ] ; do
         fi
     done)
     rm "${FILELIST}"
+    fi
 done
