@@ -1122,7 +1122,7 @@ _get_height(){
 
 _get_dar(){
     DAR=$(ffprobe "${1}" -show_streams -select_streams v:0 2>/dev/null | grep "^display_aspect_ratio=" | cut -d = -f 2 | sed 's|:|/|g')
-    if [ "${DAR}" = "0/1" ] ; then
+    if [[ "${DAR}" = "0/1" || "${DAR}" = "N/A" ]] ; then
         _get_width "${1}"
         _get_height "${1}"
         DAR="${WIDTH}/${HEIGHT}"
@@ -1131,7 +1131,7 @@ _get_dar(){
 
 _get_sar(){
     SAR=$(ffprobe "${1}" -show_streams -select_streams v:0 2>/dev/null | grep "^sample_aspect_ratio=" | cut -d = -f 2 | sed 's|:|/|g')
-    if [ "${SAR}" = "0/1" ] ; then
+    if [[ "${SAR}" = "0/1" || "${SAR}" = "N/A" ]] ; then
         SAR="1/1"
     fi
 }
