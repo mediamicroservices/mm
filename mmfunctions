@@ -6,6 +6,7 @@ OBJECTS_FIND_EXCLUSIONS=(! -name ".*")
 OBJECTS_FIND_EXCLUSIONS+=(! -path "*/access/*")
 OBJECTS_FIND_EXCLUSIONS+=(! -path "*/service/*")
 OBJECTS_FIND_EXCLUSIONS+=(! -path "*/trimmed_materials/*")
+OBJECTS_FIND_EXCLUSIONS+=(! -path "*/restoration/*")
 
 # load configuration file
 if [ -f "${TEMP_MMCONFIG}" ] ; then
@@ -997,8 +998,14 @@ _find_input (){
             fi
             ISOBJECT="Y"
             INPUTFILES=$(_maketemp)
+            if [[ -d "${1}/objects/restoration" ]] ; then
+                LOOKHERE="${1}/objects/restoration"
+                _report -dt "This package contains a restoration, using that for processing."
+            else
+                LOOKHERE="${1}/objects"
+            fi
             # find av files in a directory and output to a temp list
-            find "${1}/objects" -type f -size +0 "${OBJECTS_FIND_EXCLUSIONS[@]}" | while read file ; do
+            find "${LOOKHERE}" -type f -size +0 "${OBJECTS_FIND_EXCLUSIONS[@]}" | while read file ; do
                 streamcount=$(ffprobe -loglevel quiet "$file" -show_entries format=nb_streams -of default=nw=1:nk=1)
                 duration_ts=$(ffprobe -loglevel quiet "$file" -show_entries stream=duration_ts -of default=nw=1:nk=1)
                 if [[ "$streamcount" > 0  && "${duration_ts}" != 1 ]] ; then
@@ -1033,7 +1040,7 @@ _find_input (){
             fi
         fi
     else
-        _report -wt "A valid source file isn't found in ${1}/objects."
+        _report -wt "A valid source file isn't found in ${LOOKHERE}."
         _writeerrorlog "_find_input" "A valid source file was not found, so the script could not proceed."
         exit 1
     fi
