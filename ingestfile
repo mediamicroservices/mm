@@ -569,7 +569,6 @@ fi
 # MICROSERVICES BEFORE PROCESSING
 if [[ "${MODE}" == "preservation" ]] ; then
     _ask_digitization_logs
-    _ask_restoration
     if [[ "${INPUT#*.}" = "mkv" ]] ; then
         "${SCRIPTDIR}/makemkvchapters" "${INPUT}"
     else
