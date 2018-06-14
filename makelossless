@@ -102,6 +102,8 @@ while [ "${*}" != "" ] ; do
                 MIDDLEOPTIONS+=(-c:v ffv1)
                 MIDDLEOPTIONS+=(-level 3)
                 MIDDLEOPTIONS+=(-g 1)
+                MIDDLEOPTIONS+=(-slices 16)
+                MIDDLEOPTIONS+=(-slicecrc 1)
                 SUFFIX="_ffv1"
             fi
             _add_video_filter "setfield=bff" # this is a presumption but much of the uncompressed input is bff but not probably labelled
