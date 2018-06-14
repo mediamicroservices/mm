@@ -15,38 +15,38 @@ while [ "${*}" != "" ] ; do
     shift
     #verify objects files
     while read OBJECT_FILE ; do
-        STATUS=$(mediaconch -fx -p "${SCRIPTDIR}/object_policies.xml" "${OBJECT_FILE}" | xmlstarlet sel -N mc="https://mediaarea.net/mediaconch" -t -v mc:MediaConch/mc:media/mc:policy/@outcome -n)
+        STATUS=$(mediaconch --force -fx -p "${SCRIPTDIR}/object_policies.xml" "${OBJECT_FILE}" | xmlstarlet sel -N mc="https://mediaarea.net/mediaconch" -t -v mc:MediaConch/mc:media/mc:policy/@outcome -n)
         if [[ "$STATUS" = "pass!" ]] ; then
             _report -dt "Pass: ${OBJECT_FILE}"
         else
-            mediaconch -fs -p "${SCRIPTDIR}/object_policies.xml" "${OBJECT_FILE}"
+            mediaconch --force -fs -p "${SCRIPTDIR}/object_policies.xml" "${OBJECT_FILE}"
         fi
     done < <(find "${PACKAGE}/objects" -type f -size +0 "${OBJECTS_FIND_EXCLUSIONS[@]}")
     #verify the makebroadcast file
     if [ -f "${PACKAGE}/objects/service/${MEDIAID}.mov" ] ; then
-        STATUS=$(mediaconch -fx -p "${SCRIPTDIR}/makebroadcast_policies.xml" "${PACKAGE}/objects/service/${MEDIAID}.mov" | xmlstarlet sel -N mc="https://mediaarea.net/mediaconch" -t -v mc:MediaConch/mc:media/mc:policy/@outcome -n)
+        STATUS=$(mediaconch --force -fx -p "${SCRIPTDIR}/makebroadcast_policies.xml" "${PACKAGE}/objects/service/${MEDIAID}.mov" | xmlstarlet sel -N mc="https://mediaarea.net/mediaconch" -t -v mc:MediaConch/mc:media/mc:policy/@outcome -n)
         if [[ "$STATUS" = "pass!" ]] ; then
             _report -dt "Pass: ${PACKAGE}/objects/service/${MEDIAID}.mov"
         else
-            mediaconch -fs -p "${SCRIPTDIR}/makebroadcast_policies.xml" "${PACKAGE}/objects/service/${MEDIAID}.mov"
+            mediaconch --force -fs -p "${SCRIPTDIR}/makebroadcast_policies.xml" "${PACKAGE}/objects/service/${MEDIAID}.mov"
         fi
     fi
     #verify the makeyoutube file
     if [ -f "${PACKAGE}/objects/access/youtube_up/${MEDIAID}.mp4" ] ; then
-        STATUS=$(mediaconch -fx -p "${SCRIPTDIR}/makeyoutube_policies.xml" "${PACKAGE}/objects/access/youtube_up/${MEDIAID}.mp4" | xmlstarlet sel -N mc="https://mediaarea.net/mediaconch" -t -v mc:MediaConch/mc:media/mc:policy/@outcome -n)
+        STATUS=$(mediaconch --force-fx -p "${SCRIPTDIR}/makeyoutube_policies.xml" "${PACKAGE}/objects/access/youtube_up/${MEDIAID}.mp4" | xmlstarlet sel -N mc="https://mediaarea.net/mediaconch" -t -v mc:MediaConch/mc:media/mc:policy/@outcome -n)
         if [[ "$STATUS" = "pass!" ]] ; then
             _report -dt "Pass: ${PACKAGE}/objects/access/youtube_up/${MEDIAID}.mp4"
         else
-            mediaconch -fs -p "${SCRIPTDIR}/makeyoutube_policies.xml" "${PACKAGE}/objects/access/youtube_up/${MEDIAID}.mp4"
+            mediaconch --force -fs -p "${SCRIPTDIR}/makeyoutube_policies.xml" "${PACKAGE}/objects/access/youtube_up/${MEDIAID}.mp4"
         fi
     fi
     #verify the makedvd file
     if [ -f "${PACKAGE}/objects/access/dvd/${MEDIAID}.iso" ] ; then
-        STATUS=$(mediaconch -fx -p "${SCRIPTDIR}/makedvd_policies.xml" "${PACKAGE}/objects/access/dvd/${MEDIAID}.iso" | xmlstarlet sel -N mc="https://mediaarea.net/mediaconch" -t -v mc:MediaConch/mc:media/mc:policy/@outcome -n)
+        STATUS=$(mediaconch --force -fx -p "${SCRIPTDIR}/makedvd_policies.xml" "${PACKAGE}/objects/access/dvd/${MEDIAID}.iso" | xmlstarlet sel -N mc="https://mediaarea.net/mediaconch" -t -v mc:MediaConch/mc:media/mc:policy/@outcome -n)
         if [[ "$STATUS" = "pass!" ]] ; then
             _report -dt "Pass: ${PACKAGE}/objects/access/dvd/${MEDIAID}.iso"
         else
-            mediaconch -fs -p "${SCRIPTDIR}/makedvd_policies.xml" "${PACKAGE}/objects/access/dvd/${MEDIAID}.iso"
+            mediaconch --force -fs -p "${SCRIPTDIR}/makedvd_policies.xml" "${PACKAGE}/objects/access/dvd/${MEDIAID}.iso"
         fi
     fi
 done
