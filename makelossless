@@ -44,7 +44,7 @@ while [ "${*}" != "" ] ; do
     [ -d "${INPUT}" ] && LOGDIR="${INPUT}/metadata/logs"
     [ -f "${INPUT}" ] && LOGDIR="$(dirname "${INPUT}")/lossless/logs"
     [ ! "${LOGDIR}" ] && LOGDIR="${INPUT}/metadata/logs"
-    
+
     INPUTFILES=$(_maketemp)
 
     if [ -f "${INPUT}" ] ; then
@@ -122,9 +122,7 @@ while [ "${*}" != "" ] ; do
             _report -dt "${SOURCEFILENAME} is ${CODEC_TAG_STRING}, starting encode"
             _run mkdir -p "${OUTPUTDIR}" "${LOGDIR}"
             _prep_ffmpeg_log
-
             _filter_to_middle_option
-
             _run_critical ffmpeg ${INPUTOPTIONS[@]} -i "${SOURCEFILE}"  ${MIDDLEOPTIONS[@]} "${OUTPUTDIR}/${SOURCEFILENAME%.*}${SUFFIX}.mkv" -f framemd5 -an "${LOGDIR}/${SOURCEFILENAME%.*}.framemd5"
             if [ "${CODEC_TAG_STRING}" == "2vuy" ] ; then
                 _run_critical ffmpeg ${INPUTOPTIONS[@]} -i "${OUTPUTDIR}/${SOURCEFILENAME%.*}${SUFFIX}.mkv" -f framemd5 -pix_fmt uyvy422 -an "${LOGDIR}/${SOURCEFILENAME%.*}${SUFFIX}.framemd5"
