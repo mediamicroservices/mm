@@ -162,7 +162,7 @@ set this variable to the directory where your youtube access copy is delivered.
 set this variable to a temporary directory. it is used in the uploadomneon microservice as a temporary place for a file to live before it is uploaded to the omneon server.
 
 **10. REGEX4PODCAST**
-this varible holds regular expressions that are queried when makepodcast is run, in order to determine if a file qualifies for podcast creation. If you want all of your files to qualify for podcast creation, enter a "." which matches (almost) any character. Learn more about [regex](https://en.wikipedia.org/wiki/Regular_expression).
+this variable holds regular expressions that are queried when makepodcast is run, in order to determine if a file qualifies for podcast creation. If you want all of your files to qualify for podcast creation, enter a "." which matches (almost) any character. Learn more about [regex](https://en.wikipedia.org/wiki/Regular_expression).
 
 **11. DVDLABELPREFIX**
 this variable is for adding a set prefix to the filename for DVDs in makedvd. You may leave this variable blank if you do not want to have a prefix uniformly assigned.
@@ -201,7 +201,7 @@ This variable must be set to yes (Y) or no (N). If set to yes, volume will be ru
 This variable must be set to yes (Y) or no (N). If set to yes, database reporting for mm will be enabled.
 
 **23. SQL_ERROR_EMAIL_TO**
-This can be set to include an email address to recieve error reports for database insertion.
+This can be set to include an email address to receive error reports for database insertion.
 
 **24. PREMIS_PROFILE**
 Enter the login path information for the database here. (Use the output supplied by the createpremisdb script, or create your own using mysql_config_editor).
@@ -236,7 +236,7 @@ To finalize the database setup, run `mmconfig` (GUI mode) or `mmconfig -t` (CLI)
 ### Database Backup
 MM includes a script for database backup.  This can be either run manually or set up as an automated process.  After configuring the backup script, running `dbbackup` will create a zipped backup in the chosen location.  To automate this process use Brew Services.  Typing `brew services start mm` will cause the db to be backed up automatically using the included plist file.  By default, backups will occur daily at 2:00 AM.
 
-To configure database backup use the command `dbbackup -e`. This will open the config file in a terminal editor. Set the neccessary variables to your desired values.
+To configure database backup use the command `dbbackup -e`. This will open the config file in a terminal editor. Set the necessary variables to your desired values.
 
 ***
 
