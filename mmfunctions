@@ -1254,7 +1254,7 @@ _get_audiostreamcount(){
 }
 
 _get_timecode(){
-    TIMECODE=$(ffprobe "${1}" -select_streams v -show_streams -of flat 2>/dev/null | grep "timecode=\"[0-9]" | head -n 1 | cut -d = -f 2 | sed 's/"//g')
+    TIMECODE=$(ffprobe "${1}" -select_streams v -show_streams -show_format -of flat 2>/dev/null | grep "timecode=\"[0-9]" | head -n 1 | cut -d = -f 2 | sed 's/"//g')
 }
 
 _get_timecode_overlay(){
