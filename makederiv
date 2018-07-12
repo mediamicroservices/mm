@@ -140,6 +140,10 @@ while [[ "${@}" != "" ]] ; do
 
     MEDIAID=$(basename "${INPUT}" | cut -d. -f1)
     INGESTLOG="${LOGDIR}/capture.log"
+    if [[ ! -f "${INGESTLOG}" && -f "${INPUT}/metadata/submissionDocumentation/logs/capture.log" ]] ; then
+        INGESTLOG="${INPUT}/metadata/submissionDocumentation/logs/capture.log"
+        _report -wt "The capture.log is found in the ./metadata/submissionDocumentation/logs/ directory. Using that for now but consider moving it to ./metadata/logs/"
+    fi
     _report_to_db
 
     _set_up_output
