@@ -122,9 +122,15 @@ while [[ "${@}" != "" ]] ; do
     _report -dt "==== Starting to make a ${OUTPUT_TYPE} copy from ${INPUT}. ===="
     shift
     if [ -z "${OUTPUTDIR_FORCED}" ] ; then
-        [ -d "${INPUT}" ] && { OUTPUTDIR="${INPUT}/${RELATIVEPATH}" && LOGDIR="${INPUT}/metadata/logs" ;};
-        [ -f "${INPUT}" ] && { OUTPUTDIR=$(dirname "${INPUT}")"/$(basename "${RELATIVEPATH}")" && LOGDIR="$(dirname "${INPUT}")/$(basename "${RELATIVEPATH}")/logs" ;};
-        [ ! "${OUTPUTDIR}" ] && { OUTPUTDIR="${INPUT}/${RELATIVEPATH}" && LOGDIR="${INPUT}/metadata/logs" ;};
+        if [[ -d "${INPUT}" ]] ; then
+            OUTPUTDIR="${INPUT}/${RELATIVEPATH}"
+            LOGDIR="${INPUT}/metadata/logs"
+        elif [[ -f "${INPUT}" ]] ; then
+            OUTPUTDIR=$(dirname "${INPUT}")"/$(basename "${RELATIVEPATH}")"
+            LOGDIR="$(dirname "${INPUT}")/$(basename "${RELATIVEPATH}")/logs"
+        else
+            OUTPUTDIR="${INPUT}/${RELATIVEPATH}"LOGDIR="${INPUT}/metadata/logs"
+        fi
     else
         OUTPUTDIR="${OUTPUTDIR_FORCED}"
         LOGDIR="${OUTPUTDIR}/logs"
