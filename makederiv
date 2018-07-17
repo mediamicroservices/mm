@@ -122,9 +122,15 @@ while [[ "${@}" != "" ]] ; do
     _report -dt "==== Starting to make a ${OUTPUT_TYPE} copy from ${INPUT}. ===="
     shift
     if [ -z "${OUTPUTDIR_FORCED}" ] ; then
-        [ -d "${INPUT}" ] && { OUTPUTDIR="${INPUT}/${RELATIVEPATH}" && LOGDIR="${INPUT}/metadata/logs" ;};
-        [ -f "${INPUT}" ] && { OUTPUTDIR=$(dirname "${INPUT}")"/$(basename "${RELATIVEPATH}")" && LOGDIR="$(dirname "${INPUT}")/$(basename "${RELATIVEPATH}")/logs" ;};
-        [ ! "${OUTPUTDIR}" ] && { OUTPUTDIR="${INPUT}/${RELATIVEPATH}" && LOGDIR="${INPUT}/metadata/logs" ;};
+        if [[ -d "${INPUT}" ]] ; then
+            OUTPUTDIR="${INPUT}/${RELATIVEPATH}"
+            LOGDIR="${INPUT}/metadata/logs"
+        elif [[ -f "${INPUT}" ]] ; then
+            OUTPUTDIR=$(dirname "${INPUT}")"/$(basename "${RELATIVEPATH}")"
+            LOGDIR="$(dirname "${INPUT}")/$(basename "${RELATIVEPATH}")/logs"
+        else
+            OUTPUTDIR="${INPUT}/${RELATIVEPATH}"LOGDIR="${INPUT}/metadata/logs"
+        fi
     else
         OUTPUTDIR="${OUTPUTDIR_FORCED}"
         LOGDIR="${OUTPUTDIR}/logs"
@@ -134,6 +140,10 @@ while [[ "${@}" != "" ]] ; do
 
     MEDIAID=$(basename "${INPUT}" | cut -d. -f1)
     INGESTLOG="${LOGDIR}/capture.log"
+    if [[ ! -f "${INGESTLOG}" && -f "${INPUT}/metadata/submissionDocumentation/logs/capture.log" ]] ; then
+        INGESTLOG="${INPUT}/metadata/submissionDocumentation/logs/capture.log"
+        _report -wt "The capture.log is found in the ./metadata/submissionDocumentation/logs/ directory. Using that for now but consider moving it to ./metadata/logs/"
+    fi
     _report_to_db
 
     _set_up_output
