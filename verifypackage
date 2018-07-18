@@ -3,10 +3,66 @@
 # verifypackage checks the validity of files created with makebroadcast,
 # makeyoutube, and makedvd
 
+_usage(){
+        echo
+        echo "$(basename "verifypackage") ${VERSION}"
+        echo "This application will test particular files of a package for compliance with mediaconch policies or ffmpeg-based outcomes."
+        echo "Usage: $(basename "${0}") [ -a | -v | -i ] fileorpackage1 [ fileorpackage2 ...]"
+        echo "  -a run all tests known on the package"
+        echo "  -v test the volume of the service and youtube files"
+        echo "  -i use interlacement detection on the service file"
+        exit
+}
+
+OPTIND=1
+while getopts ":avih" OPT ; do
+    case "${OPT}" in
+        a) ALL_TESTS="Y" ;;
+        v) VOL_TEST="Y" ;;
+        i) IDET_TEST="Y" ;;
+        h) _usage ;;
+        *) echo "bad option -${OPTARG}" ; _usage ;;
+    esac
+done
+shift $(( ${OPTIND} - 1 ))
+
 SCRIPTDIR=$(dirname "${0}")
 . "${SCRIPTDIR}/mmfunctions" || { echo "Missing '${SCRIPTDIR}/mmfunctions'. Exiting." ; exit 1 ; }
 DEPENDENCIES=(mediaconch xmlstarlet)
 _initialize_make
+
+_assess_volume(){
+    INPUT="${1}"
+    NAME=$(basename "${INPUT}")
+    VOL=$(ffmpeg -i "$INPUT" -vn -af ebur128 -f null - 2>&1 | grep "^    I:" | awk '{print $2}')
+    VOL_OK=$(echo "-22 > ${VOL} && ${VOL} > -26" | bc)
+    if [[ "${VOL_OK}" == "1" ]] ; then
+        _report -dt "Pass: ${INPUT}. Integrated loudness is ${VOL} LUFS, which is in the range of -26 ... -22 LUFS."
+    else
+        _report -wt "Fail: ${NAME}. Integrated loudness is ${VOL} LUFS. Should be in a range of -26 ... -22 LUFS."
+    fi
+}
+
+_assess_interlacement(){
+    EXPECTATION="${1}"
+    INPUT="${2}"
+    NAME=$(basename "${INPUT}")
+    IDET_RESULTS=$(ffmpeg -i "${INPUT}" -vf idet -f null - 2>&1 | grep "Multi frame detection:")
+    TFF_COUNT=$(echo "${IDET_RESULTS}" | grep -o "TFF:[ ]*[0-9]*" | awk '{print $2}')
+    BFF_COUNT=$(echo "${IDET_RESULTS}" | grep -o "BFF:[ ]*[0-9]*" | awk '{print $2}')
+    PROG_COUNT=$(echo "${IDET_RESULTS}" | grep -o "Progressive:[ ]*[0-9]*" | awk '{print $2}')
+    UND_COUNT=$(echo "${IDET_RESULTS}" | grep -o "Undetermined:[ ]*[0-9]*" | awk '{print $2}')
+    IDET_SORT=$(echo -e "${TFF_COUNT} TFF\n${BFF_COUNT} BFF\n${PROG_COUNT} Progressive\n${UND_COUNT} Undetermined" | sort -n -r)
+    IDET_FIRST_NAME=$(echo "${IDET_SORT}" | head -n 1 | awk '{print $2}')
+    IDET_FIRST_COUNT=$(echo "${IDET_SORT}" | head -n 1 | awk '{print $1}')
+    FIRST_PERCENTAGE=$(echo "scale=3 ; (100 * ${IDET_FIRST_COUNT}) / ( ${TFF_COUNT} + ${BFF_COUNT} + ${PROG_COUNT} + ${UND_COUNT})" | bc)
+    if [[ "${IDET_FIRST_NAME}" == "${EXPECTATION}" ]] ; then
+        _report -dt "Pass: ${INPUT}. The file is ${IDET_FIRST_NAME} as expected. ${FIRST_PERCENTAGE}% of frames are ${EXPECTATION}."
+    else
+        _report -wt "Fail: ${INPUT}. The file is ${IDET_FIRST_NAME} but expected to be ${EXPECTATION}. ${FIRST_PERCENTAGE}% of frames are ${IDET_FIRST_NAME}."
+        _report -w "$IDET_RESULTS"
+    fi
+}
 
 #input the package
 while [ "${*}" != "" ] ; do
@@ -30,6 +86,12 @@ while [ "${*}" != "" ] ; do
         else
             mediaconch --force -fs -p "${SCRIPTDIR}/makebroadcast_policies.xml" "${PACKAGE}/objects/service/${MEDIAID}.mov"
         fi
+        if [[ "${ALL_TESTS}" == "Y"  ]] || [[ "${VOL_TEST}" == "Y"  ]] ; then
+            _assess_volume "${PACKAGE}/objects/service/${MEDIAID}.mov"
+        fi
+        if [[ "${ALL_TESTS}" == "Y"  ]] || [[ "${IDET_TEST}" == "Y"  ]] ; then
+            _assess_interlacement "TFF" "${PACKAGE}/objects/service/${MEDIAID}.mov"
+        fi
     fi
     #verify the makeyoutube file
     if [ -f "${PACKAGE}/objects/access/youtube_up/${MEDIAID}.mp4" ] ; then
@@ -38,6 +100,9 @@ while [ "${*}" != "" ] ; do
             _report -dt "Pass: ${PACKAGE}/objects/access/youtube_up/${MEDIAID}.mp4"
         else
             mediaconch --force -fs -p "${SCRIPTDIR}/makeyoutube_policies.xml" "${PACKAGE}/objects/access/youtube_up/${MEDIAID}.mp4"
+        fi
+        if [[ "${ALL_TESTS}" == "Y"  ]] || [[ "${VOL_TEST}" == "Y"  ]] ; then
+            _assess_volume "${PACKAGE}/objects/access/youtube_up/${MEDIAID}.mp4"
         fi
     fi
     #verify the makedvd file
