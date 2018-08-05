@@ -1290,11 +1290,11 @@ _is_video(){
 }
 
 _seconds_to_hhmmss(){
-    num=$1
-    h=$(expr "$num" / 3600)
-    m=$(expr "$num"  % 3600 / 60)
-    s=$(expr "$num" % 60)
-    printf "%02d:%02d:%02d\n" $h $m $s
+    num=${1}
+    h=$(expr "${num}" / 3600)
+    m=$(expr "${num}" % 3600 / 60)
+    s=$(expr "${num}" % 60)
+    printf "%02d:%02d:%02d\n" ${h} ${m} ${s}
 }
 
 _get_phase_warning(){
