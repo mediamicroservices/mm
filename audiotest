@@ -5,10 +5,9 @@ target_offset,cuny loudness adjustment,silent ranges,phase issues,interstitial,d
 while [[ "${@}" != "" ]] ; do
     PACKAGE="$1"
     shift
-    FILENAME=$(find "${PACKAGE}/objects" -maxdepth 2 -type f ! -name .DS_Store)
     FILECOUNT=$(find "${PACKAGE}/objects" -maxdepth 2 -type f ! -name .DS_Store | wc -l | sed 's/ //g')
 
-
+    find "${PACKAGE}/objects" -maxdepth 2 -type f ! -name .DS_Store | while read FILENAME ; do
     ffmpeg -nostdin -i "${FILENAME}" -vn -filter_complex "silencedetect,astats,loudnorm=print_format=json,agate=attack=0.01:release=0.01:ratio=9000,aphasemeter=r=0.2:video=0,ametadata=mode=print:key=lavfi.aphasemeter.phase:value=-0.18:function=less" -f null - 2>&1 |  tr "\r" "\n" > /tmp/loud
     image_count=$(find "${PACKAGE}/metadata/depictions" -maxdepth 2 -type f ! -name .DS_Store | wc -l | sed 's/ //g')
     measured_I=$(cat /tmp/loud | grep "input_i" | awk -F\" '{print $4}')
@@ -43,5 +42,5 @@ while [[ "${@}" != "" ]] ; do
     INTERSTITIAL=$(ffprobe -f lavfi -i "amovie=${FILENAME},loudnorm=tp=0,astats=metadata=1:reset=1" -show_entries frame=pkt_pts_time:frame_tags=lavfi.astats.Overall.Max_difference -of csv 2>/dev/null | awk -F  "," '$3>=0.07' | awk -F  "," '{print $2 "(" $3 ")"}' | xargs)
 
     echo "$(basename "$PACKAGE"),$(basename "$FILENAME"),$FILECOUNT,$image_count,$measured_I,$measured_LRA,$measured_TP,$measured_thresh,$target_offset,$LOUD_ADJ,$SILENCE,$PHASEERROR,$INTERSTITIAL,$DURATION,$SAMPLERATE,$CHANNELS,$CODEC,$PEAKLEVEL1,$PEAKLEVEL2,$PEAKLEVELDIFF,$BITSCOPE,$DCOFFSET,$FLATFACTOR,$PEAKCOUNT,$bwfmetaedit"
-    
+    done
 done
