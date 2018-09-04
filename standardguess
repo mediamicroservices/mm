@@ -1,11 +1,25 @@
 #!/bin/bash
-#checks to see if a video's properties are consistent with a set of standards and if so it assigns expected values to other properties if they are undefined or differ from expectations 
+#checks to see if a video's properties are consistent with a set of standard NTSC properties and if so it assigns expected values to other properties if they are undefined or differ from expectations 
 
-SCRIPTDIR=$(dirname $(which "${0}"))
+SCRIPTDIR=$(dirname "$(which "${0}")")
 . "${SCRIPTDIR}/mmfunctions" || { echo "Missing '${SCRIPTDIR}/mmfunctions'. Exiting." ; exit 1 ;};
 
+DEPENDENCIES=(ffmpeg ffprobe mkvinfo mkvpropedit mkvmerge)
+_check_dependencies "${DEPENDENCIES[@]}" 
+
+#ELEMENT is property name as it appears in mkvINFO report
+#EXPECTATION is expected value of property
+#MKVINFO_PROP generates mkvINFO report
+#SELECTED_ELEMENT checks to see if property is present in the mkvINFO report
+#SELECTED_ELEMENT_VALUE checks the value of the value of the property
+#PROPNAME is property name as it appears for use in mkvPROPEDIT
+#ASSIGNVALUE is the desired value of that property
+#using mkvPROPEDIT set the property to the desired value 
+#PROPMOD is the mkvPROPEDIT exit code 0, 1, 2
+#EDITELEMENT is the convertion of the property name as it appears in the mkvINFO report to the property name as it appears in mkvPROPEDIT
+
 _get_frame_rate(){
-    FRAMERATE=$(ffprobe -i "${1}" -v error -select_streams v:0 -show_entries stream=avg_frame_rate -of default=noprint_wrappers=1:nokey=0 | grep "^avg_frame_rate=" | cut -d = -f 2)
+    FRAMERATE=$(ffprobe -i "${1}" -v error -select_streams v:0 -show_entries stream=avg_frame_rate -of default=noprint_wrappers=1:nokey=1)
 }
 _get_format(){
     FORMAT=$(ffprobe -i "${1}" -v error -select_streams v:0 -show_format -of default=noprint_wrappers=1:nokey=0 | grep "^format_name=" | cut -d = -f 2)
@@ -16,7 +30,7 @@ _MKV_Prop_Check(){
     EXPECTATION="$3"
     MKVINFO_PROP=$(mkvinfo -t "${1}")
     SELECTED_ELEMENT=$(echo "${MKVINFO_PROP}" | grep -c "+ ${ELEMENT}:")
-    SELECTED_ELEMENT_VALUE=$(echo "${MKVINFO_PROP}" | grep -i "+ ${ELEMENT}: " | cut -d: -f 2 | sed 's/ //g' | sed 's/(aspectratio)//g')
+    SELECTED_ELEMENT_VALUE=$(echo "${MKVINFO_PROP}" | grep -i "+ ${ELEMENT}: " | cut -d: -f 2 | cut -d" " -f 2)
 
     if [[ "${SELECTED_ELEMENT}" != "0" ]]; then
         if [[ "${SELECTED_ELEMENT_VALUE}" -eq "${EXPECTATION}" ]]; then
@@ -29,27 +43,6 @@ _MKV_Prop_Check(){
     else
         echo "${ELEMENT} is not present"
     fi
-}
-_MKV_Interlaced(){
-    MKVINTERLACED=$(_MKV_Prop_Check "${1}" "Interlaced" "1")
-}
-_MKV_WIDTH(){
-    MKVWIDTH=$(_MKV_Prop_Check "${1}" "Display width" "4")
-}
-_MKV_HEIGHT(){
-    MKVHEIGHT=$(_MKV_Prop_Check "${1}" "Display height" "3")
-}
-_MKV_UNIT(){
-    MKVUNIT=$(_MKV_Prop_Check "${1}" "Display unit" "3")
-}
-_MKV_RANGE(){
-    MKVRANGE=$(_MKV_Prop_Check "${1}" "Colour range" "1")
-}
-_MKV_TRANSFER(){
-    MKVTRANSFER=$(_MKV_Prop_Check "${1}" "Colour transfer" "1")
-}
-_MKV_PRIMARIES(){
-    MKVPRIMARIES=$(_MKV_Prop_Check "${1}" "Colour primaries" "6")
 }
 _get_video_track(){
     VIDEOTRACK=$(mkvmerge -i "${1}" | grep -i "video" | cut -d " " -f 3 | sed 's/://g')
@@ -70,7 +63,7 @@ _APPLY_STANDARDS(){
     fi
 }
 _usage(){
-    echo "This application checks if a matroska video is consistent with a set of standards properties and if so, it will assign expected values to other properties that are either undefined or differ from expectations. The properties that will be changed to their expected values are as follows:"
+    echo "This application checks if a matroska video is consistent with a set of standard NTSC properties and if so, it will assign expected values to other properties that are either undefined or differ from expectations. The properties that will be changed to their expected values are as follows:"
     echo
     echo "Interlaced = 1"
     echo "Display width = 4"
@@ -90,6 +83,35 @@ _usage(){
     echo "-h to display this help"
     echo
     exit
+}
+_ASSESSMENT(){
+    
+    if [[ "$(echo "${ELEMENT}")" != "Colour transfer" ]]; then
+        EDITELEMENT=$(echo "${ELEMENT}" | sed 's/ /-/g' | tr '[:upper:]' '[:lower:]')
+    elif [[ "$(echo "${ELEMENT}")" == "Colour transfer" ]]; then
+        EDITELEMENT=$(echo "${ELEMENT} characteristics" | sed 's/ /-/g' | tr '[:upper:]' '[:lower:]')
+    fi
+        
+    if [[ "$(_MKV_Prop_Check "${1}" "${ELEMENT}" "${EXPECTATION}")" == "${ELEMENT} is not present" ]]; then
+        echo "Applying standard value to ${ELEMENT} of ${EXPECTATION}"
+        _APPLY_STANDARDS "${1}" "${EDITELEMENT}" "${EXPECTATION}"
+    elif [[ "${RETAIN}" == "1" ]]; then
+        echo "${ELEMENT} will retain the original value of ${SELECTED_ELEMENT_VALUE}"
+    elif [[ "$(_MKV_Prop_Check "${1}" "${ELEMENT}" "${EXPECTATION}")" == "${ELEMENT} is not ${EXPECTATION} but it has the specified value of ${SELECTED_ELEMENT_VALUE}" ]] && [[ "${FORCE}" == "1" ]]; then
+        echo "${ELEMENT} is being reset from ${SELECTED_ELEMENT_VALUE} to ${EXPECTATION}"
+        _APPLY_STANDARDS "${1}" "${EDITELEMENT}" "${EXPECTATION}"
+    elif [[ "$(_MKV_Prop_Check "${1}" "${ELEMENT}" "${EXPECTATION}")" == "${ELEMENT} is not ${EXPECTATION} but it has the specified value of ${SELECTED_ELEMENT_VALUE}" ]] && [[ "${FORCE}" != "1" ]]; then
+        read -e -p "Are you sure you would like to reset ${ELEMENT} to ${EXPECTATION}? [y/n] " choice
+        echo
+        if [[ "${choice}" == [Yy] ]]; then
+            echo "${ELEMENT} is being reset from ${SELECTED_ELEMENT_VALUE} to ${EXPECTATION}"
+            _APPLY_STANDARDS "${1}" "${EDITELEMENT}" "${EXPECTATION}"
+        else
+            echo "${ELEMENT} will retain the original value of ${SELECTED_ELEMENT_VALUE}"
+        fi
+    else 
+        echo "${ELEMENT} already set to expected value of ${EXPECTATION}"
+    fi
 }
 
 user_input="${@}"
@@ -125,20 +147,16 @@ while [[ "${@}" != "" ]] ; do
         echo "Standard video specifications detected"
         echo "Checking MKV properties"
         echo
+    elif [[ "${WIDTH}" -eq "720" && "${HEIGHT}" -eq "486" || "${HEIGHT}" -eq "480" ]] && [[ "${FRAMERATE}" -eq "30000/1001" || "${FRAMERATE}" -eq "29970/1001" ]] && [[ "${FORMAT}" -eq "matroska,webm" ]]; then
+        echo "Standard video specifications detected"
+        echo "Checking MKV properties"
+        echo
     else
         echo -e "\033[1;5;37;40mERROR:\033[0m Video specifications do not conform to the standard configuration required, \033[31m${INPUT}\033[0m will not be processed"
         echo
         continue
     fi
 
-
-#ELEMENT is property name as it appears in mkvINFO report
-#EXPECTATION is expected value of property
-#MKVINFO_PROP generates mkvINFO report
-#SELECTED_ELEMENT checks to see if property is present in the mkvINFO report
-#SELECTED_ELEMENT_VALUE checks the value of the value of the property
-
-
     _MKV_Prop_Check "${INPUT}" "Interlaced" "1"
     _MKV_Prop_Check "${INPUT}" "Display width" "4"
     _MKV_Prop_Check "${INPUT}" "Display height" "3"
@@ -146,237 +164,32 @@ while [[ "${@}" != "" ]] ; do
     _MKV_Prop_Check "${INPUT}" "Colour range" "1"
     _MKV_Prop_Check "${INPUT}" "Colour transfer" "1"
     _MKV_Prop_Check "${INPUT}" "Colour primaries" "6"
-
-
     _get_video_track "${INPUT}"
+    
     echo
     echo "The video track has an mkvmerge track ID of ${VIDEOTRACK}"
     echo "The track number ${TRACKNUMBER} is the video track" 
     echo "Expected values are now going to be applied to the following properties:"
-
-
-#PROPNAME is property name as it appears in mkvPROPEDIT
-#ASSIGNVALUE is the desired value of that property
-#using mkvPROPEDIT set the property to the desired value 
-#PROPMOD is the mkvPROPEDIT exit code 0, 1, 2
-
-
-
     echo
-    echo "Interlaced"
-    _MKV_Prop_Check "${INPUT}" "Interlaced" "1"
-    _MKV_Interlaced "${INPUT}"
-
-    if [[ $(echo "${MKVINTERLACED}") == "${ELEMENT} is not present" ]]; then
-        echo "Applying standard value to ${ELEMENT} of ${EXPECTATION}"
-        _APPLY_STANDARDS "${INPUT}" "interlaced" "1"
-    elif [[ "${RETAIN}" == "1" ]]; then
-        echo "${ELEMENT} will retain the original value of ${SELECTED_ELEMENT_VALUE}"
-    elif [[ "${MKVINTERLACED}" == "${ELEMENT} is not ${EXPECTATION} but it has the specified value of ${SELECTED_ELEMENT_VALUE}" ]] && [[ "${FORCE}" == "1" ]]; then
-        echo "${ELEMENT} is being reset from ${SELECTED_ELEMENT_VALUE} to ${EXPECTATION}"
-        _APPLY_STANDARDS "${INPUT}" "interlaced" "1"
-    elif [[ "${MKVINTERLACED}" == "${ELEMENT} is not ${EXPECTATION} but it has the specified value of ${SELECTED_ELEMENT_VALUE}" ]] && [[ "${FORCE}" != "1" ]]; then
-        read -e -p "Are you sure you would like to reset ${ELEMENT} to ${EXPECTATION}? [y/n] " choice
-        echo
-        if [[ "${choice}" == [Yy] ]]; then
-            echo "${ELEMENT} is being reset from ${SELECTED_ELEMENT_VALUE} to ${EXPECTATION}"
-            _APPLY_STANDARDS "${INPUT}" "interlaced" "1"
-        else
-            echo "${ELEMENT} will retain the original value of ${SELECTED_ELEMENT_VALUE}"
-        fi
-    else 
-        echo "${ELEMENT} already set to expected value of ${EXPECTATION}"
-    fi
-
-
-
-
-
-
+    _MKV_Prop_Check "${INPUT}" "Interlaced" "1" 
+    _ASSESSMENT "${INPUT}"
     echo
-    echo "Width"
     _MKV_Prop_Check "${INPUT}" "Display width" "4"
-    _MKV_WIDTH "${INPUT}"
-
-    if [[ "${MKVWIDTH}" == "${ELEMENT} is not present" ]]; then
-        echo "Applying standard value to ${ELEMENT} of ${EXPECTATION}"
-        _APPLY_STANDARDS "${INPUT}" "display-width" "4"
-    elif [[ "${RETAIN}" == "1" ]]; then
-        echo "${ELEMENT} will retain the original value of ${SELECTED_ELEMENT_VALUE}"
-    elif [[ "${MKVWIDTH}" == "${ELEMENT} is not ${EXPECTATION} but it has the specified value of ${SELECTED_ELEMENT_VALUE}" ]] && [[ "${FORCE}" == "1" ]]; then
-        echo "${ELEMENT} is being reset from ${SELECTED_ELEMENT_VALUE} to ${EXPECTATION}"
-        _APPLY_STANDARDS "${INPUT}" "display-width" "4"
-    elif [[ "${MKVWIDTH}" == "${ELEMENT} is not ${EXPECTATION} but it has the specified value of ${SELECTED_ELEMENT_VALUE}" ]] && [[ "${FORCE}" != "1" ]]; then
-        read -e -p "Are you sure you would like to reset ${ELEMENT} to ${EXPECTATION}? [y/n] " choice
-        echo
-        if [[ "${choice}" == [Yy] ]]; then
-            echo "${ELEMENT} is being reset from ${SELECTED_ELEMENT_VALUE} to ${EXPECTATION}"
-            _APPLY_STANDARDS "${INPUT}" "display-width" "4"
-        else
-            echo "${ELEMENT} will retain the original value of ${SELECTED_ELEMENT_VALUE}"
-        fi
-    else 
-        echo "${ELEMENT} already set to expected value of ${EXPECTATION}"
-    fi
-
-
-
-
-
+    _ASSESSMENT "${INPUT}"
     echo
-    echo "Height"
     _MKV_Prop_Check "${INPUT}" "Display height" "3"
-    _MKV_HEIGHT "${INPUT}"
-
-    if [[ "${MKVHEIGHT}" == "${ELEMENT} is not present" ]]; then
-        echo "Applying standard value to ${ELEMENT} of ${EXPECTATION}"
-        _APPLY_STANDARDS "${INPUT}" "display-height" "3"
-    elif [[ "${RETAIN}" == "1" ]]; then
-        echo "${ELEMENT} will retain the original value of ${SELECTED_ELEMENT_VALUE}"
-    elif [[ "${MKVHEIGHT}" == "${ELEMENT} is not ${EXPECTATION} but it has the specified value of ${SELECTED_ELEMENT_VALUE}" ]] && [[ "${FORCE}" == "1" ]]; then
-        echo "${ELEMENT} is being reset from ${SELECTED_ELEMENT_VALUE} to ${EXPECTATION}"
-        _APPLY_STANDARDS "${INPUT}" "display-height" "3"
-    elif [[ "${MKVHEIGHT}" == "${ELEMENT} is not ${EXPECTATION} but it has the specified value of ${SELECTED_ELEMENT_VALUE}" ]] && [[ "${FORCE}" != "1" ]]; then
-        read -e -p "Are you sure you would like to reset ${ELEMENT} to ${EXPECTATION}? [y/n] " choice
-        echo
-        if [[ "${choice}" == [Yy] ]]; then
-            echo "${ELEMENT} is being reset from ${SELECTED_ELEMENT_VALUE} to ${EXPECTATION}"
-            _APPLY_STANDARDS "${INPUT}" "display-height" "3"
-        else
-            echo "${ELEMENT} will retain the original value of ${SELECTED_ELEMENT_VALUE}"
-        fi
-    else 
-        echo "${ELEMENT} already set to expected value of ${EXPECTATION}"
-    fi
-
-
-
-
-
-
+   _ASSESSMENT "${INPUT}"
     echo
-    echo "Display Unit"
     _MKV_Prop_Check "${INPUT}" "Display unit" "3"
-    _MKV_UNIT "${INPUT}"
-
-    if [[ "${MKVUNIT}" == "${ELEMENT} is not present" ]]; then
-        echo "Applying standard value to ${ELEMENT} of ${EXPECTATION}"
-        _APPLY_STANDARDS "${INPUT}" "display-unit" "3"
-    elif [[ "${RETAIN}" == "1" ]]; then
-        echo "${ELEMENT} will retain the original value of ${SELECTED_ELEMENT_VALUE}"
-    elif [[ "${MKVUNIT}" == "${ELEMENT} is not ${EXPECTATION} but it has the specified value of ${SELECTED_ELEMENT_VALUE}" ]] && [[ "${FORCE}" == "1" ]]; then
-        echo "${ELEMENT} is being reset from ${SELECTED_ELEMENT_VALUE} to ${EXPECTATION}"
-        _APPLY_STANDARDS "${INPUT}" "display-unit" "3"
-    elif [[ "${MKVUNIT}" == "${ELEMENT} is not ${EXPECTATION} but it has the specified value of ${SELECTED_ELEMENT_VALUE}" ]] && [[ "${FORCE}" != "1" ]]; then
-        read -e -p "Are you sure you would like to reset ${ELEMENT} to ${EXPECTATION}? [y/n] " choice
-        echo
-        if [[ "${choice}" == [Yy] ]]; then
-            echo "${ELEMENT} is being reset from ${SELECTED_ELEMENT_VALUE} to ${EXPECTATION}"
-            _APPLY_STANDARDS "${INPUT}" "display-unit" "3"
-        else
-            echo "${ELEMENT} will retain the original value of ${SELECTED_ELEMENT_VALUE}"
-        fi
-    else 
-        echo "${ELEMENT} already set to expected value of ${EXPECTATION}"
-    fi
-
-
-
-
-
-
+    _ASSESSMENT "${INPUT}"
     echo
-    echo "Colour Range"
     _MKV_Prop_Check "${INPUT}" "Colour range" "1"
-    _MKV_RANGE "${INPUT}"
-
-    if [[ "${MKVRANGE}" == "${ELEMENT} is not present" ]]; then
-        echo "Applying standard value to ${ELEMENT} of ${EXPECTATION}"
-        _APPLY_STANDARDS "${INPUT}" "colour-range" "1"
-    elif [[ "${RETAIN}" == "1" ]]; then
-        echo "${ELEMENT} will retain the original value of ${SELECTED_ELEMENT_VALUE}"
-    elif [[ "${MKVRANGE}" == "${ELEMENT} is not ${EXPECTATION} but it has the specified value of ${SELECTED_ELEMENT_VALUE}" ]] && [[ "${FORCE}" == "1" ]]; then
-        echo "${ELEMENT} is being reset from ${SELECTED_ELEMENT_VALUE} to ${EXPECTATION}"
-        _APPLY_STANDARDS "${INPUT}" "colour-range" "1"
-    elif [[ "${MKVRANGE}" == "${ELEMENT} is not ${EXPECTATION} but it has the specified value of ${SELECTED_ELEMENT_VALUE}" ]] && [[ "${FORCE}" != "1" ]]; then
-        read -e -p "Are you sure you would like to reset ${ELEMENT} to ${EXPECTATION}? [y/n] " choice
-        echo
-        if [[ "${choice}" == [Yy] ]]; then
-            echo "${ELEMENT} is being reset from ${SELECTED_ELEMENT_VALUE} to ${EXPECTATION}"
-            _APPLY_STANDARDS "${INPUT}" "colour-range" "1"
-        else
-            echo "${ELEMENT} will retain the original value of ${SELECTED_ELEMENT_VALUE}"
-        fi
-    else 
-        echo "${ELEMENT} already set to expected value of ${EXPECTATION}"
-    fi
-
-
-
-
-
-
+    _ASSESSMENT "${INPUT}"
     echo
-    echo "Colour Transfer"
     _MKV_Prop_Check "${INPUT}" "Colour transfer" "1"
-    _MKV_TRANSFER "${INPUT}"
-
-    if [[ "${MKVTRANSFER}" == "${ELEMENT} is not present" ]]; then
-        echo "Applying standard value to ${ELEMENT} of ${EXPECTATION}"
-        _APPLY_STANDARDS "${INPUT}" "colour-transfer-characteristics" "1"
-    elif [[ "${RETAIN}" == "1" ]]; then
-        echo "${ELEMENT} will retain the original value of ${SELECTED_ELEMENT_VALUE}"
-    elif [[ "${MKVTRANSFER}" == "${ELEMENT} is not ${EXPECTATION} but it has the specified value of ${SELECTED_ELEMENT_VALUE}" ]] && [[ "${FORCE}" == "1" ]]; then
-        echo "${ELEMENT} is being reset from ${SELECTED_ELEMENT_VALUE} to ${EXPECTATION}"
-        _APPLY_STANDARDS "${INPUT}" "colour-transfer-characteristics" "1"
-    elif [[ "${MKVTRANSFER}" == "${ELEMENT} is not ${EXPECTATION} but it has the specified value of ${SELECTED_ELEMENT_VALUE}" ]] && [[ "${FORCE}" != "1" ]]; then
-        read -e -p "Are you sure you would like to reset ${ELEMENT} to ${EXPECTATION}? [y/n] " choice
-        echo
-        if [[ "${choice}" == [Yy] ]]; then
-            echo "${ELEMENT} is being reset from ${SELECTED_ELEMENT_VALUE} to ${EXPECTATION}"
-            _APPLY_STANDARDS "${INPUT}" "colour-transfer-characteristics" "1"
-        else
-            echo "${ELEMENT} will retain the original value of ${SELECTED_ELEMENT_VALUE}"
-        fi
-    else 
-        echo "${ELEMENT} already set to expected value of ${EXPECTATION}"
-    fi
-
-
-
-
-
-
+    _ASSESSMENT "${INPUT}"
     echo
-    echo "Colour Primaries"
     _MKV_Prop_Check "${INPUT}" "Colour primaries" "6"
-    _MKV_PRIMARIES "${INPUT}"
+    _ASSESSMENT "${INPUT}"
 
-    if [[ "${MKVPRIMARIES}" == "${ELEMENT} is not present" ]]; then
-        echo "Applying standard value to ${ELEMENT} of ${EXPECTATION}"
-        _APPLY_STANDARDS "${INPUT}" "colour-primaries" "6"
-    elif [[ "${RETAIN}" == "1" ]]; then
-        echo "${ELEMENT} will retain the original value of ${SELECTED_ELEMENT_VALUE}"
-    elif [[ "${MKVPRIMARIES}" == "${ELEMENT} is not ${EXPECTATION} but it has the specified value of ${SELECTED_ELEMENT_VALUE}" ]] && [[ "${FORCE}" == "1" ]]; then
-        echo "${ELEMENT} is being reset from ${SELECTED_ELEMENT_VALUE} to ${EXPECTATION}"
-        _APPLY_STANDARDS "${INPUT}" "colour-primaries" "6"
-    elif [[ "${MKVPRIMARIES}" == "${ELEMENT} is not ${EXPECTATION} but it has the specified value of ${SELECTED_ELEMENT_VALUE}" ]] && [[ "${FORCE}" != "1" ]]; then
-        read -e -p "Are you sure you would like to reset ${ELEMENT} to ${EXPECTATION}? [y/n] " choice
-        echo
-        if [[ "${choice}" == [Yy] ]]; then
-            echo "${ELEMENT} is being reset from ${SELECTED_ELEMENT_VALUE} to ${EXPECTATION}"
-            _APPLY_STANDARDS "${INPUT}" "colour-primaries" "6"
-        else
-            echo "${ELEMENT} will retain the original value of ${SELECTED_ELEMENT_VALUE}"
-        fi
-    else 
-        echo "${ELEMENT} already set to expected value of ${EXPECTATION}"
-    fi
 done
-exit
-
-
-
-
-
-
