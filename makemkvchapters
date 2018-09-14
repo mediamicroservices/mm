@@ -17,7 +17,7 @@ _ask_for_chapter(){
             _report -qn "Enter the end time or 'q' to quit: "
             read -e ENDTIME
             if [[ "${ENDTIME}" != "q" ]] ; then
-                _report -qn "Enter linked file if any, leave blank, or 'q' to quit: "
+                _report -qn "Enter linked file if any or press enter to proceed: "
                 read -e LINKEDSEGMENT
                 if [[ "${LINKEDSEGMENT}" != "q" ]] ; then
                     if [[ -f "${LINKEDSEGMENT}" ]] ; then
