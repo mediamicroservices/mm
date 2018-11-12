@@ -6,6 +6,7 @@ OBJECTS_FIND_EXCLUSIONS=(! -name ".*")
 OBJECTS_FIND_EXCLUSIONS+=(! -path "*/access/*")
 OBJECTS_FIND_EXCLUSIONS+=(! -path "*/service/*")
 OBJECTS_FIND_EXCLUSIONS+=(! -path "*/trimmed_materials/*")
+OBJECTS_FIND_EXCLUSIONS+=(! -path "*/reformatted/*")
 
 # load configuration file
 if [ -f "${TEMP_MMCONFIG}" ] ; then
