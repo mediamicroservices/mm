@@ -154,7 +154,8 @@ while [ "${*}" != "" ] ; do
         fi
         if [[ "${CODEC_TAG_STRING}" == "2vuy" || \
               "${CODEC_TAG_STRING}" == "v210" || \
-             ("${CODEC_TAG_STRING}" == "FFV1" && "$(echo "${FFV1_VERSION} < ${FFV1_VERSION_EXPECTED}" | bc)" == "1") ]] ; then
+             ("${CODEC_TAG_STRING}" == "FFV1" && "$(echo "${FFV1_VERSION} < ${FFV1_VERSION_EXPECTED}" | bc)" == "1") || \
+             ("${CODEC_TAG_STRING}" == "FFV1" && "${SOURCEFILE##*.}" != "mkv") ]] ; then
             if [[ -n "${FFV1_VERSION}" ]] ; then
                 _report -dt "${SOURCEFILENAME} is ${CODEC_TAG_STRING} version ${FFV1_VERSION} (${FFV1_VERSION}<${FFV1_VERSION_EXPECTED}), starting encode"
             else
