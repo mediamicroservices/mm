@@ -3,8 +3,12 @@
 SCRIPTDIR=$(dirname "${0}")
 . "${SCRIPTDIR}/mmfunctions" || { echo "Missing '${SCRIPTDIR}/mmfunctions'. Exiting." ; exit 1 ;};
 unset DEPENDENCIES
-DEPENDENCIES=(mkvpropedit)
+DEPENDENCIES=(mkvpropedit jot)
 _initialize_make
+
+_random_uint(){
+    jot -r 1  1 18446744073709551615
+}
 
 _ask_for_chapter(){
     unset ChapterSegmentUID
@@ -54,6 +58,9 @@ while [ "${*}" != "" ] ; do
 
 _report "Start and end times must be in HH:MM:SS.mmm or S.mmm format. Note mmm is milliseconds and not frames."
 
+FULL_EDITION_UUID="$(_random_uint)"
+PRES_EDITION_UUID="$(_random_uint)"
+
 echo "<?xml version='1.0' encoding='UTF-8'?>
 <!-- <!DOCTYPE Tags SYSTEM 'matroskatags.dtd'> -->
 <Chapters>
@@ -61,14 +68,14 @@ echo "<?xml version='1.0' encoding='UTF-8'?>
     <EditionFlagOrdered>1</EditionFlagOrdered>
     <EditionFlagHidden>0</EditionFlagHidden>
     <EditionFlagDefault>1</EditionFlagDefault>
-    <EditionUID>3475548369</EditionUID>
+    <EditionUID>${PRES_EDITION_UUID}</EditionUID>
     ${CHAPTER_LIST}
   </EditionEntry>
   <EditionEntry>
     <EditionFlagOrdered>1</EditionFlagOrdered>
     <EditionFlagHidden>0</EditionFlagHidden>
     <EditionFlagDefault>0</EditionFlagDefault>
-    <EditionUID>12338659363134957115</EditionUID>
+    <EditionUID>${FULL_EDITION_UUID}</EditionUID>
     <ChapterAtom>
       <ChapterTimeStart>00:00:00.000000000</ChapterTimeStart>
       <ChapterFlagHidden>0</ChapterFlagHidden>
@@ -86,7 +93,7 @@ echo "<?xml version='1.0' encoding='UTF-8'?>
 <Tags>
   <Tag>
     <Targets>
-      <EditionUID>12338659363134957115</EditionUID>
+      <EditionUID>${FULL_EDITION_UUID}</EditionUID>
       <TargetTypeValue>50</TargetTypeValue>
     </Targets>
     <Simple>
@@ -98,7 +105,7 @@ echo "<?xml version='1.0' encoding='UTF-8'?>
   </Tag>
   <Tag>
     <Targets>
-      <EditionUID>3475548369</EditionUID>
+      <EditionUID>${PRES_EDITION_UUID}</EditionUID>
       <TargetTypeValue>50</TargetTypeValue>
     </Targets>
     <Simple>
