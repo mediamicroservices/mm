@@ -29,6 +29,7 @@ _ask_for_chapter(){
                         ChapterSegmentUID="<ChapterSegmentUID format=\"hex\">${LINKEDUID}</ChapterSegmentUID>"
                     fi
                     CHAPTER="<ChapterAtom>
+                      <ChapterUID>$(_random_uint)</ChapterUID>
                       <ChapterTimeStart>${STARTTIME}</ChapterTimeStart>
                       <ChapterTimeEnd>${ENDTIME}</ChapterTimeEnd>
                       <ChapterFlagHidden>0</ChapterFlagHidden>
@@ -77,6 +78,7 @@ echo "<?xml version='1.0' encoding='UTF-8'?>
     <EditionFlagDefault>0</EditionFlagDefault>
     <EditionUID>${FULL_EDITION_UUID}</EditionUID>
     <ChapterAtom>
+      <ChapterUID>$(_random_uint)</ChapterUID>
       <ChapterTimeStart>00:00:00.000000000</ChapterTimeStart>
       <ChapterFlagHidden>0</ChapterFlagHidden>
       <ChapterFlagEnabled>1</ChapterFlagEnabled>
