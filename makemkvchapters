@@ -3,11 +3,15 @@
 SCRIPTDIR=$(dirname "${0}")
 . "${SCRIPTDIR}/mmfunctions" || { echo "Missing '${SCRIPTDIR}/mmfunctions'. Exiting." ; exit 1 ;};
 unset DEPENDENCIES
-DEPENDENCIES=(mkvpropedit jot)
+DEPENDENCIES=(mkvpropedit jot ffprobe)
 _initialize_make
 
 _random_uint(){
     jot -r 1  1 18446744073709551615
+}
+
+_get_duration(){
+    ffprobe -loglevel quiet "${1}" -sexagesimal -show_entries format=duration -of default=nw=1:nk=1
 }
 
 _ask_for_chapter(){
@@ -80,6 +84,7 @@ echo "<?xml version='1.0' encoding='UTF-8'?>
     <ChapterAtom>
       <ChapterUID>$(_random_uint)</ChapterUID>
       <ChapterTimeStart>00:00:00.000000000</ChapterTimeStart>
+      <ChapterTimeEnd>$(_get_duration "${INPUT}")</ChapterTimeEnd>
       <ChapterFlagHidden>0</ChapterFlagHidden>
       <ChapterFlagEnabled>1</ChapterFlagEnabled>
       <ChapterDisplay>
