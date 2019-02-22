@@ -118,8 +118,8 @@ while [ "${*}" != "" ] ; do
             ffmpeg -i "${TIF}" -pix_fmt gray -y "${TMP_PNG_DIR}/$(basename "${TIF%.*}").png"
         fi
         convert "${TMP_PNG_DIR}/$(basename "${TIF%.*}").png" -level 10%,75%,1 -blur 2 +dither -resize 2550x3300 -monochrome -flatten +repage -define png:bit-depth=8 -define png:color-type=0 "${TMP_CLEAN_DIR}/$(basename "${TIF%.*}").png"
-        tesseract "${TMP_CLEAN_DIR}/$(basename "${TIF%.*}").png" "${TMP_CLEAN_DIR}/$(basename "${TIF%.*}")" -l eng -psm 4 pdf "${SCRIPTDIR}/tesseract.conf"
-        tesseract "${TMP_CLEAN_DIR}/$(basename "${TIF%.*}").png" "${TMP_CLEAN_DIR}/$(basename "${TIF%.*}")" -l eng -psm 4 "${SCRIPTDIR}/tesseract.conf"
+        tesseract "${TMP_CLEAN_DIR}/$(basename "${TIF%.*}").png" "${TMP_CLEAN_DIR}/$(basename "${TIF%.*}")" -l eng --psm 4 pdf "${SCRIPTDIR}/tesseract.conf"
+        tesseract "${TMP_CLEAN_DIR}/$(basename "${TIF%.*}").png" "${TMP_CLEAN_DIR}/$(basename "${TIF%.*}")" -l eng --   psm 4 "${SCRIPTDIR}/tesseract.conf"
     done
     pdfjoin --fitpaper 'false' --rotateoversize 'false' --paper letter $(find "${TMP_CLEAN_DIR}" -name "*.pdf" | sort | xargs) --outfile "${OUTPUTDIR}/${MEDIAID}.pdf"
     cat $(find "${TMP_CLEAN_DIR}" -name "*.txt" | sort | xargs) > "${OUTPUTDIRTEXT}/${MEDIAID}.txt"
