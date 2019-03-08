@@ -79,6 +79,13 @@ _ask_digitization_logs(){
     [[ ! -z "${FILES}" ]] && _writeingestlog "digitization_logs: ${FILES}\n"
 }
 
+_ask_restoration(){
+    _report -qn "Drag in any restoration master: "
+    read -e -a RESTORATION_FILE
+    [[ "${RESTORATION_FILE[0]}" = "q" ]] && exit 0
+    [[ ! -z "${RESTORATION_FILE}" ]] && _writeingestlog "restoration: ${RESTORATION_FILE}\n"
+}
+
 # spreadsheet fields are currently CUNY-specific
 _parse_spreadsheet(){
     DIGITIZATIONLOG=$(_maketemp)
@@ -516,6 +523,7 @@ fi
     _setup_package
     if [[ "${MODE}" == "audio" ]] ; then
         _ask_digitization_logs
+        _ask_restoration
         _ask_photos "${MEDIAID}"
         if [[ -f ${FILES} ]] ; then
             _parse_spreadsheet
@@ -642,16 +650,24 @@ FROM=$(_get_filesystem "${INPUT}")
 TO=$(_get_filesystem "${OBJECTSDIR}/")
 if [ "${FROM}" == "${TO}" -a "${CLEANUPDECISION}" == "Remove source file after successful ingest" ] ; then
     _report -dt "Because ${INPUT} and ${OBJECTSDIR} are on the same filesystem and preservation mode is enabled we will mv rather than rsync."
-    _run_critical mv -v -n "${INPUT}" "${OBJECTSDIR}/"
+    _run_critical mv -v -n "${INPUT[@]}" "${OBJECTSDIR}/"
     if [ ! "${#FILES[@]}" = 0 ] ; then
         _run_critical mv -v -n "${FILES[@]}" "${LOGDIR}/"
+    fi
+    if [ ! "${#RESTORATION_FILE[@]}" = 0 ] ; then
+        _mkdir2 "${OBJECTSDIR}/restoration"
+        _run_critical mv -v -n "${RESTORATION_FILE[@]}" "${OBJECTSDIR}/restoration/"
     fi
 else
     _report -dt "STATUS Copying the original file to library storage at ${OBJECTSDIR}."
     LOGFILE="${LOGDIR}/rsync_$(_get_iso8601_c)_$(basename ${0})_${VERSION}.txt"
-    "${SCRIPTDIR}/migratefiles" -l "${LOGFILE}" -o "${OBJECTSDIR}" "${INPUT}"
+    "${SCRIPTDIR}/migratefiles" -l "${LOGFILE}" -o "${OBJECTSDIR}" "${INPUT[@]}"
     if [ ! "${#FILES[@]}" = 0 ] ; then
         _run_critical rsync -rt --progress --log-file="${LOGDIR}/rsync_$(_get_iso8601_c)_$(basename $0)_${VERSION}.txt" "${FILES[@]}" "${LOGDIR}/"
+    fi
+    if [ ! "${#RESTORATION_FILE[@]}" = 0 ] ; then
+        _mkdir2 "${OBJECTSDIR}/restoration"
+        _run_critical rsync -rt --progress --log-file="${LOGDIR}/rsync_$(_get_iso8601_c)_$(basename $0)_${VERSION}.txt" "${RESTORATION_FILE[@]}" "${OBJECTSDIR}/restoration/"
     fi
 fi
 
