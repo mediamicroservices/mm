@@ -20,7 +20,7 @@ _usage(){
         echo "      resourcespace (mp4) for uploading to resourcespace"
         echo "      dvd (iso)"
         echo "      mp3 (mp3)"
-        echo "      podcast (mov)"
+        echo "      podcast (mov or m4a)"
         echo "      waveform (png)"
         echo "      showwaves (mp4)"
         echo "  -m (only use the first track)"
@@ -107,8 +107,8 @@ elif [[ "${OUTPUT_TYPE}" == "mp3" ]] ; then
     EXTENSION="mp3"
     RELATIVEPATH="objects/access/mp3"
 elif [[ "${OUTPUT_TYPE}" == "podcast" ]] ; then
+    # extension is set later in the loop because it will be adjusted based on audio-only or audio-video
     PREFERRED_SOURCE="service"
-    EXTENSION="mov"
     RELATIVEPATH="objects/access/podcast"
     SUFFIX="_podcast"
 elif [[ "${OUTPUT_TYPE}" == "waveform" ]] ; then
@@ -155,12 +155,6 @@ while [[ "${@}" != "" ]] ; do
     fi
     _report_to_db
 
-    if [[ "${CHAPTERIZE}" != "Y" ]] ; then
-        _set_up_output
-    fi
-    INPUTOPTIONS+=(-y)
-    INPUTOPTIONS+=(-nostdin)
-
     # get information on the input
     _get_height "${SOURCEFILE}"
     _get_width "${SOURCEFILE}"
@@ -187,7 +181,21 @@ while [[ "${@}" != "" ]] ; do
         done
         exit
     fi
-    
+
+    if [[ "${OUTPUT_TYPE}" == "podcast" ]] ; then
+        if [[ "${VIDEOSTREAMCOUNT}" -gt 0 ]] ; then
+            EXTENSION="mov"
+        else
+            EXTENSION="m4a"
+        fi
+    fi
+
+    if [[ "${CHAPTERIZE}" != "Y" ]] ; then
+        _set_up_output
+    fi
+    INPUTOPTIONS+=(-y)
+    INPUTOPTIONS+=(-nostdin)
+
     # set in and out times if used; ignore out time if a slate is being created
     if [[ -f "${INGESTLOG}" && "${ISOBJECT}" = "Y" ]] ; then
         if [[ -z "${INTIME}" ]] ; then
@@ -504,7 +512,7 @@ while [[ "${@}" != "" ]] ; do
             MIDDLEOPTIONS+=(-c:v libx264)
             MIDDLEOPTIONS+=(-crf 26)
             _add_video_filter "yadif"
-        elif [[ "${OUTPUT_TYPE}" == "mp3" ]] || [[ "${OUTPUT_TYPE}" == "waveform" ]] ; then
+        elif [[ "${OUTPUT_TYPE}" == "m4a" ]] || [[ "${OUTPUT_TYPE}" == "mp3" ]] || [[ "${OUTPUT_TYPE}" == "waveform" ]] ; then
             _report -dt "No video stream needed for ${OUTPUT_TYPE}."
         else
             echo "Invalid video derivative type."
@@ -542,7 +550,13 @@ while [[ "${@}" != "" ]] ; do
             _get_audio_mapping -v "${SOURCEFILE}"
         elif [[ "${OUTPUT_TYPE}" == "podcast" ]] ; then
             MIDDLEOPTIONS+=(-c:a aac)
-            MIDDLEOPTIONS+=(-b:a 96k)
+            MIDDLEOPTIONS+=(-ar 48000)
+            if [[ "${VIDEOSTREAMCOUNT}" -gt 0 ]] ; then
+                MIDDLEOPTIONS+=(-b:a 96k)
+            else
+                MIDDLEOPTIONS+=(-b:a 128k)
+                MIDDLEOPTIONS+=(-sample_fmt fltp)
+            fi
             _get_audio_mapping -v "${SOURCEFILE}"
         elif [[ "${OUTPUT_TYPE}" == "waveform" ]] ; then
             MIDDLEOPTIONS+=(-vn)
