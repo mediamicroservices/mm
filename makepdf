@@ -105,24 +105,35 @@ while [ "${*}" != "" ] ; do
     _run mkdir -p "${OUTPUTDIR}"
 
     TMP_MAKEPDF_DIR="${INPUT}/tmp"
-    TMP_PNG_DIR="${TMP_MAKEPDF_DIR}/pngs"
-    TMP_CLEAN_DIR="${TMP_MAKEPDF_DIR}/pngs_cleaned"
-    _run mkdir -p "${TMP_MAKEPDF_DIR}" "${TMP_PNG_DIR}" "${TMP_CLEAN_DIR}" "${OUTPUTDIRTEXT}"
+    TMP_JPG_DIR="${TMP_MAKEPDF_DIR}/jpgs"
+    _run mkdir -p "${TMP_MAKEPDF_DIR}" "${TMP_JPG_DIR}" "${OUTPUTDIRTEXT}"
 
     for TIF in `find "${SOURCEDIR}" -maxdepth 1 -mindepth 1 -iname "*.tif" -type f` ; do
         check_tif_name "${TIF}"
+        TIF_BASE_NAME="$(basename "${TIF%.*}")"
         if [ "${NEW_TIF_NAME}" ] ; then
             TIF="${NEW_TIF_NAME}"
         fi
-        if [[ ! -s "${TMP_PNG_DIR}/$(basename "${TIF%.*}").png" ]] ; then
-            ffmpeg -i "${TIF}" -pix_fmt gray -y "${TMP_PNG_DIR}/$(basename "${TIF%.*}").png"
+        if [[ ! -s "${TMP_JPG_DIR}/$(basename "${TIF%.*}").jpg" ]] ; then
+            ffmpeg -i "${TIF}" -pix_fmt yuvj420p -s 1275x1650 "${TMP_JPG_DIR}/${TIF_BASE_NAME}.jpg"
         fi
-        convert "${TMP_PNG_DIR}/$(basename "${TIF%.*}").png" -level 10%,75%,1 -blur 2 +dither -resize 2550x3300 -monochrome -flatten +repage -define png:bit-depth=8 -define png:color-type=0 "${TMP_CLEAN_DIR}/$(basename "${TIF%.*}").png"
-        tesseract "${TMP_CLEAN_DIR}/$(basename "${TIF%.*}").png" "${TMP_CLEAN_DIR}/$(basename "${TIF%.*}")" -l eng --psm 4 pdf "${SCRIPTDIR}/tesseract.conf"
-        tesseract "${TMP_CLEAN_DIR}/$(basename "${TIF%.*}").png" "${TMP_CLEAN_DIR}/$(basename "${TIF%.*}")" -l eng --   psm 4 "${SCRIPTDIR}/tesseract.conf"
+        tesseract "${TMP_JPG_DIR}/${TIF_BASE_NAME}.jpg" "${TMP_JPG_DIR}/${TIF_BASE_NAME}" -l eng --psm 4 pdf "${SCRIPTDIR}/tesseract.conf"
+        tesseract "${TMP_JPG_DIR}/${TIF_BASE_NAME}.jpg" "${TMP_JPG_DIR}/${TIF_BASE_NAME}" -l eng --psm 4     "${SCRIPTDIR}/tesseract.conf"
     done
-    pdfjoin --fitpaper 'false' --rotateoversize 'false' --paper letter $(find "${TMP_CLEAN_DIR}" -name "*.pdf" | sort | xargs) --outfile "${OUTPUTDIR}/${MEDIAID}.pdf"
-    cat $(find "${TMP_CLEAN_DIR}" -name "*.txt" | sort | xargs) > "${OUTPUTDIRTEXT}/${MEDIAID}.txt"
+
+    SCRIPT_TITLE=$(fmpbcore "${MEDIAID}" | xmlstarlet 'select' -N "p=http://www.pbcore.org/PBCore/PBCoreNamespace.html" -t -v "/p:pbcoreCollection/p:pbcoreDescriptionDocument/p:pbcoreTitle[@titleType='Series']" -o ": " -v "/p:pbcoreCollection/p:pbcoreDescriptionDocument/p:pbcoreTitle[@titleType='Episode']")
+    SCRIPT_AUTHOR=$(fmpbcore "${MEDIAID}" | xmlstarlet 'select' -N "p=http://www.pbcore.org/PBCore/PBCoreNamespace.html" -t -m "/p:pbcoreCollection/p:pbcoreDescriptionDocument/p:pbcoreCreator" -v "p:creatorRole" -o ": " -v "p:creator" -o " ; ")
+
+    pdfjoin --pdftitle "${SCRIPT_TITLE}" --pdfauthor "${SCRIPT_AUTHOR}" --pdfkeywords "${MEDIAID}" --fitpaper 'false' --rotateoversize 'false' --paper letter $(find "${TMP_JPG_DIR}" -name "*.pdf" | sort | xargs) --outfile "${OUTPUT}"
+
+    find "${TMP_JPG_DIR}" -name "*.txt" | sort | while read page ; do
+        PAGENAME="$(basename "${page%.*}")"
+        echo "======================================" >> "${OUTPUTDIRTEXT}/${MEDIAID}.txt"
+        echo "Page: ${PAGENAME}" >> "${OUTPUTDIRTEXT}/${MEDIAID}.txt"
+        echo "======================================" >> "${OUTPUTDIRTEXT}/${MEDIAID}.txt"
+        echo >> "${OUTPUTDIRTEXT}/${MEDIAID}.txt"
+        cat "${page}" >> "${OUTPUTDIRTEXT}/${MEDIAID}.txt"
+    done
 
     #if [ -d "${TMP_MAKEPDF_DIR}" ] ; then
     #    _run rm -rvf "${TMP_MAKEPDF_DIR}"
