@@ -510,10 +510,26 @@ while [[ "${@}" != "" ]] ; do
             MIDDLEOPTIONS+=(-ar 48000)
             _get_audio_mapping -v "${SOURCEFILE}"
         elif [[ "${OUTPUT_TYPE}" == "mp3" ]] ; then
+            TAPE_TITLE="$(fmpbcore "${MEDIAID}" | xmlstarlet 'select' -N "p=http://www.pbcore.org/PBCore/PBCoreNamespace.html" -t -v "/p:pbcoreCollection/p:pbcoreDescriptionDocument/p:pbcoreTitle[@titleType='Episode']")"
+            TAPE_ARTIST="$(fmpbcore "${MEDIAID}" | xmlstarlet 'select' -N "p=http://www.pbcore.org/PBCore/PBCoreNamespace.html" -t -m "/p:pbcoreCollection/p:pbcoreDescriptionDocument/p:pbcoreCreator" -v "p:creator" -o " (" -v "p:creatorRole" -o "); ")"
+            TAPE_SERIES="$(fmpbcore "${MEDIAID}" | xmlstarlet 'select' -N "p=http://www.pbcore.org/PBCore/PBCoreNamespace.html" -t -v "/p:pbcoreCollection/p:pbcoreDescriptionDocument/p:pbcoreTitle[@titleType='Series']")"
+            TAPE_YEAR="$(fmpbcore "${MEDIAID}" | xmlstarlet 'select' -N "p=http://www.pbcore.org/PBCore/PBCoreNamespace.html" -t -v "/p:pbcoreCollection/p:pbcoreDescriptionDocument/p:pbcoreAssetDate[@dateType='Broadcast' or @dateType='broadcast'][1]")"
             MIDDLEOPTIONS+=(-map 0:a:0)
             MIDDLEOPTIONS+=(-ac 2)
             MIDDLEOPTIONS+=(-r:a 44100)
             MIDDLEOPTIONS+=(-sample_fmt s16p)
+            MIDDLEOPTIONS+=(-write_xing 0)
+            if [ -n "${TAPE_TITLE}" -a -n "${TAPE_YEAR}" ] ; then
+                MP3_NAME="${TAPE_TITLE}, first aired ${TAPE_YEAR}" 
+                MIDDLEOPTIONS+=(-metadata title="${MP3_NAME}")
+            elif [ -n "${TAPE_TITLE}" -a -z "${TAPE_YEAR}" ] ; then
+                MIDDLEOPTIONS+=(-metadata title="${TAPE_TITLE}")
+            fi  
+            if [ -n "${TAPE_ARTIST}" ] ; then
+                MIDDLEOPTIONS+=(-metadata artist="${TAPE_ARTIST}")
+            fi
+            MIDDLEOPTIONS+=(-metadata album="${TAPE_SERIES}")
+            MIDDLEOPTIONS+=(-metadata date="${TAPE_YEAR}")
             _get_audio_mapping -v "${SOURCEFILE}"
         elif [[ "${OUTPUT_TYPE}" == "podcast" ]] ; then
             if [[ "${VIDEOSTREAMCOUNT}" -gt 0 ]] ; then
@@ -521,14 +537,29 @@ while [[ "${@}" != "" ]] ; do
             MIDDLEOPTIONS+=(-b:a 96k)
             _get_audio_mapping -v "${SOURCEFILE}"
             else 
+            TAPE_TITLE="$(fmpbcore "${MEDIAID}" | xmlstarlet 'select' -N "p=http://www.pbcore.org/PBCore/PBCoreNamespace.html" -t -v "/p:pbcoreCollection/p:pbcoreDescriptionDocument/p:pbcoreTitle[@titleType='Episode']")"
+            TAPE_ARTIST="$(fmpbcore "${MEDIAID}" | xmlstarlet 'select' -N "p=http://www.pbcore.org/PBCore/PBCoreNamespace.html" -t -m "/p:pbcoreCollection/p:pbcoreDescriptionDocument/p:pbcoreCreator" -v "p:creator" -o " (" -v "p:creatorRole" -o "); ")"
+            TAPE_SERIES="$(fmpbcore "${MEDIAID}" | xmlstarlet 'select' -N "p=http://www.pbcore.org/PBCore/PBCoreNamespace.html" -t -v "/p:pbcoreCollection/p:pbcoreDescriptionDocument/p:pbcoreTitle[@titleType='Series']")"
+            TAPE_YEAR="$(fmpbcore "${MEDIAID}" | xmlstarlet 'select' -N "p=http://www.pbcore.org/PBCore/PBCoreNamespace.html" -t -v "/p:pbcoreCollection/p:pbcoreDescriptionDocument/p:pbcoreAssetDate[@dateType='Broadcast' or @dateType='broadcast'][1]")"
             MIDDLEOPTIONS+=(-c:a aac)
             MIDDLEOPTIONS+=(-map 0:a:0)
             MIDDLEOPTIONS+=(-ac 2)
             MIDDLEOPTIONS+=(-ar 48000)
             MIDDLEOPTIONS+=(-b:a 128k)
             MIDDLEOPTIONS+=(-sample_fmt fltp)
-            _get_audio_mapping -v "${SOURCEFILE}" 
-            fi    
+            if [ -n "${TAPE_TITLE}" -a -n "${TAPE_YEAR}" ] ; then
+                M4A_NAME="${TAPE_TITLE}, first aired ${TAPE_YEAR}" 
+                MIDDLEOPTIONS+=(-metadata title="${M4A_NAME}")
+            elif [ -n "${TAPE_TITLE}" -a -z "${TAPE_YEAR}" ] ; then
+                MIDDLEOPTIONS+=(-metadata title="${TAPE_TITLE}")
+            fi  
+            if [ -n "${TAPE_ARTIST}" ] ; then
+                MIDDLEOPTIONS+=(-metadata artist="${TAPE_ARTIST}")
+            fi
+            MIDDLEOPTIONS+=(-metadata album="${TAPE_SERIES}")
+            MIDDLEOPTIONS+=(-metadata date="${TAPE_YEAR}")
+            _get_audio_mapping -v "${SOURCEFILE}"
+            fi
         elif [[ "${OUTPUT_TYPE}" == "waveform" ]] ; then
             MIDDLEOPTIONS+=(-vn)
             MIDDLEOPTIONS+=(-frames:v 1)
