@@ -1464,9 +1464,9 @@ _prep_ffmpeg_log(){
             _unset_ffreport
         else
             if [[ -n "${OUTPUT_TYPE}" ]] ;then
-                export FFREPORT="file=${LOGDIR}/%p_%t_$(basename "${0}")_${OUTPUT_TYPE}_${VERSION}.txt"
+                export FFREPORT="file=${LOGDIR}/%p_%t_$(basename "${0}")_${OUTPUT_TYPE}_${VERSION}.txt:level=32"
             else
-                export FFREPORT="file=${LOGDIR}/%p_%t_$(basename "${0}")_${VERSION}.txt"
+                export FFREPORT="file=${LOGDIR}/%p_%t_$(basename "${0}")_${VERSION}.txt:level=32"
             fi
         fi
         INPUTOPTIONS+=(-v info)
