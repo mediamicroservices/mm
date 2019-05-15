@@ -775,6 +775,10 @@ _get_seconds(){
     FILESECONDS=$(ffprobe "${1}" -show_format 2>/dev/null | grep "^duration=" | cut -d= -f2)
 }
 
+_get_chapterlist(){
+    CHAPTER_LIST="$(ffprobe -v 0 "${1}" -show_entries chapter=id,start_time,end_time:chapter_tags=title -of compact=p=0:nk=1)"
+}
+
 _email_delivery(){
     EMAILTO="${1}"
     if [ "${EMAILTO}" ] ; then
@@ -1340,9 +1344,19 @@ _get_volume_adjustment(){
     measured_thresh=""
     target_offset=""
     LOUD_ADJ=""
+    LOUDNESS_OPT_START=""
+    LOUDNESS_OPT_END=""
     INPUT_MOVIE="${1}"
+    if [[ -n "${INTIME}" ]] ; then
+        _report -dt "Loudness reading will start at intime (${INTIME})."
+        LOUDNESS_OPT_START="-ss ${INTIME}"
+    fi
+    if [[ -n "${OUTTIME}" ]] ; then
+        _report -dt "Loudness reading will end at outtime (${OUTTIME})."
+        LOUDNESS_OPT_END="-to ${OUTTIME}"
+    fi
     _report -dt "Getting loudness data for $(basename "${INPUT_MOVIE}") ..."
-    LOUDNESS_DATA=$(ffmpeg -i "${1}" -vn -filter_complex "${AUDIOFILTERCHAIN},loudnorm=print_format=json" -f null - 2>&1)
+    LOUDNESS_DATA=$(ffmpeg ${LOUDNESS_OPT_START} -i "${1}" ${LOUDNESS_OPT_END} -vn -filter_complex "${AUDIOFILTERCHAIN},loudnorm=print_format=json" -f null - 2>&1)
     VOLUME_EXIT_CODE="${?}"
     if [ "${VOLUME_EXIT_CODE}" -ne 0 ] ; then
         _report -wt "Volume analysis for ${INPUT_MOVIE} exited with ${VOLUME_EXIT_CODE}."
@@ -1353,7 +1367,7 @@ _get_volume_adjustment(){
         measured_thresh=$(echo "$LOUDNESS_DATA" | grep "input_thresh" | awk -F\" '{print $4}')
         target_offset=$(echo "$LOUDNESS_DATA" | grep "target_offset" | awk -F\" '{print $4}')
         LOUD_ADJ=$(echo "($measured_I - -24)*-1" | bc)
-        if [[ -f "${INGESTLOG}" ]] ; then
+        if [[ -f "${INGESTLOG}" && -z "${INTIME}" ]] ; then
             _writeingestlog "measured_true_peak" "${measured_TP}"
             _writeingestlog "r128_loudness_range" "${measured_LRA}"
             _writeingestlog "r128_integrated_loudness" "${measured_I}"
