@@ -205,6 +205,7 @@ _makeaccesscopies(){
         "${SCRIPTDIR}/makederiv" -T dvd "${OUTDIR_INGESTFILE}/${MEDIAID}"
     else
         "${SCRIPTDIR}/makederiv" -T showwaves "${MAKEDERIVOPTS[@]}" "${OUTDIR_INGESTFILE}/${MEDIAID}"
+        "${SCRIPTDIR}/makederiv" -T audiographs "${OUTDIR_INGESTFILE}/${MEDIAID}"
     fi
 }
 
@@ -515,11 +516,18 @@ fi
     fi
     _setup_package
     if [[ "${MODE}" == "audio" ]] ; then
-        _ask_digitization_logs
-        _ask_photos "${MEDIAID}"
-        if [[ -f ${FILES} ]] ; then
-            _parse_spreadsheet
-            _get_xmp_info
+        _report -q "Is the file the result of digitization? Enter 1 for Yes or 2 for No."
+        select DIGITIZATION in "Yes" "No"
+        do
+            break
+        done
+        if [[ "${DIGITIZATION}" == "Yes" ]] ; then
+            _ask_digitization_logs
+            _ask_photos "${MEDIAID}"
+            if [[ -f ${FILES} ]] ; then
+                _parse_spreadsheet
+                _get_xmp_info
+            fi
         fi
     fi
     if [[ -z "${AUDIODECISION}" ]] ; then
