@@ -201,6 +201,7 @@ while [[ "${@}" != "" ]] ; do
         _report -dt "Transcoding will use intime (${INTIME}) during transcoding."
         INPUTOPTIONS+=(-seek_timestamp 1)
         MIDDLEOPTIONS+=(-ss "${INTIME}")
+        METADATA_COMMENT+=("mediaid=${MEDIAID} ")
         METADATA_COMMENT+=("in=${INTIME} ")
     fi
     if [[ "${OUTTIME}" && "${ADDSLATE}" = "Y" ]] ; then
