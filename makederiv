@@ -181,7 +181,7 @@ while [[ "${@}" != "" ]] ; do
             CHAP_START="$(echo "${chapter}" | cut -d"|" -f2)"
             CHAP_END="$(echo "${chapter}" | cut -d"|" -f3)"
             CHAP_TITLE="$(echo "${chapter}" | cut -d"|" -f4- | sed 's/ /_/g;s/[^a-zA-Z0-9_]//g;s/__/_/g')"
-            CHAP_SUFFIX="_$(printf "%02d\n" "${CHAP_ID}")_${CHAP_TITLE}"
+            CHAP_SUFFIX="_SEG$(printf "%02d\n" "${CHAP_ID}")_${CHAP_TITLE}"
             echo "Creating ${OUTPUT_TYPE} chapter output ${CHAP_TITLE} (${CHAP_START}-${CHAP_END})"
             ("${SCRIPTDIR}/makederiv" -T "${OUTPUT_TYPE}" -I "$CHAP_START" -O "${CHAP_END}" -S "$CHAP_SUFFIX" "${INPUT}")
         done
