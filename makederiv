@@ -181,7 +181,7 @@ while [[ "${@}" != "" ]] ; do
             CHAP_START="$(echo "${chapter}" | cut -d"|" -f2)"
             CHAP_END="$(echo "${chapter}" | cut -d"|" -f3)"
             CHAP_TITLE="$(echo "${chapter}" | cut -d"|" -f4- | sed 's/ /_/g;s/[^a-zA-Z0-9_]//g;s/__/_/g')"
-            CHAP_SUFFIX="_$(printf "%02d\n" "${CHAP_ID}")_${CHAP_TITLE}"
+            CHAP_SUFFIX="_SEG$(printf "%02d\n" "${CHAP_ID}")_${CHAP_TITLE}"
             echo "Creating ${OUTPUT_TYPE} chapter output ${CHAP_TITLE} (${CHAP_START}-${CHAP_END})"
             ("${SCRIPTDIR}/makederiv" -T "${OUTPUT_TYPE}" -I "$CHAP_START" -O "${CHAP_END}" -S "$CHAP_SUFFIX" "${INPUT}")
         done
@@ -201,18 +201,19 @@ while [[ "${@}" != "" ]] ; do
         _report -dt "Transcoding will use intime (${INTIME}) during transcoding."
         INPUTOPTIONS+=(-seek_timestamp 1)
         MIDDLEOPTIONS+=(-ss "${INTIME}")
-        TEMPORAL_RANGE+=("in=${INTIME} ")
+        METADATA_COMMENT+=("mediaid=${MEDIAID} ")
+        METADATA_COMMENT+=("in=${INTIME} ")
     fi
     if [[ "${OUTTIME}" && "${ADDSLATE}" = "Y" ]] ; then
         _report -dt "Transcoding will NOT use outtime (${OUTTIME}) during transcoding, as there is a slate being created for this file."
     elif [[ "${OUTTIME}" && "${ADDSLATE}" != "Y" ]] ; then
         _report -dt "Transcoding will use outtime (${OUTTIME}) during transcoding."
         MIDDLEOPTIONS+=(-to "${OUTTIME}")
-        TEMPORAL_RANGE+=("out=${OUTTIME} ")
+        METADATA_COMMENT+=("out=${OUTTIME} ")
     fi
 
-    if [[ -n "${TEMPORAL_RANGE}" ]] ; then
-        MIDDLEOPTIONS+=(-metadata "comment=${TEMPORAL_RANGE[*]}")
+    if [[ -n "${METADATA_COMMENT}" ]] ; then
+        MIDDLEOPTIONS+=(-metadata "comment=${METADATA_COMMENT[*]}")
     fi
 
     # read audio decision from ingestlog
