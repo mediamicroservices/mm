@@ -502,12 +502,8 @@ while [[ "${@}" != "" ]] ; do
             MIDDLEOPTIONS+=(-movflags faststart)
             MIDDLEOPTIONS+=(-pix_fmt yuv420p)
             MIDDLEOPTIONS+=(-c:v libx264)
-            MIDDLEOPTIONS+=(-b:v 1500k)
-            MIDDLEOPTIONS+=(-maxrate:v 3000k)
-            MIDDLEOPTIONS+=(-minrate:v 375k)
-            # MIDDLEOPTIONS+=(-bufsize:v 6000k)
+            MIDDLEOPTIONS+=(-crf 26)
             _add_video_filter "yadif"
-            _add_video_filter "scale=640:trunc(ow/dar/2)*2:interl=1"
         elif [[ "${OUTPUT_TYPE}" == "mp3" ]] || [[ "${OUTPUT_TYPE}" == "waveform" ]] ; then
             _report -dt "No video stream needed for ${OUTPUT_TYPE}."
         else
