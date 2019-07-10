@@ -42,10 +42,10 @@ while [ "${*}" != "" ] ; do
         OUTPUTDIR="${PACKAGE}/metadata"
         MEDIAID=$(basename "${PACKAGE}")
         _report -dt "running verifytree on ${PACKAGE}" #the name of the package being verified
-        "${SCRIPTDIR}/removeDSStore" "${PACKAGE}"
+
             #make a new temp tree
             TEMPTREE=$(_maketemp)
-            tree -DaNXs --du --timefmt "%Y-%m-%dT%H:%M:%SZ" -I "tree.xml" "${PACKAGE}" > "${TEMPTREE}"
+            tree -DaNXs --du --timefmt "%Y-%m-%dT%H:%M:%SZ" -I "tree.xml|.DS_Store" "${PACKAGE}" > "${TEMPTREE}"
             #if tree.xml exists, compare it to the specified xpath expressions of an AIP
 
         #searching for upper-level directories
