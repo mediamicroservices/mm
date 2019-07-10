@@ -97,7 +97,7 @@ while [ "${*}" != "" ] ; do
         #looks for any directories within access directory that are not dvd, images, mp3, podcast, or youtube_up
         _runtest "There are unexpected directories in the access directory." xmlstarlet sel -t -v "/tree/directory/directory[@name='objects']/directory[@name='access']/directory[@name!='dvd' and @name!='images' and @name!='mp3' and @name!='podcast' and @name!='youtube_up']/@name" -n "${TEMPTREE}"
         #looks for unexpected files in youtube_up directory
-        _runtest "There are unexpected files in the youtube_up directory!" xmlstarlet sel -t -v "/tree/directory/directory[@name='objects']/directory[@name='access']/directory[@name='youtube_up']/file[@name!='${MEDIAID}.mp4']/@name" -n  "${TEMPTREE}"
+        _runtest "There are unexpected files in the youtube_up directory!" xmlstarlet sel -t -v "/tree/directory/directory[@name='objects']/directory[@name='access']/directory[@name='youtube_up']/file[@name!='${MEDIAID}.mp4' and not(starts-with(@name,'${MEDIAID}_SEG') and substring(@name,string-length(@name)-3)='.mp4')]/@name" -n  "${TEMPTREE}"
         #looks for unexpected directories in youtube_up directory
         _runtest "There are unexpected directories in the youtube_up directory!" xmlstarlet sel -t -v "/tree/directory/directory[@name='objects']/directory[@name='access']/directory[@name='youtube_up']/directory[count(@name)>0]/@name" -n "${TEMPTREE}"
         #looks for unexpected files in dvd directory
