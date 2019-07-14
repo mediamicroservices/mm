@@ -385,10 +385,10 @@ To view the specific ffmpeg encoding options for each file, view the sourcecode 
 * Creates a frame md5 for video files in target package. Relies on package structure used in mm.
 
 #### makeframes
-* makeframes creates 10 still images from a video file or package input. Your command will look like:  makeframes [input]. To deliver still images to a specific directory, use this command  `ingestfile -d [path/to/directory] [input]`.
+* makeframes creates 10 still images from a video file or package input. Your command will look like:  `makeframes [input]`. To deliver still images to a specific directory, use this command  `ingestfile -d [path/to/directory] [input]`.
 
 #### makelossless
-* makelossless losslessly transcodes a video file or package input. Your command will look like this: makelossless [input].
+* makelossless losslessly transcodes a video file or package input. Your command will look like this: `makelossless [input]`.
 * if you would like to transcode using lossless jpeg2000 instead of ffv1 version 3, use option j. Your command will look like this: `makelossless -j [input]`.
 * if you want to run makelossless in "dry-run" mode, which means that the commands will be shown in the terminal but not run, use option n. Your command will look like this:  `makelossless -n [input]`.
 
