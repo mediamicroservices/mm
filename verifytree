@@ -4,7 +4,7 @@
 SCRIPTDIR=$(dirname "${0}")
 . "${SCRIPTDIR}/mmfunctions" || { echo "Missing '${SCRIPTDIR}/mmfunctions'. Exiting." ; exit 1 ;};
 unset DEPENDENCIES
-DEPENDENCIES=(xml "${SCRIPTDIR}/removeDSStore")
+DEPENDENCIES=(xmlstarlet)
 
 #define _runtest function
 _runtest(){
