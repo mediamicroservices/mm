@@ -1,10 +1,10 @@
 #!/bin/bash
 #verifytree creates a temporary xml of package and compares against a set directory structure
 #create temp xml of package and set xml, compare the two. xml starlet, temp has to exclude the tree.xml file in temp creation
-SCRIPTDIR=$(dirname "${0}")
+SCRIPTDIR="$(dirname "${0}")"
 . "${SCRIPTDIR}/mmfunctions" || { echo "Missing '${SCRIPTDIR}/mmfunctions'. Exiting." ; exit 1 ;};
 unset DEPENDENCIES
-DEPENDENCIES=(xml "${SCRIPTDIR}/removeDSStore")
+DEPENDENCIES=(xmlstarlet)
 
 #define _runtest function
 _runtest(){
@@ -42,10 +42,10 @@ while [ "${*}" != "" ] ; do
         OUTPUTDIR="${PACKAGE}/metadata"
         MEDIAID=$(basename "${PACKAGE}")
         _report -dt "running verifytree on ${PACKAGE}" #the name of the package being verified
-        "${SCRIPTDIR}/removeDSStore" "${PACKAGE}"
+
             #make a new temp tree
             TEMPTREE=$(_maketemp)
-            tree -DaNXs --du --timefmt "%Y-%m-%dT%H:%M:%SZ" -I "tree.xml" "${PACKAGE}" > "${TEMPTREE}"
+            tree -DaNXs --du --timefmt "%Y-%m-%dT%H:%M:%SZ" -I "tree.xml|.DS_Store" "${PACKAGE}" > "${TEMPTREE}"
             #if tree.xml exists, compare it to the specified xpath expressions of an AIP
 
         #searching for upper-level directories
@@ -97,7 +97,7 @@ while [ "${*}" != "" ] ; do
         #looks for any directories within access directory that are not dvd, images, mp3, podcast, or youtube_up
         _runtest "There are unexpected directories in the access directory." xmlstarlet sel -t -v "/tree/directory/directory[@name='objects']/directory[@name='access']/directory[@name!='dvd' and @name!='images' and @name!='mp3' and @name!='podcast' and @name!='youtube_up']/@name" -n "${TEMPTREE}"
         #looks for unexpected files in youtube_up directory
-        _runtest "There are unexpected files in the youtube_up directory!" xmlstarlet sel -t -v "/tree/directory/directory[@name='objects']/directory[@name='access']/directory[@name='youtube_up']/file[@name!='${MEDIAID}.mp4']/@name" -n  "${TEMPTREE}"
+        _runtest "There are unexpected files in the youtube_up directory!" xmlstarlet sel -t -v "/tree/directory/directory[@name='objects']/directory[@name='access']/directory[@name='youtube_up']/file[@name!='${MEDIAID}.mp4' and not(starts-with(@name,'${MEDIAID}_SEG') and substring(@name,string-length(@name)-3)='.mp4')]/@name" -n  "${TEMPTREE}"
         #looks for unexpected directories in youtube_up directory
         _runtest "There are unexpected directories in the youtube_up directory!" xmlstarlet sel -t -v "/tree/directory/directory[@name='objects']/directory[@name='access']/directory[@name='youtube_up']/directory[count(@name)>0]/@name" -n "${TEMPTREE}"
         #looks for unexpected files in dvd directory
