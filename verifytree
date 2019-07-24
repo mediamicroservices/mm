@@ -1,7 +1,7 @@
 #!/bin/bash
 #verifytree creates a temporary xml of package and compares against a set directory structure
 #create temp xml of package and set xml, compare the two. xml starlet, temp has to exclude the tree.xml file in temp creation
-SCRIPTDIR=$(dirname "${0}")
+SCRIPTDIR="$(dirname "${0}")"
 . "${SCRIPTDIR}/mmfunctions" || { echo "Missing '${SCRIPTDIR}/mmfunctions'. Exiting." ; exit 1 ;};
 unset DEPENDENCIES
 DEPENDENCIES=(xmlstarlet)
