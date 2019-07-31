@@ -1,0 +1,106 @@
+#!/bin/bash
+
+_ss_to_hhmmss(){
+    # if milliseconds are used it will round down to nearest second for instance 60.9, will return 1:00
+    INT="${1%.*}"
+    [[ -z "$INT" ]] && INT="0"
+    DEC="$(echo "${1#*.}" | head -c 3)"
+    printf "%02d\:%02d\:%02d.${DEC}\n" $(($INT/3600)) $(($INT%3600/60)) $(($INT%60))
+}
+
+# image settings
+AUDIO_SAMPLE_RATE=48000
+HEADER_HEIGHT=24
+HEADER_HEIGHT_BIG=$(echo "${HEADER_HEIGHT} * 2" | bc)
+TIMELINE_FONTSIZE=16
+FONT_FILE="/Library/Fonts/Courier New.ttf"
+DRAWGRAPH_SETTINGS="bg=Black"
+BORDER_COLOR="LightGrey"
+HORIZONTAL_MARKINGS_240="drawgrid=thickness=1:color=${BORDER_COLOR}@0.2:height=ih/16,drawgrid=thickness=1:color=${BORDER_COLOR}@0.5:height=ih/4,drawgrid=thickness=1:color=${BORDER_COLOR}@0.8:height=ih/2"
+HORIZONTAL_MARKINGS_120="drawgrid=thickness=1:color=${BORDER_COLOR}@0.2:height=ih/8,drawgrid=thickness=1:color=${BORDER_COLOR}@0.5:height=ih/4,drawgrid=thickness=1:color=${BORDER_COLOR}@0.8:height=ih/2"
+
+while [[ "${@}" != "" ]] ; do
+    FILENAME="$1"
+    BASENAME=$(basename "${FILENAME}")
+    shift
+
+    #file variables
+    SAMPLE_RATE=$(ffprobe "${FILENAME}" -show_entries stream=sample_rate -of default=nw=1:nk=1)
+    DURATION=$(ffprobe "${FILENAME}" -show_entries stream=duration -of default=nw=1:nk=1)
+    
+    GRAPH_W=6000
+    AUDIO_FRAME_SIZE="$(echo "((${DURATION}*${AUDIO_SAMPLE_RATE})/${GRAPH_W})+1" | bc)"
+    # adding 0.5 in the above equation to ensure that the result is rounded to the nearest integer, rather than simply rounded down
+    echo "d ${DURATION} as ${AUDIO_SAMPLE_RATE} afr ${AUDIO_FRAME_SIZE}"
+    AUDIOFORMAT="aresample=${AUDIO_SAMPLE_RATE},aformat=sample_fmts=dbl,asetnsamples=n=${AUDIO_FRAME_SIZE}:p=0"
+    VERTICAL_MARKINGS=$(echo "${GRAPH_W} / 150" | bc)
+
+    TILE_FLOOR=$(echo "scale=6; ( ( ( ${AUDIO_SAMPLE_RATE} * ${DURATION} ) / ${AUDIO_FRAME_SIZE} ) / ${GRAPH_W} )" | bc | perl -nl -MPOSIX -e 'print floor($_);')
+    TILE_MOD=$(echo "       ( ( ( ${AUDIO_SAMPLE_RATE} * ${DURATION} ) / ${AUDIO_FRAME_SIZE} ) % ${GRAPH_W} )" | bc)
+    TILE_CEILING=$(echo "scale=6; ( ( ( ${AUDIO_SAMPLE_RATE} * ${DURATION} ) / ${AUDIO_FRAME_SIZE} ) / ${GRAPH_W} ) " | bc | perl -nl -MPOSIX -e 'print ceil($_);')
+    X_AXIS_MAX=$(echo "scale=6; $DURATION / (( ${TILE_FLOOR} * ${GRAPH_W} + ${TILE_MOD} ) / ( ${TILE_CEILING} * ${GRAPH_W} ))" | bc)
+
+    PAD_W="240"
+    PAD=",pad=iw+${PAD_W}:ih:${PAD_W}:0"
+    IMAGE_W=$(echo "${GRAPH_W} + ${PAD_W}" | bc)
+
+    unset TIMELINE
+    COUNTER=0
+    while [ "${COUNTER}" -lt "${VERTICAL_MARKINGS}" ]; do
+        ((COUNTER++))
+        MARK="$(echo "scale=6; $DURATION * ($COUNTER / $VERTICAL_MARKINGS)" | bc)"
+        MARK_X="$(echo "scale=6; $GRAPH_W * ($COUNTER / $VERTICAL_MARKINGS)" | bc)"
+        MARK_TIME="$(_ss_to_hhmmss "${MARK}")"
+        TIMELINE+=",drawtext=fontfile=${FONT_FILE}:fontcolor=black:fontsize=${TIMELINE_FONTSIZE}:text='${MARK_TIME}':x=${MARK_X}-text_w:y=(${HEADER_HEIGHT}-${TIMELINE_FONTSIZE})/2"
+    done
+
+    ffmpeg -nostdin -y -i "$FILENAME" -filter_complex "asplit=10[e][f][g][h][i][j][k][l][m][n];\
+        `#timeline`color=c=${BORDER_COLOR}:s=${GRAPH_W}x${HEADER_HEIGHT}${TIMELINE},split=6[top1][top2][top3][top4][top5][top6];\
+        color=c=${BORDER_COLOR}:s=${GRAPH_W}x${HEADER_HEIGHT_BIG},drawtext=fontfile=${FONT_FILE}:fontcolor=black:fontsize=36:text='Audio QC Graph\:   Filename\: ${BASENAME},   Duration\: $(_ss_to_hhmmss "${DURATION}"),   Audio Frame Size\: ${AUDIO_FRAME_SIZE}'[Header];\
+        `#int_loudnorm`color=c=${BORDER_COLOR}:s=${GRAPH_W}x${HEADER_HEIGHT},drawtext=fontfile=${FONT_FILE}:fontcolor=black:fontsize=24:text='Interstitial (with loudnorm) -1...1. Differences in readings from sample to sample. May indicate dropped samples.'[intAH];\
+        [e]loudnorm=tp=0,${AUDIOFORMAT},astats=metadata=1:reset=1,adrawgraph=${DRAWGRAPH_SETTINGS}:m1=lavfi.astats.1.Max_difference:m2=adrawgraph=${DRAWGRAPH_SETTINGS}:m1=lavfi.astats.1.Max_difference:min=0:max=1:slide=picture:s=${GRAPH_W}x120,${HORIZONTAL_MARKINGS_120}[intA1];\
+        `#min/max`color=c=${BORDER_COLOR}:s=${GRAPH_W}x${HEADER_HEIGHT},drawtext=fontfile=${FONT_FILE}:fontcolor=black:fontsize=24:text='Min/Max Level -1...1. Blue=channel 1, pink=channel 2.'[minmaxH];\
+        [k]${AUDIOFORMAT},astats=metadata=1:reset=1,adrawgraph=${DRAWGRAPH_SETTINGS}:m1=lavfi.astats.1.Max_level:m2=lavfi.astats.2.Max_level:m3=lavfi.astats.1.Min_level:m4=lavfi.astats.2.Min_level:fg1=0xFFFF00FF:fg2=0xFFFF0000:fg3=0xFFFF00FF:fg4=0xFFFF0000:min=-1:max=1:slide=picture:s=${GRAPH_W}x240,${HORIZONTAL_MARKINGS_240}[minmax1];\
+        `#int_unprocessed`color=c=${BORDER_COLOR}:s=${GRAPH_W}x${HEADER_HEIGHT},drawtext=fontfile=${FONT_FILE}:fontcolor=black:fontsize=24:text='Interstitial (unprocessed) -1...1. Differences in readings from sample to sample. May indicate dropped samples.'[intBH];\
+        [f]${AUDIOFORMAT},astats=metadata=1:reset=1,adrawgraph=${DRAWGRAPH_SETTINGS}:m1=lavfi.astats.1.Max_difference:m2=adrawgraph=${DRAWGRAPH_SETTINGS}:m1=lavfi.astats.1.Max_difference:min=0:max=1:slide=picture:s=${GRAPH_W}x120,${HORIZONTAL_MARKINGS_120}[intB1];\
+        `#dc offset`color=c=${BORDER_COLOR}:s=${GRAPH_W}x${HEADER_HEIGHT},drawtext=fontfile=${FONT_FILE}:fontcolor=black:fontsize=24:text='DC Offset -0.01...0.01. Offsetting of the mean amplitude displacement from zero, in dB. Shows cumulative average over recording; the offset should equal 0 by the end of the graph.'[dcoffH];\
+        [g]${AUDIOFORMAT},astats=metadata=1:reset=0,adrawgraph=${DRAWGRAPH_SETTINGS}:m1=lavfi.astats.1.DC_offset:m2=lavfi.astats.2.DC_offset:min=-0.01:max=0.01:slide=picture:s=${GRAPH_W}x240:fg1=if(gte(VAL\,0.005)\,0xFF0000FF\,if(lte(VAL\,-0.005)\,0xFF0000FF\,0xFF00FF00)),${HORIZONTAL_MARKINGS_240}[dcoff1];\
+        `#peak/rms left`color=c=${BORDER_COLOR}:s=${GRAPH_W}x${HEADER_HEIGHT},drawtext=fontfile=${FONT_FILE}:fontcolor=black:fontsize=24:text='Peak Level / RMS Level Left -70...0dB. Yellow=peak level, purple=RMS level'[peakLH];\
+        [h]${AUDIOFORMAT},astats=metadata=1:reset=1,adrawgraph=${DRAWGRAPH_SETTINGS}:m1=lavfi.astats.1.Peak_level:fg1=0xFF00FFFF:m2=lavfi.astats.1.RMS_level:fg2=0xFF800080:max=0:min=-70:slide=picture:mode=bar:s=${GRAPH_W}x240:slide=picture,${HORIZONTAL_MARKINGS_240}[peakL1];
+        `#peak/rms right`color=c=${BORDER_COLOR}:s=${GRAPH_W}x${HEADER_HEIGHT},drawtext=fontfile=${FONT_FILE}:fontcolor=black:fontsize=24:text='Peak Level / RMS Level Right -70...0dB. Yellow=peak level, purple=RMS level'[peakRH];\
+        [i]${AUDIOFORMAT},astats=metadata=1:reset=1,adrawgraph=${DRAWGRAPH_SETTINGS}:m1=lavfi.astats.2.Peak_level:fg1=0xFF00FFFF:m2=lavfi.astats.2.RMS_level:fg2=0xFF800080:max=0:min=-70:slide=picture:mode=bar:s=${GRAPH_W}x240:slide=picture,${HORIZONTAL_MARKINGS_240}[peakR1];
+        `#crest`color=c=${BORDER_COLOR}:s=${GRAPH_W}x${HEADER_HEIGHT},drawtext=fontfile=${FONT_FILE}:fontcolor=black:fontsize=24:text='Crest Factor 0...10. Ratio of peak to RMS level (not in dB). Blue=channel 1, pink=channel 2.`#High levels may indicate prior compression`'[crestH];\
+        [n]${AUDIOFORMAT},astats=metadata=1:reset=1,adrawgraph=${DRAWGRAPH_SETTINGS}:m1=lavfi.astats.1.Crest_factor:m2=lavfi.astats.2.Crest_factor:fg1=0xFFFF00FF:fg2=0xFFFF0000:max=10:min=0:slide=picture:mode=line:s=${GRAPH_W}x240:slide=picture,${HORIZONTAL_MARKINGS_240}[crest1];
+        `#phase`color=c=${BORDER_COLOR}:s=${GRAPH_W}x${HEADER_HEIGHT},drawtext=fontfile=${FONT_FILE}:fontcolor=black:fontsize=24:text='Phase -1 (out of phase)...1 (in phase). Green=+0.9 to +1, reasonable for mono/error for stereo. Yellow=0 to +0.9, error for mono/reasonable for stereo. Orange=0 to -0.5, error for mono/strong possibility of error for stereo if occurring more than briefly. Red=-0.5 to -1, error for mono/strong possibility of error for stereo.'[phaseH];\
+        [j]${AUDIOFORMAT},aphasemeter=video=0,adrawgraph=${DRAWGRAPH_SETTINGS}:m1=lavfi.aphasemeter.phase:max=1:min=-1:slide=picture:s=${GRAPH_W}x240:slide=picture:fg1=if(gte(VAL\,0.9)\,0xFF00FF00\,if(gte(VAL\,0)\,0xFF00FFFF\,if(gte(VAL\,-0.5)\,0xFF0096FF\,0xFF0000FF))),${HORIZONTAL_MARKINGS_240}[phase1];\
+        `#null test dc`color=c=${BORDER_COLOR}:s=${GRAPH_W}x${HEADER_HEIGHT},drawtext=fontfile=${FONT_FILE}:fontcolor=black:fontsize=24:text='Null Test DC Offset. Shows DC offset after one track is inverted and overlaid over the other. Should be flat for mono. Red=-1 to 0, green=0 to +1.'[diffH];\
+        [l]aeval=val(0)|-val(1),${AUDIOFORMAT},aformat=channel_layouts=mono,astats=metadata=1:reset=1,adrawgraph=${DRAWGRAPH_SETTINGS}:m1=lavfi.astats.1.DC_offset:min=-0.01:max=0.01:slide=picture:s=${GRAPH_W}x240:fg1=if(lt(VAL\,0)\,0xFF0000FF\,0xFF00FF00),${HORIZONTAL_MARKINGS_240}[diff1];\
+        `#null test min/max`color=c=${BORDER_COLOR}:s=${GRAPH_W}x${HEADER_HEIGHT},drawtext=fontfile=${FONT_FILE}:fontcolor=black:fontsize=24:text='Null Test Min/Max Levels -1...1. Shows min/max levels after one track is inverted and overlaid over the other. Blue=channel 1, pink=channel 2.'[nullminmaxH];\
+        [m]aeval=val(0)|-val(1),${AUDIOFORMAT},aformat=channel_layouts=mono,astats=metadata=1:reset=1,adrawgraph=${DRAWGRAPH_SETTINGS}:m1=lavfi.astats.1.Max_level:m2=lavfi.astats.2.Max_level:m3=lavfi.astats.1.Min_level:m4=lavfi.astats.2.Min_level:fg1=0xFFFF00FF:fg2=0xFFFF00FF:fg3=0xFFFF0000:fg4=0xFFFF0000:min=-1:max=1:slide=picture:s=${GRAPH_W}x240,${HORIZONTAL_MARKINGS_240}[nullminmax1];\
+        [Header]\
+        [top1][minmaxH][minmax1][peakLH][peakL1]\
+        [top2][peakRH][peakR1][crestH][crest1][phaseH][phase1]
+        [top3][nullminmaxH][nullminmax1][diffH][diff1]\
+        [top4][dcoffH][dcoff1]\
+        [top5][intAH][intA1][intBH][intB1][top6]vstack=27,drawgrid=thickness=1:color=gray@0.5:width=iw/${VERTICAL_MARKINGS},drawgrid=thickness=1:color=${BORDER_COLOR}@0.2:width=(iw/${VERTICAL_MARKINGS})/10[graph];
+        color=c=${BORDER_COLOR}:s=${PAD_W}x${HEADER_HEIGHT_BIG}[HeaderG];\
+        color=c=${BORDER_COLOR}:s=${PAD_W}x${HEADER_HEIGHT},split=16[top1G][top2G][top3G][top4G][top5G][top6G][minmaxHG][peakLHG][peakRHG][crestHG][phaseHG][nullminmaxHG][diffHG][dcoffHG][intAHG][intBHG];\
+        `#1-1_240p_grat`color=c=${BORDER_COLOR}:s=${PAD_W}x240,drawtext=fontfile=${FONT_FILE}:fontcolor=black:fontsize=${TIMELINE_FONTSIZE}:y=h*0.52:x=w*0.7:text='0',drawtext=fontfile=${FONT_FILE}:fontcolor=black:fontsize=${TIMELINE_FONTSIZE}:y=h*0.77:x=w*0.7:text='-0.5',drawtext=fontfile=${FONT_FILE}:fontcolor=black:fontsize=${TIMELINE_FONTSIZE}:y=h*0.27:x=w*0.7:text='+0.5',drawgrid=thickness=1:color=black@0.2:height=ih/16,drawgrid=thickness=1:color=black@0.5:height=ih/4,drawgrid=thickness=1:color=black@0.8:height=ih/2,split=6[minmax1G][phase1G][crest1G][nullminmax1G][diff1G][dcoff1G];\
+        `#1-1_120p_grat`color=c=${BORDER_COLOR}:s=${PAD_W}x120,drawtext=fontfile=${FONT_FILE}:fontcolor=black:fontsize=${TIMELINE_FONTSIZE}:y=h*0.52:x=w*0.7:text='0',drawtext=fontfile=${FONT_FILE}:fontcolor=black:fontsize=${TIMELINE_FONTSIZE}:y=h*0.77:x=w*0.7:text='-0.5',drawtext=fontfile=${FONT_FILE}:fontcolor=black:fontsize=${TIMELINE_FONTSIZE}:y=h*0.27:x=w*0.7:text='+0.5',drawgrid=thickness=1:color=black@0.2:height=ih/8,drawgrid=thickness=1:color=black@0.5:height=ih/4,drawgrid=thickness=1:color=black@0.8:height=ih/2,split=2[intA1G][intB1G];\
+        `#0-70_240p_grat`color=c=${BORDER_COLOR}:s=${PAD_W}x240,drawtext=fontfile=${FONT_FILE}:fontcolor=black:fontsize=${TIMELINE_FONTSIZE}:y=h*0.52:x=w*0.7:text='-35',drawtext=fontfile=${FONT_FILE}:fontcolor=black:fontsize=${TIMELINE_FONTSIZE}:y=h*0.77:x=w*0.7:text='-52.5',drawtext=fontfile=${FONT_FILE}:fontcolor=black:fontsize=${TIMELINE_FONTSIZE}:y=h*0.27:x=w*0.7:text='-17.5',drawtext=fontfile=${FONT_FILE}:fontcolor=black:fontsize=${TIMELINE_FONTSIZE}:y=h*0.02:x=w*0.7:text='0',drawgrid=thickness=1:color=black@0.2:height=ih/16,drawgrid=thickness=1:color=black@0.5:height=ih/4,drawgrid=thickness=1:color=black@0.8:height=ih/2,split=2[peakL1G][peakR1G];\
+        [HeaderG]\
+        [top1G][minmaxHG][minmax1G][peakLHG][peakL1G]\
+        [top2G][peakRHG][peakR1G][crestHG][crest1G][phaseHG][phase1G]
+        [top3G][nullminmaxHG][nullminmax1G][diffHG][diff1G]\
+        [top4G][dcoffHG][dcoff1G]\
+        [top5G][intAHG][intA1G][intBHG][intB1G][top6G]vstack=27[grat];
+        [grat][graph]hstack=2[chart]" \
+        -map "[chart]" -vframes 1 ./"${BASENAME}_audio_report2.png"
+    #ffmpeg -nostdin -y -i "$FILENAME" -filter_complex "asplit=4[a][b][c][d];\
+        #[a]showwavespic=split_channels=1:scale=log:s=${GRAPH_W}x240:colors=purple|blue|green|red,drawbox[a1];\
+        #[b]showwavespic=split_channels=1:scale=lin:s=${GRAPH_W}x240:colors=purple|blue|green|red,drawbox[b1];\
+        #[c]showspectrumpic=s=${GRAPH_W}x240:scale=log:legend=false[c1];\
+        #[d]showspectrumpic=s=${GRAPH_W}x240:scale=lin:legend=false[d1];\
+        #[a1][b1][c1][d1]vstack=4[image1]"\
+        #-map "[image1]" -vframes 1 ./"${BASENAME}_audio_report.png"
+done

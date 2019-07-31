@@ -4,9 +4,10 @@ SCRIPTDIR=$(dirname "${0}")
 
 OBJECTS_FIND_EXCLUSIONS=(! -name ".*")
 OBJECTS_FIND_EXCLUSIONS+=(! -path "*/access/*")
+OBJECTS_FIND_EXCLUSIONS+=(! -path "*/captions/*")
+OBJECTS_FIND_EXCLUSIONS+=(! -path "*/reformatted/*")
 OBJECTS_FIND_EXCLUSIONS+=(! -path "*/service/*")
 OBJECTS_FIND_EXCLUSIONS+=(! -path "*/trimmed_materials/*")
-OBJECTS_FIND_EXCLUSIONS+=(! -path "*/reformatted/*")
 
 # load configuration file
 if [ -f "${TEMP_MMCONFIG}" ] ; then
@@ -88,7 +89,7 @@ _report_schema_db(){
         if [ -z "${xmlschema}" ] ; then
             xmlschema="$LTO_LOGS/${TAPE_SERIAL}.schema"
         fi
-        schema_sorted=$(xml sel -t -m ".//file" -v "concat(name,'|',length, '|', modifytime)" -o "|" -m "ancestor-or-self::directory" -v "name" -o "/" -b -n "${xmlschema}")
+        schema_sorted=$(xmlstarlet sel -t -m ".//file" -v "concat(name,'|',length, '|', modifytime)" -o "|" -m "ancestor-or-self::directory" -v "name" -o "/" -b -n "${xmlschema}")
         schema_tape=$(basename "${xmlschema}" | cut -d'.' -f1)
         IFS=$(echo -en "\n\b")
         (for i in ${schema_sorted}; do LINE=$i;
@@ -238,7 +239,7 @@ _db_error_check(){
 }
 
 _fingerprint_to_db(){
-VIDEOFINGERPRINT=$(xml sel -N "m=urn:mpeg:mpeg7:schema:2001" -t -m "m:Mpeg7/m:DescriptionUnit/m:Descriptor/m:VideoSignatureRegion/m:VSVideoSegment" -v m:StartFrameOfSegment -o ':' -v m:EndFrameOfSegment -o ':' -m m:BagOfWords -v "translate(.,' ','')" -o ':' -b -n "${FINGERPRINT_XML}")
+VIDEOFINGERPRINT=$(xmlstarlet sel -N "m=urn:mpeg:mpeg7:schema:2001" -t -m "m:Mpeg7/m:DescriptionUnit/m:Descriptor/m:VideoSignatureRegion/m:VSVideoSegment" -v m:StartFrameOfSegment -o ':' -v m:EndFrameOfSegment -o ':' -m m:BagOfWords -v "translate(.,' ','')" -o ':' -b -n "${FINGERPRINT_XML}")
 }
 
 _premis_event_list(){
@@ -643,15 +644,15 @@ _ask_photos(){
     _stop_ptpcamera
     trap _stop_gphoto SIGHUP SIGINT SIGTERM
     MEDIAID="${1}"
-    _report -q -n "Hit enter to take a photograph ['q' to quit, 'f' when finished with photos]: "
+    _report -q -n "Hit enter to take a photograph ['q' to quit, 'f' when finished with photos, 's' or 'S' to skip this step]: "
     read answer
     if [[ "${answer}" = "q" ]] ; then
         exit
-    elif [[ "${answer}" != "f" ]] ; then
+    elif [[ "${answer}" != [fsS] ]] ; then
         gphoto2 --summary >/dev/null
         GPHOTO_ERR="$?"
         while [[ "${GPHOTO_ERR}" != "0" ]] ; do
-            echo -n "Camera appears to not be connected. Hit 'q' to quit, 'r' to retry, or return to skip: "
+            echo -n "Camera appears to not be connected. Hit 'q' to quit, 'r' to retry, 's' or 'S' to skip this step: "
             read answer
             if [[ "${answer}" = "q" ]] ; then
                 _stop_gphoto
@@ -660,6 +661,8 @@ _ask_photos(){
                 _ask_photos "${MEDIAID}"
             else
                 NEVERMIND=1
+                _report -d "Skipping capture process"
+                break
             fi
             gphoto2 --summary >/dev/null
             GPHOTO_ERR="$?"
@@ -770,6 +773,10 @@ _get_broadcastduration(){
 
 _get_seconds(){
     FILESECONDS=$(ffprobe "${1}" -show_format 2>/dev/null | grep "^duration=" | cut -d= -f2)
+}
+
+_get_chapterlist(){
+    CHAPTER_LIST="$(ffprobe -v 0 "${1}" -show_entries chapter=id,start_time,end_time:chapter_tags=title -of compact=p=0:nk=1)"
 }
 
 _email_delivery(){
@@ -1041,7 +1048,7 @@ _find_input (){
     if [[ "${SOURCEFILE#*.}" = "iso" ]] ; then
         _report -dt "Detecting iso input and hoping its a dvd image."
         if [[ "$(uname -s)" = "Darwin" ]] ; then
-            MOUNTPATH=$(hdiutil mount "${SOURCEFILE}" | cut -d " " -f 2- | sed 's/^[ \t]*//')
+            MOUNTPATH="$(hdiutil mount "${SOURCEFILE}" | awk '{print $2}')"
             _report -dt "Mounting iso at ${MOUNTPATH}"
         else
             MOUNTPATH="/tmp/temporary_dvd_path"
@@ -1052,22 +1059,18 @@ _find_input (){
             7z e -r -o"${MOUNTPATH}" "${SOURCEFILE}"
         fi
         OLDSOURCEFILE="${SOURCEFILE}"
-        CONCATSOURCE="concat:$(find "${MOUNTPATH}" -iname "VTS*[1-9].VOB" | sort | sed -e :a -e '$!N;s/\n/|/;ta')"
+		FFMPEGINPUT=(-i)
+        FFMPEGINPUT+=("concat:$(find "${MOUNTPATH}" -iname "VTS*[1-9].VOB" | sort | sed -e :a -e '$!N;s/\n/|/;ta')")
         SOURCEFILE=$(find "${MOUNTPATH}" -iname "VTS_*_1.VOB" | head -1)
         _report -dt "Using ${CONCATSOURCE} for transcoding."
         _report -dt "Using ${SOURCEFILE} for assessment."
-        _report -wt "Extracting to ${MOUNTPATH}. Please delete ${MOUNTPATH} later."
-        if [[ "${CONCATSOURCE}" = "" ]] ; then
-            _report -wt "ERROR: Can not mount iso or find vob files to concatenate within ${OLDSOURCEFILE}. Exiting."
-            _writeerrorlog "_find_input" "Could not mount iso or find vob files to concatenate within ${OLDSOURCEFILE}."
-            exit
-        fi
+        _report -wt "Extracting to ${MOUNTPATH}. Please unmount ${MOUNTPATH} later."
     elif [[ "${SOURCEFILE#*.}" = "mkv" ]] ; then
         # if the sorucefile is an mkv, then check if it has a Presentation Chapter Edition
-        if [[ -n $(mkvextract tags "${SOURCEFILE}" | xml sel -t -m "/Tags/Tag/Simple[String='Presentation']" -v String) ]] ; then
+        if [[ -n $(mkvextract tags "${SOURCEFILE}" | xmlstarlet sel -t -m "/Tags/Tag/Simple[String='Presentation']" -v String) ]] ; then
             _report -dt "The input file ($(basename "${SOURCEFILE}")) contains a Chapter Edition called 'Presentation', will use that for transcoding."
-            LISTCHAPTERS=$(mkvextract chapters "${SOURCEFILE}" | xml sel -t -m Chapters/EditionEntry[EditionFlagDefault='1']/ChapterAtom -v ChapterTimeStart -o "-" -v ChapterTimeEnd -o "-" -v ChapterSegmentUID -n -)
-            SegmentUIDs=$(mkvextract chapters "${SOURCEFILE}" | xml sel -t -m Chapters/EditionEntry[EditionFlagDefault='1']/ChapterAtom/ChapterSegmentUID -v . -n | sort -u)
+            LISTCHAPTERS=$(mkvextract chapters "${SOURCEFILE}" | xmlstarlet sel -t -m Chapters/EditionEntry[EditionFlagDefault='1']/ChapterAtom -v ChapterTimeStart -o "-" -v ChapterTimeEnd -o "-" -v ChapterSegmentUID -n -)
+            SegmentUIDs=$(mkvextract chapters "${SOURCEFILE}" | xmlstarlet sel -t -m Chapters/EditionEntry[EditionFlagDefault='1']/ChapterAtom/ChapterSegmentUID -v . -n | sort -u)
             if [[ -n "${LISTCHAPTERS}" ]]; then
               _report -d "Found this chapter list:"
               _report -d "${LISTCHAPTERS}"
@@ -1121,7 +1124,7 @@ _get_height(){
 
 _get_dar(){
     DAR=$(ffprobe "${1}" -show_streams -select_streams v:0 2>/dev/null | grep "^display_aspect_ratio=" | cut -d = -f 2 | sed 's|:|/|g')
-    if [ "${DAR}" = "0/1" ] ; then
+    if [[ "${DAR}" = "0/1" || "${DAR}" = "N/A" ]] ; then
         _get_width "${1}"
         _get_height "${1}"
         DAR="${WIDTH}/${HEIGHT}"
@@ -1130,7 +1133,7 @@ _get_dar(){
 
 _get_sar(){
     SAR=$(ffprobe "${1}" -show_streams -select_streams v:0 2>/dev/null | grep "^sample_aspect_ratio=" | cut -d = -f 2 | sed 's|:|/|g')
-    if [ "${SAR}" = "0/1" ] ; then
+    if [[ "${SAR}" = "0/1" || "${SAR}" = "N/A" ]] ; then
         SAR="1/1"
     fi
 }
@@ -1181,7 +1184,11 @@ _get_audio_mapping(){
     if [[ ( "${AUDIOMAP}" = "L" || "${AUDIOMAP}" = "R" ) && "${FIRSTMONO}" = true ]] ; then
         _report -wt "Channel mapping was requested, but first track is mono. Request ignored."
     fi
-    if [[ "${AUDIOMAP}" = "L" && "${FIRSTMONO}" != true ]] ; then
+    if [[ "${AUDIOMAP}" = "M" ]] ; then
+        _report -wt "Only use the first track."
+        _add_audio_filter -p "channelmap=0:mono"
+        _add_audio_filter "aformat=channel_layouts=stereo" 
+    elif [[ "${AUDIOMAP}" = "L" && "${FIRSTMONO}" != true ]] ; then
         _report -wt "Use of left-channel only was requested."
         _add_audio_filter -p "channelmap=0:mono"
         _add_audio_filter "aformat=channel_layouts=stereo"
@@ -1249,7 +1256,7 @@ _get_audiostreamcount(){
 }
 
 _get_timecode(){
-    TIMECODE=$(ffprobe "${1}" -select_streams v -show_streams -of flat 2>/dev/null | grep "timecode=[0-9]" | head -n 1 | cut -d = -f 2 | sed 's/"//g')
+    TIMECODE=$(ffprobe "${1}" -select_streams v -show_streams -show_format -of flat 2>/dev/null | grep "timecode=\"[0-9]" | head -n 1 | cut -d = -f 2 | sed 's/"//g')
 }
 
 _get_timecode_overlay(){
@@ -1337,9 +1344,19 @@ _get_volume_adjustment(){
     measured_thresh=""
     target_offset=""
     LOUD_ADJ=""
+    LOUDNESS_OPT_START=""
+    LOUDNESS_OPT_END=""
     INPUT_MOVIE="${1}"
+    if [[ -n "${INTIME}" ]] ; then
+        _report -dt "Loudness reading will start at intime (${INTIME})."
+        LOUDNESS_OPT_START="-ss ${INTIME}"
+    fi
+    if [[ -n "${OUTTIME}" ]] ; then
+        _report -dt "Loudness reading will end at outtime (${OUTTIME})."
+        LOUDNESS_OPT_END="-to ${OUTTIME}"
+    fi
     _report -dt "Getting loudness data for $(basename "${INPUT_MOVIE}") ..."
-    LOUDNESS_DATA=$(ffmpeg -i "${1}" -vn -filter_complex "${AUDIOFILTERCHAIN},loudnorm=print_format=json" -f null - 2>&1)
+    LOUDNESS_DATA=$(ffmpeg ${LOUDNESS_OPT_START} -i "${1}" ${LOUDNESS_OPT_END} -vn -filter_complex "${AUDIOFILTERCHAIN},loudnorm=print_format=json" -f null - 2>&1)
     VOLUME_EXIT_CODE="${?}"
     if [ "${VOLUME_EXIT_CODE}" -ne 0 ] ; then
         _report -wt "Volume analysis for ${INPUT_MOVIE} exited with ${VOLUME_EXIT_CODE}."
@@ -1350,7 +1367,7 @@ _get_volume_adjustment(){
         measured_thresh=$(echo "$LOUDNESS_DATA" | grep "input_thresh" | awk -F\" '{print $4}')
         target_offset=$(echo "$LOUDNESS_DATA" | grep "target_offset" | awk -F\" '{print $4}')
         LOUD_ADJ=$(echo "($measured_I - -24)*-1" | bc)
-        if [[ -f "${INGESTLOG}" ]] ; then
+        if [[ -f "${INGESTLOG}" && -z "${INTIME}" ]] ; then
             _writeingestlog "measured_true_peak" "${measured_TP}"
             _writeingestlog "r128_loudness_range" "${measured_LRA}"
             _writeingestlog "r128_integrated_loudness" "${measured_I}"
@@ -1461,9 +1478,9 @@ _prep_ffmpeg_log(){
             _unset_ffreport
         else
             if [[ -n "${OUTPUT_TYPE}" ]] ;then
-                export FFREPORT="file=${LOGDIR}/%p_%t_$(basename "${0}")_${OUTPUT_TYPE}_${VERSION}.txt"
+                export FFREPORT="file=${LOGDIR}/%p_%t_$(basename "${0}")_${OUTPUT_TYPE}_${VERSION}.txt:level=32"
             else
-                export FFREPORT="file=${LOGDIR}/%p_%t_$(basename "${0}")_${VERSION}.txt"
+                export FFREPORT="file=${LOGDIR}/%p_%t_$(basename "${0}")_${VERSION}.txt:level=32"
             fi
         fi
         INPUTOPTIONS+=(-v info)

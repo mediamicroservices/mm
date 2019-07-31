@@ -4,6 +4,7 @@ VERSION="1.0"
 SCRIPTDIR=$(dirname $(which "${0}"))
 . "${SCRIPTDIR}/mmfunctions" || { echo "Missing '${SCRIPTDIR}/mmfunctions'. Exiting." ; exit 1 ;};
 SUFFIX=""
+CHAPTERIZE=""
 _initialize_make
 
 _usage(){
@@ -22,9 +23,14 @@ _usage(){
         echo "      podcast (mov)"
         echo "      waveform (png)"
         echo "      showwaves (mp4)"
+        echo "  -m (only use the first track)"
         echo "  -l (only use the left channel of the first audio track)"
         echo "  -r (only use the right channel of the first audio track)"
         echo "  -t (burn timecode overlay)"
+        echo "  -C (generate chapter-based segmented output in addition to full output)"
+        echo "  -S suffix (add custom suffix to end of output filename)"
+        echo "  -I starttime (use a custom starting time from the source video, use HH:MM:SS.mmm format or something acceptable to ffmpeg)"
+        echo "  -O endtime   (use a custom ending time from the source video, use HH:MM:SS.mmm format or something acceptable to ffmpeg)"
         echo "  -v Y|N (run the video through a volume adjustment filter, then adjust the volume accordingly during transcoding, slower; defaults to ${VOLADJUST})"
         echo "  -d directory (directory to deliver the resulting file to)"
         echo "  -o directory (directory to write the resulting file to)"
@@ -45,11 +51,12 @@ _usage(){
 
 user_input=${@}
 OPTIND=1
-while getopts ":T:lrv:d:o:e:E:F:scYp:tnh" OPT ; do
+while getopts ":T:lrmv:d:o:e:E:F:scYp:tCS:I:O:nh" OPT ; do
     case "${OPT}" in
         T) OUTPUT_TYPE="${OPTARG}";;
         l) AUDIOMAP="L";;
         r) AUDIOMAP="R";;
+        m) AUDIOMAP="M";;
         v) VOLADJUST="${OPTARG}";;
         d) DELIVERDIR="${OPTARG}" && (_check_deliverdir) ;;
         o) OUTPUTDIR_FORCED="${OPTARG}" && (_check_outputdir_forced) ;;
@@ -61,6 +68,10 @@ while getopts ":T:lrv:d:o:e:E:F:scYp:tnh" OPT ; do
         Y) YOUTUBEUPLOAD="Y";;
         p) DVDLABELPREFIX="${OPTARG}";;
         t) TCBURN="Y";;
+        C) CHAPTERIZE="Y";;
+        S) SUFFIX="${OPTARG}";;
+        I) INTIME="${OPTARG}";;
+        O) OUTTIME="${OPTARG}";;
         n) DRYRUN=true;;
         h) _usage ;;
         *) echo "bad option -${OPTARG}" ; _usage ;;
@@ -120,9 +131,15 @@ while [[ "${@}" != "" ]] ; do
     _report -dt "==== Starting to make a ${OUTPUT_TYPE} copy from ${INPUT}. ===="
     shift
     if [ -z "${OUTPUTDIR_FORCED}" ] ; then
-        [ -d "${INPUT}" ] && { OUTPUTDIR="${INPUT}/${RELATIVEPATH}" && LOGDIR="${INPUT}/metadata/logs" ;};
-        [ -f "${INPUT}" ] && { OUTPUTDIR=$(dirname "${INPUT}")"/$(basename "${RELATIVEPATH}")" && LOGDIR="$(dirname "${INPUT}")/$(basename "${RELATIVEPATH}")/logs" ;};
-        [ ! "${OUTPUTDIR}" ] && { OUTPUTDIR="${INPUT}/${RELATIVEPATH}" && LOGDIR="${INPUT}/metadata/logs" ;};
+        if [[ -d "${INPUT}" ]] ; then
+            OUTPUTDIR="${INPUT}/${RELATIVEPATH}"
+            LOGDIR="${INPUT}/metadata/logs"
+        elif [[ -f "${INPUT}" ]] ; then
+            OUTPUTDIR=$(dirname "${INPUT}")"/$(basename "${RELATIVEPATH}")"
+            LOGDIR="$(dirname "${INPUT}")/$(basename "${RELATIVEPATH}")/logs"
+        else
+            OUTPUTDIR="${INPUT}/${RELATIVEPATH}"LOGDIR="${INPUT}/metadata/logs"
+        fi
     else
         OUTPUTDIR="${OUTPUTDIR_FORCED}"
         LOGDIR="${OUTPUTDIR}/logs"
@@ -132,9 +149,15 @@ while [[ "${@}" != "" ]] ; do
 
     MEDIAID=$(basename "${INPUT}" | cut -d. -f1)
     INGESTLOG="${LOGDIR}/capture.log"
+    if [[ ! -f "${INGESTLOG}" && -f "${INPUT}/metadata/submissionDocumentation/logs/capture.log" ]] ; then
+        INGESTLOG="${INPUT}/metadata/submissionDocumentation/logs/capture.log"
+        _report -wt "The capture.log is found in the ./metadata/submissionDocumentation/logs/ directory. Using that for now but consider moving it to ./metadata/logs/"
+    fi
     _report_to_db
 
-    _set_up_output
+    if [[ "${CHAPTERIZE}" != "Y" ]] ; then
+        _set_up_output
+    fi
     INPUTOPTIONS+=(-y)
     INPUTOPTIONS+=(-nostdin)
 
@@ -148,20 +171,60 @@ while [[ "${@}" != "" ]] ; do
     _get_dar "${SOURCEFILE}"
     _get_sar "${SOURCEFILE}"
 
+    # processing for chapter-based segmented output
+    if [[ "${CHAPTERIZE}" == "Y" ]] ; then
+        _get_chapterlist "${SOURCEFILE}"
+        _report -d "${SOURCEFILE} contains a chapter list."
+        echo "${CHAPTER_LIST}"
+        echo "${CHAPTER_LIST}" | while read chapter ; do
+            CHAP_ID="$(echo "${chapter}" | cut -d"|" -f1)"
+            CHAP_START="$(echo "${chapter}" | cut -d"|" -f2)"
+            CHAP_END="$(echo "${chapter}" | cut -d"|" -f3)"
+            CHAP_TITLE="$(echo "${chapter}" | cut -d"|" -f4- | sed 's/ /_/g;s/[^a-zA-Z0-9_]//g;s/__/_/g')"
+            CHAP_SUFFIX="_SEG$(printf "%02d\n" "${CHAP_ID}")_${CHAP_TITLE}"
+            echo "Creating ${OUTPUT_TYPE} chapter output ${CHAP_TITLE} (${CHAP_START}-${CHAP_END})"
+            ("${SCRIPTDIR}/makederiv" -T "${OUTPUT_TYPE}" -I "$CHAP_START" -O "${CHAP_END}" -S "$CHAP_SUFFIX" "${INPUT}")
+        done
+        exit
+    fi
+    
     # set in and out times if used; ignore out time if a slate is being created
     if [[ -f "${INGESTLOG}" && "${ISOBJECT}" = "Y" ]] ; then
-        INTIME=$(_readingestlog "intime")
-        OUTTIME=$(_readingestlog "outtime")
-        if [[ "${INTIME}" ]] ; then
-            _report -dt "Transcoding will use intime (${INTIME}) during transcoding."
-            INPUTOPTIONS+=(-seek_timestamp 1)
-            MIDDLEOPTIONS+=(-ss "${INTIME}")
+        if [[ -z "${INTIME}" ]] ; then
+            INTIME=$(_readingestlog "intime")
         fi
-        if [[ "${OUTTIME}" && "${ADDSLATE}" = "Y" ]] ; then
-            _report -dt "Transcoding will NOT use outtime (${OUTTIME}) during transcoding, as there is a slate being created for this file."
-        elif [[ "${OUTTIME}" && "${ADDSLATE}" != "Y" ]] ; then
-            _report -dt "Transcoding will use outtime (${OUTTIME}) during transcoding."
-            MIDDLEOPTIONS+=(-to "${OUTTIME}")
+        if [[ -z "${OUTTIME}" ]] ; then
+            OUTTIME=$(_readingestlog "outtime")
+        fi
+    fi
+    if [[ "${INTIME}" ]] ; then
+        _report -dt "Transcoding will use intime (${INTIME}) during transcoding."
+        INPUTOPTIONS+=(-seek_timestamp 1)
+        MIDDLEOPTIONS+=(-ss "${INTIME}")
+        METADATA_COMMENT+=("mediaid=${MEDIAID} ")
+        METADATA_COMMENT+=("in=${INTIME} ")
+    fi
+    if [[ "${OUTTIME}" && "${ADDSLATE}" = "Y" ]] ; then
+        _report -dt "Transcoding will NOT use outtime (${OUTTIME}) during transcoding, as there is a slate being created for this file."
+    elif [[ "${OUTTIME}" && "${ADDSLATE}" != "Y" ]] ; then
+        _report -dt "Transcoding will use outtime (${OUTTIME}) during transcoding."
+        MIDDLEOPTIONS+=(-to "${OUTTIME}")
+        METADATA_COMMENT+=("out=${OUTTIME} ")
+    fi
+
+    if [[ -n "${METADATA_COMMENT}" ]] ; then
+        MIDDLEOPTIONS+=(-metadata "comment=${METADATA_COMMENT[*]}")
+    fi
+
+    # read audio decision from ingestlog
+    if [[ -z "${AUDIOMAP}" && "${ISOBJECT}" = "Y" ]] ; then
+        AUDIODECISION="$(_readingestlog audiodecision)"
+        if [[ "${AUDIODECISION}" == "Only use left of the first audio track [for 21st Century]" ]] ; then
+            AUDIOMAP="L"
+        elif [[ "${AUDIODECISION}" == "Only use right of the first audio track" ]] ; then
+            AUDIOMAP="R"
+        elif [[ "${AUDIODECISION}" == "Only use the first track" ]] ; then
+            AUDIOMAP="M"
         fi
     fi
 
@@ -439,12 +502,8 @@ while [[ "${@}" != "" ]] ; do
             MIDDLEOPTIONS+=(-movflags faststart)
             MIDDLEOPTIONS+=(-pix_fmt yuv420p)
             MIDDLEOPTIONS+=(-c:v libx264)
-            MIDDLEOPTIONS+=(-b:v 1500k)
-            MIDDLEOPTIONS+=(-maxrate:v 3000k)
-            MIDDLEOPTIONS+=(-minrate:v 375k)
-            # MIDDLEOPTIONS+=(-bufsize:v 6000k)
+            MIDDLEOPTIONS+=(-crf 26)
             _add_video_filter "yadif"
-            _add_video_filter "scale=640:trunc(ow/dar/2)*2:interl=1"
         elif [[ "${OUTPUT_TYPE}" == "mp3" ]] || [[ "${OUTPUT_TYPE}" == "waveform" ]] ; then
             _report -dt "No video stream needed for ${OUTPUT_TYPE}."
         else

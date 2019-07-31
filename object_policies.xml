@@ -1,0 +1,68 @@
+<policy type="or" name="Apply policy if Matroska">
+  <description>Example of a digitization specification of analog SD video to FFV1 and Matroska. This policy contains a copy of another policy (Is this NTSC or PAL SD).</description>
+  <policy type="and" name="Not FFV1 and not Matroska?">
+    <rule name="Is it not Matroska?" value="Format" tracktype="General" occurrence="*" operator="!=">Matroska</rule>
+    <rule name="Is it not FFV1?" value="Format" tracktype="Video" occurrence="*" operator="!=">FFV1</rule>
+  </policy>
+  <policy type="and" name="Meets Matroska/FFV1 recommandations?">
+    <description>Example of a digitization specification of analog SD video to FFV1 and Matroska.</description>
+    <rule name="Is it Matroska?" value="Format" tracktype="General" occurrence="*" operator="=">Matroska</rule>
+    <rule name="Matroska version 4 or greater?" value="Format_Version" tracktype="General" occurrence="*" operator="&gt;=">4</rule>
+    <rule name="SegmentUID is present?" scope="mmt" value="Segment/Info/SegmentUID/"/>
+    <rule name="Duration is greater than zero?" scope="mmt" operator="&gt;" value="Segment/Info/Duration/Data">0</rule>
+    <rule name="SeekHead is present?" scope="mmt" value="Segment/SeekHead/"/>
+    <rule name="Cues is present?" scope="mmt" value="Segment/Cues/"/>
+    <policy type="and" name="Select Top-Level Elements have CRCs">
+      <rule name="SeekHead CRC-32 is present?" scope="mmt" value="Segment/SeekHead/CRC-32/"/>
+      <rule name="Info CRC-32 is present?" scope="mmt" value="Segment/Info/CRC-32/"/>
+      <rule name="Tracks CRC-32 is present?" scope="mmt" value="Segment/Tracks/CRC-32/"/>
+      <rule name="Cluster CRC-32 is present?" scope="mmt" value="Segment/Cluster/CRC-32/"/>
+      <rule name="Cues CRC-32 is present?" scope="mmt" value="Segment/Cues/CRC-32/"/>
+      <rule name="Tags CRC-32 is present?" scope="mmt" value="Segment/Tags/CRC-32/"/>
+    </policy>
+    <policy type="or" name="Video Scan Type is clarified?">
+      <policy type="and" name="Interlaced video is clarified?">
+        <rule name="Video is interlaced?" scope="mmt" value="Segment/Tracks/TrackEntry/Video/FlagInterlaced/Data" operator="=">1</rule>
+        <policy type="or" name="FieldOrder is clarified?">
+          <rule name="Video is Top Field displayed and stored first?" scope="mmt" value="Segment/Tracks/TrackEntry/Video/FieldOrder/Data" operator="=">1</rule>
+          <rule name="Video is Bottom Field displayed and stored first?" scope="mmt" value="Segment/Tracks/TrackEntry/Video/FieldOrder/Data" operator="=">6</rule>
+          <rule name="Video is Bottom Field displayed and Top Field stored first?" scope="mmt" value="Segment/Tracks/TrackEntry/Video/FieldOrder/Data" operator="=">9</rule>
+          <rule name="Video is Top Field displayed and Bottom Field stored first?" scope="mmt" value="Segment/Tracks/TrackEntry/Video/FieldOrder/Data" operator="=">14</rule>
+        </policy>
+      </policy>
+      <rule name="Video is progressive?" scope="mmt" value="Segment/Tracks/TrackEntry/Video/FlagInterlaced/Data" operator="=">2</rule>
+    </policy>
+    <policy type="or" name="Video Sample Range is clarified?">
+      <rule name="Video is in Broadcast Range?" scope="mmt" value="Segment/Tracks/TrackEntry/Video/Colour/Range/Data" operator="=">1</rule>
+      <rule name="Video is in Full Range?" scope="mmt" value="Segment/Tracks/TrackEntry/Video/Colour/Range/Data" operator="=">2</rule>
+      <rule name="Video is defined by MatrixCoefficients/TransferCharacteristics?" scope="mmt" value="Segment/Tracks/TrackEntry/Video/Colour/Range/Data" operator="=">3</rule>
+    </policy>
+    <policy type="or" name="Video Colour Primary is clarified?">
+      <rule name="Colour Primary data is stored?" scope="mmt" value="Segment/Tracks/TrackEntry/Video/Colour/Primaries"/>
+      <rule name="Colour Primary data is not Unspecified?" scope="mmt" value="Segment/Tracks/TrackEntry/Video/Colour/Primaries/Data" operator="!=">2</rule>
+    </policy>
+    <rule name="Is the video FFV1?" value="Format" tracktype="Video">FFV1</rule>
+    <rule name="FFV1 is version 3.4 or later?" value="Format_Version" tracktype="Video" operator="&gt;=">3.4</rule>
+    <rule name="FFV1 is encoded in GOP size of 1?" value="Format_Settings_GOP" tracktype="Video" operator="=">N=1</rule>
+    <rule name="FFV1 uses slice crcs?" value="extra/ErrorDetectionType" tracktype="Video" operator="=">Per slice</rule>
+    <policy type="or" name="Is this NTSC or PAL SD?">
+      <description>A test to see if the files use NTSC or PAL frame rates and sizes.</description>
+      <policy type="or" name="Is this NTSC SD or PAL SD?">
+        <policy type="and" name="Is this PAL?">
+          <rule name="PAL height" value="Height" tracktype="Video" occurrence="1" operator="=">576</rule>
+          <rule name="PAL Width" value="Width" tracktype="Video" occurrence="1" operator="=">720</rule>
+          <rule name="PAL FrameRate" value="FrameRate" tracktype="Video" occurrence="1" operator="=">25.000</rule>
+        </policy>
+        <policy type="and" name="Is this NTSC?">
+          <policy type="or" name="NTSC Height">
+            <rule name="NTSC height" value="Height" tracktype="Video" occurrence="1" operator="=">486</rule>
+            <rule name="NTSC-ish height" value="Height" tracktype="Video" occurrence="1" operator="=">480</rule>
+          </policy>
+          <rule name="NTSC Width" value="Width" tracktype="Video" occurrence="1" operator="=">720</rule>
+          <rule name="NTSC FrameRate" value="FrameRate" tracktype="Video" occurrence="1" operator="=">29.970</rule>
+        </policy>
+      </policy>
+      <rule name="Is Interlaced?" value="ScanType" tracktype="Video" occurrence="1" operator="=">Interlaced</rule>
+    </policy>
+  </policy>
+</policy>

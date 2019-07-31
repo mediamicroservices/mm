@@ -32,7 +32,7 @@ while [ "${*}" != "" ] ; do
     FFMPEG_OPTS+=(-c:v copy)
     FFMPEG_OPTS+=(-c:a pcm_s24le)
     FFMPEG_OPTS+=(-map 0:v)
-    FFMPEG_OPTS+=(-map 0:a)
+    FFMPEG_OPTS+=(-map 0:a:0)
     FFMPEG_OPTS+=(-metadata timecode='00:00:00;00')
     EXTENSION="mxf"
     OUTPUT_MOVIE="${HOME}/Desktop/$(basename "${SOURCEFILE%.*}").${EXTENSION}"

@@ -33,7 +33,7 @@ get_ftp_status(){
 local FILENAME="${1}"
 STATUS=$(ftp -a "${OMNEONIP}" <<END_SCRIPT
 binary
-ls "${OMNEONPATH}/${FILENAME}"
+ls "${UPLOADPATH}/${FILENAME}"
 exit
 END_SCRIPT)
 SIZE=$(echo "${STATUS}" | grep "${FILENAME}" | awk '{print $5}')
@@ -76,15 +76,20 @@ while [ "${*}" != "" ] ; do
 
 SOURCEFILE="${1}"
 EXTENSION=$(echo "${SOURCEFILE}" |awk -F . '{print $NF}')
-if [ "${EXTENSION}" == "mov" -o "${EXTENSION}" == "mxf" ] ; then
+if [ "${EXTENSION}" == "mov" -o "${EXTENSION}" == "mxf" -o "${EXTENSION}" == "scc" ] ; then
 
+    if [ "${EXTENSION}" == "scc" ] ; then
+        UPLOADPATH="${OMNEONPATH}/subtitle.dir"
+    else
+        UPLOADPATH="${OMNEONPATH}"
+    fi
 REMOVETMP="n"
 FILENAME=$(basename "${SOURCEFILE}")
 
 _log -b
 
 get_ftp_status "${FILENAME}"
-if [[ ! $(echo "${STATUS}" | grep "${OMNEONPATH}") ]] ; then
+if [[ ! $(echo "${STATUS}" | grep "${UPLOADPATH}") ]] ; then
 _report "The file named ${FILENAME} is not currently on the omneon, proceeding..."
 
 if echo "${SOURCEFILE}" | grep -q "/Volumes/" ; then
@@ -101,8 +106,8 @@ EXTENSION=$(basename "${SOURCEFILE##*.}")
 _report -dt "Starting to ftp ${FILENAME} to the Omneon..."
 ftp -a "${OMNEONIP}" <<END_SCRIPT
 binary
-put "${UPLOADFILE}" "${OMNEONPATH}/${FILENAME}.uploading.${EXTENSION}"
-rename "${OMNEONPATH}/${FILENAME}.uploading.${EXTENSION}" "${OMNEONPATH}/${FILENAME}"
+put "${UPLOADFILE}" "${UPLOADPATH}/${FILENAME}.uploading.${EXTENSION}"
+rename "${UPLOADPATH}/${FILENAME}.uploading.${EXTENSION}" "${UPLOADPATH}/${FILENAME}"
 exit
 END_SCRIPT
 UPLOAD_ERR="${?}"
@@ -126,8 +131,8 @@ else
 _report -wt "${FILENAME} is already on the omneon as a ${SIZE} byte file."
 fi
 else
-    _report -wt "${SOURCEFILE} does not use a mov or mxf EXTENSION. This will NOT be uploaded."
-    _writeerrorlog "uploadomneon" "${SOURCEFILE} does not use a mov or mxf EXTENSION. This will NOT be uploaded."
+    _report -wt "${SOURCEFILE} does not use a mov, mxf, or scc EXTENSION. This will NOT be uploaded."
+    _writeerrorlog "uploadomneon" "${SOURCEFILE} does not use a mov, mxf, or scc EXTENSION. This will NOT be uploaded."
 fi
 shift
 done

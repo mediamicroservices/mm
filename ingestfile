@@ -82,7 +82,7 @@ _ask_digitization_logs(){
 # spreadsheet fields are currently CUNY-specific
 _parse_spreadsheet(){
     DIGITIZATIONLOG=$(_maketemp)
-    paste -d"*" <(ssconvert -T  Gnumeric_html:xhtml_range "${FILES}" fd://1 | xml fo | xml select --no-doc-namespace -t -m "_:html/_:body/_:table[1]/_:tr[1]/_:td" -v "." -n) <(ssconvert -T  Gnumeric_html:xhtml_range "${FILES}" fd://1 | xml fo | xml select --no-doc-namespace -t -m "_:html/_:body/_:table[1]/_:tr[_:td[1]='${MEDIAID}']/_:td" -v "." -n) | sed "s/*/\: /g" | tee "${DIGITIZATIONLOG}"
+    paste -d"*" <(ssconvert -T Gnumeric_html:xhtml_range "${FILES}" fd://1 | xmlstarlet fo | xmlstarlet select --no-doc-namespace -t -m "_:html/_:body/_:table[1]/_:tr[1]/_:td" -v "." -n) <(ssconvert -T  Gnumeric_html:xhtml_range "${FILES}" fd://1 | xmlstarlet fo | xmlstarlet select --no-doc-namespace -t -m "_:html/_:body/_:table[1]/_:tr[_:td[1]='${MEDIAID}']/_:td" -v "." -n) | sed "s/*/\: /g" | tee "${DIGITIZATIONLOG}"
     cat "${DIGITIZATIONLOG}" >> "${INGESTLOG}"
     OBJECTSOUNDFIELD=$(_readingestlog "object soundfield")
     DECKHEADSETTING=$(_readingestlog "deck head setting")
@@ -100,11 +100,10 @@ _parse_spreadsheet(){
 }
 
 _get_xmp_info(){
-    WAV="${INPUT}"
-    XMP_SIZE=$(mediaconch -mt "${WAV}" | xmlstarlet sel -N "mt=https://mediaarea.net/mediatrace" -t -m "mt:MediaTrace/mt:media/mt:block[@name='Wave']/mt:block[@name='_PMX']" -v "mt:block[@name='Header']/mt:data[@name='Size']" -n)
-    XMP_OFFSET=$(mediaconch -mt "${WAV}" | xmlstarlet sel -N "mt=https://mediaarea.net/mediatrace" -t -m "mt:MediaTrace/mt:media/mt:block[@name='Wave']/mt:block[@name='_PMX']" -v "mt:data/@offset" -n)
+    XMP_SIZE=$(mediaconch -mt "${INPUT}" | xmlstarlet sel -N "mt=https://mediaarea.net/mediatrace" -t -m "mt:MediaTrace/mt:media/mt:block[@name='Wave']/mt:block[@name='_PMX']" -v "mt:block[@name='Header']/mt:data[@name='Size']" -n)
+    XMP_OFFSET=$(mediaconch -mt "${INPUT}" | xmlstarlet sel -N "mt=https://mediaarea.net/mediatrace" -t -m "mt:MediaTrace/mt:media/mt:block[@name='Wave']/mt:block[@name='_PMX']" -v "mt:data/@offset" -n)
     XMP_OFFSET=$(echo "${XMP_OFFSET} + 1" | bc)
-    XMP_DATA=$(tail -c "+${XMP_OFFSET}" "$WAV" | head -c "${XMP_SIZE}" | xml fo)
+    XMP_DATA=$(tail -c "+${XMP_OFFSET}" "${INPUT}" | head -c "${XMP_SIZE}" | xmlstarlet fo)
     GET_INFO=$(echo "${XMP_DATA}" | xmlstarlet sel -N rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#" -N xmpDM="http://ns.adobe.com/xmp/1.0/DynamicMedia/" -t -m "//rdf:li[@rdf:parseType='Resource'][xmpDM:trackName='CuePoint Markers']" -o "inSample:" -v "xmpDM:markers/rdf:Seq/rdf:li[@rdf:parseType='Resource']/xmpDM:startTime" -n -o "durationSample:" -v "xmpDM:markers/rdf:Seq/rdf:li[@rdf:parseType='Resource']/xmpDM:duration" -n)
     INSAMPLE=$(echo "${XMP_DATA}" | xmlstarlet sel -N rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#" -N xmpDM="http://ns.adobe.com/xmp/1.0/DynamicMedia/" -t -m "//rdf:li[@rdf:parseType='Resource'][xmpDM:trackName='CuePoint Markers']" -v "xmpDM:markers/rdf:Seq/rdf:li[@rdf:parseType='Resource']/xmpDM:startTime" -n)
     DURATIONSAMPLE=$(echo "${XMP_DATA}" | xmlstarlet sel -N rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#" -N xmpDM="http://ns.adobe.com/xmp/1.0/DynamicMedia/" -t -m "//rdf:li[@rdf:parseType='Resource'][xmpDM:trackName='CuePoint Markers']" -v "xmpDM:markers/rdf:Seq/rdf:li[@rdf:parseType='Resource']/xmpDM:duration" -n)
@@ -113,6 +112,30 @@ _get_xmp_info(){
     DURATION=$(echo "scale=4; ${DURATIONSAMPLE}/${SAMPLINGRATE}" | bc | awk '{printf "%f", $0}')
     OUTTIME=$(echo "scale=4; ${INTIME}+${DURATION}" | bc | awk '{printf "%f", $0}')
     echo "The intime in samples is $INTIME, the outtime in seconds is $OUTTIME, and the duration in seconds is $DURATION."
+}
+
+_audioreport(){
+    ffmpeg -nostdin -i "${INPUT}" -vn -filter_complex "silencedetect,astats,loudnorm=print_format=json,agate=attack=0.01:release=0.01:ratio=9000,aphasemeter=r=0.2:video=0,ametadata=mode=print:key=lavfi.aphasemeter.phase:value=-0.18:function=less" -f null - 2>&1 |  tr "\r" "\n" > /tmp/loud
+    MEASURED_I=$(cat /tmp/loud | grep "input_i" | awk -F\" '{print $4}')
+    MEASURED_LRA=$(cat /tmp/loud | grep "input_lra" | awk -F\" '{print $4}')
+    MEASURED_TP=$(cat /tmp/loud | grep "input_tp" | awk -F\" '{print $4}')
+    MEASURED_THRESH=$(cat /tmp/loud | grep "input_thresh" | awk -F\" '{print $4}')
+    TARGET_OFFSET=$(cat /tmp/loud | grep "target_offset" | awk -F\" '{print $4}')
+    BWFMETAEDIT=$(bwfmetaedit "${INPUT}" 2>&1 | awk '{printf "%s+",$0} END {print ""}')
+    FLATFACTOR=$(cat /tmp/loud | grep "Flat factor: " | tail -n +3 | head -n 1 | cut -d ":" -f 2 | sed 's/ //g')
+    echo "  MEASURED_I = ${MEASURED_I}"
+    echo "  MEASURED_LRA = ${MEASURED_LRA}"
+    echo "  MEASURED_TP = ${MEASURED_TP}"
+    echo "  MEASURED_THRESH = ${MEASURED_THRESH}"
+    echo "  TARGET_OFFSET = ${TARGET_OFFSET}"
+    echo "  BWFMETAEDIT = ${BWFMETAEDIT}"
+    if [[ "${FLATFACTOR}" != 0.000000 ]] ; then
+        _report -wt "WARNING - There are ${FLATFACTOR} flat sections of waveform that may indicate clipped audio."
+        _report -qn "Enter q to quit, any other key to continue: "
+        read A4
+        [ "${A4}" == "q" ] && exit 0
+        _writeingestlog "Flat sections of audio waveform" "${FLATFACTOR}"
+    fi
 }
 
 _blackframetest(){
@@ -368,6 +391,7 @@ AUDIODECISION.option =
 AUDIODECISION.option = Default audio mapping [first audio track used for stereo output]
 AUDIODECISION.option = Only use left of the first audio track [for 21st Century]
 AUDIODECISION.option = Only use right of the first audio track
+AUDIODECISION.option = Only use the first track
 AUDIODECISION.width = 400
 
 # cropping strategy
@@ -501,7 +525,7 @@ fi
     if [[ -z "${AUDIODECISION}" ]] ; then
         _report -q "Select an audio strategy?"
         PS3="Selection: "
-        select AUDIODECISION in "Default audio mapping [first audio track used for stereo output]" "Only use left of the first audio track [for 21st Century]" "Only use right of the first audio track"
+        select AUDIODECISION in "Default audio mapping [first audio track used for stereo output]" "Only use left of the first audio track [for 21st Century]" "Only use right of the first audio track" "Only use the first track"
         do
             break
         done
@@ -571,7 +595,9 @@ if [[ "${MODE}" == "preservation" ]] ; then
     if [[ "${FORMULA}" == "check interlacement" ]] ; then
         _get_interlacement_full "${INPUT}"
     fi
-elif [[ "${MODE}" != "audio" ]] ; then
+elif [[ "${MODE}" == "audio" ]] ; then
+    _audioreport
+else
     # presumes default, psa, or local mode
     _blackframetest
     _phasechecktest
@@ -629,11 +655,12 @@ else
     fi
 fi
 
+# set makederivopts
 unset MAKEDERIVOPTS
-[ "${AUDIODECISION}" == "Only use left of the first audio track [for 21st Century]" -o "${AUDIODECISION}" == "left" ] && MAKEDERIVOPTS+=(-l)
-[ "${AUDIODECISION}" == "Only use right of the first audio track" ] && MAKEDERIVOPTS+=(-r)
-[ "${CROPDECISION}" == "Examine the video and auto-crop out black borders (slower)" ] && MAKEDERIVOPTS+=(-c)
-if [ ! -z "${FORMULA}" ] ; then
+if [[ "${CROPDECISION}" == "Examine the video and auto-crop out black borders (slower)" ]] ; then
+    MAKEDERIVOPTS+=(-c)
+fi
+if [[ ! -z "${FORMULA}" ]] ; then
     MAKEDERIVOPTS+=(-F "${FORMULA}")
 fi
 
