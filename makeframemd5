@@ -36,16 +36,23 @@ OUTPUTDIR="./metadata/frameMD5s"
 while [ "${*}" != "" ] ; do
     PACKAGE_PATH="${1}"
     shift
-    if [[ "$refile" == "Y" ]] ; then
-        if [[ $(find "${PACKAGE_PATH}/metadata" ! -path "*/frameMD5s/*" -name "*_pre*.framemd5") ]] ; then
-            _report -d "Refiling some framemd5s for ${PACKAGE_PATH}."
-            _mkdir2 "${PACKAGE_PATH}/metadata/frameMD5s/trimmed_materials/"
-            find "${PACKAGE_PATH}/metadata" ! -path "*/frameMD5s/*" -name "*_pre*.framemd5" -exec mv -v -n "{}" "${PACKAGE_PATH}/metadata/frameMD5s/trimmed_materials/" \;
-        fi
-        if [[ $(find "${PACKAGE_PATH}/metadata" ! -path "*/frameMD5s/*" -name "*.framemd5") ]] ; then
-            _report -d "Refiling some framemd5s for ${PACKAGE_PATH}."
-            _mkdir2 "${PACKAGE_PATH}/metadata/frameMD5s"
-            find "${PACKAGE_PATH}/metadata" ! -path "*/frameMD5s/*" -name "*.framemd5" -exec mv -v -n "{}" "${PACKAGE_PATH}/metadata/frameMD5s/" \;
+    _set_up_framemd5
+    cd "${PACKAGE_PATH}"
+    FILELIST=$(_maketemp)
+    find "./objects" -type f "${OBJECTS_FIND_EXCLUSIONS[@]}" > "${FILELIST}"
+    (IFS=$'\n'
+    for FILE in $(cat "${FILELIST}") ; do
+        VIDEOTEST=$(file -Ib "${FILE}" | grep 'video')
+        if [ -n "${VIDEOTEST}" ] ; then
+            FILENAMEROOT=$(basename "${FILE}")
+            PARENTDIR=$(dirname "${FILE}")
+            FILEOUTPUT="${OUTPUTDIR}/${PARENTDIR}"
+            if [ ! -d "${FILEOUTPUT}" ] ; then
+                _run mkdir -p "${FILEOUTPUT}"
+            fi
+            ffmpeg -i "${FILE}" -f framemd5 -an "${FILEOUTPUT}/${FILENAMEROOT}.framemd5"
+        else
+            _report -d "No video track found in target. Skipping."
         fi
     else
         _set_up_framemd5

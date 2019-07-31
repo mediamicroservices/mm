@@ -1237,7 +1237,7 @@ _get_audio_mapping(){
 _get_codectagstring(){
     CODEC_TAG_STRING=$(ffprobe "${1}" -show_streams -select_streams v:0 2> /dev/null | grep "^codec_tag_string=" | cut -d = -f 2)
     if [[ "${CODEC_TAG_STRING}" = "FFV1" ]] ; then
-        FFV1_VERSION=$(ffmpeg -debug 1 -i "${1}" -t 0.1 -f null - </dev/null 2>&1 | grep -o "ver:[0-9]*" | tail -n1 | cut -d: -f2)
+        FFV1_VERSION=$(ffmpeg -nostdin -debug 1 -i "${1}" -t 0.1 -f null - </dev/null 2>&1 | grep -o "ver:[0-9]*" | tail -n1 | cut -d: -f2)
     else
         FFV1_VERSION=""
     fi

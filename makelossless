@@ -1,10 +1,11 @@
 #!/bin/bash
 # makelossless
-#this script is not actively maintained.
+
 VERSION="1.0"
 SCRIPTDIR=$(dirname $(which "${0}"))
 . "${SCRIPTDIR}/mmfunctions" || { echo "Missing '${SCRIPTDIR}/mmfunctions'. Exiting." ; exit 1 ;};
 DEPENDENCIES=(ffmpeg ffprobe mediainfo)
+FFV1_VERSION_EXPECTED=3.4
 _initialize_make
 
 _usage(){
@@ -20,6 +21,31 @@ _usage(){
     exit
 }
 [ "${#}" = 0 ] && _usage
+
+_get_ffv1_version(){
+    FFV1_VERSION="$(ffmpeg -nostdin -debug 1 -i "${1}" -vframes 1 -f null - 2>&1 | grep -m 1 "^\[ffv1" | grep -o "ver:[0-9.]*" | cut -d":" -f2)"
+}
+
+_get_frame_rate(){
+    FRAMERATE=$(ffprobe -i "${1}" -v error -select_streams v:0 -show_entries stream=r_frame_rate -of default=noprint_wrappers=1:nokey=1)
+}
+
+_update_filename(){
+    filename="${1}"
+    filename_noext="${filename%.*}"
+    filename_ext="${filename##*.}"
+    filename_lastunderscore="${filename_noext##*_}"
+    filename_wolastunderscore="${filename_noext%_*}"
+    if [[ "${filename_lastunderscore}" == "${SUFFIX}" ]] ; then
+        echo "${filename_wolastunderscore}_${SUFFIX}r1.${filename_ext}"
+    elif [[ "${filename_lastunderscore}" == "${SUFFIX}r"* ]] ; then
+        REVISION="$(echo "${filename_lastunderscore}" | cut -d "r" -f 2-)"
+        NEWREVISION=$((REVISION+1))
+        echo "${filename_wolastunderscore}_${SUFFIX}r${NEWREVISION}.${filename_ext}"
+    else
+        echo "${filename_wolastunderscore}_${SUFFIX}.${filename_ext}"
+    fi
+}
 
 # command-line options to set mediaid and original variables
 OPTIND=1
@@ -41,7 +67,35 @@ while [ "${*}" != "" ] ; do
     [ -f "${INPUT}" ] && LOGDIR="$(dirname "${INPUT}")/lossless/logs"
     [ ! "${LOGDIR}" ] && LOGDIR="${INPUT}/metadata/logs"
 
-    find "${INPUT}" -type f \( -iname "*.mov" -o -iname "*.avi" -o -iname "*.mxf" \) -print0 | while read -d $'\0' SOURCEFILE ; do
+    INPUTFILES=$(_maketemp)
+
+    if [ -f "${INPUT}" ] ; then
+        streamcount=$(ffprobe -loglevel quiet "$file" -show_entries format=nb_streams -of default=nw=1:nk=1)
+        duration_ts=$(ffprobe -loglevel quiet "$file" -show_entries stream=duration_ts -of default=nw=1:nk=1)
+        if [[ "$streamcount" > 0  && "${duration_ts}" != 1 ]] ; then
+            _report -d "Input file: $file"
+            echo "$file" >> "${INPUTFILES}"
+        fi
+    elif [ -d "${INPUT}" ] ; then
+        # find av files in a directory and output to a temp list
+        find "${1}/objects" -type f -size +0 "${OBJECTS_FIND_EXCLUSIONS[@]}" | while read file ; do
+            streamcount=$(ffprobe -loglevel quiet "$file" -show_entries format=nb_streams -of default=nw=1:nk=1)
+            duration_ts=$(ffprobe -loglevel quiet "$file" -show_entries stream=duration_ts -of default=nw=1:nk=1)
+            if [[ "$streamcount" > 0  && "${duration_ts}" != 1 ]] ; then
+                _report -d "Input file: $file"
+                echo "$file" >> "${INPUTFILES}"
+            fi
+        done
+    else
+        _report -wt "Error: ${INPUT} is not a file or directory"
+        exit 1
+    fi
+    INPUTFILECOUNT=$(wc -l "${INPUTFILES}" | awk '{print $1}')
+    if [[ "${INPUTFILECOUNT}" = 0 ]] ; then
+        _report -w "Error no audiovisual input files were found."
+        exit 1
+    fi
+    while read SOURCEFILE ; do
         OUTPUTDIR=$(dirname "${SOURCEFILE}")
         SOURCEFILENAME=$(basename "${SOURCEFILE}")
 
@@ -54,6 +108,10 @@ while [ "${*}" != "" ] ; do
         _get_codectagstring "${SOURCEFILE}"
         _get_videostreamcount "${SOURCEFILE}"
         _get_audiostreamcount "${SOURCEFILE}"
+        _get_width "${SOURCEFILE}"
+        _get_height "${SOURCEFILE}"
+        _get_frame_rate "${SOURCEFILE}"
+
         INPUTOPTIONS+=(-nostdin)
         INPUTOPTIONS+=(-vsync 0)
         if [[ "${VIDEOSTREAMCOUNT}" > 0 ]] ; then
@@ -65,44 +123,78 @@ while [ "${*}" != "" ] ; do
             if [[ "${JPEG2000MODE}" == "Y" ]] ; then
                 MIDDLEOPTIONS+=(-c:v libopenjpeg)
                 INPUTOPTIONSFRAMEMD5+=(-vcodec libopenjpeg)
-                SUFFIX="_j2k"
+                SUFFIX="j2k"
             else
-                MIDDLEOPTIONS+=(-c:v ffv1 -level 3 -g 1)
-                SUFFIX="_ffv1"
+                MIDDLEOPTIONS+=(-c:v ffv1)
+                MIDDLEOPTIONS+=(-level 3)
+                MIDDLEOPTIONS+=(-g 1)
+                MIDDLEOPTIONS+=(-slices 16)
+                MIDDLEOPTIONS+=(-slicecrc 1)
+                SUFFIX="ffv1"
             fi
-            _add_video_filter "setfield=bff" # this is a presumption but much of the uncompressed input is bff but not probably labelled
+            _add_video_filter "setfield=bff,setsar=40/27,setdar=4/3" # this is a presumption but much of the uncompressed input is bff but not probably labelled
         fi
+
+        if [[ "${WIDTH}" = "720" && "${HEIGHT}" = "486" || "${HEIGHT}" = "480" ]] && [[ "${FRAMERATE}" = "30000/1001" || "${FRAMERATE}" = "29970/1001" || "${FRAMERATE}" = "2997/100" ]] ; then
+            _report -dt "Presuming this is NTSC and adding metadata about colorspace, aspect ratio, interlacement, and broadcast range."
+            MIDDLEOPTIONS+=(-color_primaries smpte170m)
+            MIDDLEOPTIONS+=(-color_trc bt709)
+            MIDDLEOPTIONS+=(-colorspace smpte170m)
+            MIDDLEOPTIONS+=(-aspect 4/3)
+            MIDDLEOPTIONS+=(-color_range mpeg)
+            MIDDLEOPTIONS+=(-field_order bt)
+        fi
+
         if [[ "${AUDIOSTREAMCOUNT}" > 0 ]] ; then
             MIDDLEOPTIONS+=(-c:a copy)
         fi
         _get_codectagstring "${SOURCEFILE}"
-        _run mkdir -p "${OUTPUTDIR}" "${LOGDIR}"
-        if [ "${CODEC_TAG_STRING}" == "2vuy" -o "${CODEC_TAG_STRING}" == "v210" ] ; then
-            _report -dt "${SOURCEFILENAME} is ${CODEC_TAG_STRING}, starting encode"
-            _prep_ffmpeg_log
-
-            _filter_to_middle_option
-
-            _run_critical ffmpeg ${INPUTOPTIONS[@]} -i "${SOURCEFILE}"  ${MIDDLEOPTIONS[@]} "${OUTPUTDIR}/${SOURCEFILENAME%.*}${SUFFIX}.mkv" -f framemd5 -an "${LOGDIR}/${SOURCEFILENAME%.*}.framemd5"
-            if [ "${CODEC_TAG_STRING}" == "2vuy" ] ; then
-                _run_critical ffmpeg ${INPUTOPTIONS[@]} -i "${OUTPUTDIR}/${SOURCEFILENAME%.*}${SUFFIX}.mkv" -f framemd5 -pix_fmt uyvy422 -an "${LOGDIR}/${SOURCEFILENAME%.*}${SUFFIX}.framemd5"
+        if [[ "${CODEC_TAG_STRING}" == "FFV1" ]] ; then
+            _get_ffv1_version "${SOURCEFILE}"
+        fi
+        if [[ "${CODEC_TAG_STRING}" == "2vuy" || \
+              "${CODEC_TAG_STRING}" == "v210" || \
+             ("${CODEC_TAG_STRING}" == "FFV1" && "$(echo "${FFV1_VERSION} < ${FFV1_VERSION_EXPECTED}" | bc)" == "1") || \
+             ("${CODEC_TAG_STRING}" == "FFV1" && "${SOURCEFILE##*.}" != "mkv") ]] ; then
+            if [[ -n "${FFV1_VERSION}" ]] ; then
+                _report -dt "${SOURCEFILENAME} is ${CODEC_TAG_STRING} version ${FFV1_VERSION} (${FFV1_VERSION}<${FFV1_VERSION_EXPECTED}), starting encode"
             else
-                _run_critical ffmpeg ${INPUTOPTIONS[@]} ${INPUTOPTIONSFRAMEMD5[@]} -i "${OUTPUTDIR}/${SOURCEFILENAME%.*}${SUFFIX}.mkv" -f framemd5 -an "${LOGDIR}/${SOURCEFILENAME%.*}${SUFFIX}.framemd5"
+                _report -dt "${SOURCEFILENAME} is ${CODEC_TAG_STRING}, starting encode"
             fi
-            if [ $(grep -v "^#" "${LOGDIR}/${SOURCEFILENAME%.*}.framemd5" | md5 -q) = $(grep -v "^#" "${LOGDIR}/${SOURCEFILENAME%.*}${SUFFIX}.framemd5" | md5 -q) ] ; then
-                _report -dt "Everything looks safe. Going to delete the original."
-                _run_critical mediainfo -f --language=raw --output=XML "${SOURCEFILE}" > "${LOGDIR}/${SOURCEFILENAME%.*}_mediainfo.xml"
-                _run_critical rm -f -v "${SOURCEFILE}"
+            LOSSLESS_OUTPUT=$(_update_filename "${OUTPUTDIR}/${SOURCEFILENAME%.*}.mkv")
+            REFORMATTED_DIR="${1}/objects/reformatted/$(date +%Y-%m-%dT%H-%M-%S)"
+            _run_critical _mkdir2 "${REFORMATTED_DIR}"
+            SOURCE_FRAMEMD5_OUTPUT="${REFORMATTED_DIR}/${SOURCEFILENAME}_$(date +%Y-%m-%dT%H-%M-%S).framemd5"
+            LOSSLESS_FRAMEMD5_OUTPUT="${REFORMATTED_DIR}/$(basename "${LOSSLESS_OUTPUT}_$(date +%Y-%m-%dT%H-%M-%S).framemd5")"
+            if [[ ! -f "${LOSSLESS_OUTPUT}" && ! -f "${SOURCE_FRAMEMD5_OUTPUT}" ]] ; then
+                _run mkdir -p "${OUTPUTDIR}" "${LOGDIR}"
+                _prep_ffmpeg_log
+                _filter_to_middle_option
+                _report -dt "Creating a framemd5 report and lossless ffv1 for ${SOURCEFILENAME}."
+                _run_critical ffmpeg ${INPUTOPTIONS[@]} -i "${SOURCEFILE}"  ${MIDDLEOPTIONS[@]} "${LOSSLESS_OUTPUT}" -f framemd5 -an "${SOURCE_FRAMEMD5_OUTPUT}"
+                _report -dt "Create a framemd5 for the output to verify against ${SOURCEFILENAME}."
+                if [ "${CODEC_TAG_STRING}" == "2vuy" ] ; then
+                    _run_critical ffmpeg ${INPUTOPTIONS[@]} -i "${LOSSLESS_OUTPUT}" -f framemd5 -pix_fmt uyvy422 -an "${LOSSLESS_FRAMEMD5_OUTPUT}"
+                else
+                    _run_critical ffmpeg ${INPUTOPTIONS[@]} ${INPUTOPTIONSFRAMEMD5[@]} -i "${LOSSLESS_OUTPUT}" -f framemd5 -an "${LOSSLESS_FRAMEMD5_OUTPUT}"
+                fi
+                if [ $(grep -v "^#" "${SOURCE_FRAMEMD5_OUTPUT}" | md5 -q) = $(grep -v "^#" "${LOSSLESS_FRAMEMD5_OUTPUT}" | md5 -q) ] ; then
+                    _report -dt "Everything looks safe. Going to move original to reformatted directory."
+                    _run_critical mediainfo -f --language=raw --output=XML "${SOURCEFILE}" > "${REFORMATTED_DIR}/${SOURCEFILENAME}_mediainfo.xml"
+                    _run_critical mv -v -n -f -v "${SOURCEFILE}" "${REFORMATTED_DIR}/"
+                else
+                    _report -wt "Not looking safe. Going to keep the original."
+                fi
             else
-                _report -wt "Not looking safe. Going to keep the original."
+                _report -wt "Either ${LOSSLESS_OUTPUT} or ${SOURCE_FRAMEMD5_OUTPUT} already exists. Not proceeding."
             fi
         else
-            _report -wt "${SOURCEFILENAME} is not 2vuy or v210 or progressive ffv1, skipping"
-            _writeerrorlog "makelossless" "The source file is not 2vuy or v210 or progressive ffv1, so makelossless was unable to run."
+            _report -wt "${SOURCEFILENAME} is not 2vuy or v210 or progressive ffv1 or progressive ffv1 or ffv1 less than 3.4, skipping"
+            _writeerrorlog "makelossless" "The source file is not 2vuy or v210 or progressive ffv1 or ffv1 less than 3.4, so makelossless was unable to run."
             continue
         fi
         _report -dt done with "${SOURCEFILE}"
-    done
+    done < "${INPUTFILES}"
     shift
     _log -e
 done
