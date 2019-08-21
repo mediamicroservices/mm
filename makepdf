@@ -92,7 +92,7 @@ while [ "${*}" != "" ] ; do
         TIF_BASE_NAME="$(basename "${TIF%.*}")"
         JPG_NAME="${TMP_JPG_DIR}/${TIF_BASE_NAME}.jpg"
         if [[ ! -s "${JPG_NAME}" ]] ; then
-            ffmpeg -nostdin -i "${TIF}" -pix_fmt yuvj420p -s 1275x1650 "${JPG_NAME}"
+            ffmpeg -hide_banner -nostdin -i "${TIF}" -pix_fmt yuvj420p -s 1275x1650 "${JPG_NAME}"
         fi
         tesseract "${JPG_NAME}" "${TMP_JPG_DIR}/${TIF_BASE_NAME}" -l eng --psm 4 pdf "${SCRIPTDIR}/tesseract.conf"
         tesseract "${JPG_NAME}" "${TMP_JPG_DIR}/${TIF_BASE_NAME}" -l eng --psm 4     "${SCRIPTDIR}/tesseract.conf"
