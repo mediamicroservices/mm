@@ -33,8 +33,8 @@ while getopts ":o:d:e:E:nh" OPT ; do
         E) EMAILADDRESS_OUTCOME="${OPTARG}" ;;
         n) DRYRUN=true;;
         h) _usage ;;
-        *) echo "bad option -${OPTARG}" ; _usage ;;
         :) echo "Option -${OPTARG} requires an argument" ; _writeerrorlog "makepdf" "The option selected required an argument and none was provided. The script had to exit." ; exit 1 ;;
+        *) echo "bad option -${OPTARG}" ; _usage ;;
     esac
 done
 shift $(( ${OPTIND} - 1 ))
