@@ -108,10 +108,10 @@ while [ "${*}" != "" ] ; do
     TMP_JPG_DIR="${TMP_MAKEPDF_DIR}/jpgs"
     _run mkdir -p "${TMP_MAKEPDF_DIR}" "${TMP_JPG_DIR}" "${OUTPUTDIRTEXT}"
 
-    for TIF in `find "${SOURCEDIR}" -maxdepth 1 -mindepth 1 -iname "*.tif" -type f` ; do
         check_tif_name "${TIF}"
         TIF_BASE_NAME="$(basename "${TIF%.*}")"
         if [ "${NEW_TIF_NAME}" ] ; then
+    for TIF in `find "${SOURCEDIR}" -maxdepth 1 -mindepth 1 -iname "*.tif" -type f | sort` ; do
             TIF="${NEW_TIF_NAME}"
         fi
         if [[ ! -s "${TMP_JPG_DIR}/$(basename "${TIF%.*}").jpg" ]] ; then
