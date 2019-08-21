@@ -77,6 +77,7 @@ while [ "${*}" != "" ] ; do
 
     for TIF in $(find "${SOURCEDIR}" -maxdepth 1 -mindepth 1 -iname "*.tif" -type f | sort) ; do
         tifname="$(basename "${TIF}")"
+        _report -dt "Working on ${tifname}..."
         pageno="$(echo "${tifname}" | cut -d_ -f2 | cut -d. -f1)"
         # check that tif name adheres to filename pattern and rename if not
         if [[ "${#pageno}" != "3" ]] ; then
