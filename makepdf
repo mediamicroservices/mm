@@ -1,7 +1,7 @@
 #!/bin/bash
 # makepdf, makes a pdf from an image series
 VERSION="1.0"
-SCRIPTDIR=$(dirname $(which "${0}"))
+SCRIPTDIR="$(dirname "$(which "${0}")")"
 . "${SCRIPTDIR}/mmfunctions" || { echo "Missing '${SCRIPTDIR}/mmfunctions'. Exiting." ; exit 1 ;};
 DEPENDENCIES=(ffmpeg pdfjoin tesseract)
 _initialize_make
@@ -52,7 +52,7 @@ while [ "${*}" != "" ] ; do
     fi
     OUTPUTDIRTEXT="${INPUT}/objects/access/txt_1"
     _run mkdir -p "${LOGDIR}"
-    exec > >(tee "${LOGDIR}/$(basename "${0}")_$(_get_iso8601_c)_$(basename ${0})_${VERSION}.txt")
+    exec > >(tee "${LOGDIR}/$(basename "${0}")_$(_get_iso8601_c)_$(basename "${0}")_${VERSION}.txt")
     exec 2>&1
 
     #_find_input "${INPUT}"
@@ -75,14 +75,14 @@ while [ "${*}" != "" ] ; do
     TMP_JPG_DIR="${TMP_MAKEPDF_DIR}/jpgs"
     _run mkdir -p "${TMP_MAKEPDF_DIR}" "${TMP_JPG_DIR}" "${OUTPUTDIRTEXT}"
 
-    for TIF in `find "${SOURCEDIR}" -maxdepth 1 -mindepth 1 -iname "*.tif" -type f | sort` ; do
+    for TIF in $(find "${SOURCEDIR}" -maxdepth 1 -mindepth 1 -iname "*.tif" -type f | sort) ; do
         tifname="$(basename "${TIF}")"
         pageno="$(echo "${tifname}" | cut -d_ -f2 | cut -d. -f1)"
         # check that tif name adheres to filename pattern and rename if not
         if [[ "${#pageno}" != "3" ]] ; then
             tifdir="$(dirname "${TIF}")"
             basename="$(echo "${tifname}" | cut -d_ -f1 | cut -d. -f2)"
-            EXTENSION="$(echo "${tifname##*.}")"
+            EXTENSION="${tifname##*.}"
             pageno="$(echo "0000${pageno}" | tail -c 4 | head -c 3)"
             _report -dt "Renaming to fit image sequence naming pattern."
             NEW_TIF_NAME="${tifdir}/${basename}_${pageno}.${EXTENSION}"
