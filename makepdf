@@ -6,35 +6,6 @@ SCRIPTDIR=$(dirname $(which "${0}"))
 DEPENDENCIES=(ffmpeg pdfjoin tesseract)
 _initialize_make
 
-fix_tif_name(){
-    local tif="${1}"
-    local tifname=$(basename "${TIF}")
-    local tifdir=$(dirname "${TIF}")
-    local basename=$(echo "${tifname}" | cut -d_ -f1 | cut -d. -f2)
-    local pageno=$(echo "${tifname}" | cut -d_ -f2 | cut -d. -f1)
-    local EXTENSION=$(echo "${tifname}" | cut -d_ -f2 | cut -d. -f2)
-    local pageno=$(echo "0000${pageno}" | tail -c 4 | head -c 3)
-    _report -dt "Renaming to fit image sequence naming pattern."
-    local old_tif_name="${TIF}"
-    NEW_TIF_NAME="${tifdir}/${basename}_${pageno}.${EXTENSION}"
-    mv -v -n "${old_tif_name}" "${NEW_TIF_NAME}"
-}
-
-check_tif_name(){
-    local tif="${1}"
-    local tifname=$(basename "${TIF}")
-    local tifdir=$(dirname "${TIF}")
-    local basename=$(echo "${tifname}" | cut -d_ -f2 | cut -d. -f2)
-    local pageno=$(echo "${tifname}" | cut -d_ -f2 | cut -d. -f1)
-    local EXTENSION=$(echo "${tifname}" | cut -d_ -f2 | cut -d. -f1)
-    local pageno=$(echo "0000${pageno}" | tail -c 4 | head -c 3)
-    if [ "$EXTENSION" = "TIF" ] && [ $(echo $pageno | awk '{print length()}') = "3" ] ; then
-        continue
-    else
-        fix_tif_name "${TIF}"
-    fi
-}
-
 _usage(){
     echo
     echo "$(basename "${0}") ${VERSION}"
@@ -108,12 +79,21 @@ while [ "${*}" != "" ] ; do
     TMP_JPG_DIR="${TMP_MAKEPDF_DIR}/jpgs"
     _run mkdir -p "${TMP_MAKEPDF_DIR}" "${TMP_JPG_DIR}" "${OUTPUTDIRTEXT}"
 
-        check_tif_name "${TIF}"
-        TIF_BASE_NAME="$(basename "${TIF%.*}")"
-        if [ "${NEW_TIF_NAME}" ] ; then
     for TIF in `find "${SOURCEDIR}" -maxdepth 1 -mindepth 1 -iname "*.tif" -type f | sort` ; do
+        tifname="$(basename "${TIF}")"
+        pageno="$(echo "${tifname}" | cut -d_ -f2 | cut -d. -f1)"
+        # check that tif name adheres to filename pattern and rename if not
+        if [[ "${#pageno}" != "3" ]] ; then
+            tifdir="$(dirname "${TIF}")"
+            basename="$(echo "${tifname}" | cut -d_ -f1 | cut -d. -f2)"
+            EXTENSION="$(echo "${tifname##*.}")"
+            pageno="$(echo "0000${pageno}" | tail -c 4 | head -c 3)"
+            _report -dt "Renaming to fit image sequence naming pattern."
+            NEW_TIF_NAME="${tifdir}/${basename}_${pageno}.${EXTENSION}"
+            mv -v -n "${TIF}" "${NEW_TIF_NAME}"
             TIF="${NEW_TIF_NAME}"
         fi
+        TIF_BASE_NAME="$(basename "${TIF%.*}")"
         if [[ ! -s "${TMP_JPG_DIR}/$(basename "${TIF%.*}").jpg" ]] ; then
             ffmpeg -nostdin -i "${TIF}" -pix_fmt yuvj420p -s 1275x1650 "${TMP_JPG_DIR}/${TIF_BASE_NAME}.jpg"
         fi
