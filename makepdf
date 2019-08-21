@@ -11,10 +11,8 @@ _usage(){
     echo "$(basename "${0}") ${VERSION}"
     echo "This application will create a small pdf file (suitable for sharing online) from a collection of image file or package input with the following options."
     echo "Dependencies: ${DEPENDENCIES[@]}"
-    echo "Usage: $(basename ${0}) [ -d /path/to/deliver/to/ ] fileorpackage1 [ fileorpackage2 ...]"
-    echo "  -d directory ( directory to deliver the resulting file to )"
+    echo "Usage: $(basename "${0}") [ -o /path/to/deliver/to/ ] fileorpackage1 [ fileorpackage2 ...]"
     echo "  -o directory ( directory to write the resulting file to )"
-    echo "  -n (dry-run mode, show the commands that would be run but don't do anything)"
     echo "  -e emailaddress ( send an email about the delivery, only valid if -d is used )"
     echo "  -E emailaddress ( send an email about process outcome )"
     echo "  -h ( display this help )"
@@ -25,13 +23,11 @@ _usage(){
 
 # command-line options to set mediaid and original variables
 OPTIND=1
-while getopts ":o:d:e:E:nh" OPT ; do
+while getopts ":o:e:E:h" OPT ; do
     case "${OPT}" in
         o) OUTPUTDIR_FORCED="${OPTARG}" && _check_outputdir_forced ;;
-        d) DELIVERDIR="${OPTARG}" && _check_deliverdir ;;
         e) EMAILADDRESS_DELIVERY="${OPTARG}" ;;
         E) EMAILADDRESS_OUTCOME="${OPTARG}" ;;
-        n) DRYRUN=true;;
         h) _usage ;;
         :) echo "Option -${OPTARG} requires an argument" ; _writeerrorlog "makepdf" "The option selected required an argument and none was provided. The script had to exit." ; exit 1 ;;
         *) echo "bad option -${OPTARG}" ; _usage ;;
