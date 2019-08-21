@@ -90,11 +90,12 @@ while [ "${*}" != "" ] ; do
             TIF="${NEW_TIF_NAME}"
         fi
         TIF_BASE_NAME="$(basename "${TIF%.*}")"
-        if [[ ! -s "${TMP_JPG_DIR}/$(basename "${TIF%.*}").jpg" ]] ; then
-            ffmpeg -nostdin -i "${TIF}" -pix_fmt yuvj420p -s 1275x1650 "${TMP_JPG_DIR}/${TIF_BASE_NAME}.jpg"
+        JPG_NAME="${TMP_JPG_DIR}/${TIF_BASE_NAME}.jpg"
+        if [[ ! -s "${JPG_NAME}" ]] ; then
+            ffmpeg -nostdin -i "${TIF}" -pix_fmt yuvj420p -s 1275x1650 "${JPG_NAME}"
         fi
-        tesseract "${TMP_JPG_DIR}/${TIF_BASE_NAME}.jpg" "${TMP_JPG_DIR}/${TIF_BASE_NAME}" -l eng --psm 4 pdf "${SCRIPTDIR}/tesseract.conf"
-        tesseract "${TMP_JPG_DIR}/${TIF_BASE_NAME}.jpg" "${TMP_JPG_DIR}/${TIF_BASE_NAME}" -l eng --psm 4     "${SCRIPTDIR}/tesseract.conf"
+        tesseract "${JPG_NAME}" "${TMP_JPG_DIR}/${TIF_BASE_NAME}" -l eng --psm 4 pdf "${SCRIPTDIR}/tesseract.conf"
+        tesseract "${JPG_NAME}" "${TMP_JPG_DIR}/${TIF_BASE_NAME}" -l eng --psm 4     "${SCRIPTDIR}/tesseract.conf"
     done
 
     _report -dt "Checking for PBCore data"
