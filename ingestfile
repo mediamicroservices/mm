@@ -184,15 +184,16 @@ _makebroadcastcopies(){
 
 _deliveraccessopts(){
     YOUTUBEOPTS=(-Y -d "${YOUTUBEDELIVER}")
+    MP3OPTS=(-d "${YOUTUBEDELIVER}")
     FRAMESOPTS=(-d "${YOUTUBEDELIVER}")
     PODCASTOPTS=(-d "${PODCASTDELIVER}")
 }
 
 _makeaccesscopies(){
     _report -dt "STATUS Making access copies."
-    "${SCRIPTDIR}/makederiv" -T mp3 "${OUTDIR_INGESTFILE}/${MEDIAID}"
     "${SCRIPTDIR}/makederiv" -T waveform "${OUTDIR_INGESTFILE}/${MEDIAID}"
     if [ "${MODE}" != "audio" ] ; then
+        "${SCRIPTDIR}/makederiv" -T mp3 "${OUTDIR_INGESTFILE}/${MEDIAID}"
         "${SCRIPTDIR}/makeframes" "${FRAMESOPTS[@]}" "${OUTDIR_INGESTFILE}/${MEDIAID}"
         "${SCRIPTDIR}/makederiv" -T youtube "${MAKEDERIVOPTS[@]}" "${YOUTUBEOPTS[@]}" "${OUTDIR_INGESTFILE}/${MEDIAID}"
         if [ $(echo "${MEDIAID}" | grep -E "${REGEX4PODCAST}") ] ; then
@@ -204,6 +205,8 @@ _makeaccesscopies(){
         fi
         "${SCRIPTDIR}/makederiv" -T dvd "${OUTDIR_INGESTFILE}/${MEDIAID}"
     else
+        "${SCRIPTDIR}/makederiv" -T mp3 "${MP3OPTS[@]}" "${OUTDIR_INGESTFILE}/${MEDIAID}"
+        "${SCRIPTDIR}/makederiv" -T podcast "${MAKEDERIVOPTS[@]}" "${PODCASTOPTS[@]}" "${OUTDIR_INGESTFILE}/${MEDIAID}"
         "${SCRIPTDIR}/makederiv" -T showwaves "${MAKEDERIVOPTS[@]}" "${OUTDIR_INGESTFILE}/${MEDIAID}"
         "${SCRIPTDIR}/makederiv" -T audiographs "${OUTDIR_INGESTFILE}/${MEDIAID}"
     fi
