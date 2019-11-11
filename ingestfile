@@ -205,7 +205,7 @@ _makeaccesscopies(){
         fi
         "${SCRIPTDIR}/makederiv" -T dvd "${OUTDIR_INGESTFILE}/${MEDIAID}"
     else
-        "${SCRIPTDIR}/makederiv" -T mp3 "${MP3OPTS[@]}" "${OUTDIR_INGESTFILE}/${MEDIAID}"
+        "${SCRIPTDIR}/makederiv" -T mp3 "${MP3OPTS[@]}" -e "$MAKEYOUTUBE_DELIVERY_EMAIL_TO"  "${OUTDIR_INGESTFILE}/${MEDIAID}"
         "${SCRIPTDIR}/makederiv" -T podcast "${MAKEDERIVOPTS[@]}" "${PODCASTOPTS[@]}" "${OUTDIR_INGESTFILE}/${MEDIAID}"
         "${SCRIPTDIR}/makederiv" -T showwaves "${MAKEDERIVOPTS[@]}" "${OUTDIR_INGESTFILE}/${MEDIAID}"
         "${SCRIPTDIR}/makederiv" -T audiographs "${OUTDIR_INGESTFILE}/${MEDIAID}"
