@@ -46,7 +46,7 @@ while [ "${*}" != "" ] ; do
     if [ "${CODEC_TAG_STRING}" = "mpeg" ] ; then
         EXTENSION="mxf"
     else
-        EXTENSION="mov"
+        EXTENSION="avi"
     fi
 
     OUTPUT_MOVIE="${SOURCEFILE%.*}${SUFFIX}.${EXTENSION}"
