@@ -5,6 +5,10 @@ VERSION=1.2
 unset DEPENDENCIES
 DEPENDENCIES=(ffmpeg ffprobe)
 
+echo HI SAUL
+
+echo and hey Dave
+
 SCRIPTDIR=$(dirname "${0}")
 . "${SCRIPTDIR}/mmfunctions" || { echo "Missing '${SCRIPTDIR}/mmfunctions'. Exiting." ; exit 1 ;};
 
