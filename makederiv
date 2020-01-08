@@ -443,6 +443,7 @@ while [[ "${@}" != "" ]] ; do
             MIDDLEOPTIONS+=(-movflags faststart)
             MIDDLEOPTIONS+=(-pix_fmt yuv420p)
             MIDDLEOPTIONS+=(-c:v libx264)
+            MIDDLEOPTIONS+=(-force_key_frames chapters)
             # MIDDLEOPTIONS+=(-bufsize 1835k)
             MIDDLEOPTIONS+=(-f mp4)
             if [[ "${OUTPUT_TYPE}" == "youtube" ]] ; then
@@ -515,6 +516,7 @@ while [[ "${@}" != "" ]] ; do
             MIDDLEOPTIONS+=(-movflags faststart)
             MIDDLEOPTIONS+=(-pix_fmt yuv420p)
             MIDDLEOPTIONS+=(-c:v libx264)
+            MIDDLEOPTIONS+=(-force_key_frames chapters)
             MIDDLEOPTIONS+=(-crf 26)
             _add_video_filter "yadif"
         elif [[ "${OUTPUT_TYPE}" == "m4a" ]] || [[ "${OUTPUT_TYPE}" == "mp3" ]] || [[ "${OUTPUT_TYPE}" == "waveform" ]] ; then
