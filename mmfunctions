@@ -1234,6 +1234,10 @@ _get_audio_mapping(){
     fi
 }
 
+_get_format(){
+    FORMAT="$(ffprobe -v 0 "${1}" -show_entries format=format_name -of default=nw=1:nk=1)"
+}
+
 _get_codectagstring(){
     CODEC_TAG_STRING=$(ffprobe "${1}" -show_streams -select_streams v:0 2> /dev/null | grep "^codec_tag_string=" | cut -d = -f 2)
     if [[ "${CODEC_TAG_STRING}" = "FFV1" ]] ; then
