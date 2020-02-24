@@ -202,7 +202,6 @@ _makeaccesscopies(){
             _report -dt "${MEDIAID} does NOT qualify for podcast creation, skipping."
             _writeerrorlog "makederiv" -T podcast "${MEDIAID} did not qualify for podcast creation and was skipped."
         fi
-        "${SCRIPTDIR}/makederiv" -T dvd "${OUTDIR_INGESTFILE}/${MEDIAID}"
     else
         "${SCRIPTDIR}/makederiv" -T mp3 "${MP3OPTS[@]}" "${OUTDIR_INGESTFILE}/${MEDIAID}"
         "${SCRIPTDIR}/makederiv" -T podcast "${MAKEDERIVOPTS[@]}" "${PODCASTOPTS[@]}" -e "$MAKEYOUTUBE_DELIVERY_EMAIL_TO" "${OUTDIR_INGESTFILE}/${MEDIAID}"
@@ -233,7 +232,7 @@ _delivertoia(){
     if [ $(echo "${MEDIAID}" | grep -E "${REGEX4IA}") ] ; then
         if [ $(which uploadia) ] ; then
             _report -dt "Attempting to run uploadia and upload to Internet Archive"
-            uploadia "${OUTDIR_INGESTFILE}/${MEDIAID}/objects/access/youtube_up/${MEDIAID}.mp4" "${OUTDIR_INGESTFILE}/${MEDIAID}/objects/access/dvd/${MEDIAID}.iso"
+            uploadia "${OUTDIR_INGESTFILE}/${MEDIAID}/objects/access/youtube_up/${MEDIAID}.mp4"
         fi
     fi
 }
