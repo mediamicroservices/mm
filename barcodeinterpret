@@ -22,9 +22,9 @@ translatebyte()
 {
     VAL=$(echo $1 | echo $(cut -c $2-$3) + 32 | bc)
     if [ "${VAL}" = 131 ] ; then
-        echo 9 | awk '{printf("%c", ${0});}'
+        echo 9 | awk '{printf "%c", $1}'
     else
-        echo "${VAL}" | awk '{printf("%c", ${0});}'
+        echo "${VAL}" | awk '{printf "%c", $1}'
     fi
 }
 _addcolons()
@@ -55,14 +55,14 @@ _get_ids()
     c17=$(translatebyte "${BARCODE}" 36 37)
     c18=$(translatebyte "${BARCODE}" 38 39)
     c19=$(translatebyte "${BARCODE}" 40 41)
-    echo "${c00$c01$c02$c03$c04$c05$c06$c07$c08$c09$c10$c11$c12$c13$c14$c15$c16$c17$c18$c19}"
+    echo "$c00$c01$c02$c03$c04$c05$c06$c07$c08$c09$c10$c11$c12$c13$c14$c15$c16$c17$c18$c19"
 }
 
 IDS=$(_get_ids "${BARCODE}")
 
-MATERIALID=$(echo "${IDS}" | cut -d ' ' -f 2)
+MATERIALID=$(echo "${IDS}" | cut -c 10-  | sed 's/ //g')
 if [[ $(echo "${MATERIALID}" | tail -c +9 | head -c 1) == "H" ]] ; then
    MATERIALID="${MATERIALID}D"
 fi
-echo DEVICEID,$(echo "${IDS}" | cut -d ' ' -f 1),MATERIALID,${MATERIALID},SOM,$(_addcolons $(echo "${BARCODE}" | cut -c 42-49)),duration,$(_addcolons $(echo "${BARCODE}" | cut -c 50-57))
+echo DEVICEID,$(echo "${IDS}" | cut -c 1-8),MATERIALID,${MATERIALID},SOM,$(_addcolons $(echo "${BARCODE}" | cut -c 42-49)),duration,$(_addcolons $(echo "${BARCODE}" | cut -c 50-57))
 _log -e
