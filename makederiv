@@ -256,7 +256,8 @@ while [[ "${@}" != "" ]] ; do
                 DAR="(${WIDTH}/${HEIGHT})*${SAR}"
             fi
             # set options for zeroing timecode if input is MXF
-            if [[ "$INPUT" == *.mxf ]] ; then
+            _get_format "${SOURCEFILE}"
+            if [[ "${FORMAT}" == "mxf" ]] ; then
                 metadata_option="-metadata"
             else
                 metadata_option="-metadata:s:v:0"
