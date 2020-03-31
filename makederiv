@@ -15,6 +15,7 @@ _usage(){
         echo "Usage: $(basename "${0}") [ -d /path/to/deliver/to/ ] fileorpackage1 [ fileorpackage2 ...]"
         echo "  -T derivative (specify a derivative video type:)"
         echo "      broadcast (mov) for broadcast"
+        echo "      broadcast_copy (mov) for broadcast"
         echo "      prores (mov) for editing"
         echo "      youtube (mp4) for uploading"
         echo "      resourcespace (mp4) for uploading to resourcespace"
@@ -91,6 +92,10 @@ if [[ "${OUTPUT_TYPE}" == "broadcast" ]] ; then
     if [[ "${ADDSLATE}" = "Y" ]]; then
         SUFFIX="_SLATE"
     fi
+elif [[ "${OUTPUT_TYPE}" == "broadcast_copy" ]] ; then
+    EXTENSION="mov"
+    RELATIVEPATH=""
+    SUFFIX="_COPY"
 elif [[ "${OUTPUT_TYPE}" == "prores" ]] ; then
     EXTENSION="mov"
     RELATIVEPATH="objects/access/prores"
@@ -437,6 +442,16 @@ while [[ "${@}" != "" ]] ; do
             fi
             _add_video_filter "format=yuv422p"
             _add_video_filter "lut=y=if(gt(val\,235)\,235\,val):u=if(gt(val\,235)\,235\,val):v=if(gt(val\,235)\,235\,val)"
+        elif [[ "${OUTPUT_TYPE}" == "broadcast_copy" ]] ; then
+            MIDDLEOPTIONS+=(-map 0:v)
+            MIDDLEOPTIONS+=(-c:v copy)
+            _get_format "${SOURCEFILE}"
+            if [[ "${FORMAT}" == "mxf" ]] ; then
+                metadata_option="-metadata"
+            else
+                metadata_option="-metadata:s:v:0"
+            fi
+            MIDDLEOPTIONS+=("$metadata_option" timecode=00:00:00.00)
         elif [[ "${OUTPUT_TYPE}" == "prores" ]] ; then
             MIDDLEOPTIONS+=(-map 0:v)
             MIDDLEOPTIONS+=(-c:v prores_ks)
@@ -538,6 +553,9 @@ while [[ "${@}" != "" ]] ; do
             MIDDLEOPTIONS+=(-acodec pcm_s24be)
             MIDDLEOPTIONS+=(-ar 48k)
             _get_audio_mapping -bv "${SOURCEFILE}"
+        elif [[ "${OUTPUT_TYPE}" == "broadcast_copy" ]] ; then
+            MIDDLEOPTIONS+=(-map 0:a)
+            MIDDLEOPTIONS+=(-c:a copy)
         elif [[ "${OUTPUT_TYPE}" == "prores" ]] ; then
             MIDDLEOPTIONS+=(-map 0:a)
             MIDDLEOPTIONS+=(-c:a pcm_s16le)
