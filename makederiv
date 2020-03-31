@@ -19,6 +19,7 @@ _usage(){
         echo "      prores (mov) for editing"
         echo "      youtube (mp4) for uploading"
         echo "      resourcespace (mp4) for uploading to resourcespace"
+        echo "      quick (mp4)"
         echo "      dvd (iso)"
         echo "      mp3 (mp3)"
         echo "      podcast (mov or m4a)"
@@ -106,6 +107,11 @@ elif [[ "${OUTPUT_TYPE}" == "resourcespace" ]] ; then
     PREFERRED_SOURCE="service"
     EXTENSION="mp4"
     RELATIVEPATH="objects/access/resourcespace"
+elif [[ "${OUTPUT_TYPE}" == "quick" ]] ; then
+    PREFERRED_SOURCE="service"
+    EXTENSION="mp4"
+    RELATIVEPATH="objects/access/quick"
+    SUFFIX="_quick"
 elif [[ "${OUTPUT_TYPE}" == "dvd" ]] ; then
     PREFERRED_SOURCE="service"
     EXTENSION="iso"
@@ -489,6 +495,16 @@ while [[ "${@}" != "" ]] ; do
                 _add_video_filter "crop=720:480:0:32"
             fi
             _add_video_filter "yadif"
+        elif [[ "${OUTPUT_TYPE}" == "quick" ]] ; then
+            MIDDLEOPTIONS+=(-map 0:v)
+            MIDDLEOPTIONS+=(-c:v libx264)
+            MIDDLEOPTIONS+=(-preset ultrafast)
+            MIDDLEOPTIONS+=(-crf 24)
+            MIDDLEOPTIONS+=(-pix_fmt yuv420p)
+            MIDDLEOPTIONS+=(-s 640x360)
+            MIDDLEOPTIONS+=(-force_key_frames chapters)
+            MIDDLEOPTIONS+=(-f mp4)
+            MIDDLEOPTIONS+=(-movflags faststart)
         elif [[ "${OUTPUT_TYPE}" == "dvd" ]] ; then
             DARRATIO=$(echo "scale=3 ; ${DAR}" | bc)
             if [ $(echo "scale=5 ; ${DARRATIO} > 1.5" | bc -l) = 1 ] ;then
@@ -569,6 +585,11 @@ while [[ "${@}" != "" ]] ; do
             MIDDLEOPTIONS+=(-c:a aac)
             MIDDLEOPTIONS+=(-ac 2)
             MIDDLEOPTIONS+=(-b:a 128k)
+            _get_audio_mapping -v "${SOURCEFILE}"
+        elif [[ "${OUTPUT_TYPE}" == "quick" ]] ; then
+            MIDDLEOPTIONS+=(-c:a aac)
+            MIDDLEOPTIONS+=(-ac 2)
+            MIDDLEOPTIONS+=(-b:a 96k)
             _get_audio_mapping -v "${SOURCEFILE}"
         elif [[ "${OUTPUT_TYPE}" == "dvd" ]] ; then
             MIDDLEOPTIONS+=(-b:a 448000)
