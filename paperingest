@@ -24,17 +24,15 @@ fi
 _free_space 5 "${OUTDIR_PAPER}"
 
 ORIGDIR="${OUTDIR_PAPER}/${MEDIAID}/objects"
-SUBMISSIONMETADATADIR="${OUTDIR_PAPER}/${MEDIAID}/metadata/submissionDocumentation"
-LOGDIR="${OUTDIR_PAPER}/${MEDIAID}/logs"
+LOGDIR="${OUTDIR_PAPER}/${MEDIAID}/metadata/logs"
 
 mkdir -p "${ORIGDIR}"
-mkdir -p "${SUBMISSIONMETADATADIR}"
 mkdir -p "${LOGDIR}"
 
 START=$(date -u "+%Y%m%dT%H%M%SZ")
 
 COMMAND="fscanx  --adf --rgb --bits 8 --resolution 600 --paper-width 10200 --paper-height 13200 --rotate-n-n --left 0 --width 10200 --top 0 --height 13200 --double-feed n --tiff --no-jpeg --images-per-file 1 --compress zlib '${ORIGDIR}/${MEDIAID}_.tif'"
-exec &> "${SUBMISSIONMETADATADIR}/fscanx_process.txt"
+exec &> "${LOGDIR}/fscanx_process.txt"
 eval "${COMMAND}"
 FIRST=$(find "${ORIGDIR}" -type f -mindepth 1 -maxdepth 1 ! -name ".*" -exec ls -1rt '{}' \; | head -n 1)
 LAST=$(ls -1t "${ORIGDIR}" | head -n 1)
@@ -45,14 +43,14 @@ SYSTEM_DATA=$(system_profiler SPHardwareDataType)
 SERIAL_NUMBER=$(echo "${SYSTEM_DATA}" | grep "Serial Number" | awk '{ print $4 }')
 MODEL=$(echo "${SYSTEM_DATA}" | grep "Model Identifier" | awk '{ print $3; }')
 OS=$(system_profiler SPSoftwareDataType | grep "System Version" | awk '{ print substr(${0}, index(${0},$3)); }')
-echo "datetime_start: ${START}" >> "${SUBMISSIONMETADATADIR}/operation_process.txt"
-echo "datetime_end: ${END}" >> "${SUBMISSIONMETADATADIR}/operation_process.txt"
-echo "serial number: ${SERIAL_NUMBER}" >> "${SUBMISSIONMETADATADIR}/operation_process.txt"
-echo "model id: ${MODEL}" >> "${SUBMISSIONMETADATADIR}/operation_process.txt"
-echo "os: ${OS}" >> "${SUBMISSIONMETADATADIR}/operation_process.txt"
-echo "identifier: ${MEDIAID}" >> "${SUBMISSIONMETADATADIR}/operation_process.txt"
-echo "operator: ${OP}" >> "${SUBMISSIONMETADATADIR}/operation_process.txt"
-echo "command: ${COMMAND}"  >> "${SUBMISSIONMETADATADIR}/operation_process.txt"
+echo "datetime_start: ${START}" >> "${LOGDIR}/capture.log"
+echo "datetime_end: ${END}" >> "${LOGDIR}/capture.log"
+echo "serial number: ${SERIAL_NUMBER}" >> "${LOGDIR}/capture.log"
+echo "model id: ${MODEL}" >> "${LOGDIR}/capture.log"
+echo "os: ${OS}" >> "${LOGDIR}/capture.log"
+echo "identifier: ${MEDIAID}" >> "${LOGDIR}/capture.log"
+echo "operator: ${OP}" >> "${LOGDIR}/capture.log"
+echo "command: ${COMMAND}"  >> "${LOGDIR}/capture.log"
 
 echo done scanning "${MEDIAID}"
 

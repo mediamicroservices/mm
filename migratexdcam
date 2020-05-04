@@ -1,0 +1,143 @@
+#!/bin/bash
+# migratexdcam
+# Transfer data from XDCAM disc 
+
+SCRIPTDIR=$(dirname "${0}")
+. "${SCRIPTDIR}/mmfunctions" || { echo "Missing '${SCRIPTDIR}/mmfunctions'. Exiting." ; exit 1 ;};
+
+_cleanup(){
+    _log -a "Process aborted"
+    exit 1
+}
+
+trap _cleanup SIGHUP SIGINT SIGTERM
+_log -b
+
+_usage(){
+    echo
+    echo "$(basename "${0}") ${VERSION}"
+    echo "This script may be run interactively by running it with no arguments or may be used with the following options."
+    echo "_usage: $(basename ${0}) [ -c output_directory_for_xdcam ]"
+    echo "  -c output_directory_for_xdcam (else will default to ${MM_CONFIG_FILE})"
+    exit
+}
+# command-line options to set mediaid and original variables
+OPTIND=1
+while getopts ":hc:" OPT; do
+    case "${OPT}" in
+        h) _usage ;;
+        c) OUTDIR_INGESTXDCAM="${OPTARG}" ;;
+        \?) _report -w "Invalid option: -${OPTARG}" ; exit 1 ;;
+        :) _report -w "Option -${OPTARG} requires an argument" ; _writeerrorlog "xdcamingest" "The option selected required an argument and none was provided. The script had to exit." ; exit 1 ;;
+    esac
+    done
+
+if [ ! -d "${OUTDIR_INGESTXDCAM}" ] ; then
+    _report -w "The XDCam processing directory must be set. Use [ -c /path/to/XDCam/processing/directory ]."
+    exit 1
+fi
+
+#Interview the operator
+    _report -qn "Please enter (or scan) a valid Media ID before we begin: "
+    read -e MATERIALID1
+    if [ "${MATERIALID1}" == "q" ]; then
+        exit 0
+    fi
+    _report -qn "Please enter any information from the disc's paper label: "
+    read -e LABELINPUT
+    if [ "${LABELINPUT}" == "q" ]; then
+        exit 0
+    fi
+   # _report -qn "If the XDCAM disc's case has one or more long barcodes, scan the first one now! If there are no barcodes, press enter."
+    #read -e BARCODE
+    #while [ "${BARCODE}" != "" ]; do
+    #_./barcodetest.sh ${BARCODE}
+    #_report -qn "Please scan the next barcode.  If there are no more barcodes to scan, just press enter!"
+    #read -e BARCODE
+    #if ["$BARCODE}" == "q"]; then
+    #    exit 0
+    #fi
+    _report -qn "Oh...I didn't get your name!  Would you mind entering it here and I'll include it in the record: "
+    read -e OP
+    if [ "${OP}" == "q" ]; then
+        exit 0
+    fi
+    _report -qn "Please load the disk and press enter once the directory appears in Finder, or enter q to quit."
+    read -e WAIT
+    if [ "${WAIT}" == "q" ]; then
+        exit 0
+    fi
+    
+#Pick deck of multiple.
+    VOLUME_ARRAY=($(find /Volumes -name "XDCAM*" -maxdepth 1 | sort))
+
+    _report -d "Let's get started!"
+    echo "Select the deck you'd like to use:"
+    PS3="Which XDCAM deck?"
+    select XDCAM_VOLUME in "${VOLUME_ARRAY[@]}" ; do
+       break
+    done
+
+    if [ ! "${XDCAM_VOLUME}" ] ; then
+        echo "Error: You selected an invalid option."
+        exit 1
+    fi
+    echo "You picked ${XDCAM_VOLUME}"
+          
+    XDCAM_MOUNT="${XDCAM_VOLUME}"
+    DECK1=$(basename "${XDCAM_MOUNT}")
+    _report -dt "We're almost ready to begin transfer.  I found the XDCAM deck: ${DECK1}"
+
+     #report results of OP interview
+        MATERIALID1="${MATERIALID1}"
+        DEVICEID1="${XDCAM_VOLUME}"
+    echo ----------------------------------
+    echo XDCAM Deck is:   "${XDCAM_VOLUME}"
+    echo Material ID is: "${MATERIALID1}"
+    echo The label reads: "${LABELINPUT}"
+    echo Your name is: "${OP}"
+    echo ----------------------------------
+    PS3="Do these values look correct? "
+    eval set "'Yes' 'No'"
+    select OPTION in "${@}"
+    do
+        break
+    done
+    if [ "${OPTION}" != "Yes" ] ; then
+        echo Start Over
+        echo
+    else
+        # check for existing output
+        if [ -d "${OUTDIR_INGESTXDCAM}/${MATERIALID1}" ] ; then
+            _report -dt "It looks like ${MATERIALID1} was already ingested. These things happen! If you want to overwrite the existing one please just delete ${OUTDIR_INGESTXDCAM}/${MATERIALID1} first and then try again."
+        else
+            #create ingest log file and directory
+            mkdir -p "${OUTDIR_INGESTXDCAM}/${MATERIALID1}/metadata/logs"
+            INGESTLOG="${OUTDIR_INGESTXDCAM}/${MATERIALID1}/metadata/logs/capture.log"
+            _writeingestlog "media ID" "${MATERIALID1}"
+            _writeingestlog "disc label info" "${LABELINPUT}"
+            _writeingestlog "operator" "${OP}"
+            _writeingestlog "ingest_process_dir" "${OUTDIR_INGESTXDCAM}"
+            _writeingestlog "datetime_start" "$(_get_iso8601)"
+
+            # start xdcam ingest process 
+            START=$(date -u "+%Y%m%dT%H%M%SZ")
+            mkdir -p "${OUTDIR_INGESTXDCAM}/${MATERIALID1}/objects"
+            _report -dt "migrating video..."
+            rsync -rtv --stats --progress --log-file="${OUTDIR_INGESTXDCAM}/${MATERIALID1}/metadata/logs/rsync_$(_get_iso8601_c)_$(basename $0)_${VERSION}.txt" "/Volumes/${DECK1}/Clip/"           "${OUTDIR_INGESTXDCAM}/${MATERIALID1}/objects/"
+            diskutil info "${XDCAM_MOUNT}" > "${OUTDIR_INGESTXDCAM}/${MATERIALID1}/metadata/logs/diskutilinfo.log"
+            
+            end=$(date -u "+%Y%m%dT%H%M%SZ")
+            hdiutil eject "/Volumes/${DECK1}"
+            mv -v -n "${OUTDIR_INGESTXDCAM}/${MATERIALID1}/objects/"*.XML "${OUTDIR_INGESTXDCAM}/${MATERIALID1}/metadata/logs/"
+            _writeingestlog "datetime_end" "$(_get_iso8601)"
+
+        echo "-----------------------------------------------------------"
+        _report -d "All done! Don't forget to grab your disc from the machine!"
+        echo "-----------------------------------------------------------"
+        fi
+fi
+_log -e
+
+
+
