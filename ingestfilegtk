@@ -102,6 +102,8 @@ funcCombo(){
 GTK_COMBO
 }
 
+
+
 export MAIN_DIALOG=$(cat << MAIN_FORM
 	<window title="ingestfile" resizable="false" window_position="1">
 		<vbox>
