@@ -7,3 +7,72 @@ QUEUEFILE="${HOME}/Desktop/queue.txt"
 SCRIPTDIR=$(dirname "${0}")
 . "${SCRIPTDIR}/mmfunctions" || { echo "Missing '${SCRIPTDIR}/mmfunctions'. Exiting." ; exit 1 ;};
 _initialize_make
+<<<<<<< Updated upstream
+=======
+
+funcDirectory() {
+    DIR_VAR_NAME="${1}"
+    DIR_VAR_VALUE="${!1}"
+    DIR_LABEL="${2}"
+    if [[ -n "${DIR_VAR_VALUE}" ]] ;
+    then DIR_DEFAULT="<default>${DIR_VAR_VALUE}</default>"
+    fi
+    cat << GTK_PART
+    <vbox>
+    	<text>
+    		<label>"${DIR_LABEL}"</label>
+    	</text>
+    	<hbox>
+      		<entry accept="directory" fs-entry="Select a Directory">
+          		${DIR_DEFAULT}
+       	  		<variable>${DIR_VAR_NAME}</variable>
+      		</entry>
+      		<button>
+        		<input file stock="gtk-open"></input>
+         		<variable>DIRBROWSE</variable>
+        		<action type="fileselect">${DIR_VAR_NAME}</action>
+      		</button>
+    	</hbox>
+    </vbox>
+GTK_PART
+}
+
+funcEntry(){
+  ENTRY_VAR_NAME="${1}"
+  ENTRY_VAR_VALUE="${!1}"
+  ENTRY_LABEL="${2}"
+  if [[ -n "${ENTRY_VAR_VALUE}" ]] ;
+  then ENTRY_DEFAULT="<default>${ENTRY_VAR_VALUE}</default>"
+  fi
+  cat << GTK_ENTRY
+<vbox>
+  <text wrap="true" width-chars="60" xalign="0">
+    <label>${ENTRY_LABEL}</label>
+  </text>
+  <entry>
+    <variable>${ENTRY_VAR_NAME}</variable>
+    ${ENTRY_DEFAULT}
+    </entry>
+</vbox>
+GTK_ENTRY
+}
+
+export MAIN_DIALOG=$(cat << MAIN_FORM
+	<window title="ingestfile" resizable="false" window_position="1">
+		<vbox>
+			<text>
+				<label>Ingest file options.</label>
+			</text>
+			<frame>
+				$(funcEntry OPERATOR "Please enter your name")
+				$(funcEntry MEDIAID "Please enter a unique MEDIA ID (capital letters, numbers, hyphens and underscores only).")
+				$(funcDirectory INPUT "Select your file")
+			</frame>
+		</vbox>
+	</window>
+MAIN_FORM
+)
+GTK_OUTPUT="$(gtkdialog --program=MAIN_DIALOG | sort)"
+echo "${GTK_OUTPUT}"
+
+>>>>>>> Stashed changes
