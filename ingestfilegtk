@@ -7,11 +7,7 @@ QUEUEFILE="${HOME}/Desktop/queue.txt"
 SCRIPTDIR=$(dirname "${0}")
 . "${SCRIPTDIR}/mmfunctions" || { echo "Missing '${SCRIPTDIR}/mmfunctions'. Exiting." ; exit 1 ;};
 _initialize_make
-<<<<<<< Updated upstream
-<<<<<<< Updated upstream
-=======
-=======
->>>>>>> Stashed changes
+
 
 funcDirectory() {
     DIR_VAR_NAME="${1}"
@@ -78,7 +74,3 @@ MAIN_FORM
 GTK_OUTPUT="$(gtkdialog --program=MAIN_DIALOG | sort)"
 echo "${GTK_OUTPUT}"
 
-<<<<<<< Updated upstream
->>>>>>> Stashed changes
-=======
->>>>>>> Stashed changes
