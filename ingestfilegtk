@@ -56,6 +56,54 @@ funcEntry(){
 GTK_ENTRY
 }
 
+_get_index_of_value(){
+  # run with function, value to look for as first argument, and array to look in as 2nd argument, such function as
+  # _get_index_of_value "${VIDEO_INPUT_CHOICE}" "${VIDEO_INPUT_OPTIONS[@]}"
+  VALUE="${1}"
+  shift
+  LIST=( "$@" )
+  INDEX=0
+  MATCH=""
+  for ITEM in "${LIST[@]}" ; do
+    if [[ "${VALUE}" = "${ITEM}" ]] ; then
+      MATCH="$INDEX"
+    fi
+    (( ++INDEX ))
+  done
+    if [[ -n "${MATCH}" ]] ; then
+      echo -n "${MATCH}"
+    fi
+}
+
+_expand_list2items(){
+  LIST=( "$@" )
+    for i in "${LIST[@]}" ; do
+      echo "<item>${i}</item>"
+    done
+}
+
+funcCombo(){
+    VARIABLE_NAME="${1}"
+    LABEL="${3}"
+    shift 3
+    OPTION_LIST=("${@}")
+    SELECTION="$(_get_index_of_value "${!VARIABLE_NAME}" "${OPTION_LIST[@]}")"
+    LIST="$(_expand_list2items "${OPTION_LIST[@]}")"
+    cat << GTK_COMBO
+    <hbox>
+      <text>
+          <label>${LABEL}</label>
+      </text>
+      <comboboxtext allow-empty=\"false\" value-in-list=\"true\" button-sensitivity=\"1\" focus-on-click=\"false\" selection-mode=\"1\" selected-row=\"${SELECTION}\">
+          <variable>${VARIABLE_NAME}</variable>
+          ${LIST}
+      </comboboxtext>
+    </hbox>
+GTK_COMBO
+}
+
+
+
 export MAIN_DIALOG=$(cat << MAIN_FORM
 	<window title="ingestfile" resizable="false" window_position="1">
 		<vbox>
