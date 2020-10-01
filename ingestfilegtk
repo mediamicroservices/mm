@@ -71,6 +71,7 @@ export MAIN_DIALOG=$(cat << MAIN_FORM
 	</window>
 MAIN_FORM
 )
+
 GTK_OUTPUT="$(gtkdialog --program=MAIN_DIALOG | sort)"
 echo "${GTK_OUTPUT}"
 
