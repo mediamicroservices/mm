@@ -18,8 +18,8 @@ GTK_RAD
 funcDirectory() {
     DIR_VAR_NAME="${1}"
     DIR_VAR_VALUE="${!1}"
-    if [[ -n "${DIR_VAR_VALUE}" ]] ;
-    then DIR_DEFAULT="<default>${DIR_VAR_VALUE}</default>"
+    if [[ -n "${DIR_VAR_VALUE}" ]] ; then 
+      DIR_DEFAULT="<default>${DIR_VAR_VALUE}</default>"
     fi
     cat << GTK_PART
 <frame ${DIR_VAR_NAME}>
@@ -43,8 +43,8 @@ funcEntry(){
   ENTRY_VAR_VALUE="${!1}"
   ENTRY_LABEL="${2}"
   ENTRY_WIDTH="${3}"
-  if [[ -n "${ENTRY_VAR_VALUE}" ]] ;
-  then ENTRY_DEFAULT="<default>${ENTRY_VAR_VALUE}</default>"
+  if [[ -n "${ENTRY_VAR_VALUE}" ]] ; then
+    ENTRY_DEFAULT="<default>${ENTRY_VAR_VALUE}</default>"
   fi
   cat << GTK_ENTRY
 <vbox>
@@ -154,8 +154,8 @@ export MAIN_DIALOG=$(cat << MAIN_FORM
 MAIN_FORM
 )
 
-if EXIT="OK" ;
-  then GTK_OUTPUT="$(gtkdialog --program=MAIN_DIALOG | sort)"
-  echo "${GTK_OUTPUT}" | sed 's:VOLADJUSTY="true":VOLADJUST="Y":g'';''s:VOLADJUSTN="false"::g'';''s:VOLADJUSTN="true":VOLADJUST="N":g'';''s:VOLADJUSTY="false"::g'';''s:PREMIS_DBY="true":PREMIS_DB="Y":g'';''s:PREMIS_DBN="false"::g'';''s:PREMIS_DBN="true":PREMIS_DB="N":g'';''s:PREMIS_DBY="false"::g'';''s:EXIT="OK"::g'';' | sort > "${MM_CONFIG_FILE}"
+GTK_OUTPUT="$(gtkdialog --program=MAIN_DIALOG | sort)"
+if [[ "$GTK_OUTPUT" == *'EXIT="OK"'* ]]; then
+  echo "${GTK_OUTPUT}" | sed 's:VOLADJUSTY="true":VOLADJUST="Y":g;s:VOLADJUST[YN]="false"::g;s:VOLADJUSTN="true":VOLADJUST="N":g;s:PREMIS_DBY="true":PREMIS_DB="Y":g;s:PREMIS_DB[YN]="false"::g;s:PREMIS_DBN="true":PREMIS_DB="N":g;s:EXIT="OK"::g' | sort > "${MM_CONFIG_FILE}"
   echo "${MM_CONFIG_FILE}"
 fi
