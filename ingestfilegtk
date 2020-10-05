@@ -9,6 +9,13 @@ SCRIPTDIR=$(dirname "${0}")
 _initialize_make
 
 
+AUDIODECISION_OPTIONS=("Default audio mapping [first audio track used for stereo output]" "" "Default audio mapping [first audio track used for stereo output]" "Only use left of the first audio track [for 21st Century]" "Only use right of the first audio track" "Only use the first track")
+CROPDECISION_OPTIONS=("Do not crop" "" "Examine the video and auto-crop out black borders (slower)")
+SLATE_OPTIONS=("No""""Yes")
+FORMULA_OPTIONS=("none" "" "check interlacement" "tff" "bff" "hds" "sds")
+CLEANUPDECISION_OPTIONS=("Leave source file where it is" "" "Remove source file after successful ingest")
+PRIORITY_OPTIONS=("put in queue" "" "start now")
+
 funcDirectory() {
     DIR_VAR_NAME="${1}"
     DIR_VAR_VALUE="${!1}"
@@ -84,6 +91,7 @@ _expand_list2items(){
 
 funcCombo(){
     VARIABLE_NAME="${1}"
+    WIDTH="${2}"
     LABEL="${3}"
     shift 3
     OPTION_LIST=("${@}")
@@ -114,12 +122,28 @@ export MAIN_DIALOG=$(cat << MAIN_FORM
 				$(funcEntry OPERATOR "Please enter your name")
 				$(funcEntry MEDIAID "Please enter a unique MEDIA ID (capital letters, numbers, hyphens and underscores only).")
 				$(funcDirectory INPUT "Select your file")
+        $(funcCombo AUDIODECISION "100" "Select an audio strategy" ${AUDIODECISION_OPTIONS[@]})
+        $(funcCombo CROPDECISION "100" "Select a cropping strategy:" ${CROPDECISION_OPTIONS[@]})
+        $(funcCombo SLATE "100" "Do you want to create a service copy with a slate?" ${SLATE_OPTIONS[@]})
+        $(funcEntry SERIESTITLE "If adding slate, please enter a series title:")
+        $(funcEntry EPISODETITLE "If adding slate, please enter an episode title:")
+        $(funcCombo FORMULA "100" "Select a formula for unusual cases (optional)" ${FORMULA_OPTIONS[@]})
+        $(funcCombo CLEANUPDECISION "100" "Select a cleanup strategy" ${CLEANUPDECISION_OPTIONS[@]})
+        $(funcCombo PRIORITY "100" "Would you like to put it in the queue or start now?" ${PRIORITY_OPTIONS[@]})
+        $(funcEntry INTIME_ENTRY "Enter the in-point of the video (optional; in hh:mm:ss.s)")
+        $(funcEntry OUTTIME_ENTRY "Enter the out-point of the video (optional; in hh:mm:ss.s")
 			</frame>
+      <hbox>
+        <button ok></button>
+        <button cancel></button>
+      </hbox>
 		</vbox>
 	</window>
 MAIN_FORM
 )
 
-GTK_OUTPUT="$(gtkdialog --program=MAIN_DIALOG | sort)"
-echo "${GTK_OUTPUT}"
+echo "$MAIN_DIALOG" | mate
+gtkdialog --program=MAIN_DIALOG 
+
+
 
