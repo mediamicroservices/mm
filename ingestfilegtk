@@ -9,39 +9,67 @@ SCRIPTDIR=$(dirname "${0}")
 _initialize_make
 
 
-AUDIODECISION_OPTIONS=("Default audio mapping [first audio track used for stereo output]" "" "Default audio mapping [first audio track used for stereo output]" "Only use left of the first audio track [for 21st Century]" "Only use right of the first audio track" "Only use the first track")
-CROPDECISION_OPTIONS=("Do not crop" "" "Examine the video and auto-crop out black borders (slower)")
-SLATE_OPTIONS=("No""""Yes")
-FORMULA_OPTIONS=("none" "" "check interlacement" "tff" "bff" "hds" "sds")
-CLEANUPDECISION_OPTIONS=("Leave source file where it is" "" "Remove source file after successful ingest")
-PRIORITY_OPTIONS=("put in queue" "" "start now")
+AUDIODECISION_OPTIONS=("Default audio mapping [first audio track used for stereo output]" "Default audio mapping [first audio track used for stereo output]" "Only use left of the first audio track [for 21st Century]" "Only use right of the first audio track" "Only use the first track" "")
+CROPDECISION_OPTIONS=("Do not crop" "Examine the video and auto-crop out black borders (slower)" "")
+SLATE_OPTIONS=("No" "Yes" "")
+FORMULA_OPTIONS=("None" "Check interlacement" "tff" "bff" "hds" "sds" "")
+CLEANUPDECISION_OPTIONS=("Leave source file where it is" "Remove source file after successful ingest" "")
+PRIORITY_OPTIONS=("Put in queue" "Start now")
+
+funcFileSelect() {
+    FILE_VAR_NAME="${1}"
+    FILE_VAR_VALUE="${!1}"
+    FILE_LABEL="${2}"
+    if [[ -n "${FILE_VAR_VALUE}" ]] ; then
+      FILE_DEFAULT="<default>${FILE_VAR_VALUE}</default>"
+    fi
+    cat << GTK_FILE
+    <vbox>
+    	<text xalign="0">
+    		<label>"${FILE_LABEL}"</label>
+    	</text>
+    	<hbox>
+      		<entry accept="file" fs-entry="Select a File">
+          		${FILE_DEFAULT}
+       	  		<variable>${FILE_VAR_NAME}</variable>
+      		</entry>
+      		<button>
+        		<input file stock="gtk-open"></input>
+         		<variable export="false">FILEBROWSE</variable>
+        		<action type="fileselect">${FILE_VAR_NAME}</action>
+      		</button>
+    	</hbox>
+    </vbox>
+GTK_FILE
+}
 
 funcDirectory() {
     DIR_VAR_NAME="${1}"
     DIR_VAR_VALUE="${!1}"
     DIR_LABEL="${2}"
-    if [[ -n "${DIR_VAR_VALUE}" ]] ;
-    then DIR_DEFAULT="<default>${DIR_VAR_VALUE}</default>"
+    if [[ -n "${DIR_VAR_VALUE}" ]] ; then
+      DIR_DEFAULT="<default>${DIR_VAR_VALUE}</default>"
     fi
-    cat << GTK_PART
-    <vbox>
-    	<text>
-    		<label>"${DIR_LABEL}"</label>
-    	</text>
-    	<hbox>
-      		<entry accept="directory" fs-entry="Select a Directory">
-          		${DIR_DEFAULT}
-       	  		<variable>${DIR_VAR_NAME}</variable>
-      		</entry>
-      		<button>
-        		<input file stock="gtk-open"></input>
-         		<variable>DIRBROWSE</variable>
-        		<action type="fileselect">${DIR_VAR_NAME}</action>
-      		</button>
-    	</hbox>
-    </vbox>
-GTK_PART
+    cat << GTK_DIR
+<vbox>
+    <text xalign="0">
+      <label>"${DIR_LABEL}"</label>
+    </text>
+    <hbox>
+        <entry accept="directory" fs-entry="Select a Directory">
+            ${DIR_DEFAULT}
+            <variable>${DIR_VAR_NAME}</variable>
+        </entry>
+        <button>
+            <input file stock="gtk-open"></input>
+            <variable export="false">DIRBROWSE</variable>
+            <action type="fileselect">${DIR_VAR_NAME}</action>
+        </button>
+    </hbox>
+</vbox>
+GTK_DIR
 }
+
 
 funcEntry(){
   ENTRY_VAR_NAME="${1}"
@@ -52,7 +80,7 @@ funcEntry(){
   fi
   cat << GTK_ENTRY
 <vbox>
-  <text wrap="true" width-chars="60" xalign="0">
+  <text wrap="true" width-chars="80" xalign="0">
     <label>${ENTRY_LABEL}</label>
   </text>
   <entry>
@@ -97,19 +125,25 @@ funcCombo(){
     OPTION_LIST=("${@}")
     SELECTION="$(_get_index_of_value "${!VARIABLE_NAME}" "${OPTION_LIST[@]}")"
     LIST="$(_expand_list2items "${OPTION_LIST[@]}")"
+    DEFAULT="${OPTION_LIST[0]}"
     cat << GTK_COMBO
-    <hbox>
-      <text>
+    <hbox space-expand="true" space-fill="true">
+      <text xalign="0">
           <label>${LABEL}</label>
       </text>
-      <comboboxtext allow-empty=\"false\" value-in-list=\"true\" button-sensitivity=\"1\" focus-on-click=\"false\" selection-mode=\"1\" selected-row=\"${SELECTION}\">
+      <comboboxtext width-chars="${WIDTH}" xalign="0" allow-empty="false" value-in-list="true" button-sensitivity="1" focus-on-click="false" selection-mode="1" selected-row="${SELECTION}" >
           <variable>${VARIABLE_NAME}</variable>
+          <default>${DEFAULT}</default>
           ${LIST}
       </comboboxtext>
     </hbox>
 GTK_COMBO
 }
 
+_validate_ingestfile(){
+  #mediaID validation
+  echo `date`
+}
 
 
 export MAIN_DIALOG=$(cat << MAIN_FORM
@@ -121,29 +155,50 @@ export MAIN_DIALOG=$(cat << MAIN_FORM
 			<frame>
 				$(funcEntry OPERATOR "Please enter your name")
 				$(funcEntry MEDIAID "Please enter a unique MEDIA ID (capital letters, numbers, hyphens and underscores only).")
-				$(funcDirectory INPUT "Select your file")
-        $(funcCombo AUDIODECISION "100" "Select an audio strategy" ${AUDIODECISION_OPTIONS[@]})
-        $(funcCombo CROPDECISION "100" "Select a cropping strategy:" ${CROPDECISION_OPTIONS[@]})
-        $(funcCombo SLATE "100" "Do you want to create a service copy with a slate?" ${SLATE_OPTIONS[@]})
-        $(funcEntry SERIESTITLE "If adding slate, please enter a series title:")
-        $(funcEntry EPISODETITLE "If adding slate, please enter an episode title:")
-        $(funcCombo FORMULA "100" "Select a formula for unusual cases (optional)" ${FORMULA_OPTIONS[@]})
-        $(funcCombo CLEANUPDECISION "100" "Select a cleanup strategy" ${CLEANUPDECISION_OPTIONS[@]})
-        $(funcCombo PRIORITY "100" "Would you like to put it in the queue or start now?" ${PRIORITY_OPTIONS[@]})
-        $(funcEntry INTIME_ENTRY "Enter the in-point of the video (optional; in hh:mm:ss.s)")
-        $(funcEntry OUTTIME_ENTRY "Enter the out-point of the video (optional; in hh:mm:ss.s")
+				<frame Select a file for one input; a directory for more than one input>
+          $(funcFileSelect INPUTFILE "Select a file:")
+          $(funcDirectory INPUTDIRECTORY "Select a directory containing more than one video file:")
+        </frame>
+        $(funcCombo AUDIODECISION "60" "Select an audio strategy" "${AUDIODECISION_OPTIONS[@]}")
+        $(funcCombo CROPDECISION "60" "Select a cropping strategy:" "${CROPDECISION_OPTIONS[@]}")
+        <frame>
+          $(funcCombo SLATE "60" "Do you want to create a service copy with a slate?" "${SLATE_OPTIONS[@]}")
+          $(funcEntry SERIESTITLE "If adding slate, please enter a series title:")
+          $(funcEntry EPISODETITLE "If adding slate, please enter an episode title:")
+        </frame>
+        $(funcCombo FORMULA "60" "Select a formula for unusual cases (optional)" "${FORMULA_OPTIONS[@]}")
+        $(funcCombo CLEANUPDECISION "60" "Select a cleanup strategy" "${CLEANUPDECISION_OPTIONS[@]}")
+        $(funcCombo PRIORITY "60" "Would you like to put it in the queue or start now?" "${PRIORITY_OPTIONS[@]}")
+        $(funcEntry INTIME_ENTRY "Enter the in-point of the video (optional; in hh:mm:ss.ms)")
+        $(funcEntry OUTTIME_ENTRY "Enter the out-point of the video (optional; in hh:mm:ss.ms")
 			</frame>
+      <hbox>
+        <text>
+          <label>Errors & Warnings:</label>
+        </text>
+        <vbox scrollable="true" height="28">
+          <text wrap="true" xalign="0">
+            <variable export="false">INGESTFILE_FORM_VALIDATION</variable>
+            <input>sh ~/Desktop/_validate_ingestfile.sh</input>
+          </text>
+        </vbox>
+      </hbox>
       <hbox>
         <button ok></button>
         <button cancel></button>
       </hbox>
 		</vbox>
+    <action signal="show" type="refresh">INGESTFILE_FORM_VALIDATION</action>
+    <action signal="enter-notify-event" type="refresh">INGESTFILE_FORM_VALIDATION</action>
+    <action signal="leave-notify-event" type="refresh">INGESTFILE_FORM_VALIDATION</action>
 	</window>
 MAIN_FORM
 )
 
-echo "$MAIN_DIALOG" | mate
-gtkdialog --program=MAIN_DIALOG 
+#echo "$MAIN_DIALOG" | mate
+##gtkdialog --program=MAIN_DIALOG
 
-
-
+GTK_OUTPUT="$(gtkdialog --program=MAIN_DIALOG | sort)"
+if [[ "$GTK_OUTPUT" == *'EXIT="OK"'* ]]; then
+  echo "${GTK_OUTPUT}" | mate
+fi
