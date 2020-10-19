@@ -23,7 +23,7 @@ funcFileSelect() {
     if [[ -n "${FILE_VAR_VALUE}" ]] ; then
       FILE_DEFAULT="<default>${FILE_VAR_VALUE}</default>"
     fi
-    cat << GTK_FILE
+    cat << GTKFILE
     <vbox>
     	<text xalign="0">
     		<label>"${FILE_LABEL}"</label>
@@ -35,12 +35,12 @@ funcFileSelect() {
       		</entry>
       		<button>
         		<input file stock="gtk-open"></input>
-         		<variable export="false">FILEBROWSE</variable>
+         		<variable>FILEBROWSE</variable>
         		<action type="fileselect">${FILE_VAR_NAME}</action>
       		</button>
     	</hbox>
     </vbox>
-GTK_FILE
+GTKFILE
 }
 
 funcDirectory() {
@@ -50,7 +50,7 @@ funcDirectory() {
     if [[ -n "${DIR_VAR_VALUE}" ]] ; then
       DIR_DEFAULT="<default>${DIR_VAR_VALUE}</default>"
     fi
-    cat << GTK_DIR
+    cat << GTKDIR
 <vbox>
     <text xalign="0">
       <label>"${DIR_LABEL}"</label>
@@ -67,7 +67,7 @@ funcDirectory() {
         </button>
     </hbox>
 </vbox>
-GTK_DIR
+GTKDIR
 }
 
 
@@ -78,7 +78,7 @@ funcEntry(){
   if [[ -n "${ENTRY_VAR_VALUE}" ]] ;
   then ENTRY_DEFAULT="<default>${ENTRY_VAR_VALUE}</default>"
   fi
-  cat << GTK_ENTRY
+  cat << GTKENTRY
 <vbox>
   <text wrap="true" width-chars="80" xalign="0">
     <label>${ENTRY_LABEL}</label>
@@ -88,7 +88,7 @@ funcEntry(){
     ${ENTRY_DEFAULT}
     </entry>
 </vbox>
-GTK_ENTRY
+GTKENTRY
 }
 
 _get_index_of_value(){
@@ -126,7 +126,7 @@ funcCombo(){
     SELECTION="$(_get_index_of_value "${!VARIABLE_NAME}" "${OPTION_LIST[@]}")"
     LIST="$(_expand_list2items "${OPTION_LIST[@]}")"
     DEFAULT="${OPTION_LIST[0]}"
-    cat << GTK_COMBO
+    cat << GTKCOMBO
     <hbox space-expand="true" space-fill="true">
       <text xalign="0">
           <label>${LABEL}</label>
@@ -137,7 +137,7 @@ funcCombo(){
           ${LIST}
       </comboboxtext>
     </hbox>
-GTK_COMBO
+GTKCOMBO
 }
 
 _validate_ingestfile(){
@@ -146,18 +146,18 @@ _validate_ingestfile(){
 }
 
 
-export MAIN_DIALOG=$(cat << MAIN_FORM
+MAIN_DIALOG=$(cat << MAINFORM
 	<window title="ingestfile" resizable="false" window_position="1">
 		<vbox>
 			<text>
 				<label>Ingest file options.</label>
 			</text>
 			<frame>
-				$(funcEntry OPERATOR "Please enter your name")
+				$(funcEntry OP "Please enter your name")
 				$(funcEntry MEDIAID "Please enter a unique MEDIA ID (capital letters, numbers, hyphens and underscores only).")
 				<frame Select a file for one input; a directory for more than one input>
           $(funcFileSelect INPUTFILE "Select a file:")
-          $(funcDirectory INPUTDIRECTORY "Select a directory containing more than one video file:")
+          $(funcDirectory INPUTDIR "Select a directory containing more than one video file:")
         </frame>
         $(funcCombo AUDIODECISION "60" "Select an audio strategy" "${AUDIODECISION_OPTIONS[@]}")
         $(funcCombo CROPDECISION "60" "Select a cropping strategy:" "${CROPDECISION_OPTIONS[@]}")
@@ -192,13 +192,42 @@ export MAIN_DIALOG=$(cat << MAIN_FORM
     <action signal="enter-notify-event" type="refresh">INGESTFILE_FORM_VALIDATION</action>
     <action signal="leave-notify-event" type="refresh">INGESTFILE_FORM_VALIDATION</action>
 	</window>
-MAIN_FORM
+MAINFORM
 )
+export MAIN_DIALOG
 
 #echo "$MAIN_DIALOG" | mate
-##gtkdialog --program=MAIN_DIALOG
+#eval "$(gtkdialog --program=MAIN_DIALOG)"
 
-GTK_OUTPUT="$(gtkdialog --program=MAIN_DIALOG | sort)"
-if [[ "$GTK_OUTPUT" == *'EXIT="OK"'* ]]; then
-  echo "${GTK_OUTPUT}" | mate
+#if [[ "${TERMINAL_MODE}" == "N" ]] ; then
+eval "$(gtkdialog --program=MAIN_DIALOG)"
+#fi
+if [[ "${EXIT}" = "abort" ]] ;  then
+  exit 0
+elif [[ "${EXIT}" = "Cancel" ]] ; then
+  exit 0
+elif [[ "${EXIT}" = "OK" ]] ; then
+  echo " OPERATOR = ${OP}"
+  echo " INPUTFILE = ${INPUTFILE}"
+  echo " INPUTDIR = ${INPUTDIR}"
+  echo " MEDIAID = ${MEDIAID}"
+  echo " AUDIODECISION = ${AUDIODECISION}"
+  echo " CROPDECISION = ${CROPDECISION}"
+  echo " SLATE = ${SLATE}"
+  echo " SERIESTITLE = ${SERIESTITLE}"
+  echo " EPISODETITLE = ${EPISODETITLE}"
+  echo " FORMULA = ${FORMULA}"
+  echo " CLEANUPDECISION = ${CLEANUPDECISION}"
+  echo " PRIORITY = ${PRIORITY}"
+  echo ""
+fi
+
+if [ -f "${INPUTFILE}" ] && [ ! -d "${INPUTDIR}" ] ; then
+  INPUT="${INPUTFILE}"
+  rm ${INPUTFILE}
+  rm ${INPUTDIR}
+elif [ ! -f "${INPUTFILE}" ] && [ -d "${INPUTDIR}" ] ; then
+  INPUT="${INPUTDIR}"
+  rm ${INPUTFILE}
+  rm ${INPUTDIR}
 fi
