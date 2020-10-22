@@ -2,26 +2,17 @@
 # mmconfig
 # set up variables for microservices, has option for a graphical user interface
 CONFIG="Y"
+CONFIG_VERSION="1.0"
 SCRIPTDIR=$(dirname "${0}")
 . "${SCRIPTDIR}/mmfunctions" || { echo "Missing '${SCRIPTDIR}/mmfunctions'. Exiting." ; exit 1 ;};
-
-funcrdoCreate() {
-  RDO_VAR_NAME="${1}"
-  RDO_NAME="${2}"
-  cat <<GTK_RAD
-<label>${RDO_NAME}</label>
-  <variable>${RDO_VAR_NAME}</variable>
-</radiobutton>
-GTK_RAD
-}
 
 funcDirectory() {
     DIR_VAR_NAME="${1}"
     DIR_VAR_VALUE="${!1}"
-    if [[ -n "${DIR_VAR_VALUE}" ]] ; then 
+    if [[ -n "${DIR_VAR_VALUE}" ]] ; then
       DIR_DEFAULT="<default>${DIR_VAR_VALUE}</default>"
     fi
-    cat << GTK_PART
+    cat << GTKDIR
 <frame ${DIR_VAR_NAME}>
     <hbox>
         <entry accept="directory" fs-entry="Select a Directory">
@@ -30,12 +21,11 @@ funcDirectory() {
         </entry>
         <button>
             <input file stock="gtk-open"></input>
-            <variable>DIRBROWSE</variable>
             <action type="fileselect">${DIR_VAR_NAME}</action>
         </button>
     </hbox>
 </frame>
-GTK_PART
+GTKDIR
 }
 
 funcEntry(){
@@ -46,7 +36,7 @@ funcEntry(){
   if [[ -n "${ENTRY_VAR_VALUE}" ]] ; then
     ENTRY_DEFAULT="<default>${ENTRY_VAR_VALUE}</default>"
   fi
-  cat << GTK_ENTRY
+  cat << GTKENTRY
 <vbox>
   <text wrap="true" width-chars="${ENTRY_WIDTH}" xalign="0">
     <label>${ENTRY_LABEL}</label>
@@ -56,12 +46,12 @@ funcEntry(){
     ${ENTRY_DEFAULT}
     </entry>
 </vbox>
-GTK_ENTRY
+GTKENTRY
 }
 
 
-export MAIN_DIALOG=$(cat << MAIN_FORM
-  <window title="mmconfig configuration" resizable="false" window_position="1">
+export MAIN_DIALOG=$(cat << MAINFORM
+  <window title="mmconfig configuration" resizable="false" window_position="0">
     <vbox>
       <text>
         <label>Set up mmconfig variables</label>
@@ -70,19 +60,25 @@ export MAIN_DIALOG=$(cat << MAIN_FORM
         <hbox>
           $(funcDirectory OUTDIR_INGESTFILE)
           $(funcDirectory OUTDIR_INGESTXDCAM)
-          $(funcDirectory OUTDIR_PAPER)
-          $(funcDirectory AIP_STORAGE)
-          $(funcDirectory PODCASTDELIVER)
         </hbox>
         <hbox>
+          $(funcDirectory OUTDIR_PAPER)
+          $(funcDirectory AIP_STORAGE)
+        </hbox>
+        <hbox>
+          $(funcDirectory PODCASTDELIVER)
           $(funcDirectory YOUTUBEDELIVER)
+        </hbox>
+        <hbox>
           $(funcDirectory TMPDIR)
           $(funcDirectory CUSTOM_LOG_DIR)
+        </hbox>
+        <hbox>
           $(funcDirectory LTO_INDEX_DIR)
           $(funcDirectory LOCAL_MM_DIR)
         </hbox>
       </frame>
-      <frame>
+      <frame Database and File Settings>
         <hbox homogeneous="true">
           $(funcEntry REGEX4PODCAST "Enter the regular expression you would like to use to determine if a file qualifies for podcast:" "80")
           $(funcEntry REGEX4IA "Enter the regular expression you would like to use to upload to the Internet Archive:" "80")
@@ -90,7 +86,7 @@ export MAIN_DIALOG=$(cat << MAIN_FORM
         <hbox homogeneous="true">
           $(funcEntry OMNEONIP "Please enter the IP address for the server where you would like assets to be delivered:" "80")
           $(funcEntry OMNEONPATH "Please enter the file path for the server where you would like assets to be delivered:" "80")
-        </hbox> 
+        </hbox>
         <hbox homogeneous="true">
           $(funcEntry LTO_MD5_FLAGS "Please select the flags you would like md5deep to use (ex: md5deep -rel):" "80")
           $(funcEntry FILE_MAKER_DB "Please enter the name of the filemaker database:" "80")
@@ -101,9 +97,13 @@ export MAIN_DIALOG=$(cat << MAIN_FORM
           </text>
           <vbox>
             <radiobutton>
-              $(funcrdoCreate VOLADJUSTY "Y")
+              <label>"Y"</label>
+              <variable>VOLADJUST</variable>
+            </radiobutton>
             <radiobutton active="true">
-              $(funcrdoCreate VOLADJUSTN "N")
+              <label>"N"</label>
+              <variable export="false">VOLADJUSTN</variable>
+            </radiobutton>
           </vbox>
           $(funcEntry DVDLABELPREFIX "Please enter the prefix you would like added to the filename in makedvd. You may leave this blank:" "80")
         </hbox>
@@ -115,11 +115,15 @@ export MAIN_DIALOG=$(cat << MAIN_FORM
             <radiobutton>
               <action>if true enable:PREMIS_PROFILE</action>
               <action>if true enable:PREMIS_NAME</action>
-              $(funcrdoCreate PREMIS_DBY "Y")
+              <label>"Y"</label>
+              <variable>PREMIS_DB</variable>
+            </radiobutton>
             <radiobutton active="true">
               <action>if true disable:PREMIS_PROFILE</action>
               <action>if true disable:PREMIS_NAME</action>
-              $(funcrdoCreate PREMIS_DBN "N")
+              <label>"N"</label>
+              <variable export="false">PREMIS_DBN</variable>
+            </radiobutton>
           </vbox>
           $(funcEntry PREMIS_PROFILE "Enter the name of the database profile:" "60")
           $(funcEntry PREMIS_NAME "Enter the name of the database:" "60")
@@ -151,11 +155,102 @@ export MAIN_DIALOG=$(cat << MAIN_FORM
       </hbox>
    </vbox>
   </window>
-MAIN_FORM
+MAINFORM
 )
+#option 1 for output, uses sed
+#GTK_OUTPUT="$(gtkdialog --program=MAIN_DIALOG)"
+#if [[ "${GTK_OUTPUT}" == *"OK"* ]] ; then
+  #this sed converts all true or falses to Y's or N's, which is an issue for PERCEPTUAL_HASH and PREMIS_PLIST which pashua reads as 0 or 1
+  #echo "${GTK_OUTPUT}" | sed 's:true:Y:g;s:false:N:g;s:EXIT="OK"::g' > "${MM_CONFIG_FILE}"
+  #or
+  #echo "${GTK_OUTPUT}" | sed 's:VOLADJUST="true":VOLADJUST="Y":g;s:VOLADJUST="false":VOLADJUST="Y":g;s:PREMIS_DB="true":PREMIS_DB="Y":g;PREMIS_DB="false":PREMIS_DB="N":g;s:PERCEPTUAL_HASH="true":PERCEPTUAL_HASH="1":g;s:PERCEPTUAL_HASH="false":PERCEPTUAL_HASH="0":g;s:PREMIS_PLIST="true":PREMIS_PLIST="1":g;s:PREMIS_PLIST="false":PREMIS_PLIST="0":g;s:EXIT="OK"::g'
+  #cat "${MM_CONFIG_FILE}"
+#else
+  #exit 0
+#fi
 
-GTK_OUTPUT="$(gtkdialog --program=MAIN_DIALOG | sort)"
-if [[ "$GTK_OUTPUT" == *'EXIT="OK"'* ]]; then
-  echo "${GTK_OUTPUT}" | sed 's:VOLADJUSTY="true":VOLADJUST="Y":g;s:VOLADJUST[YN]="false"::g;s:VOLADJUSTN="true":VOLADJUST="N":g;s:PREMIS_DBY="true":PREMIS_DB="Y":g;s:PREMIS_DB[YN]="false"::g;s:PREMIS_DBN="true":PREMIS_DB="N":g;s:EXIT="OK"::g' | sort > "${MM_CONFIG_FILE}"
-  echo "${MM_CONFIG_FILE}"
+#option 2 (based on original script)
+eval "$(gtkdialog --program=MAIN_DIALOG)"
+if [[ "${EXIT}" = "abort" ]] ; then
+  exit 0
+elif [[ "${EXIT}" = "Cancel" ]] ; then
+  exit 0
+elif [[ "${EXIT}" = "OK" ]] ; then
+  if [[ "${VOLADJUST}" = "true" ]] ;  then
+    VOLADJUST="Y"
+  else
+    VOLADJUST="N"
+  fi
+  if [[ "${PREMIS_DB}" = "true" ]] ; then
+    PREMIS_DB="Y"
+  else
+    PREMIS_DB="N"
+  fi
+  if [[ "${PREMIS_PLIST}" = "true" ]] ; then
+    PREMIS_PLIST="1"
+  else
+    PREMIS_PLIST="0"
+  fi
+  if [[ "${PERCEPTUAL_HASH}" = "true" ]] ; then
+    PERCEPTUAL_HASH="1"
+  else
+    PERCEPTUAL_HASH="0"
+  fi
+  #echo "${VOLADJUST}" | sed 's:true:Y:g;s:false:N:g'
+  echo "  OUTDIR_INGESTFILE = ${OUTDIR_INGESTFILE}"
+  echo "  OUTDIR_INGESTXDCAM = ${OUTDIR_INGESTXDCAM}"
+  echo "  OUTDIR_PAPER = ${OUTDIR_PAPER}"
+  echo "  AIP_STORAGE = ${AIP_STORAGE}"
+  echo "  PODCASTDELIVER = ${PODCASTDELIVER}"
+  echo "  YOUTUBEDELIVER = ${YOUTUBEDELIVER}"
+  echo "  TMPDIR = ${TMPDIR}"
+  echo "  REGEX4PODCAST = ${REGEX4PODCAST}"
+  echo "  REGEX4IA = ${REGEX4IA}"
+  echo "  DVDLABELPREFIX = ${DVDLABELPREFIX}"
+  echo "  OMNEONIP = ${OMNEONIP}"
+  echo "  OMNEONPATH = ${OMNEONPATH}"
+  echo "  CUSTOM_LOG_DIR = ${CUSTOM_LOG_DIR}"
+  echo "  LTO_INDEX_DIR = ${LTO_INDEX_DIR}"
+  echo "  LTO_MD5_FLAGS = ${LTO_MD5_FLAGS}"
+  echo "  LOCAL_MM_DIR = ${LOCAL_MM_DIR}"
+  echo "  EMAIL_FROM = ${EMAIL_FROM}"
+  echo "  MAKEYOUTUBE_DELIVERY_EMAIL_TO = ${MAKEYOUTUBE_DELIVERY_EMAIL_TO}"
+  echo "  MAKEBROADCAST_DELIVERY_EMAIL_TO = ${MAKEBROADCAST_DELIVERY_EMAIL_TO}"
+  echo "  FILE_MAKER_DB = ${FILE_MAKER_DB}"
+  echo "  SQL_ERROR_EMAIL_TO = ${SQL_ERROR_EMAIL_TO}"
+  echo "  VOLADJUST = ${VOLADJUST}"
+  echo "  PREMIS_DB = ${PREMIS_DB}"
+  echo "  PREMIS_PROFILE = ${PREMIS_PROFILE}"
+  echo "  PREMIS_NAME = ${PREMIS_NAME}"
+  echo "  PREMIS_PLIST = ${PREMIS_PLIST}"
+  echo "  PERCEPTUAL_HASH = ${PERCEPTUAL_HASH}"
+  {
+        echo "OUTDIR_INGESTFILE=\"${OUTDIR_INGESTFILE}\""
+        echo "OUTDIR_INGESTXDCAM=\"${OUTDIR_INGESTXDCAM}\""
+        echo "OUTDIR_PAPER=\"${OUTDIR_PAPER}\""
+        echo "AIP_STORAGE=\"${AIP_STORAGE}\""
+        echo "PODCASTDELIVER=\"${PODCASTDELIVER}\""
+        echo "YOUTUBEDELIVER=\"${YOUTUBEDELIVER}\""
+        echo "TMPDIR=\"${TMPDIR}\""
+        echo "REGEX4PODCAST=\"${REGEX4PODCAST}\""
+        echo "REGEX4IA=\"${REGEX4IA}\""
+        echo "DVDLABELPREFIX=\"${DVDLABELPREFIX}\""
+        echo "OMNEONIP=\"${OMNEONIP}\""
+        echo "OMNEONPATH=\"${OMNEONPATH}\""
+        echo "CUSTOM_LOG_DIR=\"${CUSTOM_LOG_DIR}\""
+        echo "LTO_INDEX_DIR=\"${LTO_INDEX_DIR}\""
+        echo "LTO_MD5_FLAGS=\"${LTO_MD5_FLAGS}\""
+        echo "LOCAL_MM_DIR=\"${LOCAL_MM_DIR}\""
+        echo "EMAIL_FROM=\"${EMAIL_FROM}\""
+        echo "MAKEYOUTUBE_DELIVERY_EMAIL_TO=\"${MAKEYOUTUBE_DELIVERY_EMAIL_TO}\""
+        echo "MAKEBROADCAST_DELIVERY_EMAIL_TO=\"${MAKEBROADCAST_DELIVERY_EMAIL_TO}\""
+        echo "FILE_MAKER_DB=\"${FILE_MAKER_DB}\""
+        echo "SQL_ERROR_EMAIL_TO=\"${SQL_ERROR_EMAIL_TO}\""
+        echo "VOLADJUST=\"${VOLADJUST}\""
+        echo "PREMIS_DB=\"${PREMIS_DB}\""
+        echo "PREMIS_PROFILE=\"${PREMIS_PROFILE}\""
+        echo "PREMIS_NAME=\"${PREMIS_NAME}\""
+        echo "PREMIS_PLIST=\"${PREMIS_PLIST}\""
+        echo "PERCEPTUAL_HASH=\"${PERCEPTUAL_HASH}\""
+    } > "${MM_CONFIG_FILE}"
 fi
