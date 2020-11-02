@@ -6,348 +6,225 @@ CONFIG_VERSION="1.0"
 SCRIPTDIR=$(dirname "${0}")
 . "${SCRIPTDIR}/mmfunctions" || { echo "Missing '${SCRIPTDIR}/mmfunctions'. Exiting." ; exit 1 ;};
 
-if [[ "$(uname -s)" = "Darwin" ]] ; then
-    RUNPASHUA="Y"
-fi
-
-_usage(){
-    cat <<EOS
-$(basename "${0}")
-  -a  set configuration file using the GUI (default on macOS)
-  -t  set configuration file using the CLI
-EOS
-}
-
-# local variables
-REQUIRED_VARIABLES=("OUTDIR_INGESTFILE" "OUTDIR_INGESTXDCAM" "OUTDIR_PAPER" "AIP_STORAGE" "PODCASTDELIVER" "YOUTUBEDELIVER" "TMPDIR" "REGEX4PODCAST" "REGEX4IA" "DVDLABELPREFIX" "OMNEONIP" "OMNEONPATH" "CUSTOM_LOG_DIR" "LTO_INDEX_DIR" "LOCAL_MM_DIR" "EMAIL_FROM" "MAKEYOUTUBE_DELIVERY_EMAIL_TO" "MAKEBROADCAST_DELIVERY_EMAIL_TO" "FILE_MAKER_DB" "VOLADJUST" "PREMIS_DB" "SQL_ERROR_EMAIL_TO" "PREMIS_PROFILE" "PREMIS_NAME" "PERCEPTUAL_HASH")
-
-OPTIND=1
-
-while getopts ":ath" OPT ; do
-    case "${OPT}" in
-        a) RUNPASHUA="Y" ;;
-        t) RUNPASHUA="N" ;;
-        h) _usage ; exit 0 ;;
-        *) echo "bad option -${OPTARG}" ; _usage ; exit 1 ;;
-    esac
-done
-
-_config_edit(){
-    [ -z "${1}" -o -z "${2}" ] && { _report -w "The config_edit function requires two arguments. Error." ; exit ;};
-    SEDTEMP=$(_maketemp)
-    sed "s:^${1}=[^ ]*:$1=$2:" "${MM_CONFIG_FILE}" > "${SEDTEMP}"
-    cp "${SEDTEMP}" "${MM_CONFIG_FILE}"
-}
-
-_test_config(){
-    for DIRECTORYVARIABLE in OUTDIR_INGESTFILE OUTDIR_INGESTXDCAM OUTDIR_PAPER AIP_STORAGE PODCASTDELIVER YOUTUBEDELIVER TMPDIR CUSTOM_LOG_DIR LTO_INDEX_DIR ; do
-        if [ ! -d "${!DIRECTORYVARIABLE}" ] ; then
-            _report -w "${DIRECTORYVARIABLE} is NOT a valid directory"
-        fi
-    done
-    for BOOLEANVARIABLE in VOLADJUST ; do
-        if [[ ! "${!BOOLEANVARIABLE}" = "Y" && ! "${!BOOLEANVARIABLE}" = "N" ]] ; then
-            _report -w "${BOOLEANVARIABLE} is NOT set to Y or N"
-        fi
-    done
-}
-
-_add_key(){
-    KEY_TO_ADD="${1}"
-    grep -q "^${KEY_TO_ADD}=" "${MM_CONFIG_FILE}" ; GREP_CODE="$?"
-    if [[ ! "${GREP_CODE}" -eq "0" ]] ; then
-        _report -td "Adding NEW variable ${KEY_TO_ADD} to ${MM_CONFIG_FILE}"
-        echo "${KEY_TO_ADD}=" >> "${MM_CONFIG_FILE}"
+funcDirectory() {
+    DIR_VAR_NAME="${1}"
+    DIR_VAR_VALUE="${!1}"
+    if [[ -n "${DIR_VAR_VALUE}" ]] ; then
+      DIR_DEFAULT="<default>${DIR_VAR_VALUE}</default>"
     fi
+    cat << GTKDIR
+<frame ${DIR_VAR_NAME}>
+    <hbox>
+        <entry accept="directory" fs-entry="Select a Directory">
+            ${DIR_DEFAULT}
+            <variable>${DIR_VAR_NAME}</variable>
+        </entry>
+        <button>
+            <input file stock="gtk-open"></input>
+            <action type="fileselect">${DIR_VAR_NAME}</action>
+        </button>
+    </hbox>
+</frame>
+GTKDIR
 }
 
-CONF="
-# Set transparency: 0 is transparent, 1 is opaque
-*.transparency=1.00
-*.x = 250
-*.y = 250
+funcEntry(){
+  ENTRY_VAR_NAME="${1}"
+  ENTRY_VAR_VALUE="${!1}"
+  ENTRY_LABEL="${2}"
+  ENTRY_WIDTH="${3}"
+  if [[ -n "${ENTRY_VAR_VALUE}" ]] ; then
+    ENTRY_DEFAULT="<default>${ENTRY_VAR_VALUE}</default>"
+  fi
+  cat << GTKENTRY
+<vbox>
+  <text wrap="true" width-chars="${ENTRY_WIDTH}" xalign="0">
+    <label>${ENTRY_LABEL}</label>
+  </text>
+  <entry>
+    <variable>${ENTRY_VAR_NAME}</variable>
+    ${ENTRY_DEFAULT}
+    </entry>
+</vbox>
+GTKENTRY
+}
 
-# Set window title
-*.title = mm config file
 
-# intro text
-intro.x = 20
-intro.y = 650
-intro.width = 500
-intro.type = text
-intro.text = Set up mmconfig variables
+export MAIN_DIALOG=$(cat << MAINFORM
+  <window title="mmconfig configuration" resizable="false" window_position="0">
+    <vbox>
+      <text>
+        <label>Set up mmconfig variables</label>
+      </text>
+      <frame Navigate to and select the directories you have created>
+        <hbox>
+          $(funcDirectory OUTDIR_INGESTFILE)
+          $(funcDirectory OUTDIR_INGESTXDCAM)
+        </hbox>
+        <hbox>
+          $(funcDirectory OUTDIR_PAPER)
+          $(funcDirectory AIP_STORAGE)
+        </hbox>
+        <hbox>
+          $(funcDirectory PODCASTDELIVER)
+          $(funcDirectory YOUTUBEDELIVER)
+        </hbox>
+        <hbox>
+          $(funcDirectory TMPDIR)
+          $(funcDirectory CUSTOM_LOG_DIR)
+        </hbox>
+        <hbox>
+          $(funcDirectory LTO_INDEX_DIR)
+          $(funcDirectory LOCAL_MM_DIR)
+        </hbox>
+      </frame>
+      <frame Database and File Settings>
+        <hbox homogeneous="true">
+          $(funcEntry REGEX4PODCAST "Enter the regular expression you would like to use to determine if a file qualifies for podcast:" "80")
+          $(funcEntry REGEX4IA "Enter the regular expression you would like to use to upload to the Internet Archive:" "80")
+        </hbox>
+        <hbox homogeneous="true">
+          $(funcEntry OMNEONIP "Please enter the IP address for the server where you would like assets to be delivered:" "80")
+          $(funcEntry OMNEONPATH "Please enter the file path for the server where you would like assets to be delivered:" "80")
+        </hbox>
+        <hbox homogeneous="true">
+          $(funcEntry LTO_MD5_FLAGS "Please select the flags you would like md5deep to use (ex: md5deep -rel):" "80")
+          $(funcEntry FILE_MAKER_DB "Please enter the name of the filemaker database:" "80")
+        </hbox>
+        <hbox space-fill="false">
+          <text wrap="false" width-chars="60" xalign="0">
+            <label>Please choose Y or N to test and adjust volume during transcoding:</label>
+          </text>
+          <vbox>
+            <radiobutton>
+              <label>"Y"</label>
+              <variable>VOLADJUST</variable>
+            </radiobutton>
+            <radiobutton active="true">
+              <label>"N"</label>
+              <variable export="false">VOLADJUSTN</variable>
+            </radiobutton>
+          </vbox>
+          $(funcEntry DVDLABELPREFIX "Please enter the prefix you would like added to the filename in makedvd. You may leave this blank:" "80")
+        </hbox>
+        <hbox space-expand="true">
+          <text>
+            <label>Please choose Y or N to enable database logging:</label>
+          </text>
+          <vbox>
+            <radiobutton>
+              <action>if true enable:PREMIS_PROFILE</action>
+              <action>if true enable:PREMIS_NAME</action>
+              <label>"Y"</label>
+              <variable>PREMIS_DB</variable>
+            </radiobutton>
+            <radiobutton active="true">
+              <action>if true disable:PREMIS_PROFILE</action>
+              <action>if true disable:PREMIS_NAME</action>
+              <label>"N"</label>
+              <variable export="false">PREMIS_DBN</variable>
+            </radiobutton>
+          </vbox>
+          $(funcEntry PREMIS_PROFILE "Enter the name of the database profile:" "60")
+          $(funcEntry PREMIS_NAME "Enter the name of the database:" "60")
+        </hbox>
+        <hbox>
+          <checkbox>
+            <label>Auto update MySQL .plist?</label>
+            <variable>PREMIS_PLIST</variable>
+          </checkbox>
+          <checkbox>
+            <label>Generate video fingerprint?</label>
+            <variable>PERCEPTUAL_HASH</variable>
+          </checkbox>
+        </hbox>
+      </frame>
+      <frame Email Settings>
+        <hbox homogeneous="true">
+          $(funcEntry EMAIL_FROM "Please enter the email account that notifications will be sent from:" "80")
+          $(funcEntry SQL_ERROR_EMAIL_TO "Please the email account for the delivery of SQL Error Reports:" "80")
+        </hbox>
+        <hbox homogeneous="true">
+          $(funcEntry MAKEBROADCAST_DELIVERY_EMAIL_TO "Please enter the email account (or multiple accounts separated by a comma) makebroadcast notifications will be delivered to:" "80")
+          $(funcEntry MAKEYOUTUBE_DELIVERY_EMAIL_TO "Please enter the email account (or multiple accounts separated by a comma) makeyoutube notifications will be delivered to:" "80")
+        </hbox>
+      </frame>
+      <hbox>
+        <button ok></button>
+        <button cancel></button>
+      </hbox>
+   </vbox>
+  </window>
+MAINFORM
+)
+#option 1 for output, uses sed
+#GTK_OUTPUT="$(gtkdialog --program=MAIN_DIALOG)"
+#if [[ "${GTK_OUTPUT}" == *"OK"* ]] ; then
+  #this sed converts all true or falses to Y's or N's, which is an issue for PERCEPTUAL_HASH and PREMIS_PLIST which pashua reads as 0 or 1
+  #echo "${GTK_OUTPUT}" | sed 's:true:Y:g;s:false:N:g;s:EXIT="OK"::g' > "${MM_CONFIG_FILE}"
+  #or
+  #echo "${GTK_OUTPUT}" | sed 's:VOLADJUST="true":VOLADJUST="Y":g;s:VOLADJUST="false":VOLADJUST="Y":g;s:PREMIS_DB="true":PREMIS_DB="Y":g;PREMIS_DB="false":PREMIS_DB="N":g;s:PERCEPTUAL_HASH="true":PERCEPTUAL_HASH="1":g;s:PERCEPTUAL_HASH="false":PERCEPTUAL_HASH="0":g;s:PREMIS_PLIST="true":PREMIS_PLIST="1":g;s:PREMIS_PLIST="false":PREMIS_PLIST="0":g;s:EXIT="OK"::g'
+  #cat "${MM_CONFIG_FILE}"
+#else
+  #exit 0
+#fi
 
-# ask OUTDIR_INGESTFILE
-OUTDIR_INGESTFILE.x = 20
-OUTDIR_INGESTFILE.y = 600
-OUTDIR_INGESTFILE.type = openbrowser
-OUTDIR_INGESTFILE.label = Please navigate to and select the OUTDIR_INGESTFILE directory that you've created:
-OUTDIR_INGESTFILE.width = 270
-OUTDIR_INGESTFILE.default = ${OUTDIR_INGESTFILE}
-
-# OUTDIR_INGESTXDCAM
-OUTDIR_INGESTXDCAM.x = 20
-OUTDIR_INGESTXDCAM.y = 550
-OUTDIR_INGESTXDCAM.type = openbrowser
-OUTDIR_INGESTXDCAM.label = Please navigate to and select the OUTDIR_INGESTXDCAM directory that you've created:
-OUTDIR_INGESTXDCAM.width = 270
-OUTDIR_INGESTXDCAM.default = ${OUTDIR_INGESTXDCAM}
-
-# OUTDIR_PAPER
-OUTDIR_PAPER.x = 20
-OUTDIR_PAPER.y = 500
-OUTDIR_PAPER.type = openbrowser
-OUTDIR_PAPER.label = Please navigate to and select the OUTDIR_PAPER directory that you've created:
-OUTDIR_PAPER.width = 270
-OUTDIR_PAPER.default = ${OUTDIR_PAPER}
-
-# AIP_STORAGE
-AIP_STORAGE.x = 20
-AIP_STORAGE.y = 450
-AIP_STORAGE.type = openbrowser
-AIP_STORAGE.label = Please navigate to and select the AIP_STORAGE directory that you've created:
-AIP_STORAGE.width = 270
-AIP_STORAGE.default = ${AIP_STORAGE}
-
-# PODCASTDELIVER
-PODCASTDELIVER.x = 20
-PODCASTDELIVER.y = 400
-PODCASTDELIVER.type = openbrowser
-PODCASTDELIVER.label = Please navigate to and select the PODCASTDELIVER directory that you've created:
-PODCASTDELIVER.width = 270
-PODCASTDELIVER.default = ${PODCASTDELIVER}
-
-# YOUTUBEDELIVER
-YOUTUBEDELIVER.x = 20
-YOUTUBEDELIVER.y = 350
-YOUTUBEDELIVER.type = openbrowser
-YOUTUBEDELIVER.label = Please navigate to and select the YOUTUBEDELIVER directory that you've created:
-YOUTUBEDELIVER.width = 270
-YOUTUBEDELIVER.default = ${YOUTUBEDELIVER}
-
-# TMPDIR
-TMPDIR.x = 20
-TMPDIR.y = 300
-TMPDIR.type = openbrowser
-TMPDIR.label = Please navigate to and select the TMPDIR directory that you've created:
-TMPDIR.width = 270
-TMPDIR.default = ${TMPDIR}
-
-# REGEX4PODCAST
-REGEX4PODCAST.x = 20
-REGEX4PODCAST.y = 250
-REGEX4PODCAST.type = textfield
-REGEX4PODCAST.label = Please enter the regular expression you'd like to use to determine if a file qualifies for podcast:
-REGEX4PODCAST.width = 300
-REGEX4PODCAST.default = ${REGEX4PODCAST}
-
-# REGEX4IA
-REGEX4IA.x = 20
-REGEX4IA.y = 200
-REGEX4IA.type = textfield
-REGEX4IA.label = Please enter the regular expression you'd like to use to upload to the Internet Archive:
-REGEX4IA.width = 300
-REGEX4IA.default = ${REGEX4IA}
-
-# DVDLABELPREFIX
-DVDLABELPREFIX.x = 20
-DVDLABELPREFIX.y = 150
-DVDLABELPREFIX.type = textfield
-DVDLABELPREFIX.label = Please enter the prefix you'd like added to the filename in makedvd. You may leave this blank:
-DVDLABELPREFIX.width = 125
-DVDLABELPREFIX.default = ${DVDLABELPREFIX}
-
-# OMNEONIP
-OMNEONIP.x = 20
-OMNEONIP.y = 100
-OMNEONIP.type = textfield
-OMNEONIP.label = Please enter the IP address for the server where you would like assets to be delivered:
-OMNEONIP.width = 125
-OMNEONIP.default = ${OMNEONIP}
-
-# OMNEONPATH
-OMNEONPATH.x = 20
-OMNEONPATH.y = 50
-OMNEONPATH.type = textfield
-OMNEONPATH.label = Please enter the file path for the server where you would like assets to be delivered:
-OMNEONPATH.width = 125
-OMNEONPATH.default = ${OMNEONPATH}
-
-# CUSTOM_LOG_DIR
-CUSTOM_LOG_DIR.x = 600
-CUSTOM_LOG_DIR.y = 600
-CUSTOM_LOG_DIR.type = openbrowser
-CUSTOM_LOG_DIR.label = Please navigate to and select the CUSTOM_LOG_DIR directory that you've created:
-CUSTOM_LOG_DIR.width = 270
-CUSTOM_LOG_DIR.default = ${CUSTOM_LOG_DIR}
-
-# LTO_INDEX_DIR
-LTO_INDEX_DIR.x = 600
-LTO_INDEX_DIR.y = 550
-LTO_INDEX_DIR.type = openbrowser
-LTO_INDEX_DIR.label = Please navigate to and select the LTO_INDEX_DIR directory that you've created:
-LTO_INDEX_DIR.width = 270
-LTO_INDEX_DIR.default = ${LTO_INDEX_DIR}
-
-# LTO_MD5_FLAGS
-LTO_MD5_FLAGS.x = 600
-LTO_MD5_FLAGS.y = 250
-LTO_MD5_FLAGS.type = textfield
-LTO_MD5_FLAGS.label = Please select the flags you would like md5deep to use. ex md5deep -rel
-LTO_MD5_FLAGS.width = 125
-LTO_MD5_FLAGS.defualt = ${LTO_MD5_FLAGS}
-
-# LOCAL_MM_DIR
-LOCAL_MM_DIR.x = 600
-LOCAL_MM_DIR.y = 500
-LOCAL_MM_DIR.type = openbrowser
-LOCAL_MM_DIR.label = Please navigate to and select the LOCAL_MM_DIR directory that you've created:
-LOCAL_MM_DIR.width = 270
-LOCAL_MM_DIR.default = ${LOCAL_MM_DIR}
-
-# EMAIL_FROM
-EMAIL_FROM.x = 600
-EMAIL_FROM.y = 450
-EMAIL_FROM.type = textfield
-EMAIL_FROM.label = Please enter the email account that notifications will be sent from:
-EMAIL_FROM.width = 125
-EMAIL_FROM.default = ${EMAIL_FROM}
-
-# MAKEYOUTUBE_DELIVERY_EMAIL_TO
-MAKEYOUTUBE_DELIVERY_EMAIL_TO.x = 600
-MAKEYOUTUBE_DELIVERY_EMAIL_TO.y = 400
-MAKEYOUTUBE_DELIVERY_EMAIL_TO.type = textfield
-MAKEYOUTUBE_DELIVERY_EMAIL_TO.label = Please enter the email account (or multiple accounts separated by a comma) makeyoutube notifications will be delivered to:
-MAKEYOUTUBE_DELIVERY_EMAIL_TO.width = 125
-MAKEYOUTUBE_DELIVERY_EMAIL_TO.default = ${MAKEYOUTUBE_DELIVERY_EMAIL_TO}
-
-# MAKEBROADCAST_DELIVERY_EMAIL_TO
-MAKEBROADCAST_DELIVERY_EMAIL_TO.x = 600
-MAKEBROADCAST_DELIVERY_EMAIL_TO.y = 350
-MAKEBROADCAST_DELIVERY_EMAIL_TO.type = textfield
-MAKEBROADCAST_DELIVERY_EMAIL_TO.label = Please enter the email account (or multiple accounts separated by a comma) makebroadcast notifications will be delivered to:
-MAKEBROADCAST_DELIVERY_EMAIL_TO.width = 125
-MAKEBROADCAST_DELIVERY_EMAIL_TO.default = ${MAKEBROADCAST_DELIVERY_EMAIL_TO}
-
-# FILE_MAKER_DB
-FILE_MAKER_DB.x = 600
-FILE_MAKER_DB.y = 300
-FILE_MAKER_DB.type = textfield
-FILE_MAKER_DB.label = Please enter the name of the filemaker database:
-FILE_MAKER_DB.width = 125
-FILE_MAKER_DB.default = ${FILE_MAKER_DB}
-
-# SQL_ERROR_EMAIL_TO
-SQL_ERROR_EMAIL_TO.x = 600
-SQL_ERROR_EMAIL_TO.y = 200
-SQL_ERROR_EMAIL_TO.type = textfield
-SQL_ERROR_EMAIL_TO.label = Please the email account for the delivery of SQL Error Reports:
-SQL_ERROR_EMAIL_TO.width = 125
-SQL_ERROR_EMAIL_TO.default = ${SQL_ERROR_EMAIL_TO}
-
-# VOLADJUST
-VOLADJUST.x = 600
-VOLADJUST.y = 100
-VOLADJUST.type = radiobutton
-VOLADJUST.label = Please choose either Y or N to test and adjust volume during transcoding:
-VOLADJUST.option = Y
-VOLADJUST.option = N
-VOLADJUST.width = 75
-VOLADJUST.default = ${VOLADJUST}
-
-#PREMIS_DB
-PREMIS_DB.x = 600
-PREMIS_DB.y = 20
-PREMIS_DB.type = radiobutton
-PREMIS_DB.label = Please choose Y or N to enable database logging:
-PREMIS_DB.option = Y
-PREMIS_DB.option = N
-PREMIS_DB.width = 125
-PREMIS_DB.default = ${PREMIS_DB}
-
-#PREMIS_PROFILE
-PREMIS_PROFILE.x = 650
-PREMIS_PROFILE.y = 10
-PREMIS_PROFILE.type = textfield
-PREMIS_PROFILE.label = Enter name of database profile:
-PREMIS_PROFILE.option = Y
-PREMIS_PROFILE.option = N
-PREMIS_PROFILE.width = 125
-PREMIS_PROFILE.default = ${PREMIS_PROFILE}
-
-#PREMIS_NAME
-PREMIS_NAME.x = 920
-PREMIS_NAME.y = 10
-PREMIS_NAME.type = textfield
-PREMIS_NAME.label = Enter name of database:
-PREMIS_NAME.option = Y
-PREMIS_NAME.option = N
-PREMIS_NAME.width = 125
-PREMIS_NAME.default = ${PREMIS_NAME}
-
-#PREMIS_PLIST
-PREMIS_PLIST.x = 1050
-PREMIS_PLIST.y = 60
-PREMIS_PLIST.type = checkbox
-PREMIS_PLIST.label = Auto update MySQL .plist?
-PREMIS_PLIST.tooltip = If activated this will try to to modify MySQL .plist file to enable outside connections when mm is updated.
-PREMIS_PLIST.default = ${PREMIS_PLIST}
-
-#PERCEPTUAL_HASH
-PERCEPTUAL_HASH.x = 1050
-PERCEPTUAL_HASH.y = 115
-PERCEPTUAL_HASH.type = checkbox
-PERCEPTUAL_HASH.label = Generate video fingerprint?
-PERCEPTUAL_HASH.tooltip = This will create perceptual fingerprints of the input video stream.
-PERCEPTUAL_HASH.default = ${PERCEPTUAL_HASH}
-
-# Add a cancel button with default label
-cb.type=cancelbutton
-
-";
-
-# if a config file does not exist, create one using this GUI
-if [[ "${RUNPASHUA}" = "Y" ]] ; then
-    PASHUA_CONFIGFILE=$(/usr/bin/mktemp /tmp/pashua_XXXXXXXXX)
-    echo "${CONF}" > "${PASHUA_CONFIGFILE}"
-    _pashua_run
-    rm "${PASHUA_CONFIGFILE}"
-    if [ "${PASHUAFAIL}" = "Y" ] ; then
-        echo "Pashua is not installed.  Opening via CLI."
-        sleep 1
-        exec $(basename "${0}") -t
-    else
-        echo "  OUTDIR_INGESTFILE = ${OUTDIR_INGESTFILE}"
-        echo "  OUTDIR_INGESTXDCAM = ${OUTDIR_INGESTXDCAM}"
-        echo "  OUTDIR_PAPER = ${OUTDIR_PAPER}"
-        echo "  AIP_STORAGE = ${AIP_STORAGE}"
-        echo "  PODCASTDELIVER = ${PODCASTDELIVER}"
-        echo "  YOUTUBEDELIVER = ${YOUTUBEDELIVER}"
-        echo "  TMPDIR = ${TMPDIR}"
-        echo "  REGEX4PODCAST = ${REGEX4PODCAST}"
-        echo "  REGEX4IA = ${REGEX4IA}"
-        echo "  DVDLABELPREFIX = ${DVDLABELPREFIX}"
-        echo "  OMNEONIP = ${OMNEONIP}"
-        echo "  OMNEONPATH = ${OMNEONPATH}"
-        echo "  CUSTOM_LOG_DIR = ${CUSTOM_LOG_DIR}"
-        echo "  LTO_INDEX_DIR = ${LTO_INDEX_DIR}"
-        echo "  LTO_MD5_FLAGS = ${LTO_MD5_FLAGS}"
-        echo "  LOCAL_MM_DIR = ${LOCAL_MM_DIR}"
-        echo "  EMAIL_FROM = ${EMAIL_FROM}"
-        echo "  MAKEYOUTUBE_DELIVERY_EMAIL_TO = ${MAKEYOUTUBE_DELIVERY_EMAIL_TO}"
-        echo "  MAKEBROADCAST_DELIVERY_EMAIL_TO = ${MAKEBROADCAST_DELIVERY_EMAIL_TO}"
-        echo "  FILE_MAKER_DB = ${FILE_MAKER_DB}"
-        echo "  SQL_ERROR_EMAIL_TO = ${SQL_ERROR_EMAIL_TO}"
-        echo "  VOLADJUST = ${VOLADJUST}"
-        echo "  PREMIS_DB = ${PREMIS_DB}"
-        echo "  PREMIS_PROFILE = ${PREMIS_PROFILE}"
-        echo "  PREMIS_NAME = ${PREMIS_NAME}"
-        echo "  PREMIS_PLIST = ${PREMIS_PLIST}"
-        echo "  PERCEPTUAL_HASH = ${PERCEPTUAL_HASH}"
-        echo
-    fi
-    #write to the config file
-    {
+#option 2 (based on original script)
+eval "$(gtkdialog --program=MAIN_DIALOG)"
+if [[ "${EXIT}" = "abort" ]] ; then
+  exit 0
+elif [[ "${EXIT}" = "Cancel" ]] ; then
+  exit 0
+elif [[ "${EXIT}" = "OK" ]] ; then
+  if [[ "${VOLADJUST}" = "true" ]] ;  then
+    VOLADJUST="Y"
+  else
+    VOLADJUST="N"
+  fi
+  if [[ "${PREMIS_DB}" = "true" ]] ; then
+    PREMIS_DB="Y"
+  else
+    PREMIS_DB="N"
+  fi
+  if [[ "${PREMIS_PLIST}" = "true" ]] ; then
+    PREMIS_PLIST="1"
+  else
+    PREMIS_PLIST="0"
+  fi
+  if [[ "${PERCEPTUAL_HASH}" = "true" ]] ; then
+    PERCEPTUAL_HASH="1"
+  else
+    PERCEPTUAL_HASH="0"
+  fi
+  #echo "${VOLADJUST}" | sed 's:true:Y:g;s:false:N:g'
+  echo "  OUTDIR_INGESTFILE = ${OUTDIR_INGESTFILE}"
+  echo "  OUTDIR_INGESTXDCAM = ${OUTDIR_INGESTXDCAM}"
+  echo "  OUTDIR_PAPER = ${OUTDIR_PAPER}"
+  echo "  AIP_STORAGE = ${AIP_STORAGE}"
+  echo "  PODCASTDELIVER = ${PODCASTDELIVER}"
+  echo "  YOUTUBEDELIVER = ${YOUTUBEDELIVER}"
+  echo "  TMPDIR = ${TMPDIR}"
+  echo "  REGEX4PODCAST = ${REGEX4PODCAST}"
+  echo "  REGEX4IA = ${REGEX4IA}"
+  echo "  DVDLABELPREFIX = ${DVDLABELPREFIX}"
+  echo "  OMNEONIP = ${OMNEONIP}"
+  echo "  OMNEONPATH = ${OMNEONPATH}"
+  echo "  CUSTOM_LOG_DIR = ${CUSTOM_LOG_DIR}"
+  echo "  LTO_INDEX_DIR = ${LTO_INDEX_DIR}"
+  echo "  LTO_MD5_FLAGS = ${LTO_MD5_FLAGS}"
+  echo "  LOCAL_MM_DIR = ${LOCAL_MM_DIR}"
+  echo "  EMAIL_FROM = ${EMAIL_FROM}"
+  echo "  MAKEYOUTUBE_DELIVERY_EMAIL_TO = ${MAKEYOUTUBE_DELIVERY_EMAIL_TO}"
+  echo "  MAKEBROADCAST_DELIVERY_EMAIL_TO = ${MAKEBROADCAST_DELIVERY_EMAIL_TO}"
+  echo "  FILE_MAKER_DB = ${FILE_MAKER_DB}"
+  echo "  SQL_ERROR_EMAIL_TO = ${SQL_ERROR_EMAIL_TO}"
+  echo "  VOLADJUST = ${VOLADJUST}"
+  echo "  PREMIS_DB = ${PREMIS_DB}"
+  echo "  PREMIS_PROFILE = ${PREMIS_PROFILE}"
+  echo "  PREMIS_NAME = ${PREMIS_NAME}"
+  echo "  PREMIS_PLIST = ${PREMIS_PLIST}"
+  echo "  PERCEPTUAL_HASH = ${PERCEPTUAL_HASH}"
+  {
         echo "OUTDIR_INGESTFILE=\"${OUTDIR_INGESTFILE}\""
         echo "OUTDIR_INGESTXDCAM=\"${OUTDIR_INGESTXDCAM}\""
         echo "OUTDIR_PAPER=\"${OUTDIR_PAPER}\""
@@ -376,42 +253,4 @@ if [[ "${RUNPASHUA}" = "Y" ]] ; then
         echo "PREMIS_PLIST=\"${PREMIS_PLIST}\""
         echo "PERCEPTUAL_HASH=\"${PERCEPTUAL_HASH}\""
     } > "${MM_CONFIG_FILE}"
-else
-    # set up configuration file using the command line
-    for KEY in "${REQUIRED_VARIABLES[@]}" ; do
-        _add_key "${KEY}"
-    done
-
-    _report -d "(basename "${0}")"
-    _report -d "Set system variables for mediamicroservices"
-    echo
-    _report -d "Notes:"
-    _report -d "VOLADJUST must be set to 'Y' or 'N'"
-    echo
-    _report -d "Testing ${MM_CONFIG_FILE} validity"
-    _test_config
-    echo
-
-    _report -d "Table of existing variables:"
-    for KEY in "${REQUIRED_VARIABLES[@]}" ; do
-        VALUE=$(grep "^${KEY}=" "${MM_CONFIG_FILE}" | cut -d= -f2)
-        printf '\t%-40s %-40s\n' "${KEY}" "${VALUE}"
-    done
-    while true ; do
-        EDITOPTION1="Edit config file in nano"
-        EDITOPTION2="Edit config file in TextMate"
-        _report -q "Edit a variable? "
-        PS3="Selection (enter by number)? "
-        select CONFIG_KEY in "${EDITOPTION1}" "${EDITOPTION2}" "${REQUIRED_VARIABLES[@]}" "Quit" ; do
-            break
-        done
-        [ "${CONFIG_KEY}" = "Quit" ] && { echo Goodbye. ; exit 1 ;};
-        [ "${CONFIG_KEY}" = "${EDITOPTION1}" ] && { nano "${MM_CONFIG_FILE}" ; exit 1 ;};
-        [ "${CONFIG_KEY}" = "${EDITOPTION2}" ] && { mate "${MM_CONFIG_FILE}" ; exit 1 ;};
-        echo -n "Enter the value for ${CONFIG_KEY}: "
-        read -e "CONFIG_VALUE"
-        echo "${CONFIG_KEY} is now set to ${CONFIG_VALUE}"
-        _config_edit "${CONFIG_KEY}" "${CONFIG_VALUE}"
-    done
-
 fi
