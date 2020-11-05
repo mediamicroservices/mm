@@ -640,7 +640,7 @@ while [[ "${@}" != "" ]] ; do
             FONT_FILE="/Library/Fonts/Menlo.ttc"
             DRAWGRAPH_SETTINGS="bg=Black"
             BORDER_COLOR="LightGrey"
-            HORIZONTAL_MARKINGS_240="drawgrid=thickness=1:color=${BORDER_COLOR}@0.2:height=ih/16,drawgrid=thickness=1:color=${BORDER_COLOR}@0.5:height=ih/4,drawgrid=thickness=1:color=${BORDER_COLOR}@0.8:height=ih/2"
+          HORIZONTAL_MARKINGS_240="drawgrid=thickness=1:color=${BORDER_COLOR}@0.2:height=ih/16,drawgrid=thickness=1:color=${BORDER_COLOR}@0.5:height=ih/4,drawgrid=thickness=1:color=${BORDER_COLOR}@0.8:height=ih/2"
             HORIZONTAL_MARKINGS_120="drawgrid=thickness=1:color=${BORDER_COLOR}@0.2:height=ih/8,drawgrid=thickness=1:color=${BORDER_COLOR}@0.5:height=ih/4,drawgrid=thickness=1:color=${BORDER_COLOR}@0.8:height=ih/2"
 
             BASENAME=$(basename "${INPUT}")
