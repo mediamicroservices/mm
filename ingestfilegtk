@@ -474,9 +474,10 @@ MAIN_DIALOG=$(cat << MAINFORM
 			<frame>
 				$(funcEntry OP "Please enter your name")
 				$(funcEntry MEDIAID "Please enter a unique MEDIA ID (capital letters, numbers, hyphens and underscores only).")
-				<frame Select a file for one input; a directory for more than one input>
-          $(funcFileSelect INPUTFILE "Select a file:")
-          $(funcDirectory INPUTDIR "Select a directory containing more than one video file:")
+				<frame Select a file for one input; for multiple files, select them in order.>
+          $(funcFileSelect INPUT "Select a file:")
+          $(funcFileSelect INPUT2 "Select a second file if needed")
+          $(funcFileSelect INPUT3 "Select a third file if needed")
         </frame>
         $(funcCombo AUDIODECISION "60" "Select an audio strategy" "${AUDIODECISION_OPTIONS[@]}")
         $(funcCombo CROPDECISION "60" "Select a cropping strategy:" "${CROPDECISION_OPTIONS[@]}")
@@ -488,8 +489,8 @@ MAIN_DIALOG=$(cat << MAINFORM
         $(funcCombo FORMULA "60" "Select a formula for unusual cases (optional)" "${FORMULA_OPTIONS[@]}")
         $(funcCombo CLEANUPDECISION "60" "Select a cleanup strategy" "${CLEANUPDECISION_OPTIONS[@]}")
         $(funcCombo PRIORITY "60" "Would you like to put it in the queue or start now?" "${PRIORITY_OPTIONS[@]}")
-        $(funcEntry INTIME_ENTRY "Enter the in-point of the video (optional; in hh:mm:ss.ms)")
-        $(funcEntry OUTTIME_ENTRY "Enter the out-point of the video (optional; in hh:mm:ss.ms")
+        $(funcEntry INTIME "Enter the in-point of the video (optional; in hh:mm:ss.ms)")
+        $(funcEntry OUTTIME "Enter the out-point of the video (optional; in hh:mm:ss.ms")
 			</frame>
       <hbox>
         <text>
@@ -498,7 +499,18 @@ MAIN_DIALOG=$(cat << MAINFORM
         <vbox scrollable="true" height="28">
           <text wrap="true" xalign="0">
             <variable export="false">INGESTFILE_FORM_VALIDATION</variable>
-            <input>sh ~/Desktop/_validate_ingestfile.sh</input>
+            <input>_validate_ingestfile</input>
+          </text>
+        </vbox>
+      </hbox>
+      <hbox>
+        <text>
+          <label>PBCore Report</label>
+        </text>
+        <vbox scrollable="true" height="28">
+          <text wrap="true" xalign="0">
+            <variable export="false">PBCORE_REPORT</variable>
+            <input>_validate_pbcore</input>
           </text>
         </vbox>
       </hbox>
@@ -511,6 +523,10 @@ MAIN_DIALOG=$(cat << MAINFORM
     <action signal="enter-notify-event" type="refresh">INGESTFILE_FORM_VALIDATION</action>
     <action signal="leave-notify-event" type="refresh">INGESTFILE_FORM_VALIDATION</action>
     <action signal="key-press-event" type="refresh">INGESTFILE_FORM_VALIDATION</action>
+    <action signal="show" type="refresh">PBCORE_REPORT</action>
+    <action signal="enter-notify-event" type="refresh">PBCORE_REPORT</action>
+    <action signal="leave-notify-event" type="refresh">PBCORE_REPORT</action>
+    <action signal="key-press-event" type="refresh">PBCORE_REPORT</action>
 	</window>
 MAINFORM
 )
@@ -527,8 +543,9 @@ if [[ "${TERMINAL_MODE}" != "N" ]] ; then
     exit 0
   elif [[ "${EXIT}" = "OK" ]] ; then
     echo " OPERATOR = ${OP}"
-    echo " INPUTFILE = ${INPUTFILE}"
-    echo " INPUTDIR = ${INPUTDIR}"
+    echo " INPUT = ${INPUT}"
+    echo " INPUT2 = ${INPUT2}"
+    echo " INPUT3 = ${INPUT3}"
     echo " MEDIAID = ${MEDIAID}"
     echo " AUDIODECISION = ${AUDIODECISION}"
     echo " CROPDECISION = ${CROPDECISION}"
@@ -540,12 +557,6 @@ if [[ "${TERMINAL_MODE}" != "N" ]] ; then
     echo " PRIORITY = ${PRIORITY}"
     echo ""
   fi
-fi
-
-if [ -f "${INPUTFILE}" ] && [ ! -d "${INPUTDIR}" ] ; then
-  INPUT="${INPUTFILE}"
-elif [ ! -f "${INPUTFILE}" ] && [ -d "${INPUTDIR}" ] ; then
-  INPUT="${INPUTDIR}"
 fi
 
 if [ ! -z $(echo "${MEDIAID}" | grep -v "^[A-Z0-9_-]*$") ] ; then
