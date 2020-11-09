@@ -565,6 +565,11 @@ while [[ "${@}" != "" ]] ; do
     fi
     if [[ "${AUDIOSTREAMCOUNT}" -gt 0 ]] ; then
         _get_audio_index "${SOURCEFILE}"
+        AUDIO_STTS_ENTRIES=$(mediaconch -mt "${SOURCEFILE}" | xmlstarlet sel -N mt="https://mediaarea.net/mediatrace" -v -t -m "mt:MediaTrace/mt:media/mt:block[@name='File header']/mt:block[@name='Track'][mt:block[@name='Media']/mt:block[@name='Media Information']/mt:block[@name='Sound Media Header']]/mt:block[@name='Media']/mt:block[@name='Media Information']/mt:block[@name='Sample Table']/mt:block[@name='Time to Sample']" -v "mt:data[@name='Number of entries']" )
+        if [[ "${AUDIO_STTS_ENTRIES}" -gt 2 ]] ; then
+            _add_audio_filter "aresample=async=1"
+            _report -d "The audio framerate is variable; adding 'aresample=async=1'"
+        fi
         if [[ "${OUTPUT_TYPE}" == "broadcast" ]] ; then
             MIDDLEOPTIONS+=(-acodec pcm_s24be)
             MIDDLEOPTIONS+=(-ar 48k)
