@@ -98,7 +98,6 @@ _parse_spreadsheet(){
         SAMPLINGRATE=48000
     fi
 }
-
 _get_xmp_info(){
     XMP_SIZE=$(mediaconch -mt "${INPUT}" | xmlstarlet sel -N "mt=https://mediaarea.net/mediatrace" -t -m "mt:MediaTrace/mt:media/mt:block[@name='Wave']/mt:block[@name='_PMX']" -v "mt:block[@name='Header']/mt:data[@name='Size']" -n)
     XMP_OFFSET=$(mediaconch -mt "${INPUT}" | xmlstarlet sel -N "mt=https://mediaarea.net/mediatrace" -t -m "mt:MediaTrace/mt:media/mt:block[@name='Wave']/mt:block[@name='_PMX']" -v "mt:data/@offset" -n)
@@ -113,7 +112,6 @@ _get_xmp_info(){
     OUTTIME=$(echo "scale=4; ${INTIME}+${DURATION}" | bc | awk '{printf "%f", $0}')
     echo "The intime in samples is $INTIME, the outtime in seconds is $OUTTIME, and the duration in seconds is $DURATION."
 }
-
 _audioreport(){
     ffmpeg -nostdin -i "${INPUT}" -vn -filter_complex "silencedetect,astats,loudnorm=print_format=json,agate=attack=0.01:release=0.01:ratio=9000,aphasemeter=r=0.2:video=0,ametadata=mode=print:key=lavfi.aphasemeter.phase:value=-0.18:function=less" -f null - 2>&1 |  tr "\r" "\n" > /tmp/loud
     MEASURED_I=$(cat /tmp/loud | grep "input_i" | awk -F\" '{print $4}')
@@ -137,7 +135,6 @@ _audioreport(){
         _writeingestlog "Flat sections of audio waveform" "${FLATFACTOR}"
     fi
 }
-
 _blackframetest(){
     _black_at_ends "${INPUT}"
     if [ "${HEAD_BLACK}" -gt "30" ] ; then
@@ -155,7 +152,6 @@ _blackframetest(){
         _ask_outtime
     fi
 }
-
 _phasechecktest(){
     _report -dt "Checking audio phase for $(basename "${INPUT}")"
     _get_phase_warning "${INPUT}"
@@ -166,7 +162,6 @@ _phasechecktest(){
         [ "${A3}" == "q" ] && exit 0
     fi
 }
-
 _makebroadcastcopies(){
     if [ "${SLATE}" == "Yes" ] ; then
         "${SCRIPTDIR}/makederiv" -T broadcast -s "${MAKEDERIVOPTS[@]}" "${OUTDIR_INGESTFILE}/${MEDIAID}"
@@ -181,13 +176,11 @@ _makebroadcastcopies(){
         "${SCRIPTDIR}/uploadomneon" "${OBJECTSDIR}/service/${MEDIAID%.*}.mov"
     fi
 }
-
 _deliveraccessopts(){
     YOUTUBEOPTS=(-Y -d "${YOUTUBEDELIVER}")
     FRAMESOPTS=(-d "${YOUTUBEDELIVER}")
     PODCASTOPTS=(-d "${PODCASTDELIVER}")
 }
-
 _makeaccesscopies(){
     _report -dt "STATUS Making access copies."
     "${SCRIPTDIR}/makederiv" -T waveform "${OUTDIR_INGESTFILE}/${MEDIAID}"
@@ -209,7 +202,6 @@ _makeaccesscopies(){
         "${SCRIPTDIR}/makederiv" -T audiographs "${OUTDIR_INGESTFILE}/${MEDIAID}"
     fi
 }
-
 _makemetadatapackage(){
     "${SCRIPTDIR}/makemetadata" "${OUTDIR_INGESTFILE}/${MEDIAID}"
     "${SCRIPTDIR}/checksumpackage" "${OUTDIR_INGESTFILE}/${MEDIAID}"
@@ -217,7 +209,6 @@ _makemetadatapackage(){
         "${SCRIPTDIR}/makefingerprint" "${OUTDIR_INGESTFILE}/${MEDIAID}"
     fi
 }
-
 _delivertoaipstorage(){
     if [ "${AIP_STORAGE}" != "${OUTDIR_INGESTFILE}" ] ; then
     "${SCRIPTDIR}/migratefiles" -r -o "${AIP_STORAGE}" "${OUTDIR_INGESTFILE}/${MEDIAID}"
@@ -227,7 +218,6 @@ _delivertoaipstorage(){
     else echo "As Target directory is same as Input directory, files were not migrated."
     fi
 }
-
 _delivertoia(){
     if [ $(echo "${MEDIAID}" | grep -E "${REGEX4IA}") ] ; then
         if [ $(which uploadia) ] ; then
@@ -236,7 +226,6 @@ _delivertoia(){
         fi
     fi
 }
-
 _writecapturelog(){
     echo -e "${LOG}" >> "${INGESTLOG}"
     _writeingestlog "media ID" "${MEDIAID}"
@@ -275,14 +264,12 @@ _writecapturelog(){
         _writeingestlog "package type" "Production"
     fi
 }
-
 _cleanup_ingest(){
     _log -a "Process canceled"
     _remove_mediaid_from_queue
     [ -d "${OUTDIR_INGESTFILE}/${MEDIAID}" ] && mv "${OUTDIR_INGESTFILE}/${MEDIAID}" "${OUTDIR_INGESTFILE}/${MEDIAID}_canceled_ingest_$(_get_iso8601_c)"
     exit 1
 }
-
 _cleanup_sourcefile(){
     if [ -n "${RSYNC_ERR}" ] && [ "${RSYNC_ERR}" -gt "0" ] ; then
         echo "${RSYNC_ERR}"
@@ -292,7 +279,6 @@ _cleanup_sourcefile(){
         _run rm -f "${INPUT}"
     fi
 }
-
 _run_storage_checks(){
     # for existing output
     if [ -d "${OUTDIR_INGESTFILE}/${MEDIAID}" ] ; then
@@ -304,7 +290,6 @@ _run_storage_checks(){
         exit 1
     fi
 }
-
 _run_input_file_checks(){
     # check if file is being modified
     INPUT_DATE=$(getfileinfo "${INPUT}" | grep modified | cut -d' ' -f2-)
@@ -323,20 +308,16 @@ _run_input_file_checks(){
         fi
     fi
 }
-
 _setup_package(){
     # set up package directories
     OBJECTSDIR="${OUTDIR_INGESTFILE}/${MEDIAID}/objects"
     _run_critical _mkdir2 "${OBJECTSDIR}"
-
     LOGDIR="${OUTDIR_INGESTFILE}/${MEDIAID}/metadata/logs"
     _run _mkdir2 "${LOGDIR}"
     INGESTLOG="${LOGDIR}/capture.log"
 }
-
 trap _cleanup SIGHUP SIGINT SIGTERM
 trap _cleanup_ingest SIGHUP SIGINT SIGTERM
-
 # check environment
 if [ ! -d "$(pwd)" ] ; then
     _report -w "You're in a directory that doesn't actually exist. The script exited and you need to cd into a different directory. ¯\_(ツ)_/¯ "
@@ -347,164 +328,243 @@ fi
 [ -z "${PODCASTDELIVER}" ] && { echo "A directory for podcast delivery must be set. Use [ -w /path/to/deliver/podcastfiles] or run mmconfig to set PODCASTDELIVER." ; exit 1 ;};
 [ -z "${YOUTUBEDELIVER}" ] && { echo "A directory for youtube delivery must be set. Use [ -y /path/to/deliver/youtubefiles] or run mmconfig to set YOUTUBEDELIVER." ; exit 1 ;};
 
-# pashua interface settings
-CONF="
-# Set transparency: 0 is transparent, 1 is opaque
-*.transparency=1.00
+AUDIODECISION_OPTIONS=("Default audio mapping [first audio track used for stereo output]" "Default audio mapping [first audio track used for stereo output]" "Only use left of the first audio track [for 21st Century]" "Only use right of the first audio track" "Only use the first track" "")
+CROPDECISION_OPTIONS=("Do not crop" "Examine the video and auto-crop out black borders (slower)" "")
+SLATE_OPTIONS=("No" "Yes" "")
+FORMULA_OPTIONS=("None" "Check interlacement" "tff" "bff" "hds" "sds" "")
+CLEANUPDECISION_OPTIONS=("Leave source file where it is" "Remove source file after successful ingest" "")
+PRIORITY_OPTIONS=("Put in queue" "Start now")
 
-# Set window title
-*.title = Ingest File
+funcFileSelect() {
+    FILE_VAR_NAME="${1}"
+    FILE_VAR_VALUE="${!1}"
+    FILE_LABEL="${2}"
+    if [[ -n "${FILE_VAR_VALUE}" ]] ; then
+      FILE_DEFAULT="<default>${FILE_VAR_VALUE}</default>"
+    fi
+    cat << GTKFILE
+    <vbox>
+    	<text xalign="0">
+    		<label>"${FILE_LABEL}"</label>
+    	</text>
+    	<hbox>
+      		<entry accept="file" fs-entry="Select a File">
+          		${FILE_DEFAULT}
+       	  		<variable>${FILE_VAR_NAME}</variable>
+      		</entry>
+      		<button>
+        		<input file stock="gtk-open"></input>
+         		<variable>FILEBROWSE</variable>
+        		<action type="fileselect">${FILE_VAR_NAME}</action>
+      		</button>
+    	</hbox>
+    </vbox>
+GTKFILE
+}
 
-# intro text
-intro.x = 20
-intro.y = 720
-intro.width = 500
-intro.type = text
-intro.text = Ingest file options. Leave the option blank to be prompted.
+funcDirectory() {
+    DIR_VAR_NAME="${1}"
+    DIR_VAR_VALUE="${!1}"
+    DIR_LABEL="${2}"
+    if [[ -n "${DIR_VAR_VALUE}" ]] ; then
+      DIR_DEFAULT="<default>${DIR_VAR_VALUE}</default>"
+    fi
+    cat << GTKDIR
+<vbox>
+    <text xalign="0">
+      <label>"${DIR_LABEL}"</label>
+    </text>
+    <hbox>
+        <entry accept="directory" fs-entry="Select a Directory">
+            ${DIR_DEFAULT}
+            <variable>${DIR_VAR_NAME}</variable>
+        </entry>
+        <button>
+            <input file stock="gtk-open"></input>
+            <variable export="false">DIRBROWSE</variable>
+            <action type="fileselect">${DIR_VAR_NAME}</action>
+        </button>
+    </hbox>
+</vbox>
+GTKDIR
+}
 
-# ask operator
-OP.x = 20
-OP.y = 660
-OP.type = textfield
-OP.label = Please enter your name:
-OP.width = 300
 
-# media ID
-MEDIAID.x = 20
-MEDIAID.y = 600
-MEDIAID.type = textfield
-MEDIAID.label = Please enter a unique MEDIA ID (capital letters, numbers, hyphens and underscores only).
-MEDIAID.width = 300
+funcEntry(){
+  ENTRY_VAR_NAME="${1}"
+  ENTRY_VAR_VALUE="${!1}"
+  ENTRY_LABEL="${2}"
+  if [[ -n "${ENTRY_VAR_VALUE}" ]] ;
+  then ENTRY_DEFAULT="<default>${ENTRY_VAR_VALUE}</default>"
+  fi
+  cat << GTKENTRY
+<vbox>
+  <text wrap="true" width-chars="80" xalign="0">
+    <label>${ENTRY_LABEL}</label>
+  </text>
+  <entry>
+    <variable>${ENTRY_VAR_NAME}</variable>
+    ${ENTRY_DEFAULT}
+    </entry>
+</vbox>
+GTKENTRY
+}
 
-# input file
-INPUT.x = 20
-INPUT.y = 540
-INPUT.type = openbrowser
-INPUT.label = Select your file:
-INPUT.width=400
+_get_index_of_value(){
+  # run with function, value to look for as first argument, and array to look in as 2nd argument, such function as
+  # _get_index_of_value "${VIDEO_INPUT_CHOICE}" "${VIDEO_INPUT_OPTIONS[@]}"
+  VALUE="${1}"
+  shift
+  LIST=( "$@" )
+  INDEX=0
+  MATCH=""
+  for ITEM in "${LIST[@]}" ; do
+    if [[ "${VALUE}" = "${ITEM}" ]] ; then
+      MATCH="$INDEX"
+    fi
+    (( ++INDEX ))
+  done
+    if [[ -n "${MATCH}" ]] ; then
+      echo -n "${MATCH}"
+    fi
+}
 
-# audio strategy
-AUDIODECISION.x = 20
-AUDIODECISION.y = 480
-AUDIODECISION.type = combobox
-AUDIODECISION.label = Select an audio strategy:
-AUDIODECISION.default = Default audio mapping [first audio track used for stereo output]
-AUDIODECISION.option =
-AUDIODECISION.option = Default audio mapping [first audio track used for stereo output]
-AUDIODECISION.option = Only use left of the first audio track [for 21st Century]
-AUDIODECISION.option = Only use right of the first audio track
-AUDIODECISION.option = Only use the first track
-AUDIODECISION.width = 400
+_expand_list2items(){
+  LIST=( "$@" )
+    for i in "${LIST[@]}" ; do
+      echo "<item>${i}</item>"
+    done
+}
 
-# cropping strategy
-CROPDECISION.x = 20
-CROPDECISION.y = 420
-CROPDECISION.type = combobox
-CROPDECISION.label = Select a cropping strategy:
-CROPDECISION.default = Do not crop
-CROPDECISION.option =
-CROPDECISION.option = Do not crop
-CROPDECISION.option = Examine the video and auto-crop out black borders (slower)
-CROPDECISION.width = 400
+funcCombo(){
+    VARIABLE_NAME="${1}"
+    WIDTH="${2}"
+    LABEL="${3}"
+    shift 3
+    OPTION_LIST=("${@}")
+    SELECTION="$(_get_index_of_value "${!VARIABLE_NAME}" "${OPTION_LIST[@]}")"
+    LIST="$(_expand_list2items "${OPTION_LIST[@]}")"
+    DEFAULT="${OPTION_LIST[0]}"
+    cat << GTKCOMBO
+    <hbox space-expand="true" space-fill="true">
+      <text xalign="0">
+          <label>${LABEL}</label>
+      </text>
+      <comboboxtext width-chars="${WIDTH}" xalign="0" allow-empty="false" value-in-list="true" button-sensitivity="1" focus-on-click="false" selection-mode="1" selected-row="${SELECTION}" >
+          <variable>${VARIABLE_NAME}</variable>
+          <default>${DEFAULT}</default>
+          ${LIST}
+      </comboboxtext>
+    </hbox>
+GTKCOMBO
+}
 
-# adding slate
-SLATE.x = 20
-SLATE.y = 360
-SLATE.type = combobox
-SLATE.label = Do you want to create a service copy with a slate?
-SLATE.default = No
-SLATE.option =
-SLATE.option = Yes
-SLATE.option = No
-SLATE.width = 100
+_validate_ingestfile(){
+  #mediaID validation
+  echo `date`
+}
 
-# slate information: series title
-SERIESTITLE.x = 20
-SERIESTITLE.y = 300
-SERIESTITLE.type = textfield
-SERIESTITLE.label = If adding slate, please enter a series title:
-SERIESTITLE.width = 300
 
-# slate information: episode title
-EPISODETITLE.x = 20
-EPISODETITLE.y = 240
-EPISODETITLE.type = textfield
-EPISODETITLE.label = If adding slate, please enter an episode title:
-EPISODETITLE.width = 300
+MAIN_DIALOG=$(cat << MAINFORM
+	<window title="ingestfile" resizable="false" window_position="1">
+		<vbox>
+			<text>
+				<label>Ingest file options.</label>
+			</text>
+			<frame>
+				$(funcEntry OP "Please enter your name")
+				$(funcEntry MEDIAID "Please enter a unique MEDIA ID (capital letters, numbers, hyphens and underscores only).")
+				<frame Select a file for one input; for multiple files, select them in order.>
+          $(funcFileSelect INPUT "Select a file:")
+          $(funcFileSelect INPUT2 "Select a second file if needed")
+          $(funcFileSelect INPUT3 "Select a third file if needed")
+        </frame>
+        $(funcCombo AUDIODECISION "60" "Select an audio strategy" "${AUDIODECISION_OPTIONS[@]}")
+        $(funcCombo CROPDECISION "60" "Select a cropping strategy:" "${CROPDECISION_OPTIONS[@]}")
+        <frame>
+          $(funcCombo SLATE "60" "Do you want to create a service copy with a slate?" "${SLATE_OPTIONS[@]}")
+          $(funcEntry SERIESTITLE "If adding slate, please enter a series title:")
+          $(funcEntry EPISODETITLE "If adding slate, please enter an episode title:")
+        </frame>
+        $(funcCombo FORMULA "60" "Select a formula for unusual cases (optional)" "${FORMULA_OPTIONS[@]}")
+        $(funcCombo CLEANUPDECISION "60" "Select a cleanup strategy" "${CLEANUPDECISION_OPTIONS[@]}")
+        $(funcCombo PRIORITY "60" "Would you like to put it in the queue or start now?" "${PRIORITY_OPTIONS[@]}")
+        $(funcEntry INTIME "Enter the in-point of the video (optional; in hh:mm:ss.ms)")
+        $(funcEntry OUTTIME "Enter the out-point of the video (optional; in hh:mm:ss.ms")
+			</frame>
+      <hbox>
+        <text>
+          <label>Errors & Warnings:</label>
+        </text>
+        <vbox scrollable="true" height="28">
+          <text wrap="true" xalign="0">
+            <variable export="false">INGESTFILE_FORM_VALIDATION</variable>
+            <input>_validate_ingestfile</input>
+          </text>
+        </vbox>
+      </hbox>
+      <hbox>
+        <text>
+          <label>PBCore Report</label>
+        </text>
+        <vbox scrollable="true" height="28">
+          <text wrap="true" xalign="0">
+            <variable export="false">PBCORE_REPORT</variable>
+            <input>_validate_pbcore</input>
+          </text>
+        </vbox>
+      </hbox>
+      <hbox>
+        <button ok></button>
+        <button cancel></button>
+      </hbox>
+		</vbox>
+    <action signal="show" type="refresh">INGESTFILE_FORM_VALIDATION</action>
+    <action signal="enter-notify-event" type="refresh">INGESTFILE_FORM_VALIDATION</action>
+    <action signal="leave-notify-event" type="refresh">INGESTFILE_FORM_VALIDATION</action>
+    <action signal="key-press-event" type="refresh">INGESTFILE_FORM_VALIDATION</action>
+    <action signal="show" type="refresh">PBCORE_REPORT</action>
+    <action signal="enter-notify-event" type="refresh">PBCORE_REPORT</action>
+    <action signal="leave-notify-event" type="refresh">PBCORE_REPORT</action>
+    <action signal="key-press-event" type="refresh">PBCORE_REPORT</action>
+	</window>
+MAINFORM
+)
+export MAIN_DIALOG
 
-# formula
-FORMULA.x = 20
-FORMULA.y = 180
-FORMULA.type = combobox
-FORMULA.label = Select a formula for unusual cases (optional).
-FORMULA.tooltip = To force the input file to be interpreted as top or bottom field first interlacement, select tff or bff. To stretch the input video to 1920x1080 HD frame size, select 'HDS'.
-FORMULA.default = none
-FORMULA.option =
-FORMULA.option = none
-FORMULA.option = check interlacement
-FORMULA.option = tff
-FORMULA.option = bff
-FORMULA.option = hds
-FORMULA.option = sds
-FORMULA.width = 300
+#echo "$MAIN_DIALOG" | mate
+#eval "$(gtkdialog --program=MAIN_DIALOG)"
 
-# cleanup decision
-CLEANUPDECISION.x = 20
-CLEANUPDECISION.y = 120
-CLEANUPDECISION.type = combobox
-CLEANUPDECISION.label = Select a cleanup strategy
-CLEANUPDECISION.default = Leave source file where it is
-CLEANUPDECISION.option =
-CLEANUPDECISION.option = Leave source file where it is
-CLEANUPDECISION.option = Remove source file after successful ingest
-CLEANUPDECISION.width = 300
-
-# priority
-PRIORITY.x = 20
-PRIORITY.y = 60
-PRIORITY.type = combobox
-PRIORITY.label = Would you like to put it in the queue or start now?
-PRIORITY.default = put in queue
-PRIORITY.option =
-PRIORITY.option = put in queue
-PRIORITY.option = start now
-PRIORITY.width = 300
-
-# Add a cancel button with default label
-cb.type=cancelbutton
-
-";
-
-# run gui
-if [ "${TERMINAL_MODE}" != "Y" ] ; then
-    PASHUA_CONFIGFILE=`/usr/bin/mktemp /tmp/pashua_XXXXXXXXX`
-    echo "${CONF}" > "${PASHUA_CONFIGFILE}"
-    _pashua_run
-    rm "${PASHUA_CONFIGFILE}"
-    echo "  OPERATOR = ${OP}"
-    echo "  INPUT = ${INPUT}"
-    echo "  MEDIAID = ${MEDIAID}"
-    echo "  AUDIODECISION = ${AUDIODECISION}"
-    echo "  CROPDECISION = ${CROPDECISION}"
-    echo "  SLATE = ${SLATE}"
-    echo "  SERIESTITLE = ${SERIESTITLE}"
-    echo "  EPISODETITLE = ${EPISODETITLE}"
-    echo "  FORMULA = ${FORMULA}"
-    echo "  CLEANUPDECISION = ${CLEANUPDECISION}"
-    echo "  PRIORITY = ${PRIORITY}"
+if [[ "${TERMINAL_MODE}" != "N" ]] ; then
+  eval "$(gtkdialog --program=MAIN_DIALOG)"
+  if [[ "${EXIT}" = "abort" ]] ;  then
+    exit 0
+  elif [[ "${EXIT}" = "Cancel" ]] ; then
+    exit 0
+  elif [[ "${EXIT}" = "OK" ]] ; then
+    echo " OPERATOR = ${OP}"
+    echo " INPUT = ${INPUT}"
+    echo " INPUT2 = ${INPUT2}"
+    echo " INPUT3 = ${INPUT3}"
+    echo " MEDIAID = ${MEDIAID}"
+    echo " AUDIODECISION = ${AUDIODECISION}"
+    echo " CROPDECISION = ${CROPDECISION}"
+    echo " SLATE = ${SLATE}"
+    echo " SERIESTITLE = ${SERIESTITLE}"
+    echo " EPISODETITLE = ${EPISODETITLE}"
+    echo " FORMULA = ${FORMULA}"
+    echo " CLEANUPDECISION = ${CLEANUPDECISION}"
+    echo " PRIORITY = ${PRIORITY}"
     echo ""
+  fi
 fi
 
-if [[ "${cb}" -eq 1 ]] ; then
-    exit 1
-fi
 if [ ! -z $(echo "${MEDIAID}" | grep -v "^[A-Z0-9_-]*$") ] ; then
     echo "Error: The MEDIA ID must only contain capital letters, numbers, hyphens and underscores."
     echo "Please enter a valid MEDIA ID:"
     MEDIAID=""
     _ask_mediaid
 fi
-
     # interview the operator
     _ask_operator
     _ask_mediaid
@@ -590,7 +650,6 @@ fi
         fi
         MEDIAID4SLATE="${MEDIAID}"
     fi
-
 # MICROSERVICES BEFORE PROCESSING
 if [[ "${MODE}" == "preservation" ]] ; then
     _ask_digitization_logs
@@ -615,7 +674,6 @@ else
         _get_interlacement_full "${INPUT}"
     fi
 fi
-
 # queue handling
 if [ "${PRIORITY}" = "put in queue" ] ; then
     _add_mediaid_to_queue
@@ -632,10 +690,8 @@ if [ "${PRIORITY}" = "put in queue" ] ; then
         NEXT="${NEWNEXT}"
     done
 fi
-
 _log -b
 _writecapturelog
-
 # rsync
 # make sure the input is still there
 if [ ! -f "${INPUT}" ] ; then
@@ -645,7 +701,6 @@ if [ ! -f "${INPUT}" ] ; then
     [ "${PRIORITY}" == "put in queue" ] && _cleanup_ingest
     exit 1
 fi
-
 # either rsync or mv the input into the package
 FROM=$(_get_filesystem "${INPUT}")
 TO=$(_get_filesystem "${OBJECTSDIR}/")
@@ -663,7 +718,6 @@ else
         _run_critical rsync -rt --progress --log-file="${LOGDIR}/rsync_$(_get_iso8601_c)_$(basename $0)_${VERSION}.txt" "${FILES[@]}" "${LOGDIR}/"
     fi
 fi
-
 # set makederivopts
 unset MAKEDERIVOPTS
 if [[ "${CROPDECISION}" == "Examine the video and auto-crop out black borders (slower)" ]] ; then
@@ -672,7 +726,6 @@ fi
 if [[ ! -z "${FORMULA}" ]] ; then
     MAKEDERIVOPTS+=(-F "${FORMULA}")
 fi
-
 # SELECT MICROSERVICES PER MODE
 if [[ "${MODE}" == "preservation" ]] ; then
     _makebroadcastcopies
@@ -712,7 +765,6 @@ else
         _cleanup_sourcefile
     fi
 fi
-
 # clean up queue
 [ "${PRIORITY}" == "put in queue" ] && _remove_mediaid_from_queue
 _report_to_db
