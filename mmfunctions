@@ -1568,6 +1568,53 @@ _unset_variables(){
     unset EXTRAOUTPUTS
 }
 
+_validate_ingestfile() {
+#validate operator
+if [[ -z ${OP} ]] ; then
+  echo "ERROR: You must enter your name."
+fi
+#validate mediaid
+if [ ! -z $(echo "${MEDIAID}" | grep -v "^[A-Z0-9_-]*$") ] ; then
+  echo "ERROR: The MEDIA ID must only contain capital letters, numbers, hyphens and underscores."
+fi
+#validate existence of input file or directory
+if [[ ! -f "${INPUTFILE}" ]] && [[ ! -f "${INPUTFILE2}" ]] && [[ ! -f "${INPUTFILE3}" ]] ; then
+  echo "ERROR: The input file or directory does not exist."
+fi
+#validate duration
+#if [ -n "${INTIME_ENTRY}" ] && [ -n "${OUTTIME_ENTRY}" ] ; then
+#  if ! [ "$(echo "${INTIME_ENTRY} < ${OUTTIME_ENTRY}" | bc)" = "1" ] ; then
+#    echo "ERROR: Illegal value for in and out times. The duration must be a possitive number."
+#  fi
+#fi
+#validate hh:mm:ss.sss format
+if [ ! -z $(echo "${INTIME}" | egrep -v "^[0-5]?[0-9](\.[0-9][0-9]?[0-9]?)?$|^[0-5]?[0-9]\:[0-5][0-9](\.[0-9][0-9]?[0-9]?)?$|^[0-9]?[0-9]\:[0-5][0-9]\:[0-5][0-9](\.[0-9][0-9]?[0-9]?)?$") ] ; then
+    echo "Error: Enter a valid timestamp hh:mm:ss.sss."
+fi
+if [ ! -z $(echo "${OUTTIME}" | egrep -v "^[0-5]?[0-9](\.[0-9][0-9]?[0-9]?)?$|^[0-5]?[0-9]\:[0-5][0-9](\.[0-9][0-9]?[0-9]?)?$|^[0-9]?[0-9]\:[0-5][0-9]\:[0-5][0-9](\.[0-9][0-9]?[0-9]?)?$") ] ; then
+    echo "Error: Enter a valid timestamp hh:mm:ss.sss."
+fi
+
+#validate for 2 or more video files in directory, if directory
+#if [ -d "${INPUTDIR}" ] ; then
+#  for file in "${INPUTDIR}"
+#  do
+#    ls "$file"
+#  done
+#fi
+}
+
+_validate_pbcore() {
+  #delivers a report on PBCore info for a MEDIA ID entered
+
+if [ -n "${MEDIAID}" ] ; then
+  #CUNY onsite
+  pbprotracktor "${MEDIAID}" | xmlstarlet select -N "p=http://www.pbcore.org/PBCore/PBCoreNamespace.html" -T -t -m "p:pbcoreCollection/p:pbcoreDescriptionDocument" -v "p:pbcoreTitle[1]" -n -v "p:pbcoreTitle[2]" -n -o "TRT=" -v "p:pbcoreInstantiation/p:instantiationDuration"
+  #test Local
+  #xmlstarlet select -N "p=http://www.pbcore.org/PBCore/PBCoreNamespace.html" -T -t -m "p:pbcoreCollection/p:pbcoreDescriptionDocument" -v "p:pbcoreTitle[1]" -n -v "p:pbcoreTitle[2]" -n -o "TRT=" -v "p:pbcoreInstantiation/p:instantiationDuration" -n ~/Desktop/pbcore.xml
+fi
+}
+
 _pashua_run() {
     # Wrapper function for interfacing to Pashua. Written by Carsten
     # Bluem <carsten@bluem.net> in 10/2003, modified in 12/2003 (including
