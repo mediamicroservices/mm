@@ -559,6 +559,9 @@ if [[ "${TERMINAL_MODE}" != "N" ]] ; then
   fi
 fi
 
+#create an array for multiple inputs
+INPUTARRAY+=( "${INPUT}" "${INPUT2}" "${INPUT3}" )
+
 if [ ! -z $(echo "${MEDIAID}" | grep -v "^[A-Z0-9_-]*$") ] ; then
     echo "Error: The MEDIA ID must only contain capital letters, numbers, hyphens and underscores."
     echo "Please enter a valid MEDIA ID:"
@@ -694,30 +697,34 @@ _log -b
 _writecapturelog
 # rsync
 # make sure the input is still there
-if [ ! -f "${INPUT}" ] ; then
-    _report -wt "The input file is no longer available! Where did $(basename "${INPUT}") go? Please redo."
-    _writeerrorlog "ingestfile" "The input file, $(basename "${INPUT}"), was no longer available, so ingest file could not continue."
+for file in ${INPUTARRAY[@]} ; do
+  if [ ! -f $file ] ; then
+    _report -wt "The input file is no longer available! Where did $(basename "$file") go? Please redo."
+    _writeerrorlog "ingestfile" "The input file, $(basename "$file"), was no longer available, so ingest file could not continue."
     # clean up queue
     [ "${PRIORITY}" == "put in queue" ] && _cleanup_ingest
     exit 1
-fi
+  fi
+done
 # either rsync or mv the input into the package
-FROM=$(_get_filesystem "${INPUT}")
-TO=$(_get_filesystem "${OBJECTSDIR}/")
-if [ "${FROM}" == "${TO}" -a "${CLEANUPDECISION}" == "Remove source file after successful ingest" ] ; then
-    _report -dt "Because ${INPUT} and ${OBJECTSDIR} are on the same filesystem and preservation mode is enabled we will mv rather than rsync."
-    _run_critical mv -v -n "${INPUT}" "${OBJECTSDIR}/"
+for file in ${INPUTARRAY[@]} ; do
+  FROM=$(_get_filesystem "$file")
+  TO=$(_get_filesystem "${OBJECTSDIR}/")
+  if [ "${FROM}" == "${TO}" -a "${CLEANUPDECISION}" == "Remove source file after successful ingest" ] ; then
+    _report -dt "Because $file and ${OBJECTSDIR} are on the same filesystem and preservation mode is enabled we will mv rather than rsync."
+    _run_critical mv -v -n "$file" "${OBJECTSDIR}/"
     if [ ! "${#FILES[@]}" = 0 ] ; then
         _run_critical mv -v -n "${FILES[@]}" "${LOGDIR}/"
     fi
-else
+  else
     _report -dt "STATUS Copying the original file to library storage at ${OBJECTSDIR}."
     LOGFILE="${LOGDIR}/rsync_$(_get_iso8601_c)_$(basename ${0})_${VERSION}.txt"
-    "${SCRIPTDIR}/migratefiles" -l "${LOGFILE}" -o "${OBJECTSDIR}" "${INPUT}"
+    "${SCRIPTDIR}/migratefiles" -l "${LOGFILE}" -o "${OBJECTSDIR}" "$file"
     if [ ! "${#FILES[@]}" = 0 ] ; then
         _run_critical rsync -rt --progress --log-file="${LOGDIR}/rsync_$(_get_iso8601_c)_$(basename $0)_${VERSION}.txt" "${FILES[@]}" "${LOGDIR}/"
     fi
-fi
+  fi
+done
 # set makederivopts
 unset MAKEDERIVOPTS
 if [[ "${CROPDECISION}" == "Examine the video and auto-crop out black borders (slower)" ]] ; then
