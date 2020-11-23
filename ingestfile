@@ -100,10 +100,11 @@ _parse_spreadsheet(){
 }
 
 _get_xmp_info(){
-    XMP_SIZE=$(mediaconch -mt "${INPUT}" | xmlstarlet sel -N "mt=https://mediaarea.net/mediatrace" -t -m "mt:MediaTrace/mt:media/mt:block[@name='Wave']/mt:block[@name='_PMX']" -v "mt:block[@name='Header']/mt:data[@name='Size']" -n)
-    XMP_OFFSET=$(mediaconch -mt "${INPUT}" | xmlstarlet sel -N "mt=https://mediaarea.net/mediatrace" -t -m "mt:MediaTrace/mt:media/mt:block[@name='Wave']/mt:block[@name='_PMX']" -v "mt:data/@offset" -n)
+  for file in ${INPUTARRAY[@]} ; do
+    XMP_SIZE=$(mediaconch -mt "${file}" | xmlstarlet sel -N "mt=https://mediaarea.net/mediatrace" -t -m "mt:MediaTrace/mt:media/mt:block[@name='Wave']/mt:block[@name='_PMX']" -v "mt:block[@name='Header']/mt:data[@name='Size']" -n)
+    XMP_OFFSET=$(mediaconch -mt "${file}" | xmlstarlet sel -N "mt=https://mediaarea.net/mediatrace" -t -m "mt:MediaTrace/mt:media/mt:block[@name='Wave']/mt:block[@name='_PMX']" -v "mt:data/@offset" -n)
     XMP_OFFSET=$(echo "${XMP_OFFSET} + 1" | bc)
-    XMP_DATA=$(tail -c "+${XMP_OFFSET}" "${INPUT}" | head -c "${XMP_SIZE}" | xmlstarlet fo)
+    XMP_DATA=$(tail -c "+${XMP_OFFSET}" "${file}" | head -c "${XMP_SIZE}" | xmlstarlet fo)
     GET_INFO=$(echo "${XMP_DATA}" | xmlstarlet sel -N rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#" -N xmpDM="http://ns.adobe.com/xmp/1.0/DynamicMedia/" -t -m "//rdf:li[@rdf:parseType='Resource'][xmpDM:trackName='CuePoint Markers']" -o "inSample:" -v "xmpDM:markers/rdf:Seq/rdf:li[@rdf:parseType='Resource']/xmpDM:startTime" -n -o "durationSample:" -v "xmpDM:markers/rdf:Seq/rdf:li[@rdf:parseType='Resource']/xmpDM:duration" -n)
     INSAMPLE=$(echo "${XMP_DATA}" | xmlstarlet sel -N rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#" -N xmpDM="http://ns.adobe.com/xmp/1.0/DynamicMedia/" -t -m "//rdf:li[@rdf:parseType='Resource'][xmpDM:trackName='CuePoint Markers']" -v "xmpDM:markers/rdf:Seq/rdf:li[@rdf:parseType='Resource']/xmpDM:startTime" -n)
     DURATIONSAMPLE=$(echo "${XMP_DATA}" | xmlstarlet sel -N rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#" -N xmpDM="http://ns.adobe.com/xmp/1.0/DynamicMedia/" -t -m "//rdf:li[@rdf:parseType='Resource'][xmpDM:trackName='CuePoint Markers']" -v "xmpDM:markers/rdf:Seq/rdf:li[@rdf:parseType='Resource']/xmpDM:duration" -n)
@@ -112,10 +113,12 @@ _get_xmp_info(){
     DURATION=$(echo "scale=4; ${DURATIONSAMPLE}/${SAMPLINGRATE}" | bc | awk '{printf "%f", $0}')
     OUTTIME=$(echo "scale=4; ${INTIME}+${DURATION}" | bc | awk '{printf "%f", $0}')
     echo "The intime in samples is $INTIME, the outtime in seconds is $OUTTIME, and the duration in seconds is $DURATION."
+  done
 }
 
 _audioreport(){
-    ffmpeg -nostdin -i "${INPUT}" -vn -filter_complex "silencedetect,astats,loudnorm=print_format=json,agate=attack=0.01:release=0.01:ratio=9000,aphasemeter=r=0.2:video=0,ametadata=mode=print:key=lavfi.aphasemeter.phase:value=-0.18:function=less" -f null - 2>&1 |  tr "\r" "\n" > /tmp/loud
+  for file in ${INPUTARRAY[@]} ; do
+    ffmpeg -nostdin -i "${file}" -vn -filter_complex "silencedetect,astats,loudnorm=print_format=json,agate=attack=0.01:release=0.01:ratio=9000,aphasemeter=r=0.2:video=0,ametadata=mode=print:key=lavfi.aphasemeter.phase:value=-0.18:function=less" -f null - 2>&1 |  tr "\r" "\n" > /tmp/loud
     MEASURED_I=$(cat /tmp/loud | grep "input_i" | awk -F\" '{print $4}')
     MEASURED_LRA=$(cat /tmp/loud | grep "input_lra" | awk -F\" '{print $4}')
     MEASURED_TP=$(cat /tmp/loud | grep "input_tp" | awk -F\" '{print $4}')
@@ -136,35 +139,40 @@ _audioreport(){
         [ "${A4}" == "q" ] && exit 0
         _writeingestlog "Flat sections of audio waveform" "${FLATFACTOR}"
     fi
+  done
 }
 
 _blackframetest(){
-    _black_at_ends "${INPUT}"
+  for file in ${INPUTARRAY[@]} ; do
+    _black_at_ends "${file}"
     if [ "${HEAD_BLACK}" -gt "30" ] ; then
-        _report -wt "WARNING - There are at least ${HEAD_BLACK} frames of black at the beginning of ${INPUT}"
+        _report -wt "WARNING - There are at least ${HEAD_BLACK} frames of black at the beginning of ${file}"
         _report -qn "Enter q to quit, any other key to continue: "
         read A1
         [ "${A1}" == "q" ] && exit 0
         _ask_intime
     fi
     if [ "${TAIL_BLACK}" -gt "30" ] ; then
-        _report -wt "WARNING - There are at least ${TAIL_BLACK} frames of black at the end of ${INPUT}"
+        _report -wt "WARNING - There are at least ${TAIL_BLACK} frames of black at the end of ${file}"
         _report -qn "Enter q to quit, any other key to continue: "
         read A2
         [ "${A2}" == "q" ] && exit 0
         _ask_outtime
     fi
+  done
 }
 
 _phasechecktest(){
-    _report -dt "Checking audio phase for $(basename "${INPUT}")"
-    _get_phase_warning "${INPUT}"
+  for file in ${INPUTARRAY[@]} ; do
+    _report -dt "Checking audio phase for $(basename "${file}")"
+    _get_phase_warning "${file}"
     if [ "${PHASE_ERROR}" -gt "0" ] ; then
         _report -w "WARNING - There are ${PHASE_ERROR} sections of out-of-phase audio"
         _report -qn "Enter q to quit, any other key to continue: "
         read A3
         [ "${A3}" == "q" ] && exit 0
     fi
+  done
 }
 
 _makebroadcastcopies(){
@@ -242,7 +250,9 @@ _writecapturelog(){
     _writeingestlog "media ID" "${MEDIAID}"
     _writeingestlog "media ID slate" "${MEDIAID4SLATE}"
     _writeingestlog "operator" "${OP}"
-    _writeingestlog "input" "${INPUT}"
+    for file in ${INGESTARRAY[@]} ; do
+      _writeingestlog "input" "${file}"
+    done
     _writeingestlog "processing_directory" "${OUTDIR_INGESTFILE}"
     _writeingestlog "audiodecision" "${AUDIODECISION}"
     _writeingestlog "cropdecision" "${CROPDECISION}"
@@ -307,21 +317,23 @@ _run_storage_checks(){
 
 _run_input_file_checks(){
     # check if file is being modified
-    INPUT_DATE=$(getfileinfo "${INPUT}" | grep modified | cut -d' ' -f2-)
-    CURRENT_DATE=$(date -j "+%m/%d/%Y %H:%M:%S")
-    if [ "${INPUT_DATE}" = "${CURRENT_DATE}" ] ; then
+    for file in ${INPUTARRAY[@]} ; do
+      INPUT_DATE=$(getfileinfo "${file}" | grep modified | cut -d' ' -f2-)
+      CURRENT_DATE=$(date -j "+%m/%d/%Y %H:%M:%S")
+      if [ "${INPUT_DATE}" = "${CURRENT_DATE}" ] ; then
         _report -w "WARNING: Input is currently being modified. Exiting."
         exit 1
-    fi
-    # here is where we would insert an option for searching for directory.
-    # if file is a video
-    if [[ "${MODE}" != "audio" ]] ; then
-        if [ ! $(_is_video "${INPUT}") ] ; then
-            _report -qnt "WARNING: ${INPUT} is not recognized as a video file. Please press q to quit, any other key to continue (if you know what you're doing):"
+      fi
+      # here is where we would insert an option for searching for directory.
+      # if file is a video
+      if [[ "${MODE}" != "audio" ]] ; then
+          if [ ! $(_is_video "${file}") ] ; then
+            _report -qnt "WARNING: ${file} is not recognized as a video file. Please press q to quit, any other key to continue (if you know what you're doing):"
             read NOTVIDRESPONSE
             [ "${NOTVIDRESPONSE}" == "q" ] && exit 0
-        fi
-    fi
+          fi
+      fi
+    done
 }
 
 _setup_package(){
@@ -717,26 +729,30 @@ fi
 # MICROSERVICES BEFORE PROCESSING
 if [[ "${MODE}" == "preservation" ]] ; then
     _ask_digitization_logs
-    if [[ "${INPUT#*.}" = "mkv" ]] ; then
-        "${SCRIPTDIR}/makemkvchapters" "${INPUT}"
-    else
+    for file in ${INPUTARRAY[@]} ; do
+      if [[ "${file#*.}" = "mkv" ]] ; then
+          "${SCRIPTDIR}/makemkvchapters" "${file}"
+      else
         _ask_intime
         _ask_outtime
-    fi
-    _get_frame_count "${INPUT}"
-    if [[ "${FORMULA}" == "check interlacement" ]] ; then
-        _get_interlacement_full "${INPUT}"
-    fi
+      fi
+      _get_frame_count "${file}"
+      if [[ "${FORMULA}" == "check interlacement" ]] ; then
+        _get_interlacement_full "${file}"
+      fi
+    done
 elif [[ "${MODE}" == "audio" ]] ; then
     _audioreport
 else
     # presumes default, psa, or local mode
     _blackframetest
     _phasechecktest
-    _get_frame_count "${INPUT}"
-    if [[ "${FORMULA}" == "check interlacement" ]] ; then
-        _get_interlacement_full "${INPUT}"
-    fi
+    for file in ${INPUTARRAY[@]} ; do
+      _get_frame_count "${file}"
+      if [[ "${FORMULA}" == "check interlacement" ]] ; then
+          _get_interlacement_full "${file}"
+      fi
+    done
 fi
 
 # queue handling
