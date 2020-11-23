@@ -98,6 +98,7 @@ _parse_spreadsheet(){
         SAMPLINGRATE=48000
     fi
 }
+
 _get_xmp_info(){
     XMP_SIZE=$(mediaconch -mt "${INPUT}" | xmlstarlet sel -N "mt=https://mediaarea.net/mediatrace" -t -m "mt:MediaTrace/mt:media/mt:block[@name='Wave']/mt:block[@name='_PMX']" -v "mt:block[@name='Header']/mt:data[@name='Size']" -n)
     XMP_OFFSET=$(mediaconch -mt "${INPUT}" | xmlstarlet sel -N "mt=https://mediaarea.net/mediatrace" -t -m "mt:MediaTrace/mt:media/mt:block[@name='Wave']/mt:block[@name='_PMX']" -v "mt:data/@offset" -n)
@@ -112,6 +113,7 @@ _get_xmp_info(){
     OUTTIME=$(echo "scale=4; ${INTIME}+${DURATION}" | bc | awk '{printf "%f", $0}')
     echo "The intime in samples is $INTIME, the outtime in seconds is $OUTTIME, and the duration in seconds is $DURATION."
 }
+
 _audioreport(){
     ffmpeg -nostdin -i "${INPUT}" -vn -filter_complex "silencedetect,astats,loudnorm=print_format=json,agate=attack=0.01:release=0.01:ratio=9000,aphasemeter=r=0.2:video=0,ametadata=mode=print:key=lavfi.aphasemeter.phase:value=-0.18:function=less" -f null - 2>&1 |  tr "\r" "\n" > /tmp/loud
     MEASURED_I=$(cat /tmp/loud | grep "input_i" | awk -F\" '{print $4}')
@@ -135,6 +137,7 @@ _audioreport(){
         _writeingestlog "Flat sections of audio waveform" "${FLATFACTOR}"
     fi
 }
+
 _blackframetest(){
     _black_at_ends "${INPUT}"
     if [ "${HEAD_BLACK}" -gt "30" ] ; then
@@ -152,6 +155,7 @@ _blackframetest(){
         _ask_outtime
     fi
 }
+
 _phasechecktest(){
     _report -dt "Checking audio phase for $(basename "${INPUT}")"
     _get_phase_warning "${INPUT}"
@@ -162,6 +166,7 @@ _phasechecktest(){
         [ "${A3}" == "q" ] && exit 0
     fi
 }
+
 _makebroadcastcopies(){
     if [ "${SLATE}" == "Yes" ] ; then
         "${SCRIPTDIR}/makederiv" -T broadcast -s "${MAKEDERIVOPTS[@]}" "${OUTDIR_INGESTFILE}/${MEDIAID}"
@@ -176,11 +181,13 @@ _makebroadcastcopies(){
         "${SCRIPTDIR}/uploadomneon" "${OBJECTSDIR}/service/${MEDIAID%.*}.mov"
     fi
 }
+
 _deliveraccessopts(){
     YOUTUBEOPTS=(-Y -d "${YOUTUBEDELIVER}")
     FRAMESOPTS=(-d "${YOUTUBEDELIVER}")
     PODCASTOPTS=(-d "${PODCASTDELIVER}")
 }
+
 _makeaccesscopies(){
     _report -dt "STATUS Making access copies."
     "${SCRIPTDIR}/makederiv" -T waveform "${OUTDIR_INGESTFILE}/${MEDIAID}"
@@ -202,6 +209,7 @@ _makeaccesscopies(){
         "${SCRIPTDIR}/makederiv" -T audiographs "${OUTDIR_INGESTFILE}/${MEDIAID}"
     fi
 }
+
 _makemetadatapackage(){
     "${SCRIPTDIR}/makemetadata" "${OUTDIR_INGESTFILE}/${MEDIAID}"
     "${SCRIPTDIR}/checksumpackage" "${OUTDIR_INGESTFILE}/${MEDIAID}"
@@ -209,6 +217,7 @@ _makemetadatapackage(){
         "${SCRIPTDIR}/makefingerprint" "${OUTDIR_INGESTFILE}/${MEDIAID}"
     fi
 }
+
 _delivertoaipstorage(){
     if [ "${AIP_STORAGE}" != "${OUTDIR_INGESTFILE}" ] ; then
     "${SCRIPTDIR}/migratefiles" -r -o "${AIP_STORAGE}" "${OUTDIR_INGESTFILE}/${MEDIAID}"
@@ -218,6 +227,7 @@ _delivertoaipstorage(){
     else echo "As Target directory is same as Input directory, files were not migrated."
     fi
 }
+
 _delivertoia(){
     if [ $(echo "${MEDIAID}" | grep -E "${REGEX4IA}") ] ; then
         if [ $(which uploadia) ] ; then
@@ -226,6 +236,7 @@ _delivertoia(){
         fi
     fi
 }
+
 _writecapturelog(){
     echo -e "${LOG}" >> "${INGESTLOG}"
     _writeingestlog "media ID" "${MEDIAID}"
@@ -264,12 +275,14 @@ _writecapturelog(){
         _writeingestlog "package type" "Production"
     fi
 }
+
 _cleanup_ingest(){
     _log -a "Process canceled"
     _remove_mediaid_from_queue
     [ -d "${OUTDIR_INGESTFILE}/${MEDIAID}" ] && mv "${OUTDIR_INGESTFILE}/${MEDIAID}" "${OUTDIR_INGESTFILE}/${MEDIAID}_canceled_ingest_$(_get_iso8601_c)"
     exit 1
 }
+
 _cleanup_sourcefile(){
     if [ -n "${RSYNC_ERR}" ] && [ "${RSYNC_ERR}" -gt "0" ] ; then
         echo "${RSYNC_ERR}"
@@ -279,6 +292,7 @@ _cleanup_sourcefile(){
         _run rm -f "${INPUT}"
     fi
 }
+
 _run_storage_checks(){
     # for existing output
     if [ -d "${OUTDIR_INGESTFILE}/${MEDIAID}" ] ; then
@@ -290,6 +304,7 @@ _run_storage_checks(){
         exit 1
     fi
 }
+
 _run_input_file_checks(){
     # check if file is being modified
     INPUT_DATE=$(getfileinfo "${INPUT}" | grep modified | cut -d' ' -f2-)
@@ -308,6 +323,7 @@ _run_input_file_checks(){
         fi
     fi
 }
+
 _setup_package(){
     # set up package directories
     OBJECTSDIR="${OUTDIR_INGESTFILE}/${MEDIAID}/objects"
@@ -316,13 +332,16 @@ _setup_package(){
     _run _mkdir2 "${LOGDIR}"
     INGESTLOG="${LOGDIR}/capture.log"
 }
+
 trap _cleanup SIGHUP SIGINT SIGTERM
 trap _cleanup_ingest SIGHUP SIGINT SIGTERM
+
 # check environment
 if [ ! -d "$(pwd)" ] ; then
     _report -w "You're in a directory that doesn't actually exist. The script exited and you need to cd into a different directory. ¯\_(ツ)_/¯ "
     exit 1
 fi
+
 [ -z "${OUTDIR_INGESTFILE}" ] && { echo "The processing directory must be set. Use [ -p /path/to/processing/directory ] or run mmconfig to set OUTDIR_INGESTFILE." ; exit 1 ;};
 [ -z "${AIP_STORAGE}" ] && { echo "The AIP Storage directory must be set. Use [ -a /path/to/AIP/storage/directory ] or run mmconfig to set AIP_STORAGE." ; exit 1 ;};
 [ -z "${PODCASTDELIVER}" ] && { echo "A directory for podcast delivery must be set. Use [ -w /path/to/deliver/podcastfiles] or run mmconfig to set PODCASTDELIVER." ; exit 1 ;};
@@ -388,7 +407,6 @@ funcDirectory() {
 </vbox>
 GTKDIR
 }
-
 
 funcEntry(){
   ENTRY_VAR_NAME="${1}"
@@ -459,12 +477,6 @@ funcCombo(){
 GTKCOMBO
 }
 
-_validate_ingestfile(){
-  #mediaID validation
-  echo `date`
-}
-
-
 MAIN_DIALOG=$(cat << MAINFORM
 	<window title="ingestfile" resizable="false" window_position="1">
 		<vbox>
@@ -530,13 +542,50 @@ MAIN_DIALOG=$(cat << MAINFORM
 	</window>
 MAINFORM
 )
+
 export MAIN_DIALOG
 
-#echo "$MAIN_DIALOG" | mate
-#eval "$(gtkdialog --program=MAIN_DIALOG)"
+# write functions to temp file
+cat > /tmp/heyy <<GTKFUNCTIONS
+_validate_ingestfile() {
+#validate operator
+if [ -z ${OP} ] ; then
+  echo "ERROR: You must enter your name."
+fi
+
+#validate mediaid
+if [ -n "${MEDIAID}"] ; then
+    if [ -n "$(echo "${MEDIAID}" | grep -v "^[A-Z0-9_-]*$")" ] ; then
+      echo "ERROR: The MEDIA ID must only contain capital letters, numbers, hyphens and underscores."
+    fi
+else
+    echo "ERROR: MEDIA ID is mandatory"
+fi
+
+#validate existence of input file or directory
+if [ ! -f "${INPUT}" ] && [ ! -f "${INPUT2}" ] && [ ! -f "${INPUT3}" ] ; then
+  echo "ERROR: The input file does not exist."
+fi
+
+#validate hh:mm:ss.sss format
+if [ ! -z $(echo "${INTIME}" | egrep -v "^[0-5]?[0-9](\.[0-9][0-9]?[0-9]?)?$|^[0-5]?[0-9]\:[0-5][0-9](\.[0-9][0-9]?[0-9]?)?$|^[0-9]?[0-9]\:[0-5][0-9]\:[0-5][0-9](\.[0-9][0-9]?[0-9]?)?$") ] ; then
+    echo "Error: Enter a valid timestamp hh:mm:ss.sss."
+fi
+if [ ! -z $(echo "${OUTTIME}" | egrep -v "^[0-5]?[0-9](\.[0-9][0-9]?[0-9]?)?$|^[0-5]?[0-9]\:[0-5][0-9](\.[0-9][0-9]?[0-9]?)?$|^[0-9]?[0-9]\:[0-5][0-9]\:[0-5][0-9](\.[0-9][0-9]?[0-9]?)?$") ] ; then
+    echo "Error: Enter a valid timestamp hh:mm:ss.sss."
+fi
+}
+
+_validate_pbcore() {
+  #delivers a report on PBCore info for a MEDIA ID entered
+if [ -n "${MEDIAID}" ] ; then
+  pbprotracktor "${MEDIAID}" | xmlstarlet select -N "p=http://www.pbcore.org/PBCore/PBCoreNamespace.html" -T -t -m "p:pbcoreCollection/p:pbcoreDescriptionDocument" -v "p:pbcoreTitle[1]" -n -v "p:pbcoreTitle[2]" -n -o "TRT=" -v "p:pbcoreInstantiation/p:instantiationDuration"
+fi
+}
+GTKFUNCTIONS
 
 if [[ "${TERMINAL_MODE}" != "N" ]] ; then
-  eval "$(gtkdialog --program=MAIN_DIALOG)"
+  eval "$(gtkdialog --include=/tmp/heyy --program=MAIN_DIALOG)"
   if [[ "${EXIT}" = "abort" ]] ;  then
     exit 0
   elif [[ "${EXIT}" = "Cancel" ]] ; then
@@ -568,17 +617,21 @@ if [ ! -z $(echo "${MEDIAID}" | grep -v "^[A-Z0-9_-]*$") ] ; then
     MEDIAID=""
     _ask_mediaid
 fi
+
     # interview the operator
     _ask_operator
     _ask_mediaid
     _run_storage_checks
     _ask_input
     _run_input_file_checks
+
     if [[ "${MODE}" == "preservation" ]] ; then
         OUTDIR_INGESTFILE=$(dirname "${INPUT}")
         _report -dt "I'm going to place the AIP in the same directory as the original input file."
     fi
+
     _setup_package
+
     if [[ "${MODE}" == "audio" ]] ; then
         _report -q "Is the file the result of digitization? Enter 1 for Yes or 2 for No."
         select DIGITIZATION in "Yes" "No"
@@ -594,6 +647,7 @@ fi
             fi
         fi
     fi
+
     if [[ -z "${AUDIODECISION}" ]] ; then
         _report -q "Select an audio strategy?"
         PS3="Selection: "
@@ -602,6 +656,7 @@ fi
             break
         done
     fi
+
     if [[ -z "${CROPDECISION}" ]] && [[ "${MODE}" != "audio" ]] ; then
         _report -q "Select a cropping strategy?"
         PS3="Selection: "
@@ -610,6 +665,7 @@ fi
             break
         done
     fi
+
     if [[ -z "${FORMULA}" ]] && [[ "${MODE}" != "audio" ]] ; then
         _report -q "Select an optional formula for unusual cases?"
         _report -d "(In most cases, select 'none'. To force the input file to be interpreted as top or bottom field first interlacement, select tff or bff. To stretch the input video to 1920x1080 HD frame size, select 'hds'. To squish into Standard Definition, select 'sds'.)"
@@ -619,6 +675,7 @@ fi
             break
         done
     fi
+
     if [[ -z "${CLEANUPDECISION}" ]] ; then
         _report -q "Select a cleanup strategy?"
         select CLEANUPDECISION in "Leave source file where it is." "Remove source file after successful ingest"
@@ -626,6 +683,7 @@ fi
             break
         done
     fi
+
     if [[ -z "${PRIORITY}" ]] ; then
         _report -q "Select a multitasking strategy?"
         select PRIORITY in "put in queue" "start now"
@@ -633,6 +691,7 @@ fi
             break
         done
     fi
+
     if [[ -z "${SLATE}" ]] && [[ "${MODE}" != "audio" ]] ; then
         _report -q "Do you want to create a service copy with a slate?"
         select SLATE in "Yes" "No"
@@ -640,6 +699,7 @@ fi
             break
         done
     fi
+
     if [[ "${SLATE}" == "Yes" ]] ; then
         if [[ -z "${SERIESTITLE}" ]] ; then
             cowsay -t "Series Title?"
@@ -653,6 +713,7 @@ fi
         fi
         MEDIAID4SLATE="${MEDIAID}"
     fi
+
 # MICROSERVICES BEFORE PROCESSING
 if [[ "${MODE}" == "preservation" ]] ; then
     _ask_digitization_logs
@@ -677,6 +738,7 @@ else
         _get_interlacement_full "${INPUT}"
     fi
 fi
+
 # queue handling
 if [ "${PRIORITY}" = "put in queue" ] ; then
     _add_mediaid_to_queue
@@ -693,8 +755,10 @@ if [ "${PRIORITY}" = "put in queue" ] ; then
         NEXT="${NEWNEXT}"
     done
 fi
+
 _log -b
 _writecapturelog
+
 # rsync
 # make sure the input is still there
 for file in ${INPUTARRAY[@]} ; do
@@ -725,6 +789,7 @@ for file in ${INPUTARRAY[@]} ; do
     fi
   fi
 done
+
 # set makederivopts
 unset MAKEDERIVOPTS
 if [[ "${CROPDECISION}" == "Examine the video and auto-crop out black borders (slower)" ]] ; then
@@ -733,6 +798,7 @@ fi
 if [[ ! -z "${FORMULA}" ]] ; then
     MAKEDERIVOPTS+=(-F "${FORMULA}")
 fi
+
 # SELECT MICROSERVICES PER MODE
 if [[ "${MODE}" == "preservation" ]] ; then
     _makebroadcastcopies
@@ -772,6 +838,7 @@ else
         _cleanup_sourcefile
     fi
 fi
+
 # clean up queue
 [ "${PRIORITY}" == "put in queue" ] && _remove_mediaid_from_queue
 _report_to_db
