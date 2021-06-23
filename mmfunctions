@@ -1004,7 +1004,7 @@ _find_input (){
             ISOBJECT="Y"
             INPUTFILES=$(_maketemp)
             # find av files in a directory and output to a temp list
-            find "${1}/objects" -type f -size +0 "${OBJECTS_FIND_EXCLUSIONS[@]}" | while read file ; do
+            find "${1}/objects" -type f -size +0 "${OBJECTS_FIND_EXCLUSIONS[@]}" | sort | while read file ; do
                 streamcount=$(ffprobe -loglevel quiet "$file" -show_entries format=nb_streams -of default=nw=1:nk=1)
                 duration_ts=$(ffprobe -loglevel quiet "$file" -show_entries stream=duration_ts -of default=nw=1:nk=1)
                 if [[ "$streamcount" > 0  && "${duration_ts}" != 1 ]] ; then
@@ -1234,6 +1234,10 @@ _get_audio_mapping(){
     fi
 }
 
+_get_format(){
+    FORMAT="$(ffprobe -v 0 "${1}" -show_entries format=format_name -of default=nw=1:nk=1)"
+}
+
 _get_codectagstring(){
     CODEC_TAG_STRING=$(ffprobe "${1}" -show_streams -select_streams v:0 2> /dev/null | grep "^codec_tag_string=" | cut -d = -f 2)
     if [[ "${CODEC_TAG_STRING}" = "FFV1" ]] ; then
@@ -1267,6 +1271,10 @@ _get_timecode_overlay(){
         TIMECODEESACPE="01\\:00\\:00;00"
     fi
     TIMECODEOVERLAY="drawtext=fontfile=/System/Library/Fonts/Monaco.dfont:timecode='${TIMECODEESACPE}':r=30000/1001:fontcolor=white:fontsize=24:shadowx=2:shadowy=2:box=1:boxcolor=gray@0.8:x=w/2-tw/2:y=h*0.8"
+}
+
+_get_timestamp_overlay(){
+    TIMECODEOVERLAY="drawtext=fontfile=/System/Library/Fonts/Monaco.dfont:text=%{pts\\\:hms}:fontcolor=white:fontsize=24:shadowx=2:shadowy=2:box=1:boxcolor=gray@0.8:x=w/2-tw/2:y=h*0.8"
 }
 
 _get_maxdvdbitrate(){
@@ -1356,7 +1364,7 @@ _get_volume_adjustment(){
         LOUDNESS_OPT_END="-to ${OUTTIME}"
     fi
     _report -dt "Getting loudness data for $(basename "${INPUT_MOVIE}") ..."
-    LOUDNESS_DATA=$(ffmpeg ${LOUDNESS_OPT_START} -i "${1}" ${LOUDNESS_OPT_END} -vn -filter_complex "${AUDIOFILTERCHAIN},loudnorm=print_format=json" -f null - 2>&1)
+    LOUDNESS_DATA=$(ffmpeg -nostdin ${LOUDNESS_OPT_START} -i "${1}" ${LOUDNESS_OPT_END} -vn -filter_complex "${AUDIOFILTERCHAIN},loudnorm=print_format=json" -f null - 2>&1)
     VOLUME_EXIT_CODE="${?}"
     if [ "${VOLUME_EXIT_CODE}" -ne 0 ] ; then
         _report -wt "Volume analysis for ${INPUT_MOVIE} exited with ${VOLUME_EXIT_CODE}."

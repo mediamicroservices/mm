@@ -15,9 +15,11 @@ _usage(){
         echo "Usage: $(basename "${0}") [ -d /path/to/deliver/to/ ] fileorpackage1 [ fileorpackage2 ...]"
         echo "  -T derivative (specify a derivative video type:)"
         echo "      broadcast (mov) for broadcast"
+        echo "      broadcast_copy (mov) for broadcast"
         echo "      prores (mov) for editing"
         echo "      youtube (mp4) for uploading"
         echo "      resourcespace (mp4) for uploading to resourcespace"
+        echo "      quick (mp4)"
         echo "      dvd (iso)"
         echo "      mp3 (mp3)"
         echo "      podcast (mov or m4a)"
@@ -28,6 +30,7 @@ _usage(){
         echo "  -l (only use the left channel of the first audio track)"
         echo "  -r (only use the right channel of the first audio track)"
         echo "  -t (burn timecode overlay)"
+        echo "  -w (burn pts overlay)"
         echo "  -C (generate chapter-based segmented output in addition to full output)"
         echo "  -S suffix (add custom suffix to end of output filename)"
         echo "  -I starttime (use a custom starting time from the source video, use HH:MM:SS.mmm format or something acceptable to ffmpeg)"
@@ -52,7 +55,7 @@ _usage(){
 
 user_input=${@}
 OPTIND=1
-while getopts ":T:lrmv:d:o:e:E:F:scYp:tCS:I:O:nh" OPT ; do
+while getopts ":T:lrmv:d:o:e:E:F:scYp:twCS:I:O:nh" OPT ; do
     case "${OPT}" in
         T) OUTPUT_TYPE="${OPTARG}";;
         l) AUDIOMAP="L";;
@@ -69,6 +72,7 @@ while getopts ":T:lrmv:d:o:e:E:F:scYp:tCS:I:O:nh" OPT ; do
         Y) YOUTUBEUPLOAD="Y";;
         p) DVDLABELPREFIX="${OPTARG}";;
         t) TCBURN="Y";;
+        w) PTSBURN="Y";;
         C) CHAPTERIZE="Y";;
         S) SUFFIX="${OPTARG}";;
         I) INTIME="${OPTARG}";;
@@ -89,6 +93,10 @@ if [[ "${OUTPUT_TYPE}" == "broadcast" ]] ; then
     if [[ "${ADDSLATE}" = "Y" ]]; then
         SUFFIX="_SLATE"
     fi
+elif [[ "${OUTPUT_TYPE}" == "broadcast_copy" ]] ; then
+    EXTENSION="mov"
+    RELATIVEPATH=""
+    SUFFIX="_COPY"
 elif [[ "${OUTPUT_TYPE}" == "prores" ]] ; then
     EXTENSION="mov"
     RELATIVEPATH="objects/access/prores"
@@ -99,6 +107,11 @@ elif [[ "${OUTPUT_TYPE}" == "resourcespace" ]] ; then
     PREFERRED_SOURCE="service"
     EXTENSION="mp4"
     RELATIVEPATH="objects/access/resourcespace"
+elif [[ "${OUTPUT_TYPE}" == "quick" ]] ; then
+    PREFERRED_SOURCE="service"
+    EXTENSION="mp4"
+    RELATIVEPATH="objects/access/quick"
+    SUFFIX="_quick"
 elif [[ "${OUTPUT_TYPE}" == "dvd" ]] ; then
     PREFERRED_SOURCE="service"
     EXTENSION="iso"
@@ -256,7 +269,8 @@ while [[ "${@}" != "" ]] ; do
                 DAR="(${WIDTH}/${HEIGHT})*${SAR}"
             fi
             # set options for zeroing timecode if input is MXF
-            if [[ "$INPUT" == *.mxf ]] ; then
+            _get_format "${SOURCEFILE}"
+            if [[ "${FORMAT}" == "mxf" ]] ; then
                 metadata_option="-metadata"
             else
                 metadata_option="-metadata:s:v:0"
@@ -396,15 +410,15 @@ while [[ "${@}" != "" ]] ; do
                 _add_video_filter "fps=fps=ntsc"
                 MIDDLEOPTIONS+=("${MIDDLEOPTIONSXDCAM[@]}")
             elif [ $(echo "scale=3 ; ${DARRATIO} > (16/9)" | bc -l) = 1 ] ; then
-                _add_video_filter "pad=${WIDTH}:${WIDTH}*(9/16)*(${SAR}):(ow-${WIDTH})/2:(oh-${HEIGHT})/2"
-                _add_video_filter "scale=size=hd1080:interl=1"
+                _add_video_filter "scale=size=hd1080:interl=1:force_original_aspect_ratio=decrease"
+                _add_video_filter "pad=1920:1080:(ow-iw)/2:(oh-ih)/2"
                 _add_video_filter "setsar=1/1"
                 _add_video_filter "setdar=16/9"
                 _add_video_filter "fps=fps=ntsc"
                 MIDDLEOPTIONS+=("${MIDDLEOPTIONSXDCAM[@]}")
             elif [ $(echo "scale=3 ; $DARRATIO > (3/2)" | bc -l) = 1 -o "${ADDSLATE}" = "Y" ] ; then
-                _add_video_filter "pad=${HEIGHT}*(16/9)/(${SAR}):${HEIGHT}:(ow-${WIDTH})/2:(oh-${HEIGHT})/2"
-                _add_video_filter "scale=size=hd1080:interl=1"
+                _add_video_filter "scale=size=hd1080:interl=1:force_original_aspect_ratio=decrease"
+                _add_video_filter "pad=1920:1080:(ow-iw)/2:(oh-ih)/2"
                 _add_video_filter "setsar=1/1"
                 _add_video_filter "setdar=16/9"
                 _add_video_filter "fps=fps=ntsc"
@@ -434,6 +448,16 @@ while [[ "${@}" != "" ]] ; do
             fi
             _add_video_filter "format=yuv422p"
             _add_video_filter "lut=y=if(gt(val\,235)\,235\,val):u=if(gt(val\,235)\,235\,val):v=if(gt(val\,235)\,235\,val)"
+        elif [[ "${OUTPUT_TYPE}" == "broadcast_copy" ]] ; then
+            MIDDLEOPTIONS+=(-map 0:v)
+            MIDDLEOPTIONS+=(-c:v copy)
+            _get_format "${SOURCEFILE}"
+            if [[ "${FORMAT}" == "mxf" ]] ; then
+                metadata_option="-metadata"
+            else
+                metadata_option="-metadata:s:v:0"
+            fi
+            MIDDLEOPTIONS+=("$metadata_option" timecode=00:00:00.00)
         elif [[ "${OUTPUT_TYPE}" == "prores" ]] ; then
             MIDDLEOPTIONS+=(-map 0:v)
             MIDDLEOPTIONS+=(-c:v prores_ks)
@@ -443,6 +467,7 @@ while [[ "${@}" != "" ]] ; do
             MIDDLEOPTIONS+=(-movflags faststart)
             MIDDLEOPTIONS+=(-pix_fmt yuv420p)
             MIDDLEOPTIONS+=(-c:v libx264)
+            MIDDLEOPTIONS+=(-force_key_frames chapters)
             # MIDDLEOPTIONS+=(-bufsize 1835k)
             MIDDLEOPTIONS+=(-f mp4)
             if [[ "${OUTPUT_TYPE}" == "youtube" ]] ; then
@@ -470,6 +495,16 @@ while [[ "${@}" != "" ]] ; do
                 _add_video_filter "crop=720:480:0:32"
             fi
             _add_video_filter "yadif"
+        elif [[ "${OUTPUT_TYPE}" == "quick" ]] ; then
+            MIDDLEOPTIONS+=(-map 0:v)
+            MIDDLEOPTIONS+=(-c:v libx264)
+            MIDDLEOPTIONS+=(-preset ultrafast)
+            MIDDLEOPTIONS+=(-crf 24)
+            MIDDLEOPTIONS+=(-pix_fmt yuv420p)
+            MIDDLEOPTIONS+=(-s 640x360)
+            MIDDLEOPTIONS+=(-force_key_frames chapters)
+            MIDDLEOPTIONS+=(-f mp4)
+            MIDDLEOPTIONS+=(-movflags faststart)
         elif [[ "${OUTPUT_TYPE}" == "dvd" ]] ; then
             DARRATIO=$(echo "scale=3 ; ${DAR}" | bc)
             if [ $(echo "scale=5 ; ${DARRATIO} > 1.5" | bc -l) = 1 ] ;then
@@ -515,6 +550,7 @@ while [[ "${@}" != "" ]] ; do
             MIDDLEOPTIONS+=(-movflags faststart)
             MIDDLEOPTIONS+=(-pix_fmt yuv420p)
             MIDDLEOPTIONS+=(-c:v libx264)
+            MIDDLEOPTIONS+=(-force_key_frames chapters)
             MIDDLEOPTIONS+=(-crf 26)
             _add_video_filter "yadif"
         elif [[ "${OUTPUT_TYPE}" == "m4a" ]] || [[ "${OUTPUT_TYPE}" == "mp3" ]] || [[ "${OUTPUT_TYPE}" == "waveform" ]] ; then
@@ -529,10 +565,18 @@ while [[ "${@}" != "" ]] ; do
     fi
     if [[ "${AUDIOSTREAMCOUNT}" -gt 0 ]] ; then
         _get_audio_index "${SOURCEFILE}"
+        AUDIO_STTS_ENTRIES=$(mediaconch -mt "${SOURCEFILE}" | xmlstarlet sel -N mt="https://mediaarea.net/mediatrace" -v -t -m "mt:MediaTrace/mt:media/mt:block[@name='File header']/mt:block[@name='Track'][mt:block[@name='Media']/mt:block[@name='Media Information']/mt:block[@name='Sound Media Header']]/mt:block[@name='Media']/mt:block[@name='Media Information']/mt:block[@name='Sample Table']/mt:block[@name='Time to Sample']" -v "mt:data[@name='Number of entries']" )
+        if [[ "${AUDIO_STTS_ENTRIES}" -gt 2 ]] ; then
+            _add_audio_filter "aresample=async=1"
+            _report -d "The audio framerate is variable; adding 'aresample=async=1'"
+        fi
         if [[ "${OUTPUT_TYPE}" == "broadcast" ]] ; then
             MIDDLEOPTIONS+=(-acodec pcm_s24be)
             MIDDLEOPTIONS+=(-ar 48k)
             _get_audio_mapping -bv "${SOURCEFILE}"
+        elif [[ "${OUTPUT_TYPE}" == "broadcast_copy" ]] ; then
+            MIDDLEOPTIONS+=(-map 0:a)
+            MIDDLEOPTIONS+=(-c:a copy)
         elif [[ "${OUTPUT_TYPE}" == "prores" ]] ; then
             MIDDLEOPTIONS+=(-map 0:a)
             MIDDLEOPTIONS+=(-c:a pcm_s16le)
@@ -546,6 +590,11 @@ while [[ "${@}" != "" ]] ; do
             MIDDLEOPTIONS+=(-c:a aac)
             MIDDLEOPTIONS+=(-ac 2)
             MIDDLEOPTIONS+=(-b:a 128k)
+            _get_audio_mapping -v "${SOURCEFILE}"
+        elif [[ "${OUTPUT_TYPE}" == "quick" ]] ; then
+            MIDDLEOPTIONS+=(-c:a aac)
+            MIDDLEOPTIONS+=(-ac 2)
+            MIDDLEOPTIONS+=(-b:a 96k)
             _get_audio_mapping -v "${SOURCEFILE}"
         elif [[ "${OUTPUT_TYPE}" == "dvd" ]] ; then
             MIDDLEOPTIONS+=(-b:a 448000)
@@ -653,6 +702,9 @@ while [[ "${@}" != "" ]] ; do
     TIMECODEOVERLAY=""
     if [[ "${TCBURN}" == "Y" ]] ; then
         _get_timecode_overlay "${SOURCEFILE}"
+        _add_video_filter "${TIMECODEOVERLAY}"
+    elif [[ "${PTSBURN}" == "Y" ]] ; then
+        _get_timestamp_overlay "${SOURCEFILE}"
         _add_video_filter "${TIMECODEOVERLAY}"
     fi
 
