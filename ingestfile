@@ -470,6 +470,20 @@ PRIORITY.option = put in queue
 PRIORITY.option = start now
 PRIORITY.width = 300
 
+# start time
+INTIME.x = 340
+INTIME.y = 120
+INTIME.type = textfield
+INTIME.label = Enter a start time (HH:MM:SS.mmm)
+INTIME.width = 100
+
+# end time
+OUTTIME.x = 340
+OUTTIME.y = 60
+OUTTIME.type = textfield
+OUTTIME.label = Enter a end time (HH:MM:SS.mmm)
+OUTTIME.width = 100
+
 # Add a cancel button with default label
 cb.type=cancelbutton
 
