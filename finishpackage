@@ -2,6 +2,6 @@
 #finish package takes a directory input created by restructureforCompliance and creates derivative access copies, metadata documents, and a checksum file.
 while [ "${*}" != "" ] ; do
     INPUT="${1}"
-    makelossless "${INPUT}" && makederiv -T broadcast "${INPUT}" && makederiv -T youtube "${INPUT}" && makemetadata "${INPUT}" && checksumpackage "${INPUT}"
+    makelossless "${INPUT}" && makederiv -T broadcast "${INPUT}" && makederiv -T youtube "${INPUT}" && makederiv -T mp3 "${INPUT}" && makederiv -T podcast "${INPUT}" && makederiv -T waveform "${INPUT}" && makeframes "${INPUT}" && makefingerprint "${INPUT}" && makemetadata "${INPUT}" && checksumpackage "${INPUT}"
     shift
 done
