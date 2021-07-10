@@ -1,0 +1,195 @@
+#!/bin/bash
+#checks to see if a video's properties are consistent with a set of standard NTSC properties and if so it assigns expected values to other properties if they are undefined or differ from expectations 
+
+SCRIPTDIR=$(dirname "$(which "${0}")")
+. "${SCRIPTDIR}/mmfunctions" || { echo "Missing '${SCRIPTDIR}/mmfunctions'. Exiting." ; exit 1 ;};
+
+DEPENDENCIES=(ffmpeg ffprobe mkvinfo mkvpropedit mkvmerge)
+_check_dependencies "${DEPENDENCIES[@]}" 
+
+#ELEMENT is property name as it appears in mkvINFO report
+#EXPECTATION is expected value of property
+#MKVINFO_PROP generates mkvINFO report
+#SELECTED_ELEMENT checks to see if property is present in the mkvINFO report
+#SELECTED_ELEMENT_VALUE checks the value of the value of the property
+#PROPNAME is property name as it appears for use in mkvPROPEDIT
+#ASSIGNVALUE is the desired value of that property
+#using mkvPROPEDIT set the property to the desired value 
+#PROPMOD is the mkvPROPEDIT exit code 0, 1, 2
+#EDITELEMENT is the convertion of the property name as it appears in the mkvINFO report to the property name as it appears in mkvPROPEDIT
+
+_get_frame_rate(){
+    FRAMERATE=$(ffprobe -i "${1}" -v error -select_streams v:0 -show_entries stream=avg_frame_rate -of default=noprint_wrappers=1:nokey=1)
+}
+_get_format(){
+    FORMAT=$(ffprobe -i "${1}" -v error -select_streams v:0 -show_format -of default=noprint_wrappers=1:nokey=0 | grep "^format_name=" | cut -d = -f 2)
+}
+_MKV_Prop_Check(){
+
+    ELEMENT="$2"
+    EXPECTATION="$3"
+    MKVINFO_PROP=$(mkvinfo -t "${1}")
+    SELECTED_ELEMENT=$(echo "${MKVINFO_PROP}" | grep -c "+ ${ELEMENT}:")
+    SELECTED_ELEMENT_VALUE=$(echo "${MKVINFO_PROP}" | grep -i "+ ${ELEMENT}: " | cut -d: -f 2 | cut -d" " -f 2)
+
+    if [[ "${SELECTED_ELEMENT}" != "0" ]]; then
+        if [[ "${SELECTED_ELEMENT_VALUE}" -eq "${EXPECTATION}" ]]; then
+            echo "${ELEMENT} -eq expectation ${EXPECTATION}"
+        elif [[ "${SELECTED_ELEMENT_VALUE}" == "${EXPECTATION}" ]]; then
+            echo "${ELEMENT} == expectation ${EXPECTATION}"
+        else
+            echo "${ELEMENT} is not ${EXPECTATION} but it has the specified value of ${SELECTED_ELEMENT_VALUE}"
+        fi
+    else
+        echo "${ELEMENT} is not present"
+    fi
+}
+_get_video_track(){
+    VIDEOTRACK=$(mkvmerge -i "${1}" | grep -i "video" | cut -d " " -f 3 | sed 's/://g')
+    
+    TRACKNUMBER=$(expr "${VIDEOTRACK}" + 1)
+}
+_APPLY_STANDARDS(){
+    PROPNAME="${2}"
+    ASSIGNVALUE="${3}"
+    mkvpropedit "${1}" -e track:v"${TRACKNUMBER}" -s "${PROPNAME}"="${ASSIGNVALUE}"
+    PROPMOD="$?"
+    
+    if [[ "${PROPMOD}" = "0" ]]; then
+        echo "The ${PROPNAME} has been assigned a value of ${ASSIGNVALUE}"
+    else
+        echo -e "\033[1;5;31;40mA problem has occured\033[0m"
+        mkvpropedit "${PROPMOD}"    
+    fi
+}
+_usage(){
+    echo "This application checks if a matroska video is consistent with a set of standard NTSC properties and if so, it will assign expected values to other properties that are either undefined or differ from expectations. The properties that will be changed to their expected values are as follows:"
+    echo
+    echo "Interlaced = 1"
+    echo "Display width = 4"
+    echo "Display height = 3"
+    echo "Display unit = 3"
+    echo "Colour range = 1"
+    echo "Colour transfer = 1"
+    echo "Colour primaries = 6"
+    echo
+    echo "By default, when the application finds a property with an assigned value that differs from the expected value, it will ask the user whether the original value should be changed to the expected value."
+    echo
+    echo "-f to apply the expected value to all properties regardless of existing values without requiring user input"
+    echo "-r to retain existing property values that differ from expected values without requiring user input"
+    echo 
+    echo "Only one option can be exercised at a time and whichever option in entered first will be applied to all"
+    echo
+    echo "-h to display this help"
+    echo
+    exit
+}
+_ASSESSMENT(){
+    
+    if [[ "$(echo "${ELEMENT}")" != "Colour transfer" ]]; then
+        EDITELEMENT=$(echo "${ELEMENT}" | sed 's/ /-/g' | tr '[:upper:]' '[:lower:]')
+    elif [[ "$(echo "${ELEMENT}")" == "Colour transfer" ]]; then
+        EDITELEMENT=$(echo "${ELEMENT} characteristics" | sed 's/ /-/g' | tr '[:upper:]' '[:lower:]')
+    fi
+        
+    if [[ "$(_MKV_Prop_Check "${1}" "${ELEMENT}" "${EXPECTATION}")" == "${ELEMENT} is not present" ]]; then
+        echo "Applying standard value to ${ELEMENT} of ${EXPECTATION}"
+        _APPLY_STANDARDS "${1}" "${EDITELEMENT}" "${EXPECTATION}"
+    elif [[ "${RETAIN}" == "1" ]]; then
+        echo "${ELEMENT} will retain the original value of ${SELECTED_ELEMENT_VALUE}"
+    elif [[ "$(_MKV_Prop_Check "${1}" "${ELEMENT}" "${EXPECTATION}")" == "${ELEMENT} is not ${EXPECTATION} but it has the specified value of ${SELECTED_ELEMENT_VALUE}" ]] && [[ "${FORCE}" == "1" ]]; then
+        echo "${ELEMENT} is being reset from ${SELECTED_ELEMENT_VALUE} to ${EXPECTATION}"
+        _APPLY_STANDARDS "${1}" "${EDITELEMENT}" "${EXPECTATION}"
+    elif [[ "$(_MKV_Prop_Check "${1}" "${ELEMENT}" "${EXPECTATION}")" == "${ELEMENT} is not ${EXPECTATION} but it has the specified value of ${SELECTED_ELEMENT_VALUE}" ]] && [[ "${FORCE}" != "1" ]]; then
+        read -e -p "Are you sure you would like to reset ${ELEMENT} to ${EXPECTATION}? [y/n] " choice
+        echo
+        if [[ "${choice}" == [Yy] ]]; then
+            echo "${ELEMENT} is being reset from ${SELECTED_ELEMENT_VALUE} to ${EXPECTATION}"
+            _APPLY_STANDARDS "${1}" "${EDITELEMENT}" "${EXPECTATION}"
+        else
+            echo "${ELEMENT} will retain the original value of ${SELECTED_ELEMENT_VALUE}"
+        fi
+    else 
+        echo "${ELEMENT} already set to expected value of ${EXPECTATION}"
+    fi
+}
+
+user_input="${@}"
+OPTIND=1
+while getopts ":frh" OPT ; do
+    case "${OPT}" in
+        f) echo ; echo -e "\033[1;35mAll property values that differ from their expected values will be reassigned to their expected values\033[0m" ; FORCE="1" ;;
+        r) echo ; echo -e "\033[1;34mAll existing property values will be retained. All unassigned values will be assigned their expected values\033[0m" ; RETAIN="1" ;;
+        h) _usage ;;
+        *) echo -e "\033[1;5;37;40mbad option -${OPTARG}\033[0m" ; _usage ;; 
+     esac
+done
+shift $(( ${OPTIND} - 1 ))
+
+while [[ "${@}" != "" ]] ; do
+    INPUT="${1}"
+    echo
+    echo -e "\033[1;36m${INPUT}\033[0m"
+    shift
+    
+    if [[ "${INPUT}" != *.mkv ]]; then
+        echo -e "\033[1;5;37;40mERROR:\033[0m Input files must be Matroska video, \033[31m${INPUT}\033[0m does not meet this requirement and will not be processed"
+        echo
+        continue 
+    fi
+    
+    _get_width "${INPUT}"
+    _get_height "${INPUT}"
+    _get_frame_rate "${INPUT}"
+    _get_format "${INPUT}"
+    
+    if [[ "${WIDTH}" = "720" && "${HEIGHT}" = "486" || "${HEIGHT}" = "480" ]] && [[ "${FRAMERATE}" = "30000/1001" || "${FRAMERATE}" = "29970/1001" ]] && [[ "${FORMAT}" = "matroska,webm" ]]; then
+        echo "Standard video specifications detected"
+        echo "Checking MKV properties"
+        echo
+    elif [[ "${WIDTH}" -eq "720" && "${HEIGHT}" -eq "486" || "${HEIGHT}" -eq "480" ]] && [[ "${FRAMERATE}" -eq "30000/1001" || "${FRAMERATE}" -eq "29970/1001" ]] && [[ "${FORMAT}" -eq "matroska,webm" ]]; then
+        echo "Standard video specifications detected"
+        echo "Checking MKV properties"
+        echo
+    else
+        echo -e "\033[1;5;37;40mERROR:\033[0m Video specifications do not conform to the standard configuration required, \033[31m${INPUT}\033[0m will not be processed"
+        echo
+        continue
+    fi
+
+    _MKV_Prop_Check "${INPUT}" "Interlaced" "1"
+    _MKV_Prop_Check "${INPUT}" "Display width" "4"
+    _MKV_Prop_Check "${INPUT}" "Display height" "3"
+    _MKV_Prop_Check "${INPUT}" "Display unit" "3"
+    _MKV_Prop_Check "${INPUT}" "Colour range" "1"
+    _MKV_Prop_Check "${INPUT}" "Colour transfer" "1"
+    _MKV_Prop_Check "${INPUT}" "Colour primaries" "6"
+    _get_video_track "${INPUT}"
+    
+    echo
+    echo "The video track has an mkvmerge track ID of ${VIDEOTRACK}"
+    echo "The track number ${TRACKNUMBER} is the video track" 
+    echo "Expected values are now going to be applied to the following properties:"
+    echo
+    _MKV_Prop_Check "${INPUT}" "Interlaced" "1" 
+    _ASSESSMENT "${INPUT}"
+    echo
+    _MKV_Prop_Check "${INPUT}" "Display width" "4"
+    _ASSESSMENT "${INPUT}"
+    echo
+    _MKV_Prop_Check "${INPUT}" "Display height" "3"
+   _ASSESSMENT "${INPUT}"
+    echo
+    _MKV_Prop_Check "${INPUT}" "Display unit" "3"
+    _ASSESSMENT "${INPUT}"
+    echo
+    _MKV_Prop_Check "${INPUT}" "Colour range" "1"
+    _ASSESSMENT "${INPUT}"
+    echo
+    _MKV_Prop_Check "${INPUT}" "Colour transfer" "1"
+    _ASSESSMENT "${INPUT}"
+    echo
+    _MKV_Prop_Check "${INPUT}" "Colour primaries" "6"
+    _ASSESSMENT "${INPUT}"
+
+done
