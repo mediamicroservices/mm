@@ -1196,6 +1196,9 @@ _get_audio_mapping(){
         _report -wt "Use of right-channel only was requested."
         _add_audio_filter -p "channelmap=1:mono"
         _add_audio_filter "aformat=channel_layouts=stereo"
+    elif [[ "${AUDIOMAP}" = "D" && "${FIRSTMONO}" = true ]] ; then
+        _report -wt "Downmix first two mono tracks"
+        _add_audio_filter "[0:a:0][0:a:1]amerge,pan=stereo|c0=0.5*c0+0.5*c1|c1=0.5*c0+0.5*c1"
     elif [[ "${MULTIMONO}" = true && "${1#*.}" != "mkv" ]] ; then
         _report -wt "The first two audio tracks of this non matroska file are both mono. Considering track 1 for left and track 2 for right."
         _add_audio_filter -p "[0:a:0][0:a:1]amerge=inputs=2"

@@ -394,6 +394,7 @@ AUDIODECISION.option = Default audio mapping [first audio track used for stereo 
 AUDIODECISION.option = Only use left of the first audio track [for 21st Century]
 AUDIODECISION.option = Only use right of the first audio track
 AUDIODECISION.option = Only use the first track
+AUDIODECISION.option = Downmix first two mono tracks
 AUDIODECISION.width = 400
 
 # cropping strategy
@@ -548,7 +549,7 @@ fi
     if [[ -z "${AUDIODECISION}" ]] ; then
         _report -q "Select an audio strategy?"
         PS3="Selection: "
-        select AUDIODECISION in "Default audio mapping [first audio track used for stereo output]" "Only use left of the first audio track [for 21st Century]" "Only use right of the first audio track" "Only use the first track"
+        select AUDIODECISION in "Default audio mapping [first audio track used for stereo output]" "Only use left of the first audio track [for 21st Century]" "Only use right of the first audio track" "Only use the first track" "Downmix the first two mono tracks"
         do
             break
         done

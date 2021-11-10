@@ -27,6 +27,7 @@ _usage(){
         echo "      audiographs (png)"
         echo "      showwaves (mp4)"
         echo "  -m (only use the first track)"
+        echo "  -D (downmix the first two mono tracks, ignored if the first two audio tracks are not mono)"
         echo "  -l (only use the left channel of the first audio track)"
         echo "  -r (only use the right channel of the first audio track)"
         echo "  -t (burn timecode overlay)"
@@ -55,12 +56,13 @@ _usage(){
 
 user_input=${@}
 OPTIND=1
-while getopts ":T:lrmv:d:o:e:E:F:scYp:twCS:I:O:nh" OPT ; do
+while getopts ":T:lrmDv:d:o:e:E:F:scYp:twCS:I:O:nh" OPT ; do
     case "${OPT}" in
         T) OUTPUT_TYPE="${OPTARG}";;
         l) AUDIOMAP="L";;
         r) AUDIOMAP="R";;
         m) AUDIOMAP="M";;
+		D) AUDIOMAP="D";;
         v) VOLADJUST="${OPTARG}";;
         d) DELIVERDIR="${OPTARG}" && (_check_deliverdir) ;;
         o) OUTPUTDIR_FORCED="${OPTARG}" && (_check_outputdir_forced) ;;
@@ -251,6 +253,8 @@ while [[ "${@}" != "" ]] ; do
             AUDIOMAP="R"
         elif [[ "${AUDIODECISION}" == "Only use the first track" ]] ; then
             AUDIOMAP="M"
+        elif [[ "${AUDIODECISION}" == "Downmix the first two mono tracks" ]] ; then
+            AUDIOMAP="D"
         fi
     fi
 
