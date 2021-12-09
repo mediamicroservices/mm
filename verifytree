@@ -58,10 +58,27 @@ while [ "${*}" != "" ] ; do
         _runtest -i "This package is missing the service directory!" xmlstarlet sel -t -v "/tree/directory/directory[@name='objects']/directory[@name='service']/@name" -n "${TEMPTREE}"
         #makes sure there is a youtube directory
         _runtest -i "This package is missing the youtube directory!" xmlstarlet sel -t -v "/tree/directory/directory[@name='objects']/directory[@name='access']/directory[@name='youtube_up']/@name" -n "${TEMPTREE}"
-        #makes sure there is a metadata directory
+        #makes sure there is an mp3 directory
+		_runtest -i "This package is missing the mp3 directory!" xmlstarlet sel -t -v "/tree/directory/directory[@name='objects']/directory[@name='access']/directory[@name='mp3']/@name" -n "${TEMPTREE}"
+        #makes sure there is a podcast directorry
+		_runtest -i "This package is missing the podcast directory!" xmlstarlet sel -t -v "/tree/directory/directory[@name='objects']/directory[@name='access']/directory[@name='podcast']/@name" -n "${TEMPTREE}"
+        #makes sure there is an image directorry
+		_runtest -i "This package is missing the images directory!" xmlstarlet sel -t -v "/tree/directory/directory[@name='objects']/directory[@name='access']/directory[@name='images']/@name" -n "${TEMPTREE}"
+		#makes sure there is a metadata directory
         _runtest -i "This package is missing a metadata directory!" xmlstarlet sel -t -v "/tree/directory/directory[@name='metadata']/@name" -n "${TEMPTREE}"
 
-        #begin search of metadata
+		#checks to see if there are files in directories
+		
+		#makes sure there is a service file
+		_runtest -i "This package is missing a service file!" xmlstarlet sel -t -v "/tree/directory/directory[@name='objects']/directory[@name='service']/file[count(@name)>0]/@name" -n "${TEMPTREE}"
+		#makes sure there is a youtube file
+		_runtest -i "This package is missing a youtube file!" xmlstarlet sel -t -v "/tree/directory/directory[@name='objects']/directory[@name='access']/directory[@name='youtube_up']/file[count(@name)>0]/@name" -n "${TEMPTREE}"
+		#makes sure there are image files
+		_runtest -i "This package is missing image files!" xmlstarlet sel -t -v "/tree/directory/directory[@name='objects']/directory[@name='access']/directory[@name='images']/file[count(@name)>0]/@name" -n "${TEMPTREE}"
+		#makes sure there is an mp3 file
+		_runtest -i "This package is missing an mp3 file!" xmlstarlet sel -t -v "/tree/directory/directory[@name='objects']/directory[@name='access']/directory[@name='mp3']/file[count(@name)>0]/@name" -n "${TEMPTREE}"
+		
+		#begin search of metadata
 
         #looks for any unexpected files in the upper level metadata directory -- files that aren't .md5, .log, .xml
         _runtest "There are files in the metadata directory that do not belong!" xmlstarlet sel -t -v "/tree/directory/directory[@name='metadata']/file[@name!='checksum.md5' and @name!='checksumchecks.log' and @name!='dfxml.xml' and @name!='mets.xml' and not(contains(@name,'checksum')) and not(contains(@name,'dfxml'))]/@name" -n "${TEMPTREE}"
