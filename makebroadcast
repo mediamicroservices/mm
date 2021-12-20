@@ -15,7 +15,24 @@ _usage(){
     _report -d "makebroadcast is an alias for the updated function makederiv (options below)."
     _report -d "You can create a derivative file suitable for broadcast with makederiv by typing: 'makederiv -T broadcast [options] [input]'."
     _report -d "Or continue to use makebroadcast using the valid options below."
+    _report -d " -c    This flag will cause makebroadcast to simply copy audiovisual data from the input to output. For instance"
+    _report -d "       makebroadcast -c -I 00:00:05.000 -O 00:00:10.000 file.mov"
+    _report -d "       will copy from teh 5th to 10th second of file.mov to a new file called file_copy.mov"
     "${SCRIPTDIR}/makederiv" -h
+    exit
 }
 [ "${#}" = 0 ] && _usage
-"${SCRIPTDIR}/makederiv" -T broadcast "${@}"
+
+while getopts ":ch" OPT ; do
+    case "${OPT}" in
+        c) CUT="Y" ;;
+        h) _usage ;;
+        :) echo "Option -${OPTARG} requires an argument" ; _writeerrorlog "makederiv" "The option selected required an argument and none was provided. The script had to exit." ; exit 1 ;;
+    esac
+done
+
+if [[ "${CUT}" == "Y" ]] ; then
+    "${SCRIPTDIR}/makederiv" -T broadcast_copy "${@}"
+else
+    "${SCRIPTDIR}/makederiv" -T broadcast "${@}"
+fi

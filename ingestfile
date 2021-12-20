@@ -190,9 +190,9 @@ _deliveraccessopts(){
 
 _makeaccesscopies(){
     _report -dt "STATUS Making access copies."
-    "${SCRIPTDIR}/makederiv" -T mp3 "${OUTDIR_INGESTFILE}/${MEDIAID}"
     "${SCRIPTDIR}/makederiv" -T waveform "${OUTDIR_INGESTFILE}/${MEDIAID}"
     if [ "${MODE}" != "audio" ] ; then
+        "${SCRIPTDIR}/makederiv" -T mp3 "${OUTDIR_INGESTFILE}/${MEDIAID}"
         "${SCRIPTDIR}/makeframes" "${FRAMESOPTS[@]}" "${OUTDIR_INGESTFILE}/${MEDIAID}"
         "${SCRIPTDIR}/makederiv" -T youtube "${MAKEDERIVOPTS[@]}" "${YOUTUBEOPTS[@]}" "${OUTDIR_INGESTFILE}/${MEDIAID}"
         if [ $(echo "${MEDIAID}" | grep -E "${REGEX4PODCAST}") ] ; then
@@ -202,8 +202,9 @@ _makeaccesscopies(){
             _report -dt "${MEDIAID} does NOT qualify for podcast creation, skipping."
             _writeerrorlog "makederiv" -T podcast "${MEDIAID} did not qualify for podcast creation and was skipped."
         fi
-        "${SCRIPTDIR}/makederiv" -T dvd "${OUTDIR_INGESTFILE}/${MEDIAID}"
     else
+        "${SCRIPTDIR}/makederiv" -T mp3 "${MP3OPTS[@]}" "${OUTDIR_INGESTFILE}/${MEDIAID}"
+        "${SCRIPTDIR}/makederiv" -T podcast "${MAKEDERIVOPTS[@]}" "${PODCASTOPTS[@]}" -e "$MAKEYOUTUBE_DELIVERY_EMAIL_TO" "${OUTDIR_INGESTFILE}/${MEDIAID}"
         "${SCRIPTDIR}/makederiv" -T showwaves "${MAKEDERIVOPTS[@]}" "${OUTDIR_INGESTFILE}/${MEDIAID}"
         "${SCRIPTDIR}/makederiv" -T audiographs "${OUTDIR_INGESTFILE}/${MEDIAID}"
     fi
@@ -231,7 +232,7 @@ _delivertoia(){
     if [ $(echo "${MEDIAID}" | grep -E "${REGEX4IA}") ] ; then
         if [ $(which uploadia) ] ; then
             _report -dt "Attempting to run uploadia and upload to Internet Archive"
-            uploadia "${OUTDIR_INGESTFILE}/${MEDIAID}/objects/access/youtube_up/${MEDIAID}.mp4" "${OUTDIR_INGESTFILE}/${MEDIAID}/objects/access/dvd/${MEDIAID}.iso"
+            uploadia "${OUTDIR_INGESTFILE}/${MEDIAID}/objects/access/youtube_up/${MEDIAID}.mp4"
         fi
     fi
 }
@@ -393,6 +394,7 @@ AUDIODECISION.option = Default audio mapping [first audio track used for stereo 
 AUDIODECISION.option = Only use left of the first audio track [for 21st Century]
 AUDIODECISION.option = Only use right of the first audio track
 AUDIODECISION.option = Only use the first track
+AUDIODECISION.option = Downmix first two mono tracks
 AUDIODECISION.width = 400
 
 # cropping strategy
@@ -469,6 +471,20 @@ PRIORITY.option = put in queue
 PRIORITY.option = start now
 PRIORITY.width = 300
 
+# start time
+INTIME.x = 340
+INTIME.y = 120
+INTIME.type = textfield
+INTIME.label = Enter a start time (HH:MM:SS.mmm)
+INTIME.width = 100
+
+# end time
+OUTTIME.x = 340
+OUTTIME.y = 60
+OUTTIME.type = textfield
+OUTTIME.label = Enter a end time (HH:MM:SS.mmm)
+OUTTIME.width = 100
+
 # Add a cancel button with default label
 cb.type=cancelbutton
 
@@ -533,7 +549,7 @@ fi
     if [[ -z "${AUDIODECISION}" ]] ; then
         _report -q "Select an audio strategy?"
         PS3="Selection: "
-        select AUDIODECISION in "Default audio mapping [first audio track used for stereo output]" "Only use left of the first audio track [for 21st Century]" "Only use right of the first audio track" "Only use the first track"
+        select AUDIODECISION in "Default audio mapping [first audio track used for stereo output]" "Only use left of the first audio track [for 21st Century]" "Only use right of the first audio track" "Only use the first track" "Downmix the first two mono tracks"
         do
             break
         done
@@ -692,6 +708,7 @@ elif [[ "${MODE}" == "local" ]] ; then
     _writeingestlog "datetime_end" "$(_get_iso8601)"
     _delivertoaipstorage
 elif [[ "${MODE}" == "audio" ]] ; then
+    _deliveraccessopts
     _makeaccesscopies
     _makemetadatapackage
     _writeingestlog "datetime_end" "$(_get_iso8601)"
