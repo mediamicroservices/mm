@@ -3,6 +3,7 @@
   <policy type="and" name="Neither FFV1 nor Matroska and not Wave?">
     <rule name="Is it not Matroska?" value="Format" tracktype="General" occurrence="*" operator="!=">Matroska</rule>
     <rule name="Is it not FFV1?" value="Format" tracktype="Video" occurrence="*" operator="!=">FFV1</rule>
+    <rule name="Is it not Wave?" value="Format" tracktype="General" occurrence="*" operator="!=">Wave</rule>
   </policy>
   <policy type="and" name="Video Digitzation Test: Meets Matroska/FFV1 Recommandations?">
     <description>Example of a digitization specification of analog SD video to FFV1 and Matroska.</description>
@@ -64,5 +65,34 @@
       </policy>
       <rule name="Is Interlaced?" value="ScanType" tracktype="Video" occurrence="1" operator="=">Interlaced</rule>
     </policy>
+  </policy>
+  <policy type="and" name="Audio Digitization Test: Meets Wave/PCM Reccomendations?" license="CC-BY-4.0+">
+    <description>This is the common norm for WAVE audiofiles.&#xD;
+  Any WAVs not matching this policy should be inspected and possibly normalized to conform to this.</description>
+    <policy type="or" name="Signed Integer or Float?">
+      <rule name="Is signed Integer?" value="Format_Settings_Sign" tracktype="Audio" occurrence="*" operator="=">Signed</rule>
+      <rule name="Is floating point?" value="Format_Profile" tracktype="Audio" occurrence="*" operator="=">Float</rule>
+    </policy>
+    <policy type="and" name="Audio: Proper resolution?">
+      <description>This policy defines audio-resolution values that are proper for WAV.</description>
+      <policy type="or" name="Valid samplerate?">
+        <description>This was not implemented as rule in order to avoid irregular sampling rates.</description>
+        <rule name="Audio is 32 kHz?" value="SamplingRate" tracktype="Audio" occurrence="*" operator="=">32000</rule>
+        <rule name="Audio is 44.1 kHz?" value="SamplingRate" tracktype="Audio" occurrence="*" operator="=">44100</rule>
+        <rule name="Audio is 48 kHz?" value="SamplingRate" tracktype="Audio" occurrence="*" operator="=">48000</rule>
+        <rule name="Audio is 88.2 kHz?" value="SamplingRate" tracktype="Audio" occurrence="*" operator="=">88200</rule>
+        <rule name="Audio is 96 kHz?" value="SamplingRate" tracktype="Audio" occurrence="*" operator="=">96000</rule>
+        <rule name="Audio is 192 kHz?" value="SamplingRate" tracktype="Audio" occurrence="*" operator="=">192000</rule>
+      </policy>
+      <policy type="or" name="Valid bit depth?">
+        <rule name="Audio is 16 bit?" value="BitDepth" tracktype="Audio" occurrence="*" operator="=">16</rule>
+        <rule name="Audio is 24 bit?" value="BitDepth" tracktype="Audio" occurrence="*" operator="=">24</rule>
+        <rule name="Audio is 32 bit?" value="BitDepth" tracktype="Audio" occurrence="*" operator="=">32</rule>
+        <rule name="Audio is 8 bit?" value="BitDepth" tracktype="Audio" occurrence="*" operator="=">8</rule>
+      </policy>
+    </policy>
+    <rule name="Container is RIFF (WAV)?" value="Format" tracktype="General" occurrence="*" operator="=">Wave</rule>
+    <rule name="Encoding is linear PCM?" value="Format" tracktype="Audio" occurrence="*" operator="=">PCM</rule>
+    <rule name="Audio is 'Little Endian'?" value="Format_Settings_Endianness" tracktype="Audio" occurrence="*" operator="=">Little</rule>
   </policy>
 </policy>
