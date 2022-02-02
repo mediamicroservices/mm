@@ -57,10 +57,14 @@ while [ "${*}" != "" ] ; do
              # Here are tests for audio packages specifically
             #looks in logs directory for any files that aren't .log or .txt
             _runtest "There are files in the logs directory that do not belong!" xmlstarlet sel -t -v "/tree/directory/directory[@name='metadata']/directory[@name='logs']/file[substring(@name,string-length(@name)-3)!='xlsx' and substring(@name,string-length(@name)-2)!='txt' and substring(@name,string-length(@name)-2)!='log']/@name" -n "${TEMPTREE}"
+            #looks for unexpected files in podcast directory
+            _runtest "There are unexpected files in the podcast directory!" xmlstarlet sel -t -v "/tree/directory/directory[@name='objects']/directory[@name='access']/directory[@name='podcast']/file[@name!='${MEDIAID}_podcast.m4a']/@name" -n  "${TEMPTREE}"
         else
             # Here are tests for video packages specifically
             #looks in logs directory for any files that aren't .log or .txt
             _runtest "There are files in the logs directory that do not belong!" xmlstarlet sel -t -v "/tree/directory/directory[@name='metadata']/directory[@name='logs']/file[substring(@name,string-length(@name)-2)!='log' and substring(@name,string-length(@name)-2)!='txt' and substring(@name,string-length(@name)-3)!='jpeg' and substring(@name,string-length(@name)-2)!='.gz' and substring(@name,string-length(@name)-2)!='md5']/@name" -n "${TEMPTREE}"
+            #looks for unexpected files in podcast directory
+            _runtest "There are unexpected files in the podcast directory!" xmlstarlet sel -t -v "/tree/directory/directory[@name='objects']/directory[@name='access']/directory[@name='podcast']/file[@name!='${MEDIAID}_podcast.mov']/@name" -n  "${TEMPTREE}"
         fi
         #searching for upper-level directories
 
@@ -132,8 +136,6 @@ while [ "${*}" != "" ] ; do
         _runtest "There are unexpected files in the mp3 directory!" xmlstarlet sel -t -v "/tree/directory/directory[@name='objects']/directory[@name='access']/directory[@name='mp3']/file[@name!='${MEDIAID}.mp3']/@name" -n  "${TEMPTREE}"
         #looks for unexpected directories in mp3 directory
         _runtest "There are unexpected directories in the mp3 directory!" xmlstarlet sel -t -v "/tree/directory/directory[@name='objects']/directory[@name='access']/directory[@name='mp3']/directory[count(@name)>0]/@name" -n "${TEMPTREE}"
-        #looks for unexpected files in podcast directory
-        _runtest "There are unexpected files in the podcast directory!" xmlstarlet sel -t -v "/tree/directory/directory[@name='objects']/directory[@name='access']/directory[@name='podcast']/file[@name!='${MEDIAID}_podcast.mov']/@name" -n  "${TEMPTREE}"
         #looks for unexpected directories in podcast directory
         _runtest "There are unexpected directories in the podcast directory!" xmlstarlet sel -t -v "/tree/directory/directory[@name='objects']/directory[@name='access']/directory[@name='podcast']/directory[count(@name)>0]/@name" -n "${TEMPTREE}"
         #looks for unexpected files in service directory
