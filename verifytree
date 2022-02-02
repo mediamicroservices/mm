@@ -57,6 +57,8 @@ while [ "${*}" != "" ] ; do
              # Here are tests for audio packages specifically
             #looks in logs directory for any files that aren't .log or .txt
             _runtest "There are files in the logs directory that do not belong!" xmlstarlet sel -t -v "/tree/directory/directory[@name='metadata']/directory[@name='logs']/file[substring(@name,string-length(@name)-3)!='xlsx' and substring(@name,string-length(@name)-2)!='txt' and substring(@name,string-length(@name)-2)!='log']/@name" -n "${TEMPTREE}"
+            #looks in fileMeta access for unexpected directories that are not dvd, mp3, podcast, or youtube_up
+            _runtest "There are directories in the fileMeta access directory that do not belong!" xmlstarlet sel -t -v "/tree/directory/directory[@name='metadata']/directory[@name='fileMeta']/directory[@name='objects']/directory[@name='access']/directory[@name!='mp3' and @name!='podcast' and @name!='showwaves']/@name" -n "${TEMPTREE}"
             #looks for unexpected files in podcast directory
             _runtest "There are unexpected files in the podcast directory!" xmlstarlet sel -t -v "/tree/directory/directory[@name='objects']/directory[@name='access']/directory[@name='podcast']/file[@name!='${MEDIAID}_podcast.m4a']/@name" -n  "${TEMPTREE}"
         else
@@ -67,6 +69,8 @@ while [ "${*}" != "" ] ; do
             _runtest -i "This package is missing the youtube or pdf_1 directory!" xmlstarlet sel -t -v "/tree/directory/directory[@name='objects']/directory[@name='access']/directory[@name='youtube_up' or @name='pdf_1']/@name" -n "${TEMPTREE}"
             #looks in logs directory for any files that aren't .log or .txt
             _runtest "There are files in the logs directory that do not belong!" xmlstarlet sel -t -v "/tree/directory/directory[@name='metadata']/directory[@name='logs']/file[substring(@name,string-length(@name)-2)!='log' and substring(@name,string-length(@name)-2)!='txt' and substring(@name,string-length(@name)-3)!='jpeg' and substring(@name,string-length(@name)-2)!='.gz' and substring(@name,string-length(@name)-2)!='md5']/@name" -n "${TEMPTREE}"
+            #looks in fileMeta access for unexpected directories that are not dvd, mp3, podcast, or youtube_up
+            _runtest "There are directories in the fileMeta access directory that do not belong!" xmlstarlet sel -t -v "/tree/directory/directory[@name='metadata']/directory[@name='fileMeta']/directory[@name='objects']/directory[@name='access']/directory[@name!='dvd' and @name!='mp3' and @name!='podcast' and @name!='youtube_up' and @name!='pdf_1' and @name!='txt_1']/@name" -n "${TEMPTREE}"
             #looks for unexpected files in podcast directory
             _runtest "There are unexpected files in the podcast directory!" xmlstarlet sel -t -v "/tree/directory/directory[@name='objects']/directory[@name='access']/directory[@name='podcast']/file[@name!='${MEDIAID}_podcast.mov']/@name" -n  "${TEMPTREE}"
         fi
@@ -99,8 +103,6 @@ while [ "${*}" != "" ] ; do
         _runtest "There are files in the fileMeta objects directory that do not belong!" xmlstarlet sel -t -v "/tree/directory/directory[@name='metadata']/directory[@name='fileMeta']/directory[@name='objects']/file[substring(@name,string-length(@name)-2)!='xml' and substring(@name,string-length(@name)-2)!='txt' and substring(@name,string-length(@name)-3)!='json']/@name" -n "${TEMPTREE}"
         #looks in fileMeta service subdirectory for that aren't .txt, .xml, .json
         _runtest "There are files in the fileMeta service directory that do not belong!" xmlstarlet sel -t -v "/tree/directory/directory[@name='metadata']/directory[@name='fileMeta']/directory[@name='objects']/directory[@name='service']/file[substring(@name,string-length(@name)-2)!='xml' and substring(@name,string-length(@name)-2)!='txt' and substring(@name,string-length(@name)-3)!='json']/@name" -n "${TEMPTREE}"
-        #looks in fileMeta access for unexpected directories that are not dvd, mp3, podcast, youtube_up, pdf_1, or txt_1
-        _runtest "There are directories in the fileMeta access directory that do not belong!" xmlstarlet sel -t -v "/tree/directory/directory[@name='metadata']/directory[@name='fileMeta']/directory[@name='objects']/directory[@name='access']/directory[@name!='dvd' and @name!='mp3' and @name!='podcast' and @name!='youtube_up' and @name!='pdf_1' and @name!='txt_1']/@name" -n "${TEMPTREE}"
         #looks in all directories under access for unexpected metadata files-- files that aren't .txt, .xml, .json
         _runtest "There are unexpected metadata files in fileMeta access subdirectories!" xmlstarlet sel -t -v "/tree/directory/directory[@name='metadata']/directory[@name='fileMeta']/directory[@name='objects']/directory[@name='access']/directory/file[substring(@name,string-length(@name)-2)!='xml' and substring(@name,string-length(@name)-2)!='txt' and substring(@name,string-length(@name)-3)!='json']/@name" -n "${TEMPTREE}"
 
