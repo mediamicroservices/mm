@@ -120,4 +120,10 @@ while [ "${*}" != "" ] ; do
             _assess_volume "${PACKAGE}/objects/access/podcast/${MEDIAID}.m4a"
         fi
     fi    
+    #verify the mp3 file
+    if [ -f "${PACKAGE}/objects/access/mp3/${MEDIAID}.mp3" ] ; then
+        if [[ "${ALL_TESTS}" == "Y"  ]] || [[ "${VOL_TEST}" == "Y"  ]] ; then
+                _assess_volume "${PACKAGE}/objects/access/mp3/${MEDIAID}.mp3"
+        fi        
+    fi        
 done
