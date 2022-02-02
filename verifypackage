@@ -77,7 +77,7 @@ while [ "${*}" != "" ] ; do
         else
             mediaconch --force -fs -p "${SCRIPTDIR}/object_policies.xml" "${OBJECT_FILE}"
         fi
-    done < <(find "${PACKAGE}/objects" -type f -size +0 "${OBJECTS_FIND_EXCLUSIONS[@]}")
+    done < <(find "${PACKAGE}/objects" -type f ! -name "*.tif" -size +0 "${OBJECTS_FIND_EXCLUSIONS[@]}")
     #verify the makebroadcast file
     if [ -f "${PACKAGE}/objects/service/${MEDIAID}.mov" ] ; then
         STATUS=$(mediaconch --force -fx -p "${SCRIPTDIR}/makebroadcast_policies.xml" "${PACKAGE}/objects/service/${MEDIAID}.mov" | xmlstarlet sel -N mc="https://mediaarea.net/mediaconch" -t -v mc:MediaConch/mc:media/mc:policy/@outcome -n)
