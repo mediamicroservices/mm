@@ -114,4 +114,10 @@ while [ "${*}" != "" ] ; do
             mediaconch --force -fs -p "${SCRIPTDIR}/makedvd_policies.xml" "${PACKAGE}/objects/access/dvd/${MEDIAID}.iso"
         fi
     fi
+    #verify the podcast file
+    if [ -f "${PACKAGE}/objects/access/podcast/${MEDIAID}.m4a" ] ; then
+        if [[ "${ALL_TESTS}" == "Y"  ]] || [[ "${VOL_TEST}" == "Y"  ]] ; then
+            _assess_volume "${PACKAGE}/objects/access/podcast/${MEDIAID}.m4a"
+        fi
+    fi    
 done
