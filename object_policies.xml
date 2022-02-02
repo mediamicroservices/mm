@@ -1,10 +1,10 @@
-<policy type="or" name="Apply policy if Matroska">
-  <description>Example of a digitization specification of analog SD video to FFV1 and Matroska. This policy contains a copy of another policy (Is this NTSC or PAL SD).</description>
-  <policy type="and" name="Not FFV1 and not Matroska?">
+<policy type="or" name="Apply policy if result of audio or video digitization">
+  <description>Example of a digitization specification of analog SD video to FFV1 and Matroska or audio to Wave. For video, this policy contains a copy of another policy (Is this NTSC or PAL SD).</description>
+  <policy type="and" name="Neither FFV1 nor Matroska and not Wave?">
     <rule name="Is it not Matroska?" value="Format" tracktype="General" occurrence="*" operator="!=">Matroska</rule>
     <rule name="Is it not FFV1?" value="Format" tracktype="Video" occurrence="*" operator="!=">FFV1</rule>
   </policy>
-  <policy type="and" name="Meets Matroska/FFV1 recommandations?">
+  <policy type="and" name="Video Digitzation Test: Meets Matroska/FFV1 Recommandations?">
     <description>Example of a digitization specification of analog SD video to FFV1 and Matroska.</description>
     <rule name="Is it Matroska?" value="Format" tracktype="General" occurrence="*" operator="=">Matroska</rule>
     <rule name="Matroska version 4 or greater?" value="Format_Version" tracktype="General" occurrence="*" operator="&gt;=">4</rule>
