@@ -67,13 +67,15 @@ while [ "${*}" != "" ] ; do
         elif [[ "${FIRSTOBJECTEXTENSION}" = "tif" ]] ; then
              _report -dt "running verifytree in text mode on ${PACKAGE}" #the name of the package being verified
               # Here are tests for text packages specifically
+            #makes sure there is a pdf_1 directory
+            _runtest -i "This package is missing the pdf_1 directory!" xmlstarlet sel -t -v "/tree/directory/directory[@name='objects']/directory[@name='access']/directory[@name='pdf_1']/@name" -n "${TEMPTREE}"
         else
              _report -dt "running verifytree in video mode on ${PACKAGE}" #the name of the package being verified
             # Here are tests for non-audio packages (video and text-based) specifically
-            #makes sure there is a service or pdf_1 directory
-            _runtest -i "This package is missing the service or pdf_1 directory!" xmlstarlet sel -t -v "/tree/directory/directory[@name='objects']/directory[@name='service']/@name" -v "/tree/directory/directory[@name='objects']/directory[@name='access']/directory[@name='pdf_1']/@name" -n "${TEMPTREE}"
             #makes sure there is a youtube or pdf_1 directory
             _runtest -i "This package is missing the youtube or pdf_1 directory!" xmlstarlet sel -t -v "/tree/directory/directory[@name='objects']/directory[@name='access']/directory[@name='youtube_up' or @name='pdf_1']/@name" -n "${TEMPTREE}"
+            #makes sure there is a service directory
+            _runtest -i "This package is missing the service directory!" xmlstarlet sel -t -v "/tree/directory/directory[@name='objects']/directory[@name='service']/@name" -n "${TEMPTREE}"
             #looks in logs directory for any files that aren't .log or .txt
             _runtest "There are files in the logs directory that do not belong!" xmlstarlet sel -t -v "/tree/directory/directory[@name='metadata']/directory[@name='logs']/file[substring(@name,string-length(@name)-2)!='log' and substring(@name,string-length(@name)-2)!='txt' and substring(@name,string-length(@name)-3)!='jpeg' and substring(@name,string-length(@name)-2)!='.gz' and substring(@name,string-length(@name)-2)!='md5']/@name" -n "${TEMPTREE}"
             #looks in fileMeta access for unexpected directories that are not dvd, mp3, podcast, or youtube_up
