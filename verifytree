@@ -71,6 +71,8 @@ while [ "${*}" != "" ] ; do
             _runtest -i "This package is missing the pdf_1 directory!" xmlstarlet sel -t -v "/tree/directory/directory[@name='objects']/directory[@name='access']/directory[@name='pdf_1']/@name" -n "${TEMPTREE}"
             #makes sure there is a pdf_1 directory
             _runtest -i "This package is missing the pdf_1 directory!" xmlstarlet sel -t -v "/tree/directory/directory[@name='objects']/directory[@name='access']/directory[@name='pdf_1']/@name" -n "${TEMPTREE}"
+            #looks in logs directory for any files that aren't .log or .txt
+            _runtest "There are files in the logs directory that do not belong!" xmlstarlet sel -t -v "/tree/directory/directory[@name='metadata']/directory[@name='logs']/file[substring(@name,string-length(@name)-2)!='log' and substring(@name,string-length(@name)-2)!='txt' and substring(@name,string-length(@name)-3)!='jpeg' and substring(@name,string-length(@name)-2)!='.gz' and substring(@name,string-length(@name)-2)!='md5']/@name" -n "${TEMPTREE}"
             #looks for any directories within access directory that are not pdf_1 or txt_1
             _runtest "There are unexpected directories in the access directory." xmlstarlet sel -t -v "/tree/directory/directory[@name='objects']/directory[@name='access']/directory[@name!='pdf_1' and @name!='txt_1']/@name" -n "${TEMPTREE}"
         else
