@@ -71,6 +71,8 @@ while [ "${*}" != "" ] ; do
             _runtest -i "This package is missing the pdf_1 directory!" xmlstarlet sel -t -v "/tree/directory/directory[@name='objects']/directory[@name='access']/directory[@name='pdf_1']/@name" -n "${TEMPTREE}"
             #makes sure there is a pdf_1 directory
             _runtest -i "This package is missing the pdf_1 directory!" xmlstarlet sel -t -v "/tree/directory/directory[@name='objects']/directory[@name='access']/directory[@name='pdf_1']/@name" -n "${TEMPTREE}"
+            #looks for any directories within access directory that are not pdf_1 or txt_1
+            _runtest "There are unexpected directories in the access directory." xmlstarlet sel -t -v "/tree/directory/directory[@name='objects']/directory[@name='access']/directory[@name!='pdf_1' and @name!='txt_1']/@name" -n "${TEMPTREE}"
         else
              _report -dt "running verifytree in video mode on ${PACKAGE}" #the name of the package being verified
             # Here are tests for non-audio packages (video and text-based) specifically
@@ -85,7 +87,7 @@ while [ "${*}" != "" ] ; do
             #looks for unexpected files in podcast directory
             _runtest "There are unexpected files in the podcast directory!" xmlstarlet sel -t -v "/tree/directory/directory[@name='objects']/directory[@name='access']/directory[@name='podcast']/file[@name!='${MEDIAID}_podcast.mov']/@name" -n  "${TEMPTREE}"
             #looks for any directories within access directory that are not dvd, images, mp3, podcast, or youtube_up
-            _runtest "There are unexpected directories in the access directory." xmlstarlet sel -t -v "/tree/directory/directory[@name='objects']/directory[@name='access']/directory[@name!='dvd' and @name!='images' and @name!='mp3' and @name!='podcast' and @name!='youtube_up' and @name!='pdf_1' and @name!='txt_1']/@name" -n "${TEMPTREE}"
+            _runtest "There are unexpected directories in the access directory." xmlstarlet sel -t -v "/tree/directory/directory[@name='objects']/directory[@name='access']/directory[@name!='dvd' and @name!='images' and @name!='mp3' and @name!='podcast' and @name!='youtube_up']/@name" -n "${TEMPTREE}"
         fi
         #searching for upper-level directories
 
