@@ -60,7 +60,11 @@ while [ "${*}" != "" ] ; do
             #looks for unexpected files in podcast directory
             _runtest "There are unexpected files in the podcast directory!" xmlstarlet sel -t -v "/tree/directory/directory[@name='objects']/directory[@name='access']/directory[@name='podcast']/file[@name!='${MEDIAID}_podcast.m4a']/@name" -n  "${TEMPTREE}"
         else
-            # Here are tests for video packages specifically
+            # Here are tests for non-audio packages (video and text-based) specifically
+            #makes sure there is a service or pdf_1 directory
+            _runtest -i "This package is missing the service or pdf_1 directory!" xmlstarlet sel -t -v "/tree/directory/directory[@name='objects']/directory[@name='service']/@name" -v "/tree/directory/directory[@name='objects']/directory[@name='access']/directory[@name='pdf_1']/@name" -n "${TEMPTREE}"
+            #makes sure there is a youtube or pdf_1 directory
+            _runtest -i "This package is missing the youtube or pdf_1 directory!" xmlstarlet sel -t -v "/tree/directory/directory[@name='objects']/directory[@name='access']/directory[@name='youtube_up' or @name='pdf_1']/@name" -n "${TEMPTREE}"
             #looks in logs directory for any files that aren't .log or .txt
             _runtest "There are files in the logs directory that do not belong!" xmlstarlet sel -t -v "/tree/directory/directory[@name='metadata']/directory[@name='logs']/file[substring(@name,string-length(@name)-2)!='log' and substring(@name,string-length(@name)-2)!='txt' and substring(@name,string-length(@name)-3)!='jpeg' and substring(@name,string-length(@name)-2)!='.gz' and substring(@name,string-length(@name)-2)!='md5']/@name" -n "${TEMPTREE}"
             #looks for unexpected files in podcast directory
@@ -72,10 +76,6 @@ while [ "${*}" != "" ] ; do
         _runtest "There are directories that are not objects, metadata, or tmp in this package." xmlstarlet sel -t -v "/tree/directory/directory[@name!='objects' and @name!='metadata' and @name!='tmp']/@name" -n "${TEMPTREE}"
         #makes sure there is an objects directory
         _runtest -i "This package is missing an objects directory!" xmlstarlet sel -t -v "/tree/directory/directory[@name='objects']/@name" -n "${TEMPTREE}"
-        #makes sure there is a service or pdf_1 directory
-        _runtest -i "This package is missing the service or pdf_1 directory!" xmlstarlet sel -t -v "/tree/directory/directory[@name='objects']/directory[@name='service']/@name" -v "/tree/directory/directory[@name='objects']/directory[@name='access']/directory[@name='pdf_1']/@name" -n "${TEMPTREE}"
-        #makes sure there is a youtube or pdf_1 directory
-        _runtest -i "This package is missing the youtube or pdf_1 directory!" xmlstarlet sel -t -v "/tree/directory/directory[@name='objects']/directory[@name='access']/directory[@name='youtube_up' or @name='pdf_1']/@name" -n "${TEMPTREE}"
         #makes sure there is a metadata directory
         _runtest -i "This package is missing a metadata directory!" xmlstarlet sel -t -v "/tree/directory/directory[@name='metadata']/@name" -n "${TEMPTREE}"
 
