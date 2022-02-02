@@ -56,6 +56,8 @@ while [ "${*}" != "" ] ; do
         if [[ "${OBJECTCOUNT}" = 1 && "${FIRSTOBJECTEXTENSION}" = "wav" ]] ; then
             _report -dt "running verifytree in audio mode on ${PACKAGE}" #the name of the package being verified
              # Here are tests for audio packages specifically
+             #makes sure there is a podcast directory
+             _runtest -i "This package is missing the podcast directory!" xmlstarlet sel -t -v "/tree/directory/directory[@name='objects']/directory[@name='access']/directory[@name='podcast']/@name" -n "${TEMPTREE}"
             #looks in logs directory for any files that aren't .log or .txt
             _runtest "There are files in the logs directory that do not belong!" xmlstarlet sel -t -v "/tree/directory/directory[@name='metadata']/directory[@name='logs']/file[substring(@name,string-length(@name)-3)!='xlsx' and substring(@name,string-length(@name)-2)!='txt' and substring(@name,string-length(@name)-2)!='log']/@name" -n "${TEMPTREE}"
             #looks in fileMeta access for unexpected directories that are not dvd, mp3, podcast, or youtube_up
