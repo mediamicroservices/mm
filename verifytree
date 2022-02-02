@@ -54,6 +54,7 @@ while [ "${*}" != "" ] ; do
         FIRSTOBJECTEXTENSION="$(xmlstarlet sel -t -m "/tree/directory/directory[@name='objects']/file[1]" -v "substring-after(@name, '.')" -n  "${TEMPTREE}")"
         #if there is one object file and it uses a .wav extension, then run audio-specific tests 
         if [[ "${OBJECTCOUNT}" = 1 && "${FIRSTOBJECTEXTENSION}" = "wav" ]] ; then
+            _report -dt "running verifytree in audio mode on ${PACKAGE}" #the name of the package being verified
              # Here are tests for audio packages specifically
             #looks in logs directory for any files that aren't .log or .txt
             _runtest "There are files in the logs directory that do not belong!" xmlstarlet sel -t -v "/tree/directory/directory[@name='metadata']/directory[@name='logs']/file[substring(@name,string-length(@name)-3)!='xlsx' and substring(@name,string-length(@name)-2)!='txt' and substring(@name,string-length(@name)-2)!='log']/@name" -n "${TEMPTREE}"
@@ -63,7 +64,9 @@ while [ "${*}" != "" ] ; do
             _runtest "There are unexpected files in the podcast directory!" xmlstarlet sel -t -v "/tree/directory/directory[@name='objects']/directory[@name='access']/directory[@name='podcast']/file[@name!='${MEDIAID}_podcast.m4a']/@name" -n  "${TEMPTREE}"
             #looks for any directories within access directory that are not dvd, images, mp3, podcast, or youtube_up
             _runtest "There are unexpected directories in the access directory." xmlstarlet sel -t -v "/tree/directory/directory[@name='objects']/directory[@name='access']/directory[@name!='mp3' and @name!='showwaves' and @name!='podcast']/@name" -n "${TEMPTREE}"
+             _report -dt "running verifytree in text mode on ${PACKAGE}" #the name of the package being verified
         else
+             _report -dt "running verifytree in video mode on ${PACKAGE}" #the name of the package being verified
             # Here are tests for non-audio packages (video and text-based) specifically
             #makes sure there is a service or pdf_1 directory
             _runtest -i "This package is missing the service or pdf_1 directory!" xmlstarlet sel -t -v "/tree/directory/directory[@name='objects']/directory[@name='service']/@name" -v "/tree/directory/directory[@name='objects']/directory[@name='access']/directory[@name='pdf_1']/@name" -n "${TEMPTREE}"
