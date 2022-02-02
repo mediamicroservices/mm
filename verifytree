@@ -52,6 +52,16 @@ while [ "${*}" != "" ] ; do
         OBJECTCOUNT="$(xmlstarlet sel -t -m "/tree/directory/directory[@name='objects']" -v "count(file)" -n "${TEMPTREE}")"
         #check extension of first object file
         FIRSTOBJECTEXTENSION="$(xmlstarlet sel -t -m "/tree/directory/directory[@name='objects']/file[1]" -v "substring-after(@name, '.')" -n  "${TEMPTREE}")"
+        #if there is one object file and it uses a .wav extension, then run audio-specific tests 
+        if [[ "${OBJECTCOUNT}" = 1 && "${FIRSTOBJECTEXTENSION}" = "wav" ]] ; then
+             # Here are tests for audio packages specifically
+            #looks in logs directory for any files that aren't .log or .txt
+            _runtest "There are files in the logs directory that do not belong!" xmlstarlet sel -t -v "/tree/directory/directory[@name='metadata']/directory[@name='logs']/file[substring(@name,string-length(@name)-3)!='xlsx' and substring(@name,string-length(@name)-2)!='txt' and substring(@name,string-length(@name)-2)!='log']/@name" -n "${TEMPTREE}"
+        else
+            # Here are tests for video packages specifically
+            #looks in logs directory for any files that aren't .log or .txt
+            _runtest "There are files in the logs directory that do not belong!" xmlstarlet sel -t -v "/tree/directory/directory[@name='metadata']/directory[@name='logs']/file[substring(@name,string-length(@name)-2)!='log' and substring(@name,string-length(@name)-2)!='txt' and substring(@name,string-length(@name)-3)!='jpeg' and substring(@name,string-length(@name)-2)!='.gz' and substring(@name,string-length(@name)-2)!='md5']/@name" -n "${TEMPTREE}"
+        fi
         #searching for upper-level directories
 
         #looks for any directories that are not objects or metadata or tmp (for digitized materials)
@@ -73,8 +83,6 @@ while [ "${*}" != "" ] ; do
         _runtest -i "This package needs a checksum.md5!" xmlstarlet sel -t -v "/tree/directory/directory[@name='metadata']/file[@name='checksum.md5']/@name" -n "${TEMPTREE}"
         #begins search of metadata subdirectories, looks for directories that do not belong
         _runtest "There are directories in the metadata directory that do not belong!" xmlstarlet sel -t -v "/tree/directory/directory[@name='metadata']/directory[@name!='depictions' and @name!='fileMeta' and @name!='frameMD5s' and @name!='logs' and @name!='fingerprints']/@name" -n "${TEMPTREE}"
-        #looks in logs directory for any files that aren't .log or .txt
-        _runtest "There are files in the logs directory that do not belong!" xmlstarlet sel -t -v "/tree/directory/directory[@name='metadata']/directory[@name='logs']/file[substring(@name,string-length(@name)-2)!='log' and substring(@name,string-length(@name)-2)!='txt' and substring(@name,string-length(@name)-3)!='jpeg' and substring(@name,string-length(@name)-2)!='.gz' and substring(@name,string-length(@name)-2)!='md5']/@name" -n "${TEMPTREE}"
         #makes sure there is a capture.log in the log directory
         _runtest -i "This package needs a capture.log!" xmlstarlet sel -t -v "/tree/directory/directory[@name='metadata']/directory[@name='logs']/file[@name='capture.log']/@name" -n "${TEMPTREE}"
         #makes sure there is a fileMeta directory
