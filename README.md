@@ -473,7 +473,7 @@ To view the specific ffmpeg encoding options for each file, view the sourcecode 
 * To run mmtest, type: `mmtest`.
 
 #### paperingest
-* This is an interactive script that asks you to enter your name and the media id. After you enter the info, the scanner will begin to scan your papers. To use this script, type the following: 'paperingest'.
+* This is an interactive script that is used to scan docuements. paperingest asks you to enter your name and the media id. After you enter the info, the scanner will begin to scan your papers. To use this script, type the following: 'paperingest'.
 
 #### phasecheck
 * this script performs a series of quality assurance tests on an audio visual file or set of files. 
