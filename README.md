@@ -253,11 +253,11 @@ Across all mediamicroservices, you can always receive the usage information by t
 To view the specific ffmpeg encoding options for each file, view the sourcecode of the microservice directly on GitHub or using a text editor on your computer.
 
 #### aipupgrade
-* this script takes an archival information package created by earlier versions of ingestfile and removes the submissionDocumentation directory, removes .DS_Store files, logs the package type to the capture log if there is not one listed, and creates new technical metadata files that overwrite previously created metadata files. To use aipupgrade, type aipupgrade and drag in all the packages you wish to modify. Note that you will be asked to choose a package type and that will be assigned to all of the packages, so only drag in packages of one type of content. Your command will look like this: aipupgrade [package1] [package2]. 
+* this script takes an archival information package created by earlier versions of ingestfile and removes the submissionDocumentation directory, removes .DS_Store files, logs the package type to the capture log if there is not one listed, and creates new technical metadata files that overwrite previously created metadata files. To use aipupgrade, type aipupgrade and drag in all the packages you wish to modify. Note that you will be asked to choose a package type and that will be assigned to all of the packages, so only drag in packages of one type of content. Your command will look like this: `aipupgrade [package1] [package2]`. 
 
 #### audiotest
 * this script takes an audio package and reports on data associated with the AIP. This is helpful for audio QC. 
-* you can run the script two ways. The first way is to type in the command line the following: 'audiotest [package1] [package2] [package3]'. The data will print directly in the command line. If you would like to create a csv instead, run the following command: 'audiotest [package1] [package2] [package3] >mycsv.csv'. This csv file will be created in the home folder, but you can direct it to anywhere on your computer.
+* you can run the script two ways. The first way is to type in the command line the following: `audiotest [package1] [package2] [package3]`. The data will print directly in the command line. If you would like to create a csv instead, run the following command: `audiotest [package1] [package2] [package3] >mycsv.csv`. This csv file will be created in the home folder, but you can direct it to anywhere on your computer.
 
 #### barcodeinterpret
 * barcodeinterpret works with xdcamingest to gather metadata about an XDCam disk by scanning the barcode on the disk case. This script is no longer in use and development is not supported.
@@ -321,7 +321,7 @@ To view the specific ffmpeg encoding options for each file, view the sourcecode 
 <img src="https://github.com/mediamicroservices/mm/blob/master/Resources/ingestfilegui.gif" width="500">
 
 #### makeaudiographs
-* This script creates a visual representation of an audio file. Another helpful tool for audio QC. To use this script, run the following command: 'makeaudiographs [file]'.
+* This script creates a visual representation of an audio file. Another helpful tool for audio QC. To use this script, run the following command: `makeaudiographs [file]`.
 
 #### makebroadcast
 * makebroadcast is an alias for the updated umbrella function [makederiv](https://github.com/mediamicroservices/mm#makederiv). It creates a file suitable for broadcast or editing from the input of a file or package. 
@@ -401,7 +401,7 @@ To view the specific ffmpeg encoding options for each file, view the sourcecode 
 * makeframes creates 10 still images from a video file or package input. Your command will look like: `makeframes [input]`. To deliver still images to a specific directory, use this command  `ingestfile -d [path/to/directory] [input]`.
 
 #### makegifsummery
-* makegifsummery will make a gif as a visual representation of a video. Your command will look like this: 'makegifsummery [ -d /path/to/diliver/to ] fileorpackage1 [fileorpackage2]'.
+* makegifsummery will make a gif as a visual representation of a video. Your command will look like this: `makegifsummery [ -d /path/to/diliver/to ] fileorpackage1 [fileorpackage2]`.
 
 #### makelossless
 * makelossless losslessly transcodes a video file or package input. Your command will look like this: `makelossless [input]`.
@@ -416,7 +416,7 @@ To view the specific ffmpeg encoding options for each file, view the sourcecode 
 
 #### makemkvchapters
 * makemkvchapters creates chapters in a Matroksa file. It is an interactive script that will ask you to enter the chapter title, start and end times, and any linked files. 
-* Here's how to use the script: enter this command: 'makemkvchapters [matroskafile]'. Press enter. Enter the name of the chapter. Enter the start and end time of the chapter. Make sure these times are in HH:MM:SS.mmm format. It will then ask  you to ‘Enter linked file if any or press enter to proceed.’ At this point, you can drag in a linked file or you can leave this blank if you are not linking a file. You can continue to add chapters to the Matroska file, or you can press q to quit. 
+* Here's how to use the script: enter this command: `makemkvchapters [matroskafile]`. Press enter. Enter the name of the chapter. Enter the start and end time of the chapter. Make sure these times are in HH:MM:SS.mmm format. It will then ask  you to ‘Enter linked file if any or press enter to proceed.’ At this point, you can drag in a linked file or you can leave this blank if you are not linking a file. You can continue to add chapters to the Matroska file, or you can press q to quit. 
 
 #### makemp3
 * makemp3 is an alias for the updated umbrella function [makederiv](https://github.com/mediamicroservices/mm#makederiv). It creates an mp3 file from a video file or package input.
@@ -425,7 +425,7 @@ To view the specific ffmpeg encoding options for each file, view the sourcecode 
 * Both makederiv and makemp3 may use the full list of options under [makederiv](https://github.com/mediamicroservices/mm#makederiv).
 
 #### makepdf
-* makepdf makes a pdf from an image series. Your command should look like this: 'makepdf [-o /path/to/deliver/to/] fileorpackage1 [fileorpackage2]'.
+* makepdf makes a pdf from an image series. Your command should look like this: `makepdf [-o /path/to/deliver/to/] fileorpackage1 [fileorpackage2]`.
  
 #### makepodcast
 * makepodcast is an alias for the updated umbrella function [makederiv](https://github.com/mediamicroservices/mm#makederiv). It creates a Quicktime file that is suitable for podcasting from a video file or package input.
@@ -447,7 +447,7 @@ To view the specific ffmpeg encoding options for each file, view the sourcecode 
 
 #### makewaveform
 *  makewaveform is an alias for the updated function makederiv (options below).
-* You can create a a visual representation of the primary audio of the input with makederiv by typing: 'makederiv -T waveform [options] [input]'.
+* You can create a a visual representation of the primary audio of the input with makederiv by typing: `makederiv -T waveform [options] [input]`.
 * Or continue to use makewaveform using this valid option: makederiv [-d /path/to/deliver/to/] fileorpackage1 [fileorpackage2].
 
 #### makeyoutube
@@ -473,7 +473,7 @@ To view the specific ffmpeg encoding options for each file, view the sourcecode 
 * To run mmtest, type: `mmtest`.
 
 #### paperingest
-* This is an interactive script that is used to scan docuements. paperingest asks you to enter your name and the media id. After you enter the info, the scanner will begin to scan your papers. To use this script, type the following: 'paperingest'.
+* This is an interactive script that is used to scan docuements. paperingest asks you to enter your name and the media id. After you enter the info, the scanner will begin to scan your papers. To use this script, type the following: `paperingest`.
 
 #### phasecheck
 * this script performs a series of quality assurance tests on an audio visual file or set of files to make sure that the file is in phase. 
@@ -494,7 +494,7 @@ To view the specific ffmpeg encoding options for each file, view the sourcecode 
 * Your command will look like this: `restructureForCompliance [file or directory input] [file or directory input 2]`
 
 #### rewrapmf 
-* This application takes an input video file and produces an mxf file. Timecode will be set to 00:00:00;00. Your command should look like this: 'rewrapmxf file1 [file2]'.
+* This application takes an input video file and produces an mxf file. Timecode will be set to 00:00:00;00. Your command should look like this: `rewrapmxf file1 [file2]`.
 
 #### searchfingerprint
 * Generates fingerprints (perceptual hashes) from whole or specified portion of an input video file and compares them against fingerprints stored in the mm database. Outputs any detected matches in 500 frame segments both in the terminal and in an optional preview window. Preview window will attempt to locate the portions of input video for which matches were found.
