@@ -296,7 +296,7 @@ To view the specific ffmpeg encoding options for each file, view the sourcecode 
 * fix\_rewrap takes an input video file or files and produces outputs through re-multiplexing all tracks of the input into a new container. The suffix "\_rewrap" is added to the file name to distinguish it from the original. Your command will look like this: `fix_rewrap [file1] [file2]`.
 
 #### fix_timecode
-* fix\_timecode takes an input video file(s) and produces output that sets the timecode to 00:00:00;00. Your command will look like this: 'fix_timecode [file1] [file2]'.
+* fix\_timecode takes an input video file(s) and produces output that sets the timecode to 00:00:00;00. Your command will look like this: 'fix_timecode [file1]'.
 
 #### fix_volume
 * fix_volume uses an input video file to produce an output video file where the audio is adjusted to meet an integrated loudness of -23dB. If the integrated loudness of the input is already within 1dB of the target then no change will occur. The output file will be in the same directory as the input file, and the suffix "\_voladj" is added to the file name to distinguish it from the original. Your command will look like this: `fix_volume [file1] [file2]`.
