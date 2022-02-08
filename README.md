@@ -445,6 +445,11 @@ To view the specific ffmpeg encoding options for each file, view the sourcecode 
 * You can also create an identical derivative file by typing: `makeresourcespace [input]`, which will route your command through makederiv.
 * Both makederiv and makeresourcespace may use the full list of options under [makederiv](https://github.com/mediamicroservices/mm#makederiv).
 
+#### makewaveform
+*  makewaveform is an alias for the updated function makederiv (options below).
+* You can create a a visual representation of the primary audio of the input with makederiv by typing: 'makederiv -T waveform [options] [input]'.
+* Or continue to use makewaveform using this valid option: makederiv [-d /path/to/deliver/to/] fileorpackage1 [fileorpackage2].
+
 #### makeyoutube
 * makeyoutube is an alias for the updated umbrella function [makederiv](https://github.com/mediamicroservices/mm#makederiv). It creates a high quality h264 file from a video file or package input.
 * You can create a file for youtube with makederiv by typing: `makederiv -T youtube [input]`.
