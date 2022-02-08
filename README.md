@@ -457,7 +457,7 @@ To view the specific ffmpeg encoding options for each file, view the sourcecode 
 * Both makederiv and makeyoutube may use the full list of options under [makederiv](https://github.com/mediamicroservices/mm#makederiv).
 
 #### migratefiles
-* migratefiles is a script that uses rsync to move files, and creates a log documenting the checksum, time, and file paths of files migrated. migratefiles expects a directory input. To use migrate files, type the command `migratefiles -o [destination] [input]`
+* migratefiles is a script that uses rsync to move files, and creates a log documenting the checksum, time, and file paths of files migrated. migratefiles expects a directory input. To use migrate files, type the command `migratefiles -o [destination] [input]`.
 
 #### mmtest
 * mmtest is a regression test that will test whether tinkering with the derivative creation process changes the character of the derivative files. mmtest generates simple test files, creates derivatives of these files with makederiv, and checks the checksums of the generated derivatives against a set of expected checksums. Once the test completes, it will report which checksums did not match as expected to help debug.
@@ -479,13 +479,13 @@ To view the specific ffmpeg encoding options for each file, view the sourcecode 
 * this script performs a series of quality assurance tests on an audio visual file or set of files to make sure that the file is in phase. 
 
 #### qatesting
-* QA testing performs a series on tests on one or multiple video inputs and outputs the results into the terminal. Your command will look like this: `qatesting [input] [input1] [input2]`
+* QA testing performs a series on tests on one or multiple video inputs and outputs the results into the terminal. Your command will look like this: `qatesting [input] [input1] [input2]`.
 
 #### quickcompare
-* quickcompare takes two files and compares the checksums against one another, and outputs the results into the terminal. Your command will look like this: `quickcompare [input1] [input2]`
+* quickcompare takes two files and compares the checksums against one another, and outputs the results into the terminal. Your command will look like this: `quickcompare [input1] [input2]`.
 
 #### removeDSStore
-* removeDSStore is a script to remove hidden .DS\_Store files from a package input. Your command will look like this: `removeDSStore [input]`
+* removeDSStore is a script to remove hidden .DS\_Store files from a package input. Your command will look like this: `removeDSStore [input]`.
 
 #### restructureForCompliance
 * restructureForCompliance is a script that takes one or multiple directory or file input and creates an archival information directory structure.
