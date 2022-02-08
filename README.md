@@ -275,7 +275,7 @@ To view the specific ffmpeg encoding options for each file, view the sourcecode 
 * Finally, use -v as an option if you want to fully verify checksums. If no checksums exist, the script will create the initial ones. Verification will version existing checksums by adding the date they were created to the filename and create new ones, and log the difference to a checksumprocess log, which will be placed in the metadata directory of the package. To use -v, type  `checksumpackage -v [input]`
 
 #### createmmdb
-* createmmdb configures a database, users and login profiles. Your command will look like this 'Usage: -c (create database) -u (create user) -h (help)'
+* createmmdb configures a database, users and login profiles. Your command will look like this 'Usage: -c (create database) -u (create user) -h (help)'.
 
 #### createpremisdb
 * createpremisdb will create a database for the logging of microservices information as well as facilitate user creation.  For more information on use, see the [database configuration](#configuring-premisfixity-logging-database) section of this readme.
@@ -296,7 +296,7 @@ To view the specific ffmpeg encoding options for each file, view the sourcecode 
 * fix\_rewrap takes an input video file or files and produces outputs through re-multiplexing all tracks of the input into a new container. The suffix "\_rewrap" is added to the file name to distinguish it from the original. Your command will look like this: `fix_rewrap [file1] [file2]`
 
 #### fix_timecode
-* fix\_timecode takes an input video file(s) and produces output that sets the timecode to 00:00:00;00. Your command will look like this: 'fix_timecode [file1] [file2]'
+* fix\_timecode takes an input video file(s) and produces output that sets the timecode to 00:00:00;00. Your command will look like this: 'fix_timecode [file1] [file2]'.
 
 #### fix_volume
 * fix_volume uses an input video file to produce an output video file where the audio is adjusted to meet an integrated loudness of -23dB. If the integrated loudness of the input is already within 1dB of the target then no change will occur. The output file will be in the same directory as the input file, and the suffix "\_voladj" is added to the file name to distinguish it from the original. Your command will look like this: `fix_volume [file1] [file2]`
@@ -321,7 +321,7 @@ To view the specific ffmpeg encoding options for each file, view the sourcecode 
 <img src="https://github.com/mediamicroservices/mm/blob/master/Resources/ingestfilegui.gif" width="500">
 
 #### makeaudiographs
-* This script creates a visual representation of an audio file. Another helpful tool for audio QC. To use this script, run the following command: 'makeaudiographs [file]'
+* This script creates a visual representation of an audio file. Another helpful tool for audio QC. To use this script, run the following command: 'makeaudiographs [file]'.
 
 #### makebroadcast
 * makebroadcast is an alias for the updated umbrella function [makederiv](https://github.com/mediamicroservices/mm#makederiv). It creates a file suitable for broadcast or editing from the input of a file or package. 
@@ -401,7 +401,7 @@ To view the specific ffmpeg encoding options for each file, view the sourcecode 
 * makeframes creates 10 still images from a video file or package input. Your command will look like: `makeframes [input]`. To deliver still images to a specific directory, use this command  `ingestfile -d [path/to/directory] [input]`.
 
 #### makegifsummery
-* makegifsummery will make a gif as a visual representation of a video. Your command with look like this: 'makegifsummery [ -d /path/to/diliver/to ] fileorpackage1 [fileorpackage2]'
+* makegifsummery will make a gif as a visual representation of a video. Your command with look like this: 'makegifsummery [ -d /path/to/diliver/to ] fileorpackage1 [fileorpackage2]'.
 
 #### makelossless
 * makelossless losslessly transcodes a video file or package input. Your command will look like this: `makelossless [input]`.
