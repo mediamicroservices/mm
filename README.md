@@ -255,6 +255,10 @@ To view the specific ffmpeg encoding options for each file, view the sourcecode 
 #### aipupgrade
 * this script takes an archival information package created by earlier versions of ingestfile and removes the submissionDocumentation directory, removes .DS_Store files, logs the package type to the capture log if there is not one listed, and creates new technical metadata files that overwrite previously created metadata files. To use aipupgrade, type aipupgrade and drag in all the packages you wish to modify. Note that you will be asked to choose a package type and that will be assigned to all of the packages, so only drag in packages of one type of content. Your command will look like this: aipupgrade [package1] [package2]
 
+#### audiotest
+* this script takes an audio package and reports on data associated with the AIP. This is helpful for audio QC. 
+* you can run the script two ways. the first way is to type in the command line the following: 'audiotest [package1] [package2] [package3]'. the data will print directly in the command line. if you would like to create a csv instead, run the following command: 'audiotest [package1] [package2] [package3] >mycsv.csv'. this csv file will be created in the home folder, but you can direct it to anywhere on your computer.
+
 #### barcodeinterpret
 * barcodeinterpret works with xdcamingest to gather metadata about an XDCam disk by scanning the barcode on the disk case. this script is no longer in use and development is not supported.
 
