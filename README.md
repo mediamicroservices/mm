@@ -503,6 +503,9 @@ To view the specific ffmpeg encoding options for each file, view the sourcecode 
 #### uploadomneon
 * uploadomneon uploads a file or group of files, in sequential order, to a server using rsync. Although the script is called uploadomneon because that is the name of the server at CUNY Television, it can be set to any server and directory path in mmconfig. To run uploadomneon, the server IP address, path, and tmpdir variables must be set. Your command will look like this: `uploadomneon [input1] [input2]`
 
+#### verifypackage
+* verifypackage checks the validity of files created with makebraodcast, makedvd, and makeyoutube. Your command will look like this: 'verifypackage [package]'.
+
 #### verifytree
 * verifytree uses a series of xpath statements and the tree.xml document created by maketree to validate the contents of an Archival Information Package. verifytree outputs mismatches and unexpected items found in AIPs into the terminal window. It must be used in conjunction with maketree. Your command will look like: `verifytree [package]`.
 
