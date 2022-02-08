@@ -424,6 +424,9 @@ To view the specific ffmpeg encoding options for each file, view the sourcecode 
 * You can also create an identical derivative file by typing: `makemp3 [input]`, which will route your command through makederiv.
 * Both makederiv and makemp3 may use the full list of options under [makederiv](https://github.com/mediamicroservices/mm#makederiv).
 
+#### makepdf
+* makepdf makes a pdf from an image series. Your command should look like this: 'makepdf [-o /path/to/deliver/to/] fileorpackage1 [fileorpackage2]'.
+ 
 #### makepodcast
 * makepodcast is an alias for the updated umbrella function [makederiv](https://github.com/mediamicroservices/mm#makederiv). It creates a Quicktime file that is suitable for podcasting from a video file or package input.
 * You can create a file for podcasting with makederiv by typing: `makederiv -T podcast [input]`.
