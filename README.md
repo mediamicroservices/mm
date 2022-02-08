@@ -257,10 +257,10 @@ To view the specific ffmpeg encoding options for each file, view the sourcecode 
 
 #### audiotest
 * this script takes an audio package and reports on data associated with the AIP. This is helpful for audio QC. 
-* you can run the script two ways. the first way is to type in the command line the following: 'audiotest [package1] [package2] [package3]'. the data will print directly in the command line. if you would like to create a csv instead, run the following command: 'audiotest [package1] [package2] [package3] >mycsv.csv'. this csv file will be created in the home folder, but you can direct it to anywhere on your computer.
+* you can run the script two ways. The first way is to type in the command line the following: 'audiotest [package1] [package2] [package3]'. The data will print directly in the command line. If you would like to create a csv instead, run the following command: 'audiotest [package1] [package2] [package3] >mycsv.csv'. This csv file will be created in the home folder, but you can direct it to anywhere on your computer.
 
 #### barcodeinterpret
-* barcodeinterpret works with xdcamingest to gather metadata about an XDCam disk by scanning the barcode on the disk case. this script is no longer in use and development is not supported.
+* barcodeinterpret works with xdcamingest to gather metadata about an XDCam disk by scanning the barcode on the disk case. This script is no longer in use and development is not supported.
 
 #### blackatends
 * blackatends reports on the number of black frames at the beginning and end of a video file. The report is output into the terminal window. Your command will look like this: `blackatends [file1] [file2]`.
@@ -302,7 +302,7 @@ To view the specific ffmpeg encoding options for each file, view the sourcecode 
 * fix_volume uses an input video file to produce an output video file where the audio is adjusted to meet an integrated loudness of -23dB. If the integrated loudness of the input is already within 1dB of the target then no change will occur. The output file will be in the same directory as the input file, and the suffix "\_voladj" is added to the file name to distinguish it from the original. Your command will look like this: `fix_volume [file1] [file2]`.
 
 #### ingestfile
-* ingestfile is a combination of multiple microservices for the purposes of creating an Archival Information Package (AIP) from an input of a video file. Included in the AIP are the original file, access copies, and corresponding technical metadata. Running ingestfile also sets a unique identifier for a video file, and bases the directory and metadata naming on this unique identifier. to run ingestfile, you must have the following variables set: OUTDIR\_INGESTFILE, AIP_STORAGE, PODCASTDELIVER, YOUTUBEDELIVER. the default use of ingestfile runs the following processes on a file:
+* ingestfile is a combination of multiple microservices for the purposes of creating an Archival Information Package (AIP) from an input of a video file. Included in the AIP are the original file, access copies, and corresponding technical metadata. Running ingestfile also sets a unique identifier for a video file, and bases the directory and metadata naming on this unique identifier. To run ingestfile, you must have the following variables set: OUTDIR\_INGESTFILE, AIP_STORAGE, PODCASTDELIVER, YOUTUBEDELIVER. the default use of ingestfile runs the following processes on a file:
     * queries the user, via terminal prompt or command line, about audio mapping settings, cropping of the video, formula of the video, whether a slate should be created for the file, and whether the original file should be removed after successful ingest. ingestfile also has a queue function, which allows for the user to set up many files at a time.
 	* carries out several tests and will alert the user to discrepancies. You may select a formula that will perform an interlacement test on the file (this should only be done if you have a concern that the file may have interlacement issues). ingestfile will also test for: the frame count (if there is a discrepancy between the reported and actual framecount, it will prompt the operator to quit or proceed); black frames at the beginning and end of the file (requests in and out times if needed); and out-of-phase audio (if there is out-of-phase audio, it will prompt the operator to quit or proceed).
     * sets up the structure of the AIP, writes out the input from the user queries to a log file, and uses rsync to move the original file into the objects directory.
@@ -415,8 +415,8 @@ To view the specific ffmpeg encoding options for each file, view the sourcecode 
 * makemets creates a mets.xml file that documents the structure of an archival information package created by ingestfile. The mets file also includes information from the dfxml file created in the makemetadata process.
 
 #### makemkvchapters
-* Here's how to use the script: enter this command: 'makemkvchapters [matroskafile]'. press enter. Enter the name of the chapter. Enter the start and end time of the chapter. Make sure these times are in HH:MM:SS.mmm format. It will then ask  you to ‘Enter linked file if any or press enter to proceed.’ At this point, you can drag in a linked file or you can leave this blank if you are not linking a file. You can continue to add chapters to the Matroska file, or you can press q to quit. 
 * makemkvchapters creates chapters in a Matroksa file. It is an interactive script that will ask you to enter the chapter title, start and end times, and any linked files. 
+* Here's how to use the script: enter this command: 'makemkvchapters [matroskafile]'. Press enter. Enter the name of the chapter. Enter the start and end time of the chapter. Make sure these times are in HH:MM:SS.mmm format. It will then ask  you to ‘Enter linked file if any or press enter to proceed.’ At this point, you can drag in a linked file or you can leave this blank if you are not linking a file. You can continue to add chapters to the Matroska file, or you can press q to quit. 
 
 #### makemp3
 * makemp3 is an alias for the updated umbrella function [makederiv](https://github.com/mediamicroservices/mm#makederiv). It creates an mp3 file from a video file or package input.
