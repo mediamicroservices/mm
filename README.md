@@ -253,22 +253,29 @@ Across all mediamicroservices, you can always receive the usage information by t
 To view the specific ffmpeg encoding options for each file, view the sourcecode of the microservice directly on GitHub or using a text editor on your computer.
 
 #### aipupgrade
-* this script takes an archival information package created by earlier versions of ingestfile and removes the submissionDocumentation directory, removes .DS_Store files, logs the package type to the capture log if there is not one listed, and creates new technical metadata files that overwrite previously created metadata files. To use aipupgrade, type aipupgrade and drag in all the packages you wish to modify. Note that you will be asked to choose a package type and that will be assigned to all of the packages, so only drag in packages of one type of content. Your command will look like this: aipupgrade [package1] [package2]
+* this script takes an archival information package created by earlier versions of ingestfile and removes the submissionDocumentation directory, removes .DS_Store files, logs the package type to the capture log if there is not one listed, and creates new technical metadata files that overwrite previously created metadata files. To use aipupgrade, type aipupgrade and drag in all the packages you wish to modify. Note that you will be asked to choose a package type and that will be assigned to all of the packages, so only drag in packages of one type of content. Your command will look like this: `aipupgrade [package1] [package2]`. 
+
+#### audiotest
+* this script takes an audio package and reports on data associated with the AIP. This is helpful for audio QC. 
+* you can run the script two ways. The first way is to type in the command line the following: `audiotest [package1] [package2] [package3]`. The data will print directly in the command line. If you would like to create a csv instead, run the following command: `audiotest [package1] [package2] [package3] >mycsv.csv`. This csv file will be created in the home folder, but you can direct it to anywhere on your computer.
 
 #### barcodeinterpret
-* barcodeinterpret works with xdcamingest to gather metadata about an XDCam disk by scanning the barcode on the disk case. this script is no longer in use and development is not supported.
+* barcodeinterpret works with xdcamingest to gather metadata about an XDCam disk by scanning the barcode on the disk case. This script is no longer in use and development is not supported.
 
 #### blackatends
-* blackatends reports on the number of black frames at the beginning and end of a video file. The report is output into the terminal window. Your command will look like this: `blackatends [file1] [file2]`
+* blackatends reports on the number of black frames at the beginning and end of a video file. The report is output into the terminal window. Your command will look like this: `blackatends [file1] [file2]`.
 
 #### checksum2filemaker
-* checksum2filemaker delivers checksums from a package input into a predefined table in a FileMaker Database called checksums, using the dfxml format. this script requires the user to set up a FileMaker database and server URL, which are both variables stored in the configuration file. To use this script, type checksum2filemaker in your command line, followed by the package, like this:  `checksum2filemaker [package]`
+* checksum2filemaker delivers checksums from a package input into a predefined table in a FileMaker Database called checksums, using the dfxml format. This script requires the user to set up a FileMaker database and server URL, which are both variables stored in the configuration file. To use this script, type checksum2filemaker in your command line, followed by the package, like this:  `checksum2filemaker [package]`.
 
 #### checksumpackage
 * checksumpackage creates, and verifies checksums from an input of a directory or archival informaion package. To use, type checksumpackage into the command line, followed by the input:  `checksumpackage [input]`.
 * If you only want to check that filenames and filesizes are the same as in existing files, use option -c. Type  `checksumpackage -c [input]` and if no existing checksum file exists, one will be created.
 * Another option is to use -c in conjunction with -u, which will create new checksums and version the previous ones if the check is unsuccessful, meaning your checksums have changed. Type  `checksumpackage -cu [input]` for this option.
-* Finally, use -v as an option if you want to fully verify checksums. If no checksums exist, the script will create the initial ones. Verification will version existing checksums by adding the date they were created to the filename and create new ones, and log the difference to a checksumprocess log, which will be placed in the metadata directory of the package. To use -v, type  `checksumpackage -v [input]`
+* Finally, use -v as an option if you want to fully verify checksums. If no checksums exist, the script will create the initial ones. Verification will version existing checksums by adding the date they were created to the filename and create new ones, and log the difference to a checksumprocess log, which will be placed in the metadata directory of the package. To use -v, type  `checksumpackage -v [input]`.
+
+#### createmmdb
+* createmmdb configures a database, users and login profiles. Your command will look like this 'Usage: -c (create database) -u (create user) -h (help)'.
 
 #### createpremisdb
 * createpremisdb will create a database for the logging of microservices information as well as facilitate user creation.  For more information on use, see the [database configuration](#configuring-premisfixity-logging-database) section of this readme.
@@ -283,16 +290,19 @@ To view the specific ffmpeg encoding options for each file, view the sourcecode 
 * finishpackage is a combination of the microservices makelossless, makebroadcast, makeyoutube, makemetadata, and checksumpackage. The purpose is to losslessly transcode, create access copies, and create metadata and directory structure information for a file or package input. To use finishpackage, type finishpackage and drag your input into the command line: `finishpackage [input]`. finish package is typically used in conjunction with restructureForCompliance.
 
 #### fix_left2stereo
-* fix\_left2stereo takes an input video file or files and produces outputs that map the left channel of the input to a stereo mix in the output. The suffix "\_left2stereo" is added to the filename to distinguish it from the original. Your command will look like this: `fix_left2stereo [file1] [file2]`
+* fix\_left2stereo takes an input video file or files and produces outputs that map the left channel of the input to a stereo mix in the output. The suffix "\_left2stereo" is added to the filename to distinguish it from the original. Your command will look like this: `fix_left2stereo [file1] [file2]`.
 
 #### fix_rewrap
-* fix\_rewrap takes an input video file or files and produces outputs through re-multiplexing all tracks of the input into a new container. The suffix "\_rewrap" is added to the file name to distinguish it from the original. Your command will look like this: `fix_rewrap [file1] [file2]`
+* fix\_rewrap takes an input video file or files and produces outputs through re-multiplexing all tracks of the input into a new container. The suffix "\_rewrap" is added to the file name to distinguish it from the original. Your command will look like this: `fix_rewrap [file1] [file2]`.
+
+#### fix_timecode
+* fix\_timecode takes an input video file(s) and produces output that sets the timecode to 00:00:00;00. Your command will look like this: 'fix_timecode [file1]'.
 
 #### fix_volume
-* fix_volume uses an input video file to produce an output video file where the audio is adjusted to meet an integrated loudness of -23dB. If the integrated loudness of the input is already within 1dB of the target then no change will occur. The output file will be in the same directory as the input file, and the suffix "\_voladj" is added to the file name to distinguish it from the original. Your command will look like this: `fix_volume [file1] [file2]`
+* fix_volume uses an input video file to produce an output video file where the audio is adjusted to meet an integrated loudness of -23dB. If the integrated loudness of the input is already within 1dB of the target then no change will occur. The output file will be in the same directory as the input file, and the suffix "\_voladj" is added to the file name to distinguish it from the original. Your command will look like this: `fix_volume [file1] [file2]`.
 
 #### ingestfile
-* ingestfile is a combination of multiple microservices for the purposes of creating an Archival Information Package (AIP) from an input of a video file. Included in the AIP are the original file, access copies, and corresponding technical metadata. Running ingestfile also sets a unique identifier for a video file, and bases the directory and metadata naming on this unique identifier. to run ingestfile, you must have the following variables set: OUTDIR\_INGESTFILE, AIP_STORAGE, PODCASTDELIVER, YOUTUBEDELIVER. the default use of ingestfile runs the following processes on a file:
+* ingestfile is a combination of multiple microservices for the purposes of creating an Archival Information Package (AIP) from an input of a video file. Included in the AIP are the original file, access copies, and corresponding technical metadata. Running ingestfile also sets a unique identifier for a video file, and bases the directory and metadata naming on this unique identifier. To run ingestfile, you must have the following variables set: OUTDIR\_INGESTFILE, AIP_STORAGE, PODCASTDELIVER, YOUTUBEDELIVER. the default use of ingestfile runs the following processes on a file:
     * queries the user, via terminal prompt or command line, about audio mapping settings, cropping of the video, formula of the video, whether a slate should be created for the file, and whether the original file should be removed after successful ingest. ingestfile also has a queue function, which allows for the user to set up many files at a time.
 	* carries out several tests and will alert the user to discrepancies. You may select a formula that will perform an interlacement test on the file (this should only be done if you have a concern that the file may have interlacement issues). ingestfile will also test for: the frame count (if there is a discrepancy between the reported and actual framecount, it will prompt the operator to quit or proceed); black frames at the beginning and end of the file (requests in and out times if needed); and out-of-phase audio (if there is out-of-phase audio, it will prompt the operator to quit or proceed).
     * sets up the structure of the AIP, writes out the input from the user queries to a log file, and uses rsync to move the original file into the objects directory.
@@ -309,6 +319,9 @@ To view the specific ffmpeg encoding options for each file, view the sourcecode 
 * here's two gifs of ingestfile
 <img src="https://github.com/mediamicroservices/mm/blob/master/Resources/ingestfile.gif" width="500">
 <img src="https://github.com/mediamicroservices/mm/blob/master/Resources/ingestfilegui.gif" width="500">
+
+#### makeaudiographs
+* This script creates a visual representation of an audio file. Another helpful tool for audio QC. To use this script, run the following command: `makeaudiographs [file]`.
 
 #### makebroadcast
 * makebroadcast is an alias for the updated umbrella function [makederiv](https://github.com/mediamicroservices/mm#makederiv). It creates a file suitable for broadcast or editing from the input of a file or package. 
@@ -387,6 +400,9 @@ To view the specific ffmpeg encoding options for each file, view the sourcecode 
 #### makeframes
 * makeframes creates 10 still images from a video file or package input. Your command will look like: `makeframes [input]`. To deliver still images to a specific directory, use this command  `ingestfile -d [path/to/directory] [input]`.
 
+#### makegifsummery
+* makegifsummery will make a gif as a visual representation of a video. Your command will look like this: `makegifsummery [ -d /path/to/diliver/to ] fileorpackage1 [fileorpackage2]`.
+
 #### makelossless
 * makelossless losslessly transcodes a video file or package input. Your command will look like this: `makelossless [input]`.
 * if you would like to transcode using lossless jpeg2000 instead of ffv1 version 3, use option j. Your command will look like this: `makelossless -j [input]`.
@@ -398,12 +414,19 @@ To view the specific ffmpeg encoding options for each file, view the sourcecode 
 #### makemets
 * makemets creates a mets.xml file that documents the structure of an archival information package created by ingestfile. The mets file also includes information from the dfxml file created in the makemetadata process.
 
+#### makemkvchapters
+* makemkvchapters creates chapters in a Matroksa file. It is an interactive script that will ask you to enter the chapter title, start and end times, and any linked files. 
+* Here's how to use the script: enter this command: `makemkvchapters [matroskafile]`. Press enter. Enter the name of the chapter. Enter the start and end time of the chapter. Make sure these times are in HH:MM:SS.mmm format. It will then ask  you to ‘Enter linked file if any or press enter to proceed.’ At this point, you can drag in a linked file or you can leave this blank if you are not linking a file. You can continue to add chapters to the Matroska file, or you can press q to quit. 
+
 #### makemp3
 * makemp3 is an alias for the updated umbrella function [makederiv](https://github.com/mediamicroservices/mm#makederiv). It creates an mp3 file from a video file or package input.
 * You can create an mp3 file with makederiv by typing: `makederiv -T mp3 [input]`.
 * You can also create an identical derivative file by typing: `makemp3 [input]`, which will route your command through makederiv.
 * Both makederiv and makemp3 may use the full list of options under [makederiv](https://github.com/mediamicroservices/mm#makederiv).
 
+#### makepdf
+* makepdf makes a pdf from an image series. Your command should look like this: `makepdf [-o /path/to/deliver/to/] fileorpackage1 [fileorpackage2]`.
+ 
 #### makepodcast
 * makepodcast is an alias for the updated umbrella function [makederiv](https://github.com/mediamicroservices/mm#makederiv). It creates a Quicktime file that is suitable for podcasting from a video file or package input.
 * You can create a file for podcasting with makederiv by typing: `makederiv -T podcast [input]`.
@@ -422,6 +445,11 @@ To view the specific ffmpeg encoding options for each file, view the sourcecode 
 * You can also create an identical derivative file by typing: `makeresourcespace [input]`, which will route your command through makederiv.
 * Both makederiv and makeresourcespace may use the full list of options under [makederiv](https://github.com/mediamicroservices/mm#makederiv).
 
+#### makewaveform
+*  makewaveform is an alias for the updated function makederiv (options below).
+* You can create a a visual representation of the primary audio of the input with makederiv by typing: `makederiv -T waveform [options] [input]`.
+* Or continue to use makewaveform using this valid option: makederiv [-d /path/to/deliver/to/] fileorpackage1 [fileorpackage2].
+
 #### makeyoutube
 * makeyoutube is an alias for the updated umbrella function [makederiv](https://github.com/mediamicroservices/mm#makederiv). It creates a high quality h264 file from a video file or package input.
 * You can create a file for youtube with makederiv by typing: `makederiv -T youtube [input]`.
@@ -429,7 +457,7 @@ To view the specific ffmpeg encoding options for each file, view the sourcecode 
 * Both makederiv and makeyoutube may use the full list of options under [makederiv](https://github.com/mediamicroservices/mm#makederiv).
 
 #### migratefiles
-* migratefiles is a script that uses rsync to move files, and creates a log documenting the checksum, time, and file paths of files migrated. migratefiles expects a directory input. To use migrate files, type the command `migratefiles -o [destination] [input]`
+* migratefiles is a script that uses rsync to move files, and creates a log documenting the checksum, time, and file paths of files migrated. migratefiles expects a directory input. To use migrate files, type the command `migratefiles -o [destination] [input]`.
 
 #### mmtest
 * mmtest is a regression test that will test whether tinkering with the derivative creation process changes the character of the derivative files. mmtest generates simple test files, creates derivatives of these files with makederiv, and checks the checksums of the generated derivatives against a set of expected checksums. Once the test completes, it will report which checksums did not match as expected to help debug.
@@ -442,29 +470,41 @@ To view the specific ffmpeg encoding options for each file, view the sourcecode 
         * resourcespace (removed -bufsize flag to get consistent test files)
         * youtube (removed -bufsize flag to get consistent test files)
     * mmtest does not test dvd derivatives, as iso file checksums cannot match consistently.
-* To run mmtest, type: `mmtest`
+* To run mmtest, type: `mmtest`.
+
+#### paperingest
+* This is an interactive script that is used to scan docuements. paperingest asks you to enter your name and the media id. After you enter the info, the scanner will begin to scan your papers. To use this script, type the following: `paperingest`.
+
+#### phasecheck
+* this script performs a series of quality assurance tests on an audio visual file or set of files to make sure that the file is in phase. 
 
 #### qatesting
-* QA testing performs a series on tests on one or multiple video inputs and outputs the results into the terminal. Your command will look like this: `qatesting [input] [input1] [input2]`
+* QA testing performs a series on tests on one or multiple video inputs and outputs the results into the terminal. Your command will look like this: `qatesting [input] [input1] [input2]`.
 
 #### quickcompare
-* quickcompare takes two files and compares the checksums against one another, and outputs the results into the terminal. Your command will look like this: `quickcompare [input1] [input2]`
+* quickcompare takes two files and compares the checksums against one another, and outputs the results into the terminal. Your command will look like this: `quickcompare [input1] [input2]`.
 
 #### removeDSStore
-* removeDSStore is a script to remove hidden .DS\_Store files from a package input. Your command will look like this: `removeDSStore [input]`
+* removeDSStore is a script to remove hidden .DS\_Store files from a package input. Your command will look like this: `removeDSStore [input]`.
 
 #### restructureForCompliance
 * restructureForCompliance is a script that takes one or multiple directory or file input and creates an archival information directory structure.
 * If the input is a file, the script creates an upper level directory named by the media ID, named with the same name as the input file, and within that an objects directory and a metadata directory. The metadata directory contains a fileMeta folder and a logs folder. The script also moves the input file into the objects directory.
 * If the input is a directory, the script creates the objects and metadata directory within the input directory, as well as a fileMeta and logs directory within the metadata directory. The script also moves the input file into the objects directory.
-* Your command will look like this: `restructureForCompliance [file or directory input] [file or directory input 2]`
+* Your command will look like this: `restructureForCompliance [file or directory input] [file or directory input 2]`.
+
+#### rewrapmf 
+* This application takes an input video file and produces an mxf file. Timecode will be set to 00:00:00;00. Your command should look like this: `rewrapmxf file1 [file2]`.
 
 #### searchfingerprint
 * Generates fingerprints (perceptual hashes) from whole or specified portion of an input video file and compares them against fingerprints stored in the mm database. Outputs any detected matches in 500 frame segments both in the terminal and in an optional preview window. Preview window will attempt to locate the portions of input video for which matches were found.
 * Usage: "searchfingerprint" [ -h ] (help) [ -i ] (set in time) [ -o ] (set out time) [ -t ] (text only-don't display video preview)
 
 #### uploadomneon
-* uploadomneon uploads a file or group of files, in sequential order, to a server using rsync. Although the script is called uploadomneon because that is the name of the server at CUNY Television, it can be set to any server and directory path in mmconfig. To run uploadomneon, the server IP address, path, and tmpdir variables must be set. Your command will look like this: `uploadomneon [input1] [input2]`
+* uploadomneon uploads a file or group of files, in sequential order, to a server using rsync. Although the script is called uploadomneon because that is the name of the server at CUNY Television, it can be set to any server and directory path in mmconfig. To run uploadomneon, the server IP address, path, and tmpdir variables must be set. Your command will look like this: `uploadomneon [input1] [input2]`.
+
+#### verifypackage
+* verifypackage checks the validity of files created with makebraodcast, makedvd, and makeyoutube. Your command will look like this: 'verifypackage [package]'.
 
 #### verifytree
 * verifytree uses a series of xpath statements and the tree.xml document created by maketree to validate the contents of an Archival Information Package. verifytree outputs mismatches and unexpected items found in AIPs into the terminal window. It must be used in conjunction with maketree. Your command will look like: `verifytree [package]`.
