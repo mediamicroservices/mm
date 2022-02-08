@@ -253,7 +253,7 @@ Across all mediamicroservices, you can always receive the usage information by t
 To view the specific ffmpeg encoding options for each file, view the sourcecode of the microservice directly on GitHub or using a text editor on your computer.
 
 #### aipupgrade
-* this script takes an archival information package created by earlier versions of ingestfile and removes the submissionDocumentation directory, removes .DS_Store files, logs the package type to the capture log if there is not one listed, and creates new technical metadata files that overwrite previously created metadata files. To use aipupgrade, type aipupgrade and drag in all the packages you wish to modify. Note that you will be asked to choose a package type and that will be assigned to all of the packages, so only drag in packages of one type of content. Your command will look like this: aipupgrade [package1] [package2]
+* this script takes an archival information package created by earlier versions of ingestfile and removes the submissionDocumentation directory, removes .DS_Store files, logs the package type to the capture log if there is not one listed, and creates new technical metadata files that overwrite previously created metadata files. To use aipupgrade, type aipupgrade and drag in all the packages you wish to modify. Note that you will be asked to choose a package type and that will be assigned to all of the packages, so only drag in packages of one type of content. Your command will look like this: aipupgrade [package1] [package2]. 
 
 #### audiotest
 * this script takes an audio package and reports on data associated with the AIP. This is helpful for audio QC. 
@@ -263,16 +263,16 @@ To view the specific ffmpeg encoding options for each file, view the sourcecode 
 * barcodeinterpret works with xdcamingest to gather metadata about an XDCam disk by scanning the barcode on the disk case. this script is no longer in use and development is not supported.
 
 #### blackatends
-* blackatends reports on the number of black frames at the beginning and end of a video file. The report is output into the terminal window. Your command will look like this: `blackatends [file1] [file2]`
+* blackatends reports on the number of black frames at the beginning and end of a video file. The report is output into the terminal window. Your command will look like this: `blackatends [file1] [file2]`.
 
 #### checksum2filemaker
-* checksum2filemaker delivers checksums from a package input into a predefined table in a FileMaker Database called checksums, using the dfxml format. this script requires the user to set up a FileMaker database and server URL, which are both variables stored in the configuration file. To use this script, type checksum2filemaker in your command line, followed by the package, like this:  `checksum2filemaker [package]`
+* checksum2filemaker delivers checksums from a package input into a predefined table in a FileMaker Database called checksums, using the dfxml format. This script requires the user to set up a FileMaker database and server URL, which are both variables stored in the configuration file. To use this script, type checksum2filemaker in your command line, followed by the package, like this:  `checksum2filemaker [package]`.
 
 #### checksumpackage
 * checksumpackage creates, and verifies checksums from an input of a directory or archival informaion package. To use, type checksumpackage into the command line, followed by the input:  `checksumpackage [input]`.
 * If you only want to check that filenames and filesizes are the same as in existing files, use option -c. Type  `checksumpackage -c [input]` and if no existing checksum file exists, one will be created.
 * Another option is to use -c in conjunction with -u, which will create new checksums and version the previous ones if the check is unsuccessful, meaning your checksums have changed. Type  `checksumpackage -cu [input]` for this option.
-* Finally, use -v as an option if you want to fully verify checksums. If no checksums exist, the script will create the initial ones. Verification will version existing checksums by adding the date they were created to the filename and create new ones, and log the difference to a checksumprocess log, which will be placed in the metadata directory of the package. To use -v, type  `checksumpackage -v [input]`
+* Finally, use -v as an option if you want to fully verify checksums. If no checksums exist, the script will create the initial ones. Verification will version existing checksums by adding the date they were created to the filename and create new ones, and log the difference to a checksumprocess log, which will be placed in the metadata directory of the package. To use -v, type  `checksumpackage -v [input]`.
 
 #### createmmdb
 * createmmdb configures a database, users and login profiles. Your command will look like this 'Usage: -c (create database) -u (create user) -h (help)'.
@@ -290,16 +290,16 @@ To view the specific ffmpeg encoding options for each file, view the sourcecode 
 * finishpackage is a combination of the microservices makelossless, makebroadcast, makeyoutube, makemetadata, and checksumpackage. The purpose is to losslessly transcode, create access copies, and create metadata and directory structure information for a file or package input. To use finishpackage, type finishpackage and drag your input into the command line: `finishpackage [input]`. finish package is typically used in conjunction with restructureForCompliance.
 
 #### fix_left2stereo
-* fix\_left2stereo takes an input video file or files and produces outputs that map the left channel of the input to a stereo mix in the output. The suffix "\_left2stereo" is added to the filename to distinguish it from the original. Your command will look like this: `fix_left2stereo [file1] [file2]`
+* fix\_left2stereo takes an input video file or files and produces outputs that map the left channel of the input to a stereo mix in the output. The suffix "\_left2stereo" is added to the filename to distinguish it from the original. Your command will look like this: `fix_left2stereo [file1] [file2]`.
 
 #### fix_rewrap
-* fix\_rewrap takes an input video file or files and produces outputs through re-multiplexing all tracks of the input into a new container. The suffix "\_rewrap" is added to the file name to distinguish it from the original. Your command will look like this: `fix_rewrap [file1] [file2]`
+* fix\_rewrap takes an input video file or files and produces outputs through re-multiplexing all tracks of the input into a new container. The suffix "\_rewrap" is added to the file name to distinguish it from the original. Your command will look like this: `fix_rewrap [file1] [file2]`.
 
 #### fix_timecode
 * fix\_timecode takes an input video file(s) and produces output that sets the timecode to 00:00:00;00. Your command will look like this: 'fix_timecode [file1] [file2]'.
 
 #### fix_volume
-* fix_volume uses an input video file to produce an output video file where the audio is adjusted to meet an integrated loudness of -23dB. If the integrated loudness of the input is already within 1dB of the target then no change will occur. The output file will be in the same directory as the input file, and the suffix "\_voladj" is added to the file name to distinguish it from the original. Your command will look like this: `fix_volume [file1] [file2]`
+* fix_volume uses an input video file to produce an output video file where the audio is adjusted to meet an integrated loudness of -23dB. If the integrated loudness of the input is already within 1dB of the target then no change will occur. The output file will be in the same directory as the input file, and the suffix "\_voladj" is added to the file name to distinguish it from the original. Your command will look like this: `fix_volume [file1] [file2]`.
 
 #### ingestfile
 * ingestfile is a combination of multiple microservices for the purposes of creating an Archival Information Package (AIP) from an input of a video file. Included in the AIP are the original file, access copies, and corresponding technical metadata. Running ingestfile also sets a unique identifier for a video file, and bases the directory and metadata naming on this unique identifier. to run ingestfile, you must have the following variables set: OUTDIR\_INGESTFILE, AIP_STORAGE, PODCASTDELIVER, YOUTUBEDELIVER. the default use of ingestfile runs the following processes on a file:
@@ -470,7 +470,7 @@ To view the specific ffmpeg encoding options for each file, view the sourcecode 
         * resourcespace (removed -bufsize flag to get consistent test files)
         * youtube (removed -bufsize flag to get consistent test files)
     * mmtest does not test dvd derivatives, as iso file checksums cannot match consistently.
-* To run mmtest, type: `mmtest`
+* To run mmtest, type: `mmtest`.
 
 #### paperingest
 * This is an interactive script that asks you to enter your name and the media id. After you enter the info, the scanner will begin to scan your papers. To use this script, type the following: 'paperingest'.
