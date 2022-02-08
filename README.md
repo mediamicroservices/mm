@@ -491,7 +491,7 @@ To view the specific ffmpeg encoding options for each file, view the sourcecode 
 * restructureForCompliance is a script that takes one or multiple directory or file input and creates an archival information directory structure.
 * If the input is a file, the script creates an upper level directory named by the media ID, named with the same name as the input file, and within that an objects directory and a metadata directory. The metadata directory contains a fileMeta folder and a logs folder. The script also moves the input file into the objects directory.
 * If the input is a directory, the script creates the objects and metadata directory within the input directory, as well as a fileMeta and logs directory within the metadata directory. The script also moves the input file into the objects directory.
-* Your command will look like this: `restructureForCompliance [file or directory input] [file or directory input 2]`
+* Your command will look like this: `restructureForCompliance [file or directory input] [file or directory input 2]`.
 
 #### rewrapmf 
 * This application takes an input video file and produces an mxf file. Timecode will be set to 00:00:00;00. Your command should look like this: `rewrapmxf file1 [file2]`.
@@ -501,7 +501,7 @@ To view the specific ffmpeg encoding options for each file, view the sourcecode 
 * Usage: "searchfingerprint" [ -h ] (help) [ -i ] (set in time) [ -o ] (set out time) [ -t ] (text only-don't display video preview)
 
 #### uploadomneon
-* uploadomneon uploads a file or group of files, in sequential order, to a server using rsync. Although the script is called uploadomneon because that is the name of the server at CUNY Television, it can be set to any server and directory path in mmconfig. To run uploadomneon, the server IP address, path, and tmpdir variables must be set. Your command will look like this: `uploadomneon [input1] [input2]`
+* uploadomneon uploads a file or group of files, in sequential order, to a server using rsync. Although the script is called uploadomneon because that is the name of the server at CUNY Television, it can be set to any server and directory path in mmconfig. To run uploadomneon, the server IP address, path, and tmpdir variables must be set. Your command will look like this: `uploadomneon [input1] [input2]`.
 
 #### verifypackage
 * verifypackage checks the validity of files created with makebraodcast, makedvd, and makeyoutube. Your command will look like this: 'verifypackage [package]'.
