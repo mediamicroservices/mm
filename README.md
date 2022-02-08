@@ -476,7 +476,7 @@ To view the specific ffmpeg encoding options for each file, view the sourcecode 
 * This is an interactive script that is used to scan docuements. paperingest asks you to enter your name and the media id. After you enter the info, the scanner will begin to scan your papers. To use this script, type the following: 'paperingest'.
 
 #### phasecheck
-* this script performs a series of quality assurance tests on an audio visual file or set of files. 
+* this script performs a series of quality assurance tests on an audio visual file or set of files to make sure that the file is in phase. 
 
 #### qatesting
 * QA testing performs a series on tests on one or multiple video inputs and outputs the results into the terminal. Your command will look like this: `qatesting [input] [input1] [input2]`
