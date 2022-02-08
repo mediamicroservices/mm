@@ -493,6 +493,9 @@ To view the specific ffmpeg encoding options for each file, view the sourcecode 
 * If the input is a directory, the script creates the objects and metadata directory within the input directory, as well as a fileMeta and logs directory within the metadata directory. The script also moves the input file into the objects directory.
 * Your command will look like this: `restructureForCompliance [file or directory input] [file or directory input 2]`
 
+#### rewrapmf 
+* This application takes an input video file and produces an mxf file. Timecode will be set to 00:00:00;00. Your command should look like this: 'rewrapmxf file1 [file2]'.
+
 #### searchfingerprint
 * Generates fingerprints (perceptual hashes) from whole or specified portion of an input video file and compares them against fingerprints stored in the mm database. Outputs any detected matches in 500 frame segments both in the terminal and in an optional preview window. Preview window will attempt to locate the portions of input video for which matches were found.
 * Usage: "searchfingerprint" [ -h ] (help) [ -i ] (set in time) [ -o ] (set out time) [ -t ] (text only-don't display video preview)
