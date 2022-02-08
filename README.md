@@ -274,6 +274,9 @@ To view the specific ffmpeg encoding options for each file, view the sourcecode 
 * Another option is to use -c in conjunction with -u, which will create new checksums and version the previous ones if the check is unsuccessful, meaning your checksums have changed. Type  `checksumpackage -cu [input]` for this option.
 * Finally, use -v as an option if you want to fully verify checksums. If no checksums exist, the script will create the initial ones. Verification will version existing checksums by adding the date they were created to the filename and create new ones, and log the difference to a checksumprocess log, which will be placed in the metadata directory of the package. To use -v, type  `checksumpackage -v [input]`
 
+#### createmmdb
+* createmmdb configures a database, users and login profiles. Your command will look like this 'Usage: -c (create database) -u (create user) -h (help)'
+
 #### createpremisdb
 * createpremisdb will create a database for the logging of microservices information as well as facilitate user creation.  For more information on use, see the [database configuration](#configuring-premisfixity-logging-database) section of this readme.
 * commands are `createpremisdb -c` for database creation and `createpremisdb -u` for user creation.
