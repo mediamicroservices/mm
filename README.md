@@ -320,6 +320,9 @@ To view the specific ffmpeg encoding options for each file, view the sourcecode 
 <img src="https://github.com/mediamicroservices/mm/blob/master/Resources/ingestfile.gif" width="500">
 <img src="https://github.com/mediamicroservices/mm/blob/master/Resources/ingestfilegui.gif" width="500">
 
+#### makeaudiographs
+* This script creates a visual representation of an audio file. Another helpful tool for audio QC. To use this script, run the following command: 'makeaudiographs [file]'
+
 #### makebroadcast
 * makebroadcast is an alias for the updated umbrella function [makederiv](https://github.com/mediamicroservices/mm#makederiv). It creates a file suitable for broadcast or editing from the input of a file or package. 
 * You can create a derivative file suitable for broadcast with makederiv by typing: `makederiv -T broadcast [input]`.
