@@ -414,6 +414,10 @@ To view the specific ffmpeg encoding options for each file, view the sourcecode 
 #### makemets
 * makemets creates a mets.xml file that documents the structure of an archival information package created by ingestfile. The mets file also includes information from the dfxml file created in the makemetadata process.
 
+#### makemkvchapters
+* makemkvchapters creates chapters in a Matroksa file. It is an interactive script that will as you to enter the chapter title, start and end times, and any linked files. 
+* Here's how to use the script: enter this command: 'makemkvchapters [matroskafile]'. press enter. Enter the name of the chapter. Enter the start and end time of the chapter. Make sure these times are in HH:MM:SS.mmm format. It will then ask  you to ‘Enter linked file if any or press enter to proceed.’ At this point, you can drag in a linked file or you can leave this blank if you are not linking a file. You can continue to add chapters to the Matroska file, or you can press q to quit. 
+
 #### makemp3
 * makemp3 is an alias for the updated umbrella function [makederiv](https://github.com/mediamicroservices/mm#makederiv). It creates an mp3 file from a video file or package input.
 * You can create an mp3 file with makederiv by typing: `makederiv -T mp3 [input]`.
