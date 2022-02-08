@@ -400,6 +400,9 @@ To view the specific ffmpeg encoding options for each file, view the sourcecode 
 #### makeframes
 * makeframes creates 10 still images from a video file or package input. Your command will look like: `makeframes [input]`. To deliver still images to a specific directory, use this command  `ingestfile -d [path/to/directory] [input]`.
 
+#### makegifsummery
+* makegifsummery will make a gif as a visual representation of a video. Your command with look like this: 'makegifsummery [ -d /path/to/diliver/to ] fileorpackage1 [fileorpackage2]'
+
 #### makelossless
 * makelossless losslessly transcodes a video file or package input. Your command will look like this: `makelossless [input]`.
 * if you would like to transcode using lossless jpeg2000 instead of ffv1 version 3, use option j. Your command will look like this: `makelossless -j [input]`.
