@@ -678,7 +678,7 @@ if [ "${FROM}" == "${TO}" -a "${CLEANUPDECISION}" == "Remove source file after s
 else
     _report -dt "STATUS Copying the original file to library storage at ${OBJECTSDIR}."
     LOGFILE="${LOGDIR}/rsync_$(_get_iso8601_c)_$(basename ${0})_${VERSION}.txt"
-    "${SCRIPTDIR}/migratefiles" -l "${LOGFILE}" -o "${OBJECTSDIR}" "${INPUT}"
+    "${SCRIPTDIR}/migratefiles" -l "${LOGFILE}" -o "${OBJECTSDIR}" "${INPUT[@]}"
     if [ ! "${#FILES[@]}" = 0 ] ; then
         _run_critical rsync -rt --progress --log-file="${LOGDIR}/rsync_$(_get_iso8601_c)_$(basename $0)_${VERSION}.txt" "${FILES[@]}" "${LOGDIR}/"
     fi
