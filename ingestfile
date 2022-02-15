@@ -667,7 +667,7 @@ FROM=$(_get_filesystem "${INPUT}")
 TO=$(_get_filesystem "${OBJECTSDIR}/")
 if [ "${FROM}" == "${TO}" -a "${CLEANUPDECISION}" == "Remove source file after successful ingest" ] ; then
     _report -dt "Because ${INPUT} and ${OBJECTSDIR} are on the same filesystem and preservation mode is enabled we will mv rather than rsync."
-    _run_critical mv -v -n "${INPUT}" "${OBJECTSDIR}/"
+    _run_critical mv -v -n "${INPUT[@]}" "${OBJECTSDIR}/"
     if [ ! "${#FILES[@]}" = 0 ] ; then
         _run_critical mv -v -n "${FILES[@]}" "${LOGDIR}/"
     fi
