@@ -1003,6 +1003,12 @@ _find_input (){
             fi
             ISOBJECT="Y"
             INPUTFILES=$(_maketemp)
+		    if [[ -d "${1}/objects/restoration" ]] ; then
+		                   LOOKHERE="${1}/objects/restoration"
+		                   _report -dt "This package contains a restoration, using that for processing."
+		               else
+		                   LOOKHERE="${1}/objects"
+		               fi
             # find av files in a directory and output to a temp list
             find "${LOOKHERE}" -type f -size +0 "${OBJECTS_FIND_EXCLUSIONS[@]}" | sort | while read file ; do
                 streamcount=$(ffprobe -loglevel quiet "$file" -show_entries format=nb_streams -of default=nw=1:nk=1)
