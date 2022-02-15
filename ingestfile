@@ -538,12 +538,6 @@ fi
     fi
     _setup_package
     if [[ "${MODE}" == "audio" ]] ; then
-        _report -q "Is the file the result of digitization? Enter 1 for Yes or 2 for No."
-        select DIGITIZATION in "Yes" "No"
-        do
-            break
-        done
-        if [[ "${DIGITIZATION}" == "Yes" ]] ; then
             _ask_digitization_logs
             _ask_photos "${MEDIAID}"
             if [[ -f ${FILES} ]] ; then
