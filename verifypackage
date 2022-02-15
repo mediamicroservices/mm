@@ -77,7 +77,7 @@ while [ "${*}" != "" ] ; do
         else
             mediaconch --force -fs -p "${SCRIPTDIR}/object_policies.xml" "${OBJECT_FILE}"
         fi
-    done < <(find "${PACKAGE}/objects" -type f -size +0 "${OBJECTS_FIND_EXCLUSIONS[@]}")
+    done < <(find "${PACKAGE}/objects" -type f ! -name "*.tif" -size +0 "${OBJECTS_FIND_EXCLUSIONS[@]}")
     #verify the makebroadcast file
     if [ -f "${PACKAGE}/objects/service/${MEDIAID}.mov" ] ; then
         STATUS=$(mediaconch --force -fx -p "${SCRIPTDIR}/makebroadcast_policies.xml" "${PACKAGE}/objects/service/${MEDIAID}.mov" | xmlstarlet sel -N mc="https://mediaarea.net/mediaconch" -t -v mc:MediaConch/mc:media/mc:policy/@outcome -n)
@@ -114,4 +114,16 @@ while [ "${*}" != "" ] ; do
             mediaconch --force -fs -p "${SCRIPTDIR}/makedvd_policies.xml" "${PACKAGE}/objects/access/dvd/${MEDIAID}.iso"
         fi
     fi
+    #verify the audio podcast file
+    if [ -f "${PACKAGE}/objects/access/podcast/${MEDIAID}.m4a" ] ; then
+        if [[ "${ALL_TESTS}" == "Y"  ]] || [[ "${VOL_TEST}" == "Y"  ]] ; then
+            _assess_volume "${PACKAGE}/objects/access/podcast/${MEDIAID}.m4a"
+        fi
+    fi    
+    #verify the mp3 file
+    if [ -f "${PACKAGE}/objects/access/mp3/${MEDIAID}.mp3" ] ; then
+        if [[ "${ALL_TESTS}" == "Y"  ]] || [[ "${VOL_TEST}" == "Y"  ]] ; then
+            _assess_volume "${PACKAGE}/objects/access/mp3/${MEDIAID}.mp3"
+        fi        
+    fi        
 done
