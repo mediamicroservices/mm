@@ -682,6 +682,10 @@ else
     if [ ! "${#FILES[@]}" = 0 ] ; then
         _run_critical rsync -rt --progress --log-file="${LOGDIR}/rsync_$(_get_iso8601_c)_$(basename $0)_${VERSION}.txt" "${FILES[@]}" "${LOGDIR}/"
     fi
+    if [ ! "${#RESTORATION_FILE[@]}" = 0 ] ; then
+           _mkdir2 "${OBJECTSDIR}/restoration"
+           _run_critical rsync -rt --progress --log-file="${LOGDIR}/rsync_$(_get_iso8601_c)_$(basename $0)_${VERSION}.txt" "${RESTORATION_FILE[@]}" "${OBJECTSDIR}/restoration/"
+       fi
 fi
 
 # set makederivopts
