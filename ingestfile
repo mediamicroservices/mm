@@ -78,6 +78,12 @@ _ask_digitization_logs(){
     [[ "$FILES[0]" = "q" ]] && exit 0
     [[ ! -z "${FILES}" ]] && _writeingestlog "digitization_logs: ${FILES}\n"
 }
+_ask_restoration(){
+	-report -qn "Drag in any restoration master: "
+	read -e -a RESTORATION_FILE
+	[[ "${RESTORATION_FILE[0]}" = "q" ]] && exit 0
+	[[ ! -z "${RESTORATION_FILE}" ]] && _writeingestlog "restoration: ${RESTORATION_FILE}\n"
+}
 
 # spreadsheet fields are currently CUNY-specific
 _parse_spreadsheet(){
