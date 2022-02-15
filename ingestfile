@@ -539,6 +539,7 @@ fi
     _setup_package
     if [[ "${MODE}" == "audio" ]] ; then
             _ask_digitization_logs
+			_ask_restoration
             _ask_photos "${MEDIAID}"
             if [[ -f ${FILES} ]] ; then
                 _parse_spreadsheet
