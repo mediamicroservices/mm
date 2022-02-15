@@ -1039,7 +1039,7 @@ _find_input (){
             fi
         fi
     else
-        _report -wt "A valid source file isn't found in ${1}/objects."
+        _report -wt "A valid source file isn't found in ${LOOKHERE}."
         _writeerrorlog "_find_input" "A valid source file was not found, so the script could not proceed."
         exit 1
     fi
