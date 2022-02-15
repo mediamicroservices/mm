@@ -107,10 +107,13 @@ while [ "${*}" != "" ] ; do
         _runtest "There are directories that are not objects, metadata, or tmp in this package." xmlstarlet sel -t -v "/tree/directory/directory[@name!='objects' and @name!='metadata' and @name!='tmp']/@name" -n "${TEMPTREE}"
         #makes sure there is an objects directory
         _runtest -i "This package is missing an objects directory!" xmlstarlet sel -t -v "/tree/directory/directory[@name='objects']/@name" -n "${TEMPTREE}"
-        #makes sure there is a metadata directory
+	    #makes sure there is an metadata directory
         _runtest -i "This package is missing a metadata directory!" xmlstarlet sel -t -v "/tree/directory/directory[@name='metadata']/@name" -n "${TEMPTREE}"
 
-        #begin search of metadata
+		#checks to see if there are files in directories
+		  _runtest -i "This package is missing files!" xmlstarlet sel -t -v "/tree/directory/directory[@name='${MEDIAID}']/file[count(@name)>0]/@name" -n "${TEMPTREE}"
+	   
+	    #begin search of metadata
 
         #looks for any unexpected files in the upper level metadata directory -- files that aren't .md5, .log, .xml
         _runtest "There are files in the metadata directory that do not belong!" xmlstarlet sel -t -v "/tree/directory/directory[@name='metadata']/file[@name!='checksum.md5' and @name!='checksumchecks.log' and @name!='dfxml.xml' and @name!='mets.xml' and not(contains(@name,'checksum')) and not(contains(@name,'dfxml'))]/@name" -n "${TEMPTREE}"
