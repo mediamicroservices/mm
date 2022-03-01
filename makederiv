@@ -151,6 +151,11 @@ elif [[ "${OUTPUT_TYPE}" == "showwaves" ]] ; then
     RELATIVEPATH="objects/access/showwaves"
     SUFFIX="_showwaves"
     USEACCESSTIMES="N"
+elif [[ "${OUTPUT_TYPE}" == "spectogram" ]] ; then
+    EXTENSION="png"
+    RELATIVEPATH="objects/access/showwaves"
+    SUFFIX="_spectogram"
+    USEACCESSTIMES="N"
 else
     echo "No matches for specified output type."
     _usage
@@ -648,6 +653,10 @@ while [[ "${@}" != "" ]] ; do
             MIDDLEOPTIONS+=(-vn)
             MIDDLEOPTIONS+=(-frames:v 1)
             _add_audio_filter "showwavespic=split_channels=1:scale=log:s=1920x240:colors=purple|blue|green|red"
+        elif [[ "${OUTPUT_TYPE}" == "spectogram" ]] ; then
+            MIDDLEOPTIONS+=(-vn)
+            MIDDLEOPTIONS+=(-frames:v 1)
+            _add_audio_filter "showspectrumpic=mode=combined:color=intensity:scale=log:fscale=lin:s=1024x1024"
         elif [[ "${OUTPUT_TYPE}" == "audiographs" ]] ; then
             MIDDLEOPTIONS+=(-vn)
             MIDDLEOPTIONS+=(-frames:v 1)
