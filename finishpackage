@@ -24,10 +24,19 @@ while [ "${*}" != "" ] ; do
         FIRSTOBJECTEXTENSION="$(xmlstarlet sel -t -m "/tree/directory/directory[@name='objects']/file[1]" -v "substring-after(@name, '.')" -n  "${TEMPTREE}")"
         #if there is one object file and it uses a .wav extension, then run audio-specific tests 
         if [[ "${OBJECTCOUNT}" = 1 && "${FIRSTOBJECTEXTENSION}" = "wav" ]] ; then
-            makederiv -T mp3 "${PACKAGE}" && makederiv -T showwaves "${PACKAGE}" && makederiv -T audiographs "${PACKAGE}" && makederiv -T podcast "${PACKAGE}" && makederiv -T spectogram "${PACKAGE}"
+            makederiv -T audiographs "${PACKAGE}"
         else
-            makelossless "${PACKAGE}" && makederiv -T broadcast "${PACKAGE}" && makederiv -T youtube "${PACKAGE}" && makederiv -T mp3 "${PACKAGE}" && makederiv -T podcast "${PACKAGE}" && makederiv -T waveform "${PACKAGE}" && makeframes "${PACKAGE}" && makefingerprint "${PACKAGE}"
+            makelossless "${PACKAGE}"
+            makederiv -T broadcast "${PACKAGE}"
+            makederiv -T youtube "${PACKAGE}"
+            makeframes "${PACKAGE}"
+            makefingerprint "${PACKAGE}"
         fi
+        makederiv -T spectogram "${PACKAGE}"
+        makederiv -T waveform "${PACKAGE}"
+        makederiv -T podcast "${PACKAGE}"
+        makederiv -T mp3 "${PACKAGE}"
+        makemetadata "${PACKAGE}"
+        checksumpackage "${PACKAGE}"
     fi
-    makemetadata "${PACKAGE}" && checksumpackage "${PACKAGE}"
 done
