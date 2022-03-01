@@ -10,8 +10,7 @@ while [ "${*}" != "" ] ; do
     shift
     if [ -d "${PACKAGE}" ] ; then
         OUTPUTDIR="${PACKAGE}/metadata"
-        MEDIAID=$(basename "${PACKAGE}")
-        _report -dt "running verifytree on ${PACKAGE}" #the name of the package being verified
+        _report -dt "running finishpackage on ${PACKAGE}" #the name of the package being verified
 
         #make a new temp tree
         TEMPTREE=$(_maketemp)
