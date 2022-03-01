@@ -22,6 +22,10 @@ while [ "${*}" != "" ] ; do
         #if there is one object file and it uses a .wav extension, then run audio-specific tests 
         if [[ "${MOSTCOMMONEXTENSION}" = "wav" ]] ; then
             makederiv -T audiographs "${PACKAGE}"
+        elif [[ "${MOSTCOMMONEXTENSION}" = "tif" ]] ; then
+            makepdf "${PACKAGE}"
+            makemetadata "${PACKAGE}" 
+            checksumpackage "${PACKAGE}"
         else
             makelossless "${PACKAGE}"
             makederiv -T broadcast "${PACKAGE}"
