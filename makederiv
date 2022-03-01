@@ -92,6 +92,7 @@ DEPENDENCIES=(ffmpeg ffprobe)
 if [[ "${OUTPUT_TYPE}" == "broadcast" ]] ; then
     EXTENSION="mov"
     RELATIVEPATH="objects/service"
+    USEACCESSTIMES="Y"
     if [[ "${ADDSLATE}" = "Y" ]]; then
         SUFFIX="_SLATE"
     fi
@@ -99,46 +100,57 @@ elif [[ "${OUTPUT_TYPE}" == "broadcast_copy" ]] ; then
     EXTENSION="mov"
     RELATIVEPATH=""
     SUFFIX="_COPY"
+    USEACCESSTIMES="Y"
 elif [[ "${OUTPUT_TYPE}" == "prores" ]] ; then
     EXTENSION="mov"
     RELATIVEPATH="objects/access/prores"
+    USEACCESSTIMES="Y"
 elif [[ "${OUTPUT_TYPE}" == "youtube" ]] ; then
     EXTENSION="mp4"
     RELATIVEPATH="objects/access/youtube_up"
+    USEACCESSTIMES="Y"
 elif [[ "${OUTPUT_TYPE}" == "resourcespace" ]] ; then
     PREFERRED_SOURCE="service"
     EXTENSION="mp4"
     RELATIVEPATH="objects/access/resourcespace"
+    USEACCESSTIMES="Y"
 elif [[ "${OUTPUT_TYPE}" == "quick" ]] ; then
     PREFERRED_SOURCE="service"
     EXTENSION="mp4"
     RELATIVEPATH="objects/access/quick"
     SUFFIX="_quick"
+    USEACCESSTIMES="Y"
 elif [[ "${OUTPUT_TYPE}" == "dvd" ]] ; then
     PREFERRED_SOURCE="service"
     EXTENSION="iso"
     RELATIVEPATH="objects/access/dvd"
     DEPENDENCIES+=(dvdauthor mkisofs)
+    USEACCESSTIMES="Y"
 elif [[ "${OUTPUT_TYPE}" == "mp3" ]] ; then
     EXTENSION="mp3"
     RELATIVEPATH="objects/access/mp3"
+    USEACCESSTIMES="Y"
 elif [[ "${OUTPUT_TYPE}" == "podcast" ]] ; then
     # extension is set later in the loop because it will be adjusted based on audio-only or audio-video
     PREFERRED_SOURCE="service"
     RELATIVEPATH="objects/access/podcast"
     SUFFIX="_podcast"
+    USEACCESSTIMES="Y"
 elif [[ "${OUTPUT_TYPE}" == "waveform" ]] ; then
     EXTENSION="png"
     RELATIVEPATH="metadata/depictions"
     SUFFIX="_waveform"
+    USEACCESSTIMES="Y"
 elif [[ "${OUTPUT_TYPE}" == "audiographs" ]] ; then
     EXTENSION="png"
     RELATIVEPATH="metadata/depictions"
     SUFFIX="_audiographs"
+    USEACCESSTIMES="Y"
 elif [[ "${OUTPUT_TYPE}" == "showwaves" ]] ; then
     EXTENSION="mp4"
     RELATIVEPATH="objects/access/showwaves"
     SUFFIX="_showwaves"
+    USEACCESSTIMES="N"
 else
     echo "No matches for specified output type."
     _usage
@@ -235,6 +247,18 @@ while [[ "${@}" != "" ]] ; do
     if [[ "${OUTTIME}" && "${ADDSLATE}" = "Y" ]] ; then
         _report -dt "Transcoding will NOT use outtime (${OUTTIME}) during transcoding, as there is a slate being created for this file."
     elif [[ "${OUTTIME}" && "${ADDSLATE}" != "Y" ]] ; then
+        _report -dt "Transcoding will use outtime (${OUTTIME}) during transcoding."
+        MIDDLEOPTIONS+=(-to "${OUTTIME}")
+        METADATA_COMMENT+=("out=${OUTTIME} ")
+    fi
+    if [[ "${USEACCESSTIMES}" = "N" ]]; then
+        _report -dt "Transcoding will NOT use outtime (${OUTTIME}) during transcoding"
+    elif [[ "${USEACCESSTIMES}" = "Y" ]]; then
+        _report -dt "Transcoding will use intime (${INTIME}) during transcoding."
+        INPUTOPTIONS+=(-seek_timestamp 1)
+        MIDDLEOPTIONS+=(-ss "${INTIME}")
+        METADATA_COMMENT+=("mediaid=${MEDIAID} ")
+        METADATA_COMMENT+=("in=${INTIME} ")
         _report -dt "Transcoding will use outtime (${OUTTIME}) during transcoding."
         MIDDLEOPTIONS+=(-to "${OUTTIME}")
         METADATA_COMMENT+=("out=${OUTTIME} ")
@@ -644,7 +668,7 @@ while [[ "${@}" != "" ]] ; do
             FONT_FILE="/Library/Fonts/Menlo.ttc"
             DRAWGRAPH_SETTINGS="bg=Black"
             BORDER_COLOR="LightGrey"
-    HORIZONTAL_MARKINGS_240="drawgrid=thickness=1:color=${BORDER_COLOR}@0.2:height=ih/16,drawgrid=thickness=1:color=${BORDER_COLOR}@0.5:height=ih/4,drawgrid=thickness=1:color=${BORDER_COLOR}@0.8:height=ih/2"
+            HORIZONTAL_MARKINGS_240="drawgrid=thickness=1:color=${BORDER_COLOR}@0.2:height=ih/16,drawgrid=thickness=1:color=${BORDER_COLOR}@0.5:height=ih/4,drawgrid=thickness=1:color=${BORDER_COLOR}@0.8:height=ih/2"
             HORIZONTAL_MARKINGS_120="drawgrid=thickness=1:color=${BORDER_COLOR}@0.2:height=ih/8,drawgrid=thickness=1:color=${BORDER_COLOR}@0.5:height=ih/4,drawgrid=thickness=1:color=${BORDER_COLOR}@0.8:height=ih/2"
 
             BASENAME=$(basename "${INPUT}")
