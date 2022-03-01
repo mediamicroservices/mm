@@ -1,7 +1,33 @@
 #!/bin/bash
 #finish package takes a directory input created by restructureforCompliance and creates derivative access copies, metadata documents, and a checksum file.
+SCRIPTDIR=$(dirname "${0}")
+. "${SCRIPTDIR}/mmfunctions" || { echo "Missing '${SCRIPTDIR}/mmfunctions'. Exiting." ; exit 1 ;};
+_initialize_make
+
 while [ "${*}" != "" ] ; do
-    INPUT="${1}"
-    makelossless "${INPUT}" && makederiv -T broadcast "${INPUT}" && makederiv -T youtube "${INPUT}" && makederiv -T mp3 "${INPUT}" && makederiv -T podcast "${INPUT}" && makederiv -T waveform "${INPUT}" && makeframes "${INPUT}" && makefingerprint "${INPUT}" && makemetadata "${INPUT}" && checksumpackage "${INPUT}"
+#look for tree.xml
+    PACKAGE="${1}"
     shift
+    if [ -d "${PACKAGE}" ] ; then
+        OUTPUTDIR="${PACKAGE}/metadata"
+        MEDIAID=$(basename "${PACKAGE}")
+        _report -dt "running verifytree on ${PACKAGE}" #the name of the package being verified
+
+        #make a new temp tree
+        TEMPTREE=$(_maketemp)
+        tree -DaNXs --du --timefmt "%Y-%m-%dT%H:%M:%SZ" -I "tree.xml|.DS_Store" "${PACKAGE}" > "${TEMPTREE}"
+        #if tree.xml exists, compare it to the specified xpath expressions of an AIP
+
+        #check number of object files
+        OBJECTCOUNT="$(xmlstarlet sel -t -m "/tree/directory/directory[@name='objects']" -v "count(file)" -n "${TEMPTREE}")"
+        #check extension of first object file
+        FIRSTOBJECTEXTENSION="$(xmlstarlet sel -t -m "/tree/directory/directory[@name='objects']/file[1]" -v "substring-after(@name, '.')" -n  "${TEMPTREE}")"
+        #if there is one object file and it uses a .wav extension, then run audio-specific tests 
+        if [[ "${OBJECTCOUNT}" = 1 && "${FIRSTOBJECTEXTENSION}" = "wav" ]] ; then
+            makederiv -T mp3 "${PACKAGE}" && makederiv -T showwaves "${PACKAGE}" && makederiv -T audiographs "${PACKAGE}" && makederiv -T podcast "${PACKAGE}" && makederiv -T spectogram "${PACKAGE}"
+        else
+            makelossless "${PACKAGE}" && makederiv -T broadcast "${PACKAGE}" && makederiv -T youtube "${PACKAGE}" && makederiv -T mp3 "${PACKAGE}" && makederiv -T podcast "${PACKAGE}" && makederiv -T waveform "${PACKAGE}" && makeframes "${PACKAGE}" && makefingerprint "${PACKAGE}"
+        fi
+    fi
+    makemetadata "${PACKAGE}" && checksumpackage "${PACKAGE}"
 done
