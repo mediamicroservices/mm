@@ -21,25 +21,25 @@ while [ "${*}" != "" ] ; do
         MOSTCOMMONEXTENSION="$(xmlstarlet sel -t -m "/tree/directory/directory[@name='objects']/file" -v "substring-after(@name, '.')" -n  "${TEMPTREE}"| sort | uniq -c | sort -n -r | head -n 1 | awk '{print $2}')"
         #if there is one object file and it uses a .wav extension, then run audio-specific tests 
         if [[ "${MOSTCOMMONEXTENSION}" = "wav" ]] ; then
-            makederiv -T audiographs "${PACKAGE}"
-            makederiv -T spectrogram "${PACKAGE}"
-            makederiv -T waveform "${PACKAGE}"
-            makederiv -T podcast "${PACKAGE}"
-            makederiv -T mp3 "${PACKAGE}"
+            "${SCRIPTDIR}/makederiv" -T audiographs "${PACKAGE}"
+            "${SCRIPTDIR}/makederiv" -T spectrogram "${PACKAGE}"
+            "${SCRIPTDIR}/makederiv" -T waveform "${PACKAGE}"
+            "${SCRIPTDIR}/makederiv" -T podcast "${PACKAGE}"
+            "${SCRIPTDIR}/makederiv" -T mp3 "${PACKAGE}"
         elif [[ "${MOSTCOMMONEXTENSION}" = "tif" ]] ; then
-            makepdf "${PACKAGE}"
+            "${SCRIPTDIR}/makepdf" "${PACKAGE}"
         else
             makelossless "${PACKAGE}"
-            makederiv -T broadcast "${PACKAGE}"
-            makederiv -T youtube "${PACKAGE}"
-            makeframes "${PACKAGE}"
-            makefingerprint "${PACKAGE}"
-            makederiv -T spectrogram "${PACKAGE}"
-            makederiv -T waveform "${PACKAGE}"
-            makederiv -T podcast "${PACKAGE}"
-            makederiv -T mp3 "${PACKAGE}"
+            "${SCRIPTDIR}/makederiv" -T broadcast "${PACKAGE}"
+            "${SCRIPTDIR}/makederiv" -T youtube "${PACKAGE}"
+            "${SCRIPTDIR}/makeframes" "${PACKAGE}"
+            "${SCRIPTDIR}/makefingerprint" "${PACKAGE}"
+            "${SCRIPTDIR}/makederiv" -T spectrogram "${PACKAGE}"
+            "${SCRIPTDIR}/makederiv" -T waveform "${PACKAGE}"
+            "${SCRIPTDIR}/makederiv" -T podcast "${PACKAGE}"
+            "${SCRIPTDIR}/makederiv" -T mp3 "${PACKAGE}"
         fi
-        makemetadata "${PACKAGE}"
-        checksumpackage "${PACKAGE}"
+        "${SCRIPTDIR}/makemetadata" "${PACKAGE}"
+        "${SCRIPTDIR}/checksumpackage" "${PACKAGE}"
     fi
 done
