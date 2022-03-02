@@ -244,9 +244,29 @@ while [[ "${@}" != "" ]] ; do
             if [[ -z "${OUTTIME}" ]] ; then
                 OUTTIME=$(_readingestlog "outtime")
             fi
+            if [[ -n "${INTIME}" ]] ; then
+                IN_TIME_FROM="from capture.log"
+            fi
+            if [[ -n "${OUTTIME}" ]] ; then
+                OUT_TIME_FROM="from capture.log"
+            fi
+        fi
+        if [[ "${SOURCEFILE##*.}" == "wav" && "${ISOBJECT}" = "Y" ]] ; then
+            if [[ -z "${INTIME}" ]] ; then
+                INTIME=$(ffprobe -v 0 -i "${SOURCEFILE}" -show_entries chapter=start_time -of compact=p=0:nk=1 | head -n 1)
+            fi
+            if [[ -z "${OUTTIME}" ]] ; then
+                OUTTIME=$(ffprobe -v 0 -i "${SOURCEFILE}" -show_entries chapter=end_time -of compact=p=0:nk=1 | head -n 1)
+            fi
+            if [[ -n "${INTIME}" ]] ; then
+                IN_TIME_FROM="from wav cues chunk"
+            fi
+            if [[ -n "${OUTTIME}" ]] ; then
+                OUT_TIME_FROM="from wav cues chunk"
+            fi
         fi
         if [[ "${INTIME}" ]] ; then
-            _report -dt "Transcoding will use intime (${INTIME}) during transcoding."
+            _report -dt "Transcoding will use intime (${INTIME}) ${IN_TIME_FROM} during transcoding."
             INPUTOPTIONS+=(-seek_timestamp 1)
             MIDDLEOPTIONS+=(-ss "${INTIME}")
             METADATA_COMMENT+=("mediaid=${MEDIAID} ")
@@ -255,7 +275,7 @@ while [[ "${@}" != "" ]] ; do
         if [[ "${OUTTIME}" && "${ADDSLATE}" = "Y" ]] ; then
             _report -dt "Transcoding will NOT use outtime (${OUTTIME}) during transcoding, as there is a slate being created for this file."
         elif [[ "${OUTTIME}" && "${ADDSLATE}" != "Y" ]] ; then
-            _report -dt "Transcoding will use outtime (${OUTTIME}) during transcoding."
+            _report -dt "Transcoding will use outtime (${OUTTIME}) ${OUT_TIME_FROM} during transcoding."
             MIDDLEOPTIONS+=(-to "${OUTTIME}")
             METADATA_COMMENT+=("out=${OUTTIME} ")
         fi
