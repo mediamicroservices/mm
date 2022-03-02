@@ -233,40 +233,32 @@ while [[ "${@}" != "" ]] ; do
     INPUTOPTIONS+=(-y)
     INPUTOPTIONS+=(-nostdin)
 
-    # set in and out times if used; ignore out time if a slate is being created
-    if [[ -f "${INGESTLOG}" && "${ISOBJECT}" = "Y" ]] ; then
-        if [[ -z "${INTIME}" ]] ; then
-            INTIME=$(_readingestlog "intime")
-        fi
-        if [[ -z "${OUTTIME}" ]] ; then
-            OUTTIME=$(_readingestlog "outtime")
-        fi
-    fi
-    if [[ "${INTIME}" ]] ; then
-        _report -dt "Transcoding will use intime (${INTIME}) during transcoding."
-        INPUTOPTIONS+=(-seek_timestamp 1)
-        MIDDLEOPTIONS+=(-ss "${INTIME}")
-        METADATA_COMMENT+=("mediaid=${MEDIAID} ")
-        METADATA_COMMENT+=("in=${INTIME} ")
-    fi
-    if [[ "${OUTTIME}" && "${ADDSLATE}" = "Y" ]] ; then
-        _report -dt "Transcoding will NOT use outtime (${OUTTIME}) during transcoding, as there is a slate being created for this file."
-    elif [[ "${OUTTIME}" && "${ADDSLATE}" != "Y" ]] ; then
-        _report -dt "Transcoding will use outtime (${OUTTIME}) during transcoding."
-        MIDDLEOPTIONS+=(-to "${OUTTIME}")
-        METADATA_COMMENT+=("out=${OUTTIME} ")
-    fi
     if [[ "${USEACCESSTIMES}" = "N" ]]; then
         _report -dt "Transcoding will NOT use outtime (${OUTTIME}) during transcoding"
     elif [[ "${USEACCESSTIMES}" = "Y" ]]; then
-        _report -dt "Transcoding will use intime (${INTIME}) during transcoding."
-        INPUTOPTIONS+=(-seek_timestamp 1)
-        MIDDLEOPTIONS+=(-ss "${INTIME}")
-        METADATA_COMMENT+=("mediaid=${MEDIAID} ")
-        METADATA_COMMENT+=("in=${INTIME} ")
-        _report -dt "Transcoding will use outtime (${OUTTIME}) during transcoding."
-        MIDDLEOPTIONS+=(-to "${OUTTIME}")
-        METADATA_COMMENT+=("out=${OUTTIME} ")
+        # set in and out times if used; ignore out time if a slate is being created
+        if [[ -f "${INGESTLOG}" && "${ISOBJECT}" = "Y" ]] ; then
+            if [[ -z "${INTIME}" ]] ; then
+                INTIME=$(_readingestlog "intime")
+            fi
+            if [[ -z "${OUTTIME}" ]] ; then
+                OUTTIME=$(_readingestlog "outtime")
+            fi
+        fi
+        if [[ "${INTIME}" ]] ; then
+            _report -dt "Transcoding will use intime (${INTIME}) during transcoding."
+            INPUTOPTIONS+=(-seek_timestamp 1)
+            MIDDLEOPTIONS+=(-ss "${INTIME}")
+            METADATA_COMMENT+=("mediaid=${MEDIAID} ")
+            METADATA_COMMENT+=("in=${INTIME} ")
+        fi
+        if [[ "${OUTTIME}" && "${ADDSLATE}" = "Y" ]] ; then
+            _report -dt "Transcoding will NOT use outtime (${OUTTIME}) during transcoding, as there is a slate being created for this file."
+        elif [[ "${OUTTIME}" && "${ADDSLATE}" != "Y" ]] ; then
+            _report -dt "Transcoding will use outtime (${OUTTIME}) during transcoding."
+            MIDDLEOPTIONS+=(-to "${OUTTIME}")
+            METADATA_COMMENT+=("out=${OUTTIME} ")
+        fi
     fi
 
     if [[ -n "${METADATA_COMMENT}" ]] ; then
