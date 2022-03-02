@@ -141,7 +141,7 @@ elif [[ "${OUTPUT_TYPE}" == "waveform" ]] ; then
     EXTENSION="png"
     RELATIVEPATH="metadata/depictions"
     SUFFIX="_waveform"
-    USEACCESSTIMES="Y"
+    USEACCESSTIMES="N"
 elif [[ "${OUTPUT_TYPE}" == "audiographs" ]] ; then
     EXTENSION="png"
     RELATIVEPATH="metadata/depictions"
@@ -151,7 +151,7 @@ elif [[ "${OUTPUT_TYPE}" == "showwaves" ]] ; then
     EXTENSION="mp4"
     RELATIVEPATH="objects/access/showwaves"
     SUFFIX="_showwaves"
-    USEACCESSTIMES="N"
+    USEACCESSTIMES="Y"
 elif [[ "${OUTPUT_TYPE}" == "spectrogram" ]] ; then
     EXTENSION="png"
     RELATIVEPATH="objects/access/showwaves"
@@ -235,7 +235,7 @@ while [[ "${@}" != "" ]] ; do
     INPUTOPTIONS+=(-nostdin)
 
     if [[ "${USEACCESSTIMES}" = "N" ]]; then
-        _report -dt "Transcoding will NOT use outtime (${OUTTIME}) during transcoding"
+        _report -dt "Transcoding will NOT use in and out times during transcoding"
     else
         # set in and out times if used; ignore out time if a slate is being created
         if [[ -f "${INGESTLOG}" && "${ISOBJECT}" = "Y" && "${TIMESET}" != "Y" ]] ; then

@@ -22,7 +22,6 @@ while [ "${*}" != "" ] ; do
         #if there is one object file and it uses a .wav extension, then run audio-specific tests 
         if [[ "${MOSTCOMMONEXTENSION}" = "wav" ]] ; then
             "${SCRIPTDIR}/makederiv" -T audiographs "${PACKAGE}"
-            "${SCRIPTDIR}/makederiv" -T spectrogram "${PACKAGE}"
             "${SCRIPTDIR}/makederiv" -T waveform "${PACKAGE}"
             "${SCRIPTDIR}/makederiv" -T podcast "${PACKAGE}"
             "${SCRIPTDIR}/makederiv" -T mp3 "${PACKAGE}"
@@ -34,7 +33,6 @@ while [ "${*}" != "" ] ; do
             "${SCRIPTDIR}/makederiv" -T youtube "${PACKAGE}"
             "${SCRIPTDIR}/makeframes" "${PACKAGE}"
             "${SCRIPTDIR}/makefingerprint" "${PACKAGE}"
-            "${SCRIPTDIR}/makederiv" -T spectrogram "${PACKAGE}"
             "${SCRIPTDIR}/makederiv" -T waveform "${PACKAGE}"
             "${SCRIPTDIR}/makederiv" -T podcast "${PACKAGE}"
             "${SCRIPTDIR}/makederiv" -T mp3 "${PACKAGE}"
