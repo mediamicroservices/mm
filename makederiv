@@ -235,7 +235,7 @@ while [[ "${@}" != "" ]] ; do
     INPUTOPTIONS+=(-nostdin)
 
     if [[ "${USEACCESSTIMES}" = "N" ]]; then
-        _report -dt "Transcoding will NOT use outtime (${OUTTIME}) during transcoding"
+        _report -dt "Transcoding will NOT use in and out times during transcoding"
     else
         # set in and out times if used; ignore out time if a slate is being created
         if [[ -f "${INGESTLOG}" && "${ISOBJECT}" = "Y" ]] ; then
