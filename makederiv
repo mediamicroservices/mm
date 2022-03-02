@@ -275,7 +275,11 @@ while [[ "${@}" != "" ]] ; do
         if [[ "${INTIME}" ]] ; then
             _report -dt "Transcoding will use intime (${INTIME}) ${IN_TIME_FROM} during transcoding."
             INPUTOPTIONS+=(-seek_timestamp 1)
-            MIDDLEOPTIONS+=(-ss "${INTIME}")
+            if [[ "${OUTPUT_TYPE}" == "waveform" ]] ; then
+                INPUTOPTIONS+=(-ss "${INTIME}")
+            else
+                MIDDLEOPTIONS+=(-ss "${INTIME}")
+            fi
             METADATA_COMMENT+=("mediaid=${MEDIAID} ")
             METADATA_COMMENT+=("in=${INTIME} ")
         fi
@@ -283,7 +287,11 @@ while [[ "${@}" != "" ]] ; do
             _report -dt "Transcoding will NOT use outtime (${OUTTIME}) during transcoding, as there is a slate being created for this file."
         elif [[ "${OUTTIME}" && "${ADDSLATE}" != "Y" ]] ; then
             _report -dt "Transcoding will use outtime (${OUTTIME}) ${OUT_TIME_FROM} during transcoding."
-            MIDDLEOPTIONS+=(-to "${OUTTIME}")
+            if [[ "${OUTPUT_TYPE}" == "waveform" ]] ; then
+                INPUTOPTIONS+=(-to "${OUTTIME}")
+            else
+                MIDDLEOPTIONS+=(-to "${OUTTIME}")
+            fi
             METADATA_COMMENT+=("out=${OUTTIME} ")
         fi
     fi
