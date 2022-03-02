@@ -47,13 +47,12 @@ while [ "${*}" != "" ] ; do
         TEMPTREE=$(_maketemp)
         tree -DaNXs --du --timefmt "%Y-%m-%dT%H:%M:%SZ" -I "tree.xml|.DS_Store" "${PACKAGE}" > "${TEMPTREE}"
         #if tree.xml exists, compare it to the specified xpath expressions of an AIP
-
-        #check number of object files
-        OBJECTCOUNT="$(xmlstarlet sel -t -m "/tree/directory/directory[@name='objects']" -v "count(file)" -n "${TEMPTREE}")"
-        #check extension of first object file
-        FIRSTOBJECTEXTENSION="$(xmlstarlet sel -t -m "/tree/directory/directory[@name='objects']/file[1]" -v "substring-after(@name, '.')" -n  "${TEMPTREE}")"
+        
+        #check for most common extension in objects file
+        MOSTCOMMONEXTENSION="$(xmlstarlet sel -t -m "/tree/directory/directory[@name='objects']/file" -v "substring-after(@name, '.')" -n  "${TEMPTREE}"| sort | uniq -c | sort -n -r | head -n 1 | awk '{print $2}')"
+        
         #if there is one object file and it uses a .wav extension, then run audio-specific tests 
-        if [[ "${OBJECTCOUNT}" = 1 && "${FIRSTOBJECTEXTENSION}" = "wav" ]] ; then
+        if [[ "${MOSTCOMMONEXTENSION}" = "wav" ]] ; then
             _report -dt "running verifytree in audio mode on ${PACKAGE}" #the name of the package being verified
              # Here are tests for audio packages specifically
              #makes sure there is a podcast directory
@@ -72,7 +71,7 @@ while [ "${*}" != "" ] ; do
             _runtest -i "There is no audiograph file in the depictions directory!" xmlstarlet sel -t -v "/tree/directory/directory[@name='metadata']/directory[@name='depictions']/file[@name='${MEDIAID}_audiographs.png']/@name" -n  "${TEMPTREE}"
             #looks for waveform file in depictions directory
             _runtest -i "There is no waveform file in the depictions directory!" xmlstarlet sel -t -v "/tree/directory/directory[@name='metadata']/directory[@name='depictions']/file[@name='${MEDIAID}_waveform.png']/@name" -n  "${TEMPTREE}"
-        elif [[ "${FIRSTOBJECTEXTENSION}" = "tif" ]] ; then
+        elif [[ "${MOSTCOMMONEXTENSION}" = "tif" ]] ; then
              _report -dt "running verifytree in text mode on ${PACKAGE}" #the name of the package being verified
               # Here are tests for text packages specifically
             #makes sure there is a pdf_1 directory
