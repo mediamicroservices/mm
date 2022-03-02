@@ -22,21 +22,23 @@ while [ "${*}" != "" ] ; do
         #if there is one object file and it uses a .wav extension, then run audio-specific tests 
         if [[ "${MOSTCOMMONEXTENSION}" = "wav" ]] ; then
             makederiv -T audiographs "${PACKAGE}"
+            makederiv -T spectogram "${PACKAGE}"
+            makederiv -T waveform "${PACKAGE}"
+            makederiv -T podcast "${PACKAGE}"
+            makederiv -T mp3 "${PACKAGE}"
         elif [[ "${MOSTCOMMONEXTENSION}" = "tif" ]] ; then
             makepdf "${PACKAGE}"
-            makemetadata "${PACKAGE}" 
-            checksumpackage "${PACKAGE}"
         else
             makelossless "${PACKAGE}"
             makederiv -T broadcast "${PACKAGE}"
             makederiv -T youtube "${PACKAGE}"
             makeframes "${PACKAGE}"
             makefingerprint "${PACKAGE}"
+            makederiv -T spectogram "${PACKAGE}"
+            makederiv -T waveform "${PACKAGE}"
+            makederiv -T podcast "${PACKAGE}"
+            makederiv -T mp3 "${PACKAGE}"
         fi
-        makederiv -T spectogram "${PACKAGE}"
-        makederiv -T waveform "${PACKAGE}"
-        makederiv -T podcast "${PACKAGE}"
-        makederiv -T mp3 "${PACKAGE}"
         makemetadata "${PACKAGE}"
         checksumpackage "${PACKAGE}"
     fi
