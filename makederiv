@@ -78,8 +78,8 @@ while getopts ":T:lrmDv:d:o:e:E:F:scYp:twCS:I:O:nh" OPT ; do
         w) PTSBURN="Y";;
         C) CHAPTERIZE="Y";;
         S) SUFFIX="${OPTARG}";;
-        I) INTIME="${OPTARG}";;
-        O) OUTTIME="${OPTARG}";;
+        I) INTIME="${OPTARG}" ; TIMESET="Y" ;;
+        O) OUTTIME="${OPTARG}" ; TIMESET="Y" ;;
         n) DRYRUN=true;;
         h) _usage ;;
         *) echo "bad option -${OPTARG}" ; _usage ;;
@@ -238,7 +238,7 @@ while [[ "${@}" != "" ]] ; do
         _report -dt "Transcoding will NOT use outtime (${OUTTIME}) during transcoding"
     else
         # set in and out times if used; ignore out time if a slate is being created
-        if [[ -f "${INGESTLOG}" && "${ISOBJECT}" = "Y" ]] ; then
+        if [[ -f "${INGESTLOG}" && "${ISOBJECT}" = "Y" && "${TIMESET}" != "Y" ]] ; then
             if [[ -z "${INTIME}" ]] ; then
                 INTIME="$(_readingestlog "intime")"
             fi
@@ -252,19 +252,25 @@ while [[ "${@}" != "" ]] ; do
                 OUT_TIME_FROM="from capture.log"
             fi
         fi
-        if [[ "${SOURCEFILE##*.}" == "wav" && "${ISOBJECT}" = "Y" ]] ; then
+        if [[ "${SOURCEFILE##*.}" == "wav" && "${ISOBJECT}" = "Y" && "${TIMESET}" != "Y" && -z "${INTIME}" ]] ; then
             if [[ -z "${INTIME}" ]] ; then
                 INTIME="$(ffprobe -v 0 -i "${SOURCEFILE}" -show_entries chapter=start_time -of compact=p=0:nk=1 | head -n 1)"
-            fi
-            if [[ -z "${OUTTIME}" ]] ; then
-                OUTTIME="$(ffprobe -v 0 -i "${SOURCEFILE}" -show_entries chapter=end_time -of compact=p=0:nk=1 | head -n 1)"
             fi
             if [[ -n "${INTIME}" ]] ; then
                 IN_TIME_FROM="from wav cues chunk"
             fi
+        fi
+        if [[ "${SOURCEFILE##*.}" == "wav" && "${ISOBJECT}" = "Y" && "${TIMESET}" != "Y" && -z "${OUTTIME}" ]] ; then
+            if [[ -z "${OUTTIME}" ]] ; then
+                OUTTIME="$(ffprobe -v 0 -i "${SOURCEFILE}" -show_entries chapter=end_time -of compact=p=0:nk=1 | head -n 1)"
+            fi
             if [[ -n "${OUTTIME}" ]] ; then
                 OUT_TIME_FROM="from wav cues chunk"
             fi
+        fi
+        if [[ -n "$TIMESET" ]] ; then
+            IN_TIME_FROM="from command line options"
+            OUT_TIME_FROM="from command line options"
         fi
         if [[ "${INTIME}" ]] ; then
             _report -dt "Transcoding will use intime (${INTIME}) ${IN_TIME_FROM} during transcoding."
