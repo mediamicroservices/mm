@@ -110,7 +110,9 @@ while [ "${*}" != "" ] ; do
         _runtest -i "This package is missing a metadata directory!" xmlstarlet sel -t -v "/tree/directory/directory[@name='metadata']/@name" -n "${TEMPTREE}"
 
         #begin search of metadata
-
+        
+        #checks to see if there are files missing in restoration folder
+         _runtest "The restoration directory is missing files!" xmlstarlet sel -t -v "/tree/directory/directory[@name='objects']/directory[@name='restoration']/file[count(@name)=1]/@name" -n "${TEMPTREE}"
         #looks for any unexpected files in the upper level metadata directory -- files that aren't .md5, .log, .xml
         _runtest "There are files in the metadata directory that do not belong!" xmlstarlet sel -t -v "/tree/directory/directory[@name='metadata']/file[@name!='checksum.md5' and @name!='checksumchecks.log' and @name!='dfxml.xml' and @name!='mets.xml' and not(contains(@name,'checksum')) and not(contains(@name,'dfxml'))]/@name" -n "${TEMPTREE}"
         #makes sure a checksum.md5 is in the package
