@@ -405,7 +405,6 @@ while [[ "${@}" != "" ]] ; do
             MIDDLEOPTIONSIMX+=(-qmax 12)
             MIDDLEOPTIONSIMX+=(-g 1)
             MIDDLEOPTIONSIMX+=(-top 1)
-            MIDDLEOPTIONSIMX+=(-intra)
             MIDDLEOPTIONSIMX+=(-b:v 30M)
             MIDDLEOPTIONSIMX+=(-maxrate:v 30M)
             MIDDLEOPTIONSIMX+=(-minrate:v 30M)
