@@ -1,0 +1,642 @@
+#!/bin/bash
+THIS_NAME="$(basename "${0}")"
+
+_usage(){
+    cat <<EOF
+${THIS_NAME}
+
+Provide visual and information reporting on audio files.
+Usage:
+    ${THIS_NAME} [options] file1.wav [file2.wav ...]
+    or
+    ${THIS_NAME} [options] directory/
+
+The input can be a list of files or a directory of audio files. If the input is
+a directory, then ${THIS_NAME} will review all audio files immediately within
+that directory.
+
+Options:
+    By analyzing audio files, ${THIS_NAME} will provide the following outputs.
+    - A csv of metadata from the ffmpeg astats filter, stream metadata, and
+      bwfmetaedit (one csv for all file inputs)
+    - A csv of astats metadata per audio frame  (one csv for each file input)
+    - An xml of metadata from ffprobe, the astats filter, and bwfmetaedit (one
+      xml for all file inputs)
+    - A png graph that visualizes data from the astats and phasemeter filters
+      (one png for each file input)
+
+ -h        (Show this message)
+ -v        (Provide verbose output)
+
+ -c (y|n)  (Enable file summary csv output, default 'y')
+ -f (y|n)  (Enable audio frame astats csv output, default 'y')
+ -x (y|n)  (Enable xml output, default 'y')
+ -g (y|n)  (Enable graph output, default 'y')
+
+ -X        (By default the file summary csv will contain a core set of
+            metadata. The '-X' option adds more values.)
+
+EOF
+}
+
+if [ "${#}" = 0 ] ; then
+    _usage
+    exit 0
+fi
+
+OPTIND=1
+CSV_SUMMARY_OUTPUT="y"
+CSV_FRAMES_OUTPUT="y"
+XML_OUTPUT="y"
+GRAPH_OUTPUT="y"
+FULL_DATA="n"
+while getopts "hvc:f:x:g:X" opt ; do
+    case "${opt}" in
+        h) _usage ; exit ;;
+        v) VERBOSE=true ;;
+        c) CSV_SUMMARY_OUTPUT="${OPTARG}" ;;
+        f) CSV_FRAMES_OUTPUT="${OPTARG}" ;;
+        x) XML_OUTPUT="${OPTARG}" ;;
+        g) GRAPH_OUTPUT="${OPTARG}" ;;
+        X) FULL_DATA="y" ;;
+        *) echo "bad option -${OPTARG}" ; _usage ; exit 1 ;;
+        :) echo "Option -${OPTARG} requires an argument" ; exit 1 ;;
+    esac
+done
+shift "$((OPTIND-1))"
+
+if [[ "$VERBOSE" == "true" ]] ; then
+    :
+else
+    FFMPEG_VERBOSE=(-v 0)
+fi
+
+_add_column(){
+    IF_FULL="n"
+    unset RELABEL
+    OPTIND=1
+    while getopts "fr:" opt ; do
+        case "${opt}" in
+            f) IF_FULL="y" ;;
+            r) RELABEL="${OPTARG}" ;;
+            *) echo "bad option -${OPTARG}" ; _usage ; exit 1 ;;
+            :) echo "Option -${OPTARG} requires an argument" ; exit 1 ;;
+        esac
+    done
+    shift "$((OPTIND-1))"
+    REPORT_SOURCE="${1}"
+    SECTION="${2}"
+    KEY="${3}"
+    VALUE="${4}"
+    if [[ "${FULL_DATA}" = "n" && "${IF_FULL}" = "n" ]] ; then
+        if [[ "${FILE_NUMBER}" = "0" ]] ; then
+            if [[ -n "${RELABEL}" ]] ; then
+                CSV_HEADER+="${RELABEL},"
+            elif [[ "${REPORT_SOURCE}" = "ffprobe" ]] ; then
+                CSV_HEADER+="${SECTION}.${KEY},"
+            elif [[ "${REPORT_SOURCE}" = "astats" ]] ; then
+                if [[ "${SECTION:0:5}" = "lavfi" ]] ; then
+                    CSV_HEADER+="${KEY// /_},"
+                else
+                    CSV_HEADER+="${KEY// /_}_${SECTION},"
+                fi
+            elif [[ "${REPORT_SOURCE}" = "local" ]] ; then
+                CSV_HEADER+="${KEY},"
+            fi
+        fi
+        if [[ "${REPORT_SOURCE}" = "ffprobe" ]] ; then
+            CSV_ROW+="$(_flat_ffprobe_parse "${FFPROBE_REPORT}" "${SECTION}.${KEY}"),"
+        elif [[ "${REPORT_SOURCE}" = "astats" ]] ; then
+            if [[ "${SECTION}" = "lavfi.aphasemeter.phase" ]] ; then
+                CSV_ROW+="$(grep "${SECTION}=" "${FILTER_REPORT}" | cut -d "=" -f2 | awk '{s+=$1}END{print s/NR}'),"
+            else
+                CSV_ROW+="$(_astats_parse "${FILTER_REPORT}" "${SECTION}" "${KEY}" "${VALUE}"),"
+            fi
+        elif [[ "${REPORT_SOURCE}" = "local" ]] ; then
+            CSV_ROW+="${VALUE},"
+        else
+            _report -w "Unexpected error in _add_column, REPORT_SOURCE=(${REPORT_SOURCE}), SECTION=(${SECTION}), KEY=(${KEY})"
+        fi
+    fi
+}
+
+_check_dependencies(){
+    while [ "${*}" != "" ] ; do
+        DEPENDENCY="${1}"
+        if [ ! $(which "${DEPENDENCY}") ] ; then
+            _report -wt "This script requires ${DEPENDENCY} to run but it is not installed"
+            DEPS_OK=NO
+        fi
+        shift
+    done
+    if [[ "${DEPS_OK}" = "NO" ]]; then
+        _report -wt "Unmet dependencies"
+        _report -wt "Stopping!"
+        exit 1
+    else
+        return 0
+    fi
+}
+
+_find_a_font(){
+    if [[ -f "/Library/Fonts/Andale Mono.ttf" ]] ; then
+        FONT_FILE="/Library/Fonts/Andale Mono.ttf"
+    elif [[ -f "/System/Library/Fonts/Supplemental/Andale Mono.ttf" ]] ; then
+        FONT_FILE="/System/Library/Fonts/Supplemental/Andale Mono.ttf"
+    elif [[ -f "/System/Library/Fonts/Monaco.dfont" ]] ; then
+        FONT_FILE="/System/Library/Fonts/Monaco.dfont"
+    elif [[ -f "/Library/Fonts/Microsoft/Lucida Console.ttf" ]] ; then
+        FONT_FILE="/Library/Fonts/Microsoft/Lucida\Console.ttf"
+    elif [[ -f "/Library/Fonts/LetterGothicStd.otf" ]] ; then
+        FONT_FILE="/Library/Fonts/LetterGothicStd.otf"
+    else
+        _report -wt "astatsaudit can't find a preferred font to use."
+    fi
+}
+
+_finish_xml(){
+    INVENTORY_XML="${1}"
+    _report -d "Finalizing xml output at ${INVENTORY_XML}"
+    xmlstarlet select \
+        -N "rdf=http://www.w3.org/1999/02/22-rdf-syntax-ns#" \
+        -N "asa=https://github.com/amiaopensource/astatsaudit" \
+        -N "ffprobe=http://www.ffmpeg.org/schema/ffprobe" \
+        -N "astats=https://ffmpeg.org/ffmpeg-filters.html#astats" \
+        -N "bwfme=https://mediaarea.net/BWFMetaEdit" \
+        -t \
+            --elem "rdf:RDF" \
+            --match "//f" \
+            --elem "rdf:Description" \
+                --attr "rdf:about" -v "." -b \
+            --elem "asa:stats" \
+                --elem "asa:dateTime" -v "date:date-time()" -b \
+            -b \
+            --elem "ffprobe:report" \
+                  --attr "settings" -o "$(echo ${FFPROBE_CMD[@]})" -b \
+                  --copy-of "document(@ff)/*" -b \
+            --elem "astats:report" --copy-of "document(@astats)/astats/text()" -b \
+            --elem "bwfme:fullReport" \
+                  --copy-of "document(@bwf)/*" \
+        "${INVENTORY_XML}" | xmlstarlet fo
+}
+
+_flat_ffprobe_parse(){
+    FFPROBE_DOC="${1}"
+    KEY="${2}"
+    VALUE="$(grep "^${KEY}=" "${FFPROBE_DOC}" | cut -d "=" -f2- | sed -e 's/^"//' -e 's/"$//')"
+    VALUE_LINE_COUNT="$(echo -n "${VALUE}" | grep -c '^')"
+    if [[ "${VALUE_LINE_COUNT}" > 1 ]] ; then
+        _report -w "The parsed value for '${KEY}' is in ${VALUE_LINE_COUNT} lines, which may be unintended"
+    fi
+    echo -n "${VALUE}"
+}
+
+_astats_parse(){
+    ASTATS_DOC="${1}"
+    SECTION="${2}"
+    KEY="${3}"
+    FILTER_PREFIX="${4}"
+    if [[ -z "${FILTER_PREFIX}" ]] ; then
+        FILTER_PREFIX="Parsed_astats_0"
+    fi
+    if [[ "${SECTION}" == "Overall" ]] ; then
+        VALUE="$(grep "${FILTER_PREFIX}" "${ASTATS_DOC}" | sed '1,/Overall$/d' | grep "] ${KEY}:" | cut -d : -f2- | sed 's/ //g')"
+    elif [[ "${SECTION:0:5}" == "lavfi" ]] ; then
+        grep "${SECTION}" "${ASTATS_DOC}" | cut -d "=" -f2- | head -n 1
+    else
+        VALUE="$(grep "${FILTER_PREFIX}" "${ASTATS_DOC}" | sed -n "s/Overall$/Channel: X/g;/Channel: ${SECTION}/,/Channel/p" | grep "] ${KEY}:" | cut -d : -f2- | sed 's/ //g')"
+    fi
+    VALUE_LINE_COUNT="$(echo -n "${VALUE}" | grep -c '^')"
+    if [[ "${VALUE_LINE_COUNT}" > 1 ]] ; then
+        _report -w "The parsed value for '${KEY}' is in ${VALUE_LINE_COUNT} lines, which may be unintended"
+    fi
+    echo -n "${VALUE}"
+}
+
+_get_iso8601(){
+    date +%FT%T
+}
+
+_get_iso8601_c(){
+    date +%Y%m%d-%H%M%S
+}
+
+_maketemp(){
+    mktemp -q -t "$(basename "${0}").XXXXXX"
+    if [ "${?}" -ne 0 ]; then
+        echo "${0}: Can't create temp file, exiting..."
+        exit 1
+    fi
+}
+
+_report(){
+    local RED="$(tput setaf 1)"    # Red      - For Warnings
+    local GREEN="$(tput setaf 2)"  # Green    - For Declarations
+    local BLUE="$(tput setaf 4)"   # Blue     - For Questions
+    local MAGENTA="$(tput setaf 5)" # Magenta - For Verbose Statements
+    local NC="$(tput sgr0)"        # No Color
+    local COLOR=""
+    local STARTMESSAGE=""
+    local ECHOOPT=""
+    local VERBOSE_CHECK=false
+    OPTIND=1
+    while getopts "vqdwstn" opt ; do
+        case "${opt}" in
+            v) VERBOSE_CHECK=true ;
+               COLOR="${MAGENTA}" ;
+               STARTMESSAGE+="#" ;; # only output the message if DV_VERBOSE=true
+            q) COLOR="${BLUE}" ;;                        # question mode, use color blue
+            d) COLOR="${GREEN}" ;;                       # declaration mode, use color green
+            w) COLOR="${RED}" ;;                         # warning mode, use color red
+            s) STARTMESSAGE+=([${SCRIPTNAME}] ) ;;       # prepend scriptname to the message
+            t) STARTMESSAGE+=($(_get_iso8601) '- ' ) ;;  # prepend timestamp to the message
+            n) ECHOOPT="-n" ;;                           # to avoid line breaks after echo
+        esac
+    done
+    shift "$((OPTIND-1))"
+    MESSAGE="${1}"
+    if ! "${VERBOSE_CHECK}" ; then
+        >&2 echo ${ECHOOPT} "${COLOR}${STARTMESSAGE[@]}${MESSAGE}${NC}"
+    fi
+}
+
+_ss_to_hhmmss(){
+    # if milliseconds are used it will round down to nearest second for instance 60.9, will return 1:00
+    INT="${1%.*}"
+    [[ -z "$INT" ]] && INT="0"
+    DEC="$(echo "${1#*.}" | head -c 3)"
+    printf "%02d\:%02d\:%02d.${DEC}\n" $(($INT/3600)) $(($INT%3600/60)) $(($INT%60))
+}
+
+_get_metadata(){
+    FILENAME="${1}"
+    BASENAME=$(basename "${FILENAME}")
+    FILTER_REPORT="$(_maketemp)"
+    FILTER_REPORT_XMLD="${2}"
+    FFPROBE_REPORT="$(_maketemp)"
+    ffmpeg -nostdin -i "${FILENAME}" -vn -filter_complex "astats,asetnsamples=n=65536:p=0,aphasemeter=video=0,ametadata=mode=print:key=lavfi.aphasemeter.phase,channelsplit,axcorrelate,astats" -f null - 2>&1 |  tr "\r" "\n" > "${FILTER_REPORT}"
+    {
+        echo "<astats>"
+        grep "Parsed_astats" "${FILTER_REPORT}" | cut -d "]" -f2- | sed 's/^ //g'
+        echo "</astats>"
+    } > "${FILTER_REPORT_XMLD}"
+    ffprobe -i "${FILENAME}" -show_format -show_streams -of flat 2> /dev/null > "${FFPROBE_REPORT}"
+    BWFMETAEDIT_REPORT=$(bwfmetaedit "$FILENAME" 2>&1 | awk '{printf "%s+",$0} END {print ""}')
+}
+
+_get_csv_row(){
+    # this function expects to process the following variables:
+    # FILTER_REPORT, FFPROBE_REPORT, BWFMETAEDIT_REPORT
+    unset CSV_ROW
+
+    #local math
+    RMS_level_1="$(_astats_parse "${FILTER_REPORT}" "1" "RMS level dB")"
+    RMS_level_2="$(_astats_parse "${FILTER_REPORT}" "2" "RMS level dB")"
+    if [[ -n "${RMS_level_1}" && -n "${RMS_level_2}" ]] ; then
+        RMS_level_ch_offset="$(echo "$(_astats_parse "${FILTER_REPORT}" "1" "RMS level dB") - $(_astats_parse "${FILTER_REPORT}" "2" "RMS level dB")" | bc)"
+    else
+        RMS_level_ch_offset=""
+    fi
+
+    # the following _add_column functions use the following arguments
+    # 1: 'astats to read from FILTER_REPORT
+    #    'ffprobe' to read from FFPROBE_REPORT
+    #    'local' to print local key/value pairs
+    # 2: if $1=astats the $2 is the channel number or 'Overall'
+    #    if $2=ffprobe then $2 is the section: format or streams
+    #    if $1=local then $2 is unused
+    # 3: the value or variable to parse from the referenced report
+    # 4: if $1=astats then this is a filter for the astats occurrence (blank for primary, astats_6 for astats of the axcorrelation output (the 6th filter))
+    #    if $1=local then this is the value for the $3 variable
+    _add_column -f astats  1       "Bit depth"
+    _add_column -f astats  2       "Bit depth"
+    _add_column    astats  Overall "Bit depth"
+    _add_column    ffprobe streams stream.0.channels
+    _add_column    ffprobe streams stream.0.codec_name
+    _add_column -r "Correlation (via phase)"         astats  lavfi.aphasemeter.phase   "Correlation"
+    _add_column -r "Correlation (via axcorrelation)" astats  1       "DC offset"              "Parsed_astats_6"
+    _add_column    astats  1       "Crest factor"
+    _add_column    astats  2       "Crest factor"
+    _add_column    astats  1       "DC offset"
+    _add_column    astats  2       "DC offset"
+    _add_column -f astats  Overall "DC offset"
+    _add_column    ffprobe format  duration
+    _add_column    astats  1       "Dynamic range"
+    _add_column    astats  2       "Dynamic range"
+    _add_column    local   ""      filename "${BASENAME}"
+    _add_column    astats  1       "Flat factor"
+    _add_column    astats  2       "Flat factor"
+    _add_column -f astats  Overall "Flat factor"
+    _add_column    astats  1       "Max difference"
+    _add_column    astats  2       "Max difference"
+    _add_column -f astats  Overall "Max difference"
+    _add_column    astats  1       "Max level"
+    _add_column    astats  2       "Max level"
+    _add_column -f astats  Overall "Max level"
+    _add_column -f astats  1       "Mean difference"
+    _add_column -f astats  2       "Mean difference"
+    _add_column -f astats  Overall "Mean difference"
+    _add_column -f astats  1       "Min difference"
+    _add_column -f astats  2       "Min difference"
+    _add_column -f astats  Overall "Min difference"
+    _add_column    astats  1       "Min level"
+    _add_column    astats  2       "Min level"
+    _add_column -f astats  Overall "Min level"
+    _add_column    astats  1       "Noise floor dB"
+    _add_column    astats  2       "Noise floor dB"
+    _add_column -f astats  Overall "Noise floor dB"
+    _add_column    astats  1       "Noise floor count"
+    _add_column    astats  2       "Noise floor count"
+    _add_column -f astats  Overall "Noise floor count"
+    _add_column -f astats  Overall "Number of samples"
+    _add_column    astats  1       "Peak count"
+    _add_column    astats  2       "Peak count"
+    _add_column    astats  Overall "Peak count"
+    _add_column    astats  1       "Peak level dB"
+    _add_column    astats  2       "Peak level dB"
+    _add_column -f astats  Overall "Peak level dB"
+    _add_column -f astats  1       "RMS difference"
+    _add_column -f astats  2       "RMS difference"
+    _add_column -f astats  Overall "RMS difference"
+    _add_column    astats  1       "RMS level dB"
+    _add_column    astats  2       "RMS level dB"
+    _add_column -f astats  Overall "RMS level dB"
+    _add_column    local   ""      "RMS level channel offset" "${RMS_level_ch_offset}"
+    _add_column -f astats  1       "RMS peak dB"
+    _add_column -f astats  2       "RMS peak dB"
+    _add_column -f astats  Overall "RMS peak dB"
+    _add_column -f astats  1       "RMS trough dB"
+    _add_column -f astats  2       "RMS trough dB"
+    _add_column -f astats  Overall "RMS trough dB"
+    _add_column    ffprobe streams stream.0.sample_rate
+    _add_column -f astats  1       "Zero crossings"
+    _add_column -f astats  2       "Zero crossings"
+    _add_column -f astats  1       "Zero crossings rate"
+    _add_column -f astats  2       "Zero crossings rate"
+    _add_column    local   ""      bwfmetaedit "${BWFMETAEDIT_REPORT}"
+}
+
+_make_astats_csv_body(){
+    FILENAME="${1}"
+    ASTATS_CSV="${2}"
+    ffprobe -v 0 -f lavfi -i "amovie=${FILENAME},astats=metadata=1:reset=1" -show_frames -of csv >> "${ASTATS_CSV}"
+}
+
+_make_astats_csv(){
+    OPTIND=1
+    unset OUTPUT_DIR
+    while getopts "o:" opt ; do
+        case "${opt}" in
+            o) OUTPUT_DIR="${OPTARG}" ;;
+            *) echo "bad option -${OPTARG}" ; _usage ; exit 1 ;;
+            :) echo "Option -${OPTARG} requires an argument" ; exit 1 ;;
+        esac
+    done
+    shift "$((OPTIND-1))"
+
+    FILENAME="$1"
+    if [[ -z "${OUTPUT_DIR}" ]] ; then
+        OUTPUT_DIR="$(dirname "${FILENAME}")"
+    fi
+    BASENAME="$(basename "${FILENAME}")"
+    ASTATS_CSV="${OUTPUT_DIR}/${BASENAME}.astats.csv"
+    DURATION="${2}"
+    DURATION_LITTLE_LESS="$(echo "${DURATION}" - 0.1 | bc -l)"
+    if [[ ! -f "${ASTATS_CSV}" ]] ; then
+        _report -d "    Making astats csv for ${BASENAME}"
+        ffprobe -f lavfi -i "amovie=${FILENAME}:sp=${DURATION_LITTLE_LESS},astats=metadata=1:reset=1" -show_frames -of csv=nk=0 2>/dev/null | tail -n 1 | sed 's/=[^,]*//g' > "${ASTATS_CSV}"
+        _make_astats_csv_body "${FILENAME}" "${ASTATS_CSV}"
+    else
+        _report -d "    Astats csv for ${BASENAME} already exists, skipping."
+    fi
+}
+
+_make_graph(){
+    OPTIND=1
+    unset OUTPUT_DIR
+    while getopts "o:" opt ; do
+        case "${opt}" in
+            o) OUTPUT_DIR="${OPTARG}" ;;
+            *) echo "bad option -${OPTARG}" ; _usage ; exit 1 ;;
+            :) echo "Option -${OPTARG} requires an argument" ; exit 1 ;;
+        esac
+    done
+    shift "$((OPTIND-1))"
+
+    FILENAME="${1}"
+    if [[ -z "${OUTPUT_DIR}" ]] ; then
+        OUTPUT_DIR="$(dirname "${FILENAME}")"
+    fi
+    BASENAME=$(basename "${FILENAME}")
+    OUTPUT_GRAPH="${OUTPUT_DIR}/${BASENAME}.astatsaudit.png"
+    _report -d "    Generating a graph at ${OUTPUT_GRAPH}"
+    # image settings
+    AUDIO_SAMPLE_RATE=48000
+    HEADER_HEIGHT=24
+    HEADER_HEIGHT_BIG=$(echo "${HEADER_HEIGHT} * 2" | bc)
+    TIMELINE_FONTSIZE=16
+    DRAWGRAPH_SETTINGS="bg=Black"
+    BORDER_COLOR="LightGrey"
+    HORIZONTAL_MARKINGS_240="drawgrid=thickness=1:color=${BORDER_COLOR}@0.2:height=ih/16,drawgrid=thickness=1:color=${BORDER_COLOR}@0.5:height=ih/4,drawgrid=thickness=1:color=${BORDER_COLOR}@0.8:height=ih/2"
+    HORIZONTAL_MARKINGS_120="drawgrid=thickness=1:color=${BORDER_COLOR}@0.2:height=ih/8,drawgrid=thickness=1:color=${BORDER_COLOR}@0.5:height=ih/4,drawgrid=thickness=1:color=${BORDER_COLOR}@0.8:height=ih/2"
+    GRAPH_W=6000
+    AUDIO_FRAME_SIZE="$(echo "((${DURATION}*${AUDIO_SAMPLE_RATE})/${GRAPH_W})+1" | bc)"
+    # adding 0.5 in the above equation to ensure that the result is rounded to the nearest integer, rather than simply rounded down
+    AUDIOFORMAT="aresample=${AUDIO_SAMPLE_RATE},aformat=sample_fmts=dbl,asetnsamples=n=${AUDIO_FRAME_SIZE}:p=0"
+    VERTICAL_MARKINGS=$(echo "${GRAPH_W} / 150" | bc)
+    GRAPH_H="384"
+    PAD_W="240"
+
+    unset TIMELINE
+    COUNTER=0
+    while [ "${COUNTER}" -lt "${VERTICAL_MARKINGS}" ]; do
+        ((COUNTER++))
+        MARK="$(echo "scale=6; $DURATION * ($COUNTER / $VERTICAL_MARKINGS)" | bc)"
+        MARK_X="$(echo "scale=6; $GRAPH_W * ($COUNTER / $VERTICAL_MARKINGS)" | bc)"
+        MARK_TIME="$(_ss_to_hhmmss "${MARK}")"
+        TIMELINE+=",drawtext=fontfile=${FONT_FILE}:fontcolor=black:fontsize=${TIMELINE_FONTSIZE}:text='${MARK_TIME}':x=${MARK_X}-text_w:y=(${HEADER_HEIGHT}-${TIMELINE_FONTSIZE})/2"
+    done
+    GRAPH_FILTER="asplit=4[j][k][l][m];
+        `#timeline`
+        color=c=${BORDER_COLOR}:s=${GRAPH_W}x${HEADER_HEIGHT}${TIMELINE},split=4[top1][top2][top3][top4];
+        color=c=${BORDER_COLOR}:s=${GRAPH_W}x${HEADER_HEIGHT_BIG},drawtext=fontfile=${FONT_FILE}:fontcolor=black:fontsize=36:text='Audio QC Graph\:   Filename\: ${BASENAME},   Duration\: $(_ss_to_hhmmss "${DURATION}"),   Audio Frame Size\: ${AUDIO_FRAME_SIZE}'[Header];
+        `#peak/rms left`color=c=${BORDER_COLOR}:s=${GRAPH_W}x${HEADER_HEIGHT},drawtext=fontfile=${FONT_FILE}:fontcolor=black:fontsize=24:text='Channel 1 Level, -144 to 0 dBFS, Blue=peak, Yellow=RMS'[peakLH];
+        `#peak/rms right`color=c=${BORDER_COLOR}:s=${GRAPH_W}x${HEADER_HEIGHT},drawtext=fontfile=${FONT_FILE}:fontcolor=black:fontsize=24:text='Channel 2 Level, -144 to 0 dBFS, Purple=peak, Yellow=RMS'[peakRH];
+        `#min/max`color=c=${BORDER_COLOR}:s=${GRAPH_W}x${HEADER_HEIGHT},drawtext=fontfile=${FONT_FILE}:fontcolor=black:fontsize=24:text='Audio Min/Max Level -1...1. Blue=channel 1, Purple=channel 2.'[minmaxH];
+        `#phase`color=c=${BORDER_COLOR}:s=${GRAPH_W}x${HEADER_HEIGHT},drawtext=fontfile=${FONT_FILE}:fontcolor=black:fontsize=24:text='Correlation, -1 to 1'[phaseH];
+        `#axcorrelate`color=c=${BORDER_COLOR}:s=${GRAPH_W}x${HEADER_HEIGHT},drawtext=fontfile=${FONT_FILE}:fontcolor=black:fontsize=24:text='Normalized Cross Correlation, -1.1 to 1.1 (-1 to 1 with a boundary)'[axcorrelateH];
+        `#dc offset`color=c=${BORDER_COLOR}:s=${GRAPH_W}x${HEADER_HEIGHT},drawtext=fontfile=${FONT_FILE}:fontcolor=black:fontsize=24:text='DC Offset, -0.01 to 0.01 dBFS offset in the mean displacement from 0'[dcoffH];
+        `#crest`color=c=${BORDER_COLOR}:s=${GRAPH_W}x${HEADER_HEIGHT},drawtext=fontfile=${FONT_FILE}:fontcolor=black:fontsize=24:text='Crest Factor, -1 to 1 ratio of peak level to RMS level, Blue=Channel 1, Purple=Channel 2`#High levels may indicate prior compression`'[crestH];
+        [j]${AUDIOFORMAT},astats=metadata=1:reset=1,asplit=4[astats1][astats2][astats3][astats4];
+            [astats1]adrawgraph=${DRAWGRAPH_SETTINGS}:
+                m1=lavfi.astats.1.Peak_level:fg1=0xFFFF0000:
+                m2=lavfi.astats.1.RMS_level:fg2=0xFF00FFFF:
+                max=0:min=-144:
+                slide=picture:
+                mode=line:
+                s=${GRAPH_W}x${GRAPH_H},${HORIZONTAL_MARKINGS_240}[peakL1];
+            [astats2]adrawgraph=${DRAWGRAPH_SETTINGS}:
+                m1=lavfi.astats.2.Peak_level:fg1=0xFFFF00FF:
+                m2=lavfi.astats.2.RMS_level:fg2=0xFF00FFFF:
+                max=0:min=-144:
+                slide=picture:
+                mode=line:
+                s=${GRAPH_W}x${GRAPH_H},${HORIZONTAL_MARKINGS_240}[peakR1];
+            [astats3]adrawgraph=${DRAWGRAPH_SETTINGS}:
+                m1=lavfi.astats.1.Max_level:fg1=0xFFFF0000:
+                m2=lavfi.astats.2.Max_level:fg2=0xFFFF00FF:
+                m3=lavfi.astats.1.Min_level:fg3=0xFFFF0000:
+                m4=lavfi.astats.2.Min_level:fg4=0xFFFF00FF:
+                min=-1:max=1:
+                slide=picture:
+                s=${GRAPH_W}x${GRAPH_H},${HORIZONTAL_MARKINGS_240}[minmax1];
+        [k]${AUDIOFORMAT},astats=metadata=1,adrawgraph=${DRAWGRAPH_SETTINGS}:
+                m1=lavfi.astats.1.DC_offset:fg1=if(gte(VAL\,0.005)\,0xFF0000FF\,if(lte(VAL\,-0.005)\,0xFF0000FF\,0xFF00FF00)):
+                m2=lavfi.astats.2.DC_offset:
+                min=-0.01:max=0.01:
+                slide=picture:
+                s=${GRAPH_W}x${GRAPH_H},${HORIZONTAL_MARKINGS_240}[dcoff1];
+            [astats4]adrawgraph=${DRAWGRAPH_SETTINGS}:
+                m1=lavfi.astats.1.Crest_factor:fg1=0xFFFF0000:
+                m2=lavfi.astats.2.Crest_factor:fg2=0xFFFF00FF:
+                max=10:min=0:
+                slide=picture:
+                mode=line:
+                s=${GRAPH_W}x${GRAPH_H},${HORIZONTAL_MARKINGS_240}[crest1];
+        [l]${AUDIOFORMAT},aphasemeter=video=0,
+            adrawgraph=${DRAWGRAPH_SETTINGS}:
+                m1=lavfi.aphasemeter.phase:fg1=if(gte(VAL\,0.9)\,0xFF00FF00\,if(gte(VAL\,0)\,0xFF00FFFF\,if(gte(VAL\,-0.5)\,0xFF0096FF\,0xFF0000FF))):
+                max=1:min=-1:
+                slide=picture:
+                s=${GRAPH_W}x${GRAPH_H},${HORIZONTAL_MARKINGS_240}[phase1];
+        [m]${AUDIOFORMAT},channelsplit,axcorrelate=algo=fast,astats=metadata=1:reset=1,adrawgraph=${DRAWGRAPH_SETTINGS}:
+                m1=lavfi.astats.1.Max_level:fg1=if(gte(VAL\,0.9)\,0xFF00FF00\,if(gte(VAL\,0)\,0xFF00FFFF\,if(gte(VAL\,-0.5)\,0xFF0096FF\,0xFF0000FF))):
+                min=-1.1:max=1.1:
+                slide=picture:
+                s=${GRAPH_W}x${GRAPH_H},${HORIZONTAL_MARKINGS_240}[axcorrelate];
+        [Header]
+        [top1][peakLH][peakL1][peakRH][peakR1]
+        [top2][minmaxH][minmax1][phaseH][phase1][axcorrelateH][axcorrelate]
+        [top3][dcoffH][dcoff1][crestH][crest1]
+        [top4]vstack=19,drawgrid=thickness=1:color=gray@0.5:width=iw/${VERTICAL_MARKINGS},drawgrid=thickness=1:color=${BORDER_COLOR}@0.2:width=(iw/${VERTICAL_MARKINGS})/10[graph];
+        color=c=${BORDER_COLOR}:s=${PAD_W}x${HEADER_HEIGHT_BIG}[HeaderG];
+        color=c=${BORDER_COLOR}:s=${PAD_W}x${HEADER_HEIGHT},split=11[top1G][top2G][top3G][top4G][peakLHG][peakRHG][minmaxHG][phaseHG][axcorrelateHG][dcoffHG][crestHG];
+        `#1-1_240p_grat`color=c=${BORDER_COLOR}:s=${PAD_W}x${GRAPH_H},drawtext=fontfile=${FONT_FILE}:fontcolor=black:fontsize=${TIMELINE_FONTSIZE}:y=h*0.52:x=w*0.7:text='0',drawtext=fontfile=${FONT_FILE}:fontcolor=black:fontsize=${TIMELINE_FONTSIZE}:y=h*0.77:x=w*0.7:text='-0.5',drawtext=fontfile=${FONT_FILE}:fontcolor=black:fontsize=${TIMELINE_FONTSIZE}:y=h*0.27:x=w*0.7:text='+0.5',drawgrid=thickness=1:color=black@0.2:height=ih/16,drawgrid=thickness=1:color=black@0.5:height=ih/4,drawgrid=thickness=1:color=black@0.8:height=ih/2,split=4[minmax1G][phase1G][crest1G][dcoff1G];
+                `#1.1-1.1_240p_grat`color=c=${BORDER_COLOR}:s=${PAD_W}x${GRAPH_H},drawtext=fontfile=${FONT_FILE}:fontcolor=black:fontsize=${TIMELINE_FONTSIZE}:y=h*0.52:x=w*0.7:text='0',drawtext=fontfile=${FONT_FILE}:fontcolor=black:fontsize=${TIMELINE_FONTSIZE}:y=h*0.77:x=w*0.7:text='-0.42',drawtext=fontfile=${FONT_FILE}:fontcolor=black:fontsize=${TIMELINE_FONTSIZE}:y=h*0.27:x=w*0.7:text='+0.42',drawgrid=thickness=1:color=black@0.2:height=ih/16,drawgrid=thickness=1:color=black@0.5:height=ih/4,drawgrid=thickness=1:color=black@0.8:height=ih/2[axcorrelateG];
+        `#-144-0_240p_grat`color=c=${BORDER_COLOR}:s=${PAD_W}x${GRAPH_H},drawtext=fontfile=${FONT_FILE}:fontcolor=black:fontsize=${TIMELINE_FONTSIZE}:y=h*0.52:x=w*0.7:text='-72',drawtext=fontfile=${FONT_FILE}:fontcolor=black:fontsize=${TIMELINE_FONTSIZE}:y=h*0.77:x=w*0.7:text='-108',drawtext=fontfile=${FONT_FILE}:fontcolor=black:fontsize=${TIMELINE_FONTSIZE}:y=h*0.27:x=w*0.7:text='-36',drawtext=fontfile=${FONT_FILE}:fontcolor=black:fontsize=${TIMELINE_FONTSIZE}:y=h*0.02:x=w*0.7:text='0',drawgrid=thickness=1:color=black@0.2:height=ih/16,drawgrid=thickness=1:color=black@0.5:height=ih/4,drawgrid=thickness=1:color=black@0.8:height=ih/2,split=2[peakL1G][peakR1G];
+        [HeaderG]
+        [top1G][peakLHG][peakL1G][peakRHG][peakR1G]
+        [top2G][minmaxHG][minmax1G][phaseHG][phase1G][axcorrelateHG][axcorrelateG]
+        [top3G][dcoffHG][dcoff1G][crestHG][crest1G]
+        [top4G]vstack=19[grat];
+        [grat][graph]hstack=2[chart]"
+    ffmpeg "${FFMPEG_VERBOSE[@]}" -nostdin -y -i "$FILENAME" -filter_complex "${GRAPH_FILTER}" \
+        -map "[chart]" -vframes 1 "${OUTPUT_GRAPH}"
+}
+
+_process_file(){
+    OPTIND=1
+    unset OUTPUT_DIR
+    while getopts "o:" opt ; do
+        case "${opt}" in
+            o) OUTPUT_DIR="${OPTARG}" ;;
+            *) echo "bad option -${OPTARG}" ; _usage ; exit 1 ;;
+            :) echo "Option -${OPTARG} requires an argument" ; exit 1 ;;
+        esac
+    done
+    shift "$((OPTIND-1))"
+
+    FILENAME="$1"
+    if [[ -z "${OUTPUT_DIR}" ]] ; then
+        OUTPUT_DIR="$(dirname "${FILENAME}")"
+    fi
+    BASENAME="$(basename "${FILENAME}")"
+    unset CSV_ROW
+    FILTER_TMP_XMLD="$(_maketemp)"
+    _report -d "Processing: ${BASENAME}"
+    if [[ "${CSV_SUMMARY_OUTPUT}" = "y" || "${XML_OUTPUT}" = "y" || "${GRAPH_OUTPUT}" = "y" ]] ; then
+        _get_metadata "${FILENAME}" "${FILTER_TMP_XMLD}"
+    fi
+    if [[ "${XML_OUTPUT}" = "y" ]] ; then
+        # gather xml data
+        FFMPEG_TMP="${FILES_XML_TMP}.ff.${FILE_NUMBER}.xml"
+        BWFME_TMP="${FILES_XML_TMP}.bwf.${FILE_NUMBER}.xml"
+        echo "<f ff=\"${FFMPEG_TMP}\" bwf=\"${BWFME_TMP}\" astats=\"${FILTER_TMP_XMLD}\">$(echo "${FILENAME}" | sed 's/.*\/\|.*\///g')</f>" >> "${FILES_XML_TMP}"
+        FFPROBE_CMD=(ffprobe -v 0 "${FILENAME}" "${FFPROBE_SETTINGS[@]}")
+        "${FFPROBE_CMD[@]}" > "${FFMPEG_TMP}"
+        BWFME_CMD=(bwfmetaedit --out-core-xml="${BWFME_TMP}" "${FILENAME}")
+        "${BWFME_CMD[@]}" 2>/dev/null
+    fi
+    if [[ "${CSV_SUMMARY_OUTPUT}" = "y" ]] ; then
+        # express csv row (with header if on first row)
+        _report -d "    Adding metadata to the file summary csv"
+        _get_csv_row "${FILENAME}"
+        if [[ "${FILE_NUMBER}" = "0" ]] ; then
+            echo "${CSV_HEADER}" | sed 's/.$//' > "${OUTPUT_CSV}"
+        fi
+        echo "${CSV_ROW}" | sed 's/.$//' >> "${OUTPUT_CSV}"
+    fi
+    if [[ "${GRAPH_OUTPUT}" = "y" ]] ; then
+        # variables to keep
+        DURATION=$(_flat_ffprobe_parse "${FFPROBE_REPORT}" format.duration)
+        _make_graph -o "${OUTPUT_DIR}" "${FILENAME}"
+    fi
+    if [[ "${CSV_FRAMES_OUTPUT}" = "y" ]] ; then
+        _make_astats_csv -o "${OUTPUT_DIR}" "${FILENAME}" "${DURATION}"
+    fi
+}
+
+_check_dependencies bwfmetaedit ffmpeg ffprobe bc xmlstarlet
+_find_a_font
+
+FILE_NUMBER="0"
+CSV_HEADER=""
+CSV_ROW=""
+
+INPUT="$1"
+FFPROBE_SETTINGS=(-of xml=x=1:q=1 -noprivate -show_format -show_streams -show_chapters)
+NOW="$(_get_iso8601_c)"
+if [[ -f "${INPUT}" ]] ; then
+    _report -d "${THIS_NAME} will process this list of files: ${@}"
+    OUTPUT_CSV="astatsaudit_${NOW}.csv"
+    while [[ "${@}" != "" ]] ; do
+        INPUT="$1"
+        FILES_XML_TMP="$(_maketemp)"
+        OUTPUT_XML="${INPUT}.astatsaudit.xml"
+        IS_AUDIO="$(ffprobe "${FFMPEG_VERBOSE[@]}" -v 0 "${INPUT}" -show_entries stream=codec_type -select_streams a:0 -of default=nk=1:nw=1)"
+        if [[ "${IS_AUDIO}" = "audio" ]] ; then
+            _process_file "${INPUT}"
+            _finish_xml "${FILES_XML_TMP}" > "${OUTPUT_XML}"
+            ((FILE_NUMBER++))
+        else
+            _report -d "Skipping: ${INPUT} (no audio stream found)"
+        fi
+        shift
+    done
+elif [[ -d "${INPUT}" ]] ; then
+    OUTPUT_DIR="${INPUT}_astatauditfiles"
+    _report -d "${THIS_NAME} will process audio files in ${INPUT} to ${OUTPUT_DIR}."
+    if [[ -d "${OUTPUT_DIR}" ]] ; then
+        _report -w "Error: ${OUTPUT_DIR} already exists."
+        exit 1
+    else
+        mkdir "${OUTPUT_DIR}"
+    fi
+    FILES_XML_TMP="$(_maketemp)"
+    OUTPUT_XML="${OUTPUT_DIR}/astatsaudit_${NOW}.xml"
+    OUTPUT_CSV="${OUTPUT_DIR}/astatsaudit_${NOW}.csv"
+    echo "<files>" > "${FILES_XML_TMP}"
+    while read FILE ; do
+        IS_AUDIO="$(ffprobe "${FFMPEG_VERBOSE[@]}" -v 0 "${FILE}" -show_entries stream=codec_type -select_streams a:0 -of default=nk=1:nw=1)"
+        if [[ "${IS_AUDIO}" = "audio" ]] ; then
+            _process_file -o "${OUTPUT_DIR}" "${FILE}"
+            ((FILE_NUMBER++))
+        else
+            _report -d "Skipping: ${FILE} (no audio stream found)"
+        fi
+    done < <(find "${INPUT}" -maxdepth 1 -type f ! -name ".*")
+    echo "</files>" >> "${FILES_XML_TMP}"
+    if [[ "${XML_OUTPUT}" = "y" ]] ; then
+        _finish_xml "${FILES_XML_TMP}" > "${OUTPUT_XML}"
+    fi
+fi
