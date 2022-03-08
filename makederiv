@@ -24,7 +24,6 @@ _usage(){
         echo "      mp3 (mp3)"
         echo "      podcast (mov or m4a)"
         echo "      waveform (png)"
-        echo "      audiographs (png)"
         echo "      showwaves (mp4)"
         echo "      spectrogram (png)"
         echo "  -m (only use the first track)"
@@ -142,11 +141,6 @@ elif [[ "${OUTPUT_TYPE}" == "waveform" ]] ; then
     RELATIVEPATH="metadata/depictions"
     SUFFIX="_waveform"
     USEACCESSTIMES="N"
-elif [[ "${OUTPUT_TYPE}" == "audiographs" ]] ; then
-    EXTENSION="png"
-    RELATIVEPATH="metadata/depictions"
-    SUFFIX="_audiographs"
-    USEACCESSTIMES="Y"
 elif [[ "${OUTPUT_TYPE}" == "showwaves" ]] ; then
     EXTENSION="mp4"
     RELATIVEPATH="objects/access/showwaves"
@@ -615,10 +609,6 @@ while [[ "${@}" != "" ]] ; do
             _add_video_filter "yadif"
         elif [[ "${OUTPUT_TYPE}" == "m4a" ]] || [[ "${OUTPUT_TYPE}" == "mp3" ]] || [[ "${OUTPUT_TYPE}" == "waveform" ]] ; then
             _report -dt "No video stream needed for ${OUTPUT_TYPE}."
-        elif [[ "${OUTPUT_TYPE}" == "m4a" ]] || [[ "${OUTPUT_TYPE}" == "audiographs" ]] ; then
-            _report _dt "No video stream needed for ${OUTPUT_TYPE}."
-        elif [[ "${OUTPUT_TYPE}" == "mp3" ]] || [[ "${OUTPUT_TYPE}" == "audiographs" ]] ; then
-            _report -dt "No video stream needed for ${OUTPUT_TYPE}."
         else
             echo "Invalid video derivative type."
         fi
@@ -684,10 +674,6 @@ while [[ "${@}" != "" ]] ; do
             MIDDLEOPTIONS+=(-vn)
             MIDDLEOPTIONS+=(-frames:v 1)
             _add_audio_filter "showspectrumpic=mode=combined:color=intensity:scale=log:fscale=lin:s=1024x1024"
-        elif [[ "${OUTPUT_TYPE}" == "audiographs" ]] ; then
-            MIDDLEOPTIONS+=(-vn)
-            MIDDLEOPTIONS+=(-frames:v 1)
-            MIDDLEOPTIONS+=(-map "[chart]")
             _ss_to_hhmmss(){
                 # if milliseconds are used it will round down to nearest second for instance 60.9, will return 1:00
                 INT="${1%.*}"
