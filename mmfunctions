@@ -1550,11 +1550,11 @@ _set_up_output(){
 
 _filter_to_middle_option(){
     if [ -n "${VIDEOFILTERCHAIN}" -a -n "${AUDIOFILTERCHAIN}" ] ; then
-        MIDDLEOPTIONS+=(-filter_complex ${VIDEOFILTERCHAIN}\;${AUDIOFILTERCHAIN})
+        MIDDLEOPTIONS+=(-filter_complex "${VIDEOFILTERCHAIN};${AUDIOFILTERCHAIN}")
     elif [ -n "${VIDEOFILTERCHAIN}" ] ; then
-        MIDDLEOPTIONS+=(-filter_complex ${VIDEOFILTERCHAIN})
+        MIDDLEOPTIONS+=(-filter_complex "${VIDEOFILTERCHAIN}")
     elif [ -n "${AUDIOFILTERCHAIN}" ] ; then
-        MIDDLEOPTIONS+=(-filter_complex ${AUDIOFILTERCHAIN})
+        MIDDLEOPTIONS+=(-filter_complex "${AUDIOFILTERCHAIN}")
     fi
 }
 
