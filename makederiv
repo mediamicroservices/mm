@@ -688,7 +688,6 @@ while [[ "${@}" != "" ]] ; do
             GRAPH_W=6000
             AUDIO_FRAME_SIZE="$(echo "((${DURATION}*${AUDIO_SAMPLE_RATE})/${GRAPH_W})+1" | bc)"
             # adding 0.5 in the above equation to ensure that the result is rounded to the nearest integer, rather than simply rounded down
-            echo "d ${DURATION} as ${AUDIO_SAMPLE_RATE} afr ${AUDIO_FRAME_SIZE}"
             AUDIOFORMAT="aresample=${AUDIO_SAMPLE_RATE},aformat=sample_fmts=dbl,asetnsamples=n=${AUDIO_FRAME_SIZE}:p=0"
             VERTICAL_MARKINGS=$(echo "${GRAPH_W} / 150" | bc)
 
