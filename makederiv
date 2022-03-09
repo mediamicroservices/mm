@@ -642,7 +642,16 @@ while [[ "${@}" != "" ]] ; do
         elif [[ "${OUTPUT_TYPE}" == "waveform" ]] ; then
             MIDDLEOPTIONS+=(-vn)
             MIDDLEOPTIONS+=(-frames:v 1)
-            _add_audio_filter "showwavespic=split_channels=1:scale=log:s=1920x240:colors=purple|blue|green|red"
+            _add_audio_filter "acrossover=split='15 250 1000 4000'[a01][a02][a03][a04][a05];
+            [a01]showwavespic=split_channels=1:scale=log:s=1920x240:colors=0x3030FF@0.8[v01];
+            [a02]showwavespic=split_channels=1:scale=log:s=1920x240:colors=0x5050FF@0.8[v02];
+            [a03]showwavespic=split_channels=1:scale=log:s=1920x240:colors=0x7070FF@0.8[v03];
+            [a04]showwavespic=split_channels=1:scale=log:s=1920x240:colors=0x9090FF@0.8[v04];
+            [a05]showwavespic=split_channels=1:scale=log:s=1920x240:colors=0xB0B0FF@0.8[v05];
+            [v01][v02]overlay[v2];
+            [v2][v03]overlay[v3];
+            [v3][v04]overlay[v4];
+            [v4][v05]overlay"
         elif [[ "${OUTPUT_TYPE}" == "spectogram" ]] ; then
             MIDDLEOPTIONS+=(-vn)
             MIDDLEOPTIONS+=(-frames:v 1)
