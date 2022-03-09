@@ -21,7 +21,7 @@ while [ "${*}" != "" ] ; do
         MOSTCOMMONEXTENSION="$(xmlstarlet sel -t -m "/tree/directory/directory[@name='objects']/file" -v "substring-after(@name, '.')" -n  "${TEMPTREE}"| sort | uniq -c | sort -n -r | head -n 1 | awk '{print $2}')"
         #if there is one object file and it uses a .wav extension, then run audio-specific tests 
         if [[ "${MOSTCOMMONEXTENSION}" = "wav" ]] ; then
-            astataudit -v -c n -f n -x n "${PACKAGE}/objects"
+            astataudit -v -c n -f n -x n -o ${PACKAGE}/metadata/depictions "${PACKAGE}/objects"
             "${SCRIPTDIR}/makederiv" -T waveform "${PACKAGE}"
             "${SCRIPTDIR}/makederiv" -T podcast "${PACKAGE}"
             "${SCRIPTDIR}/makederiv" -T mp3 "${PACKAGE}"
