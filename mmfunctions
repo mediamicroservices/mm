@@ -1378,7 +1378,7 @@ _get_volume_adjustment(){
         measured_thresh=$(echo "$LOUDNESS_DATA" | grep "input_thresh" | awk -F\" '{print $4}')
         target_offset=$(echo "$LOUDNESS_DATA" | grep "target_offset" | awk -F\" '{print $4}')
         LOUD_ADJ=$(echo "($measured_I - -24)*-1" | bc)
-        if [[ -f "${INGESTLOG}" && -z "${INTIME}" ]] ; then
+        if [[ -z "${INTIME}" ]] ; then
             _writeingestlog "measured_true_peak" "${measured_TP}"
             _writeingestlog "r128_loudness_range" "${measured_LRA}"
             _writeingestlog "r128_integrated_loudness" "${measured_I}"
