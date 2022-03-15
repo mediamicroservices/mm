@@ -105,7 +105,7 @@ mediamicroservice dependencies:
 * dvdauthor
 * exiftool
 * sdl
-* ffmpeg --with-sdl2 --with-freetype
+* ffmpeg
 * flac
 * ltopers (optional)
 * hashdeep
