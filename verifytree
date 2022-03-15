@@ -59,7 +59,7 @@ while [ "${*}" != "" ] ; do
              #makes sure there is a mp3 directory
              _runtest -i "This package is missing the mp3 directory!" xmlstarlet sel -t -v "/tree/directory/directory[@name='objects']/directory[@name='access']/directory[@name='mp3']/@name" -n "${TEMPTREE}"
             #looks in logs directory for any files that aren't .log or .txt
-            _runtest "There are files in the logs directory that do not belong!" xmlstarlet sel -t -v "/tree/directory/directory[@name='metadata']/directory[@name='logs']/file[substring(@name,string-length(@name)-3)!='xlsx' and substring(@name,string-length(@name)-2)!='txt' and substring(@name,string-length(@name)-2)!='log']/@name" -n "${TEMPTREE}"
+            _runtest "There are files in the logs directory that do not belong!" xmlstarlet sel -t -v "/tree/directory/directory[@name='metadata']/directory[@name='logs']/file[substring(@name,string-length(@name)-3)!='xlsx' and substring(@name,string-length(@name)-2)!='txt' and substring(@name,string-length(@name)-2)!='log' and substring(@name,string-length(@name)-2)!='xls']/@name" -n "${TEMPTREE}"
             #looks in fileMeta access for unexpected directories that are not dvd, mp3, podcast, or youtube_up
             _runtest "There are directories in the fileMeta access directory that do not belong!" xmlstarlet sel -t -v "/tree/directory/directory[@name='metadata']/directory[@name='fileMeta']/directory[@name='objects']/directory[@name='access']/directory[@name!='mp3' and @name!='podcast' and @name!='showwaves']/@name" -n "${TEMPTREE}"
             #looks for unexpected files in podcast directory
