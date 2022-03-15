@@ -48,12 +48,10 @@ while [ "${*}" != "" ] ; do
         tree -DaNXs --du --timefmt "%Y-%m-%dT%H:%M:%SZ" -I "tree.xml|.DS_Store" "${PACKAGE}" > "${TEMPTREE}"
         #if tree.xml exists, compare it to the specified xpath expressions of an AIP
 
-        #check number of object files
-        OBJECTCOUNT="$(xmlstarlet sel -t -m "/tree/directory/directory[@name='objects']" -v "count(file)" -n "${TEMPTREE}")"
-        #check extension of first object file
-        FIRSTOBJECTEXTENSION="$(xmlstarlet sel -t -m "/tree/directory/directory[@name='objects']/file[1]" -v "substring-after(@name, '.')" -n  "${TEMPTREE}")"
-        #if there is one object file and it uses a .wav extension, then run audio-specific tests 
-        if [[ "${OBJECTCOUNT}" = 1 && "${FIRSTOBJECTEXTENSION}" = "wav" ]] ; then
+        #check most common object extension
+        MOSTCOMMONEXTENSION="$(xmlstarlet sel -t -m "/tree/directory/directory[@name='objects']/file" -v "substring-after(@name, '.')" -n  "${TEMPTREE}"| sort | uniq -c | sort -n -r | head -n 1 | awk '{print $2}')"
+        #if the most common extension is .wav, then run audio-specific tests 
+        if [[ "${MOSTCOMMONEXTENSION}" = "wav" ]] ; then
             _report -dt "running verifytree in audio mode on ${PACKAGE}" #the name of the package being verified
              # Here are tests for audio packages specifically
              #makes sure there is a podcast directory
