@@ -111,7 +111,7 @@ while [ "${*}" != "" ] ; do
         _runtest -i "This package is missing a metadata directory!" xmlstarlet sel -t -v "/tree/directory/directory[@name='metadata']/@name" -n "${TEMPTREE}"
 
 		#checks to see if there are files in directories
-		  _runtest -i "This package is missing files!" xmlstarlet sel -t -v "/tree/directory/directory[@name='${MEDIAID}']/file[count(@name)>0]/@name" -n "${TEMPTREE}"
+		  _runtest "This package has empty directories!" xmlstarlet sel -t -v "/tree/directory//directory[not(directory|file)]/@name" -n "${TEMPTREE}"
 	   
 	    #begin search of metadata
 
