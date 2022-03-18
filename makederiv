@@ -397,7 +397,6 @@ while [[ "${@}" != "" ]] ; do
             MIDDLEOPTIONSIMX+=(-aspect 4:3)
             MIDDLEOPTIONSIMX+=(-qmax 12)
             MIDDLEOPTIONSIMX+=(-g 1)
-            MIDDLEOPTIONSIMX+=(-top 1)
             MIDDLEOPTIONSIMX+=(-b:v 30M)
             MIDDLEOPTIONSIMX+=(-maxrate:v 30M)
             MIDDLEOPTIONSIMX+=(-minrate:v 30M)
