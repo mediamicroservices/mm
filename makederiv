@@ -13,7 +13,7 @@ _usage(){
         echo "This application will create a derivative file from a video file or package input with the following options."
         echo "Dependencies: ${DEPENDENCIES[@]}"
         echo "Usage: $(basename "${0}") [ -d /path/to/deliver/to/ ] fileorpackage1 [ fileorpackage2 ...]"
-        echo "  -T derivative (specify a derivative video type:)"
+        echo "  -T derivative       (specify a derivative video type:)"
         echo "      broadcast (mov) for broadcast"
         echo "      broadcast_copy (mov) for broadcast"
         echo "      prores (mov) for editing"
@@ -26,29 +26,30 @@ _usage(){
         echo "      waveform (png)"
         echo "      audiographs (png)"
         echo "      showwaves (mp4)"
-        echo "  -m (only use the first track)"
-        echo "  -D (downmix the first two mono tracks, ignored if the first two audio tracks are not mono)"
-        echo "  -l (only use the left channel of the first audio track)"
-        echo "  -r (only use the right channel of the first audio track)"
-        echo "  -t (burn timecode overlay)"
-        echo "  -w (burn pts overlay)"
-        echo "  -C (generate chapter-based segmented output in addition to full output)"
-        echo "  -S suffix (add custom suffix to end of output filename)"
-        echo "  -I starttime (use a custom starting time from the source video, use HH:MM:SS.mmm format or something acceptable to ffmpeg)"
-        echo "  -O endtime   (use a custom ending time from the source video, use HH:MM:SS.mmm format or something acceptable to ffmpeg)"
-        echo "  -v Y|N (run the video through a volume adjustment filter, then adjust the volume accordingly during transcoding, slower; defaults to ${VOLADJUST})"
-        echo "  -d directory (directory to deliver the resulting file to)"
-        echo "  -o directory (directory to write the resulting file to)"
-        echo "  -e emailaddress (send an email about the delivery; only valid if -d is used)"
-        echo "  -E emailaddress (send an email about process outcome)"
-        echo "  -n (dry-run mode: show the commands that would be run but don't do anything)"
-        echo "  -h (display this help)"
+        echo "  -m                  (only use the first track)"
+        echo "  -D                  (downmix the first two mono tracks, ignored if the first two audio tracks are not mono)"
+        echo "  -l                  (only use the left channel of the first audio track)"
+        echo "  -r                  (only use the right channel of the first audio track)"
+        echo "  -t                  (burn timecode overlay)"
+        echo "  -u subtitle_file    (burn in a subtitle file)"
+        echo "  -w                  (burn pts overlay)"
+        echo "  -C                  (generate chapter-based segmented output in addition to full output)"
+        echo "  -S suffix           (add custom suffix to end of output filename)"
+        echo "  -I starttime        (use a custom starting time from the source video, use HH:MM:SS.mmm format or something acceptable to ffmpeg)"
+        echo "  -O endtime          (use a custom ending time from the source video, use HH:MM:SS.mmm format or something acceptable to ffmpeg)"
+        echo "  -v Y|N              (run the video through a volume adjustment filter, then adjust the volume accordingly during transcoding, slower; defaults to ${VOLADJUST})"
+        echo "  -d directory        (directory to deliver the resulting file to)"
+        echo "  -o directory        (directory to write the resulting file to)"
+        echo "  -e emailaddress     (send an email about the delivery; only valid if -d is used)"
+        echo "  -E emailaddress     (send an email about process outcome)"
+        echo "  -n                  (dry-run mode: show the commands that would be run but don't do anything)"
+        echo "  -h                  (display this help)"
         echo "  FOR BROADCAST USE ONLY:"
-        echo "      -F (apply a formula, override default settings)"
-        echo "      -s (create slate, which adds color bars, a slate, and 30 seconds of black at the end)"
-        echo "      -c (run the video through a crop detection filter, then crop the video accordingly during transcoding, slower)"
+        echo "      -F              (apply a formula, override default settings)"
+        echo "      -s              (create slate, which adds color bars, a slate, and 30 seconds of black at the end)"
+        echo "      -c              (run the video through a crop detection filter, then crop the video accordingly during transcoding, slower)"
         echo "  FOR YOUTUBE USE ONLY:"
-        echo "      -Y (attempt to use uploadyoutube on the resulting file)"
+        echo "      -Y              (attempt to use uploadyoutube on the resulting file)"
         echo "  FOR DVD USE ONLY:"
         echo "      -p dvdlabelprefix (overrides label set in mmconfig)"
         exit
@@ -56,7 +57,7 @@ _usage(){
 
 user_input=${@}
 OPTIND=1
-while getopts ":T:lrmDv:d:o:e:E:F:scYp:twCS:I:O:nh" OPT ; do
+while getopts ":T:lrmDv:d:o:e:E:F:scYp:tu:wCS:I:O:nh" OPT ; do
     case "${OPT}" in
         T) OUTPUT_TYPE="${OPTARG}";;
         l) AUDIOMAP="L";;
@@ -74,6 +75,7 @@ while getopts ":T:lrmDv:d:o:e:E:F:scYp:twCS:I:O:nh" OPT ; do
         Y) YOUTUBEUPLOAD="Y";;
         p) DVDLABELPREFIX="${OPTARG}";;
         t) TCBURN="Y";;
+        u) SUBTITLE_FILE="${OPTARG}";;
         w) PTSBURN="Y";;
         C) CHAPTERIZE="Y";;
         S) SUFFIX="${OPTARG}";;
@@ -741,6 +743,11 @@ while [[ "${@}" != "" ]] ; do
     elif [[ "${PTSBURN}" == "Y" ]] ; then
         _get_timestamp_overlay "${SOURCEFILE}"
         _add_video_filter "${TIMECODEOVERLAY}"
+    fi
+    # subtitle process
+    if [[ -n "${SUBTITLE_FILE}" ]] ; then
+        _get_subtitle_overlay "${SOURCEFILE}"
+        _add_video_filter "${SUBTITLEOVERLAY}"
     fi
 
     # slate process

@@ -1280,6 +1280,10 @@ _get_timestamp_overlay(){
     TIMECODEOVERLAY="drawtext=fontfile=/System/Library/Fonts/Monaco.dfont:text=%{pts\\\:hms}:fontcolor=white:fontsize=24:shadowx=2:shadowy=2:box=1:boxcolor=gray@0.8:x=w/2-tw/2:y=h*0.8"
 }
 
+_get_subtitle_overlay(){
+    SUBTITLEOVERLAY="subtitles=${SUBTITLE_FILE}"
+}
+
 _get_maxdvdbitrate(){
     _get_duration "${1}"
     local DVDCAPACITY=30794400000  # in bits, minus 10%
@@ -1378,7 +1382,7 @@ _get_volume_adjustment(){
         measured_thresh=$(echo "$LOUDNESS_DATA" | grep "input_thresh" | awk -F\" '{print $4}')
         target_offset=$(echo "$LOUDNESS_DATA" | grep "target_offset" | awk -F\" '{print $4}')
         LOUD_ADJ=$(echo "($measured_I - -24)*-1" | bc)
-        if [[ -f "${INGESTLOG}" && -z "${INTIME}" ]] ; then
+        if [[ -z "${INTIME}" ]] ; then
             _writeingestlog "measured_true_peak" "${measured_TP}"
             _writeingestlog "r128_loudness_range" "${measured_LRA}"
             _writeingestlog "r128_integrated_loudness" "${measured_I}"
