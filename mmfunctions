@@ -1280,6 +1280,10 @@ _get_timestamp_overlay(){
     TIMECODEOVERLAY="drawtext=fontfile=/System/Library/Fonts/Monaco.dfont:text=%{pts\\\:hms}:fontcolor=white:fontsize=24:shadowx=2:shadowy=2:box=1:boxcolor=gray@0.8:x=w/2-tw/2:y=h*0.8"
 }
 
+_get_subtitle_overlay(){
+    SUBTITLEOVERLAY="subtitles=${SUBTITLE_FILE}"
+}
+
 _get_maxdvdbitrate(){
     _get_duration "${1}"
     local DVDCAPACITY=30794400000  # in bits, minus 10%

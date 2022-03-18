@@ -31,6 +31,7 @@ _usage(){
         echo "  -l (only use the left channel of the first audio track)"
         echo "  -r (only use the right channel of the first audio track)"
         echo "  -t (burn timecode overlay)"
+        echo "  -u subtitle_file (burn in a subtitle file)"
         echo "  -w (burn pts overlay)"
         echo "  -C (generate chapter-based segmented output in addition to full output)"
         echo "  -S suffix (add custom suffix to end of output filename)"
@@ -56,7 +57,7 @@ _usage(){
 
 user_input=${@}
 OPTIND=1
-while getopts ":T:lrmDv:d:o:e:E:F:scYp:twCS:I:O:nh" OPT ; do
+while getopts ":T:lrmDv:d:o:e:E:F:scYp:tu:wCS:I:O:nh" OPT ; do
     case "${OPT}" in
         T) OUTPUT_TYPE="${OPTARG}";;
         l) AUDIOMAP="L";;
@@ -74,6 +75,7 @@ while getopts ":T:lrmDv:d:o:e:E:F:scYp:twCS:I:O:nh" OPT ; do
         Y) YOUTUBEUPLOAD="Y";;
         p) DVDLABELPREFIX="${OPTARG}";;
         t) TCBURN="Y";;
+        u) SUBTITLE_FILE="${OPTARG}";;
         w) PTSBURN="Y";;
         C) CHAPTERIZE="Y";;
         S) SUFFIX="${OPTARG}";;
@@ -741,6 +743,11 @@ while [[ "${@}" != "" ]] ; do
     elif [[ "${PTSBURN}" == "Y" ]] ; then
         _get_timestamp_overlay "${SOURCEFILE}"
         _add_video_filter "${TIMECODEOVERLAY}"
+    fi
+    # subtitle process
+    if [[ -n "${SUBTITLE_FILE}" ]] ; then
+        _get_subtitle_overlay "${SOURCEFILE}"
+        _add_video_filter "${SUBTITLEOVERLAY}"
     fi
 
     # slate process
