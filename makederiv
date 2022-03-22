@@ -142,7 +142,7 @@ elif [[ "${OUTPUT_TYPE}" == "waveform" ]] ; then
     EXTENSION="png"
     RELATIVEPATH="metadata/depictions"
     SUFFIX="_waveform"
-    USEACCESSTIMES="N"
+    USEACCESSTIMES="Y"
 elif [[ "${OUTPUT_TYPE}" == "audiographs" ]] ; then
     EXTENSION="png"
     RELATIVEPATH="metadata/depictions"
