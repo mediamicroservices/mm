@@ -27,17 +27,17 @@ while [ "${*}" != "" ] ; do
             makemetadata "${PACKAGE}" 
             checksumpackage "${PACKAGE}"
         else
-            makelossless "${PACKAGE}"
-            makederiv -T broadcast "${PACKAGE}"
-            makederiv -T youtube "${PACKAGE}"
-            makeframes "${PACKAGE}"
-            makefingerprint "${PACKAGE}"
+            "${SCRIPTDIR}/makelossless" "${PACKAGE}"
+            "${SCRIPTDIR}/makederiv" -T broadcast "${PACKAGE}"
+            "${SCRIPTDIR}/makederiv" -T youtube "${PACKAGE}"
+            "${SCRIPTDIR}/makeframes" "${PACKAGE}"
+            "${SCRIPTDIR}/makefingerprint" "${PACKAGE}"
         fi
         "${SCRIPTDIR}/makederiv" -T spectogram "${PACKAGE}"
         "${SCRIPTDIR}/makederiv" -T waveform "${PACKAGE}"
-        makederiv -T podcast "${PACKAGE}"
-        makederiv -T mp3 "${PACKAGE}"
-        makemetadata "${PACKAGE}"
-        checksumpackage "${PACKAGE}"
+        "${SCRIPTDIR}/makederiv" -T podcast "${PACKAGE}"
+        "${SCRIPTDIR}/makederiv" -T mp3 "${PACKAGE}"
+         "${SCRIPTDIR}/makemetadata" "${PACKAGE}"
+         "${SCRIPTDIR}/checksumpackage" "${PACKAGE}"
     fi
 done
