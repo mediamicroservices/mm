@@ -26,7 +26,7 @@ _usage(){
         echo "      waveform (png)"
         echo "      audiographs (png)"
         echo "      showwaves (mp4)"
-	echo "      streamable"
+        echo "      streamable"
         echo "  -m                  (only use the first track)"
         echo "  -D                  (downmix the first two mono tracks, ignored if the first two audio tracks are not mono)"
         echo "  -l                  (only use the left channel of the first audio track)"
@@ -525,39 +525,17 @@ while [[ "${@}" != "" ]] ; do
                 _add_video_filter "crop=720:480:0:32"
             fi
             _add_video_filter "yadif"
-	      elif [[ "${OUTPUT_TYPE}" == "streamable" ]]; then
+	      
+		  elif [[ "${OUTPUT_TYPE}" == "streamable" ]]; then
             MIDDLEOPTIONS+=(-movflags faststart)
             MIDDLEOPTIONS+=(-pix_fmt yuv420p)
             MIDDLEOPTIONS+=(-c:v libx264)
+			MIDDLEOPTIONS+=(-c:a aac)
             MIDDLEOPTIONS+=(-force_key_frames chapters)
             MIDDLEOPTIONS+=(-bufsize 1M)
 			MIDDLEOPTIONS+=(-maxrate 1M)
+			MIDDLEOPTIONS+=(-b:v 1M)
             MIDDLEOPTIONS+=(-f mp4)
-            if [[ "${OUTPUT_TYPE}" == "streamable" ]] ; then
-                MIDDLEOPTIONS+=(-crf 18)
-                if [ "${FILESECONDS%.*}" -gt "7200" ] ; then
-                    MIDDLEOPTIONS+=(-maxrate 2190k)
-                elif [ "${FILESECONDS%.*}" -gt "3600" ] ; then
-                    MIDDLEOPTIONS+=(-maxrate 4380k)
-                else
-                    MIDDLEOPTIONS+=(-maxrate 8760k)
-                fi
-            else
-                MIDDLEOPTIONS+=(-crf 23)
-                if [ "${FILESECONDS%.*}" -gt "7200" ] ; then
-                    MIDDLEOPTIONS+=(-maxrate 800k)
-                elif [ "${FILESECONDS%.*}" -gt "3600" ] ; then
-                    MIDDLEOPTIONS+=(-maxrate 900k)
-                else
-                    MIDDLEOPTIONS+=(-maxrate 2000k)
-                fi
-            fi
-            if  [[ "${WIDTH}" == 720 && "${HEIGHT}" == 486 ]] ; then
-                _add_video_filter "crop=720:480:0:4"
-            elif  [[ "${WIDTH}" == 720 && "${HEIGHT}" == 512 ]] ; then
-                _add_video_filter "crop=720:480:0:32"
-            fi
-            _add_video_filter "yadif"    
         elif [[ "${OUTPUT_TYPE}" == "quick" ]] ; then
             MIDDLEOPTIONS+=(-map 0:v)
             MIDDLEOPTIONS+=(-c:v libx264)
