@@ -525,16 +525,14 @@ while [[ "${@}" != "" ]] ; do
                 _add_video_filter "crop=720:480:0:32"
             fi
             _add_video_filter "yadif"
-	      
-		  elif [[ "${OUTPUT_TYPE}" == "streamable" ]]; then
+        elif [[ "${OUTPUT_TYPE}" == "streamable" ]]; then
             MIDDLEOPTIONS+=(-movflags faststart)
             MIDDLEOPTIONS+=(-pix_fmt yuv420p)
             MIDDLEOPTIONS+=(-c:v libx264)
-			MIDDLEOPTIONS+=(-c:a aac)
             MIDDLEOPTIONS+=(-force_key_frames chapters)
             MIDDLEOPTIONS+=(-bufsize 1M)
-			MIDDLEOPTIONS+=(-maxrate 1M)
-			MIDDLEOPTIONS+=(-b:v 1M)
+            MIDDLEOPTIONS+=(-maxrate 1M)
+            MIDDLEOPTIONS+=(-b:v 1M)
             MIDDLEOPTIONS+=(-f mp4)
         elif [[ "${OUTPUT_TYPE}" == "quick" ]] ; then
             MIDDLEOPTIONS+=(-map 0:v)
@@ -674,6 +672,11 @@ while [[ "${@}" != "" ]] ; do
             MIDDLEOPTIONS+=(-vn)
             MIDDLEOPTIONS+=(-frames:v 1)
             _add_audio_filter "showspectrumpic=mode=combined:color=intensity:scale=log:fscale=lin:s=1024x1024"
+        elif [[ "${OUTPUT_TYPE}" == "streamable" ]] ; then
+            MIDDLEOPTIONS+=(-c:a aac)
+            MIDDLEOPTIONS+=(-ac 2)
+            MIDDLEOPTIONS+=(-b:a 96k) 
+            _get_audio_mapping -v "${SOURCEFILE}"	
         elif [[ "${OUTPUT_TYPE}" == "audiographs" ]] ; then
             MIDDLEOPTIONS+=(-vn)
             MIDDLEOPTIONS+=(-frames:v 1)
