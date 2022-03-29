@@ -33,7 +33,6 @@ while [ "${*}" != "" ] ; do
             "${SCRIPTDIR}/makeframes" "${PACKAGE}"
             "${SCRIPTDIR}/makefingerprint" "${PACKAGE}"
         fi
-        "${SCRIPTDIR}/makederiv" -T spectogram "${PACKAGE}"
         "${SCRIPTDIR}/makederiv" -T waveform "${PACKAGE}"
         "${SCRIPTDIR}/makederiv" -T podcast "${PACKAGE}"
         "${SCRIPTDIR}/makederiv" -T mp3 "${PACKAGE}"
