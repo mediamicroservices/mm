@@ -38,25 +38,24 @@ if [ ! -d "${OUTDIR_INGESTXDCAM}" ] ; then
 fi
 
 #Interview the operator
-    _report -qn "Please enter (or scan) a valid Media ID before we begin: "
-    read -e MATERIALID1
-    if [ "${MATERIALID1}" == "q" ]; then
+    _report -qn "Please enter a valid Media ID. If there is no Media ID, please enter the Format Identifier: "
+    read -e MEDIAID
+    if [ "${MEDIAID}" == "q" ]; then
         exit 0
     fi
+    
+    _report -qn "Please enter a Format Identifier: "
+    read -e FORMATID
+    if [ "${FORMATID}" == "q" ]; then
+        exit 0
+    fi
+    
     _report -qn "Please enter any information from the disc's paper label: "
     read -e LABELINPUT
     if [ "${LABELINPUT}" == "q" ]; then
         exit 0
     fi
-   # _report -qn "If the XDCAM disc's case has one or more long barcodes, scan the first one now! If there are no barcodes, press enter."
-    #read -e BARCODE
-    #while [ "${BARCODE}" != "" ]; do
-    #_./barcodetest.sh ${BARCODE}
-    #_report -qn "Please scan the next barcode.  If there are no more barcodes to scan, just press enter!"
-    #read -e BARCODE
-    #if ["$BARCODE}" == "q"]; then
-    #    exit 0
-    #fi
+    
     _report -qn "Oh...I didn't get your name!  Would you mind entering it here and I'll include it in the record: "
     read -e OP
     if [ "${OP}" == "q" ]; then
@@ -89,11 +88,13 @@ fi
     _report -dt "We're almost ready to begin transfer.  I found the XDCAM deck: ${DECK1}"
 
      #report results of OP interview
-        MATERIALID1="${MATERIALID1}"
-        DEVICEID1="${XDCAM_VOLUME}"
+    MEDIAID="${MEDIAID}"
+    FORMATID="${FORMATID}"
+    DEVICEID1="${XDCAM_VOLUME}"
     echo ----------------------------------
     echo XDCAM Deck is:   "${XDCAM_VOLUME}"
-    echo Material ID is: "${MATERIALID1}"
+    echo Media ID is: "${MEDIAID}"
+    echo Format Identifier is: "${FORMATID}"
     echo The label reads: "${LABELINPUT}"
     echo Your name is: "${OP}"
     echo ----------------------------------
@@ -108,13 +109,13 @@ fi
         echo
     else
         # check for existing output
-        if [ -d "${OUTDIR_INGESTXDCAM}/${MATERIALID1}" ] ; then
-            _report -dt "It looks like ${MATERIALID1} was already ingested. These things happen! If you want to overwrite the existing one please just delete ${OUTDIR_INGESTXDCAM}/${MATERIALID1} first and then try again."
+        if [ -d "${OUTDIR_INGESTXDCAM}/${MEDIAID}" ] ; then
+            _report -dt "It looks like ${MEDIAID} was already ingested. These things happen! If you want to overwrite the existing one please just delete ${OUTDIR_INGESTXDCAM}/${MEDIAID} first and then try again."
         else
             #create ingest log file and directory
-            mkdir -p "${OUTDIR_INGESTXDCAM}/${MATERIALID1}/metadata/logs"
-            INGESTLOG="${OUTDIR_INGESTXDCAM}/${MATERIALID1}/metadata/logs/capture.log"
-            _writeingestlog "media ID" "${MATERIALID1}"
+            mkdir -p "${OUTDIR_INGESTXDCAM}/${MEDIAID}/metadata/logs"
+            INGESTLOG="${OUTDIR_INGESTXDCAM}/${MEDIAID}/metadata/logs/capture.log"
+            _writeingestlog "media ID" "${MEDIAID}"
             _writeingestlog "disc label info" "${LABELINPUT}"
             _writeingestlog "operator" "${OP}"
             _writeingestlog "ingest_process_dir" "${OUTDIR_INGESTXDCAM}"
@@ -122,16 +123,24 @@ fi
 
             # start xdcam ingest process 
             START=$(date -u "+%Y%m%dT%H%M%SZ")
-            mkdir -p "${OUTDIR_INGESTXDCAM}/${MATERIALID1}/objects"
+            mkdir -p "${OUTDIR_INGESTXDCAM}/${MEDIAID}/objects"
             _report -dt "migrating video..."
-            rsync -rtv --stats --progress --log-file="${OUTDIR_INGESTXDCAM}/${MATERIALID1}/metadata/logs/rsync_$(_get_iso8601_c)_$(basename $0)_${VERSION}.txt" "/Volumes/${DECK1}/Clip/"           "${OUTDIR_INGESTXDCAM}/${MATERIALID1}/objects/"
-            diskutil info "${XDCAM_MOUNT}" > "${OUTDIR_INGESTXDCAM}/${MATERIALID1}/metadata/logs/diskutilinfo.log"
+            rsync -rtv --stats --progress --log-file="${OUTDIR_INGESTXDCAM}/${MEDIAID}/metadata/logs/rsync_$(_get_iso8601_c)_$(basename $0)_${VERSION}.txt" "/Volumes/${DECK1}/Clip/"           "${OUTDIR_INGESTXDCAM}/${MEDIAID}/objects/"
+            diskutil info "${XDCAM_MOUNT}" > "${OUTDIR_INGESTXDCAM}/${MEDIAID}/metadata/logs/diskutilinfo.log"
             
             end=$(date -u "+%Y%m%dT%H%M%SZ")
             hdiutil eject "/Volumes/${DECK1}"
-            mv -v -n "${OUTDIR_INGESTXDCAM}/${MATERIALID1}/objects/"*.XML "${OUTDIR_INGESTXDCAM}/${MATERIALID1}/metadata/logs/"
+            mv -v -n "${OUTDIR_INGESTXDCAM}/${MEDIAID}/objects/"*.XML "${OUTDIR_INGESTXDCAM}/${MEDIAID}/metadata/logs/"
             _writeingestlog "datetime_end" "$(_get_iso8601)"
-
+            
+            #rename files
+            for FILE in $(find "${OUTDIR_INGESTXDCAM}/${MEDIAID}/objects" -iname "*.MXF" -type f | sort) ; do
+                MXFNAME="$(basename "${FILE}")"
+                MXFDIR="$(dirname "${FILE}")"
+                NEWNAME="${MXFDIR}/${FORMATID}-${MXFNAME}"
+                mv -v -n "${FILE}" "${NEWNAME}"
+            done
+            
         echo "-----------------------------------------------------------"
         _report -d "All done! Don't forget to grab your disc from the machine!"
         echo "-----------------------------------------------------------"
