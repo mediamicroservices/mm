@@ -62,6 +62,7 @@ while [ "${*}" != "" ] ; do
     _add_video_filter "yadif"
     _add_video_filter "thumbnail=100"
     MIDDLEOPTIONS+=(-frames:v 1)
+    MIDDLEOPTIONS+=(-pix_fmt rgba)
 
     _filter_to_middle_option
 
