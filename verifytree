@@ -51,7 +51,9 @@ while [ "${*}" != "" ] ; do
         #check most common object extension
         MOSTCOMMONEXTENSION="$(xmlstarlet sel -t -m "/tree/directory/directory[@name='objects']/file|/tree/directory/directory[@name='objects']/directory[@name='restoration']/file" -v "substring-after(@name, '.')" -n  "${TEMPTREE}"| sort | uniq -c | sort -n -r | head -n 1 | awk '{print $2}')"
         #if the most common extension is .wav, then run audio-specific tests 
-        if [[ "${MOSTCOMMONEXTENSION}" = "wav" ]] ; then
+        MOSTCOMMONEXTENSION_LOWER="$(echo "${MOSTCOMMONEXTENSION}" | awk '{print tolower($0)}')"
+        AUDIO_EXTENSION_LIST="|mp3|aif|aiff|wav|m4a|"
+        if [[ "${AUDIO_EXTENSION_LIST}" =~ "|${MOSTCOMMONEXTENSION_LOWER}|" ]] ; then
             _report -dt "running verifytree in audio mode on ${PACKAGE}" #the name of the package being verified
              # Here are tests for audio packages specifically
              #makes sure there is a podcast directory
