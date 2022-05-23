@@ -4,6 +4,25 @@ SCRIPTDIR=$(dirname "${0}")
 . "${SCRIPTDIR}/mmfunctions" || { echo "Missing '${SCRIPTDIR}/mmfunctions'. Exiting." ; exit 1 ;};
 _initialize_make
 
+_usage(){
+    echo "This application will try to determine what type of package this is and finish any processing needed to pass verifytree."
+    echo "Dependencies: ${DEPENDENCIES[@]}"
+    echo "Usage: $(basename "${0}") [ options ] fileorpackage1 [ fileorpackage2 ...]"
+    echo "  -n                  (skip the broadcast output)"
+
+}
+
+OPTIND=1
+while getopts "nh" OPT ; do
+    case "${OPT}" in
+        n) SKIP_BROADCAST="Y" ;;
+        h) _usage ;;
+        *) echo "bad option -${OPTARG}" ; _usage ;;
+        :) echo "Option -${OPTARG} requires an argument" ; _writeerrorlog "finishpackage" "The option selected required an argument and none was provided. The script had to exit." ; exit 1 ;;
+    esac
+done
+shift $(( ${OPTIND} - 1 ))
+
 while [ "${*}" != "" ] ; do
 #look for tree.xml
     PACKAGE="${1}"
@@ -18,9 +37,11 @@ while [ "${*}" != "" ] ; do
         #if tree.xml exists, compare it to the specified xpath expressions of an AIP
 
         #check extension of first object file
-        MOSTCOMMONEXTENSION="$(xmlstarlet sel -t -m "/tree/directory/directory[@name='objects']/file"/tree/directory/directory[@name='objects']/file|/tree/directory/directory[@name='objects']/directory[@name='restoration']/file"" -v "substring-after(@name, '.')" -n  "${TEMPTREE}"| sort | uniq -c | sort -n -r | head -n 1 | awk '{print $2}')"
+        MOSTCOMMONEXTENSION="$(xmlstarlet sel -t -m "/tree/directory/directory[@name='objects']/file|/tree/directory/directory[@name='objects']/file|/tree/directory/directory[@name='objects']/directory[@name='restoration']/file" -v "substring-after(@name, '.')" -n "${TEMPTREE}" | sort | uniq -c | sort -n -r | head -n 1 | awk '{print $2}')"
+        MOSTCOMMONEXTENSION_LOWER="$(echo "${MOSTCOMMONEXTENSION}" | awk '{print tolower($0)}')"
+        AUDIO_EXTENSION_LIST="|mp3|aif|aiff|wav|m4a|"
         #if there is one object file and it uses a .wav extension, then run audio-specific tests 
-        if [[ "${MOSTCOMMONEXTENSION}" = "wav" ]] ; then
+        if [[ "${AUDIO_EXTENSION_LIST}" =~ "|${MOSTCOMMONEXTENSION_LOWER}|" ]] ; then
             makederiv -T audiographs "${PACKAGE}"
         elif [[ "${MOSTCOMMONEXTENSION}" = "tif" ]] ; then
             makepdf "${PACKAGE}"
@@ -28,7 +49,9 @@ while [ "${*}" != "" ] ; do
             checksumpackage "${PACKAGE}"
         else
             "${SCRIPTDIR}/makelossless" "${PACKAGE}"
-            "${SCRIPTDIR}/makederiv" -T broadcast "${PACKAGE}"
+            if [[ "${SKIP_BROADCAST}" != "Y" ]] ; then
+                "${SCRIPTDIR}/makederiv" -T broadcast "${PACKAGE}"
+            fi
             "${SCRIPTDIR}/makederiv" -T youtube "${PACKAGE}"
             "${SCRIPTDIR}/makeframes" "${PACKAGE}"
             "${SCRIPTDIR}/makefingerprint" "${PACKAGE}"
