@@ -208,6 +208,7 @@ while [[ "${@}" != "" ]] ; do
     _get_audiostreamcount "${SOURCEFILE}"
     _get_dar "${SOURCEFILE}"
     _get_sar "${SOURCEFILE}"
+    _get_format "${SOURCEFILE}"
 
     # processing for chapter-based segmented output
     if [[ "${CHAPTERIZE}" == "Y" ]] ; then
@@ -300,7 +301,6 @@ while [[ "${@}" != "" ]] ; do
                 DAR="(${WIDTH}/${HEIGHT})*${SAR}"
             fi
             # set options for zeroing timecode if input is MXF
-            _get_format "${SOURCEFILE}"
             if [[ "${FORMAT}" == "mxf" ]] ; then
                 metadata_option="-metadata"
             else
@@ -481,7 +481,6 @@ while [[ "${@}" != "" ]] ; do
         elif [[ "${OUTPUT_TYPE}" == "broadcast_copy" ]] ; then
             MIDDLEOPTIONS+=(-map 0:v)
             MIDDLEOPTIONS+=(-c:v copy)
-            _get_format "${SOURCEFILE}"
             if [[ "${FORMAT}" == "mxf" ]] ; then
                 metadata_option="-metadata"
             else
