@@ -37,7 +37,7 @@ while [ "${*}" != "" ] ; do
         #if tree.xml exists, compare it to the specified xpath expressions of an AIP
 
         #check extension of first object file
-        MOSTCOMMONEXTENSION="$(xmlstarlet sel -t -m "/tree/directory/directory[@name='objects']/file|/tree/directory/directory[@name='objects']/file|/tree/directory/directory[@name='objects']/directory[@name='restoration']/file" -v "substring-after(@name, '.')" -n "${TEMPTREE}" | sort | uniq -c | sort -n -r | head -n 1 | awk '{print $2}')"
+        MOSTCOMMONEXTENSION="$(xmlstarlet sel -t -m "/tree/directory/directory[@name='objects']/file|/tree/directory/directory[@name='objects']/file|/tree/directory/directory[@name='objects']/directory[@name='restoration']/file" -v "substring-after(@name, '.')" -n "${TEMPTREE}" | while read j ; do echo "${j##*.}" ; done | sort | uniq -c | sort -n -r | head -n 1 | awk '{print $2}')"
         MOSTCOMMONEXTENSION_LOWER="$(echo "${MOSTCOMMONEXTENSION}" | awk '{print tolower($0)}')"
         AUDIO_EXTENSION_LIST="|mp3|aif|aiff|wav|m4a|"
         #if there is one object file and it uses a .wav extension, then run audio-specific tests 
