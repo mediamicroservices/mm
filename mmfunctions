@@ -1244,7 +1244,7 @@ _get_audio_mapping(){
 }
 
 _get_format(){
-    FORMAT="$(ffprobe -v 0 "${1}" -show_entries format=format_name -of default=nw=1:nk=1)"
+    FORMAT="$(ffprobe -v 0 "${1}" -show_entries format=format_name -of default=nw=1:nk=1 | cut -d , -f1)"
 }
 
 _get_codectagstring(){
