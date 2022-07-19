@@ -49,9 +49,11 @@ while [ "${*}" != "" ] ; do
         #if tree.xml exists, compare it to the specified xpath expressions of an AIP
 
         #check most common object extension
-        MOSTCOMMONEXTENSION="$(xmlstarlet sel -t -m "/tree/directory/directory[@name='objects']/file" -v "substring-after(@name, '.')" -n  "${TEMPTREE}"| sort | uniq -c | sort -n -r | head -n 1 | awk '{print $2}')"
+        MOSTCOMMONEXTENSION="$(xmlstarlet sel -t -m "/tree/directory/directory[@name='objects']/file|/tree/directory/directory[@name='objects']/directory[@name='restoration']/file" -v "substring-after(@name, '.')" -n  "${TEMPTREE}"| while read j ; do echo "${j##*.}" ; done | sort | uniq -c | sort -n -r | head -n 1 | awk '{print $2}')"
         #if the most common extension is .wav, then run audio-specific tests 
-        if [[ "${MOSTCOMMONEXTENSION}" = "wav" ]] ; then
+        MOSTCOMMONEXTENSION_LOWER="$(echo "${MOSTCOMMONEXTENSION}" | awk '{print tolower($0)}')"
+        AUDIO_EXTENSION_LIST="|mp3|aif|aiff|wav|m4a|"
+        if [[ "${AUDIO_EXTENSION_LIST}" =~ "|${MOSTCOMMONEXTENSION_LOWER}|" ]] ; then
             _report -dt "running verifytree in audio mode on ${PACKAGE}" #the name of the package being verified
              # Here are tests for audio packages specifically
              #makes sure there is a podcast directory
@@ -90,14 +92,14 @@ while [ "${*}" != "" ] ; do
             _runtest -i "This package is missing the service directory!" xmlstarlet sel -t -v "/tree/directory/directory[@name='objects']/directory[@name='service']/@name" -n "${TEMPTREE}"
             #makes sure there is a youtube directory
             _runtest -i "This package is missing the youtube directory!" xmlstarlet sel -t -v "/tree/directory/directory[@name='objects']/directory[@name='access']/directory[@name='youtube_up']/@name" -n "${TEMPTREE}"
-            #looks in logs directory for any files that aren't .log or .txt
-            _runtest "There are files in the logs directory that do not belong!" xmlstarlet sel -t -v "/tree/directory/directory[@name='metadata']/directory[@name='logs']/file[substring(@name,string-length(@name)-2)!='log' and substring(@name,string-length(@name)-2)!='txt' and substring(@name,string-length(@name)-3)!='jpeg' and substring(@name,string-length(@name)-2)!='.gz' and substring(@name,string-length(@name)-2)!='md5']/@name" -n "${TEMPTREE}"
+            #looks in logs directory for any files that aren't .log, .txt, .md5 or .qctools.mkv
+            _runtest "There are files in the logs directory that do not belong!" xmlstarlet sel -t -v "/tree/directory/directory[@name='metadata']/directory[@name='logs']/file[substring(@name,string-length(@name)-2)!='log' and substring(@name,string-length(@name)-2)!='txt' and substring(@name,string-length(@name)-10)!='qctools.mkv' and substring(@name,string-length(@name)-3)!='jpeg' and substring(@name,string-length(@name)-2)!='.gz' and substring(@name,string-length(@name)-2)!='md5']/@name" -n "${TEMPTREE}"
             #looks in fileMeta access for unexpected directories that are not dvd, mp3, podcast, or youtube_up
-            _runtest "There are directories in the fileMeta access directory that do not belong!" xmlstarlet sel -t -v "/tree/directory/directory[@name='metadata']/directory[@name='fileMeta']/directory[@name='objects']/directory[@name='access']/directory[@name!='dvd' and @name!='mp3' and @name!='podcast' and @name!='youtube_up' and @name!='pdf_1' and @name!='txt_1']/@name" -n "${TEMPTREE}"
+            _runtest "There are directories in the fileMeta access directory that do not belong!" xmlstarlet sel -t -v "/tree/directory/directory[@name='metadata']/directory[@name='fileMeta']/directory[@name='objects']/directory[@name='access']/directory[@name!='dvd' and @name!='mp3' and @name!='podcast' and @name!='resourcespace' and @name!='youtube_up' and @name!='pdf_1' and @name!='txt_1']/@name" -n "${TEMPTREE}"
             #looks for unexpected files in podcast directory
             _runtest "There are unexpected files in the podcast directory!" xmlstarlet sel -t -v "/tree/directory/directory[@name='objects']/directory[@name='access']/directory[@name='podcast']/file[@name!='${MEDIAID}_podcast.mov']/@name" -n  "${TEMPTREE}"
             #looks for any directories within access directory that are not dvd, images, mp3, podcast, or youtube_up
-            _runtest "There are unexpected directories in the access directory." xmlstarlet sel -t -v "/tree/directory/directory[@name='objects']/directory[@name='access']/directory[@name!='dvd' and @name!='images' and @name!='mp3' and @name!='podcast' and @name!='youtube_up']/@name" -n "${TEMPTREE}"
+            _runtest "There are unexpected directories in the access directory." xmlstarlet sel -t -v "/tree/directory/directory[@name='objects']/directory[@name='access']/directory[@name!='dvd' and @name!='images' and @name!='mp3' and @name!='podcast' and @name!='resourcespace' and @name!='youtube_up']/@name" -n "${TEMPTREE}"
         fi
         #searching for upper-level directories
 
