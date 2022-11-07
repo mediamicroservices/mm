@@ -64,6 +64,16 @@ _assess_interlacement(){
     fi
 }
 
+ _check_for_illegal_characters(){
+    COLONALERT=$(find "${1}" -iname '*:*')
+    if [ -n "${COLONALERT}" ] ; then
+        _report -w "Illegal characters (colons) have been detected in the following file(s):"
+        for i in ${COLONALERT} ; do
+            _report -w "    ${i}"
+        done
+    fi
+}
+
 #input the package
 while [ "${*}" != "" ] ; do
     PACKAGE="${1}"
@@ -93,6 +103,9 @@ while [ "${*}" != "" ] ; do
             _assess_interlacement "TFF" "${PACKAGE}/objects/service/${MEDIAID}.mov"
         fi
     fi
+    #check for illegal characters in filenames or directories.
+    _check_for_illegal_characters "${PACKAGE}"
+    
     #verify the makeyoutube file
     if [ -f "${PACKAGE}/objects/access/youtube_up/${MEDIAID}.mp4" ] ; then
         STATUS=$(mediaconch --force -fx -p "${SCRIPTDIR}/makeyoutube_policies.xml" "${PACKAGE}/objects/access/youtube_up/${MEDIAID}.mp4" | xmlstarlet sel -N mc="https://mediaarea.net/mediaconch" -t -v mc:MediaConch/mc:media/mc:policy/@outcome -n)
