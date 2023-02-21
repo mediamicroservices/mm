@@ -70,7 +70,6 @@ while [ "${*}" != "" ] ; do
     _add_video_filter "scale=320:320/($DAR)"
     _add_video_filter "thumbnail=4"
     MIDDLEOPTIONS+=(-frames:v 1)
-    echo "DAR $DAR"
     _filter_to_middle_option
     _set_up_output
     _log -b
@@ -85,7 +84,6 @@ while [ "${*}" != "" ] ; do
         if [ "${CONCATSOURCE}" != "" ] ; then
             FFMPEGINPUT="${CONCATSOURCE}"
         fi
-
         _run_critical_event ffmpeg -nostdin -y ${INPUTOPTIONS[@]} -v warning -ss "$START" "${FFMPEGINPUT[@]}" "${MIDDLEOPTIONS[@]}" "${TEMPIMAGES}.${IMAGENUMBER}.png"
     done
     PALETTE="$(_maketemp)"
