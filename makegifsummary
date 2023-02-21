@@ -17,7 +17,7 @@ _usage(){
     echo "Dependencies: ${DEPENDENCIES[@]}"
     echo "Usage: $(basename ${0}) [ -d /path/to/deliver/to/ ] fileorpackage1 [ fileorpackage2 ...]"
     echo "  -d directory ( directory to deliver the resulting file to )"
-    echo "  -o directory ( directory to write the resulting file to )"
+    echo "  -o file or directory ( directory or filepath to write the resulting file to )"
     echo "  -n (dry-run mode, show the commands that would be run but don't do anything)"
     echo "  -h display this help"
     echo
@@ -33,7 +33,7 @@ while getopts ":d:e:E:o:nh" OPT ; do
         d) DELIVERDIR="${OPTARG}" && _check_deliverdir ;;
         e) EMAILADDRESS_DELIVERY="${OPTARG}" && check_emailaddress "${EMAILADDRESS_DELIVERY}" ;;
         E) EMAILADDRESS_OUTCOME="${OPTARG}" && check_emailaddress "${EMAILADDRESS_OUTCOME}" ;;
-        o) OUTPUTDIR_FORCED="${OPTARG}" && _check_outputdir_forced ;;
+        o) OUTPUT_FORCED="${OPTARG}" ;;
         n) DRYRUN=true;;
         h) _usage ;;
         *) echo "bad option -${OPTARG}" ; _usage ;;
@@ -45,18 +45,32 @@ shift $(( ${OPTIND} - 1 ))
 while [ "${*}" != "" ] ; do
     INPUT="${1}"
     shift
-    if [ -z "${OUTPUTDIR_FORCED}" ] ; then
-        [ -d "${INPUT}" ] && { OUTPUTDIR="${INPUT}/objects/access/gif" && LOGDIR="${INPUT}/metadata/logs" ;};
-        [ -f "${INPUT}" ] && { OUTPUTDIR=$(dirname "${INPUT}")"/access/gif" && LOGDIR="$(dirname "${INPUT}")/access/logs" ;};
-        [ ! "$OUTPUTDIR" ] && { OUTPUTDIR="${INPUT}/objects/access/gif" && LOGDIR="${INPUT}/metadata/logs" ;};
-    else
-        OUTPUTDIR="${OUTPUTDIR_FORCED}"
-        LOGDIR="${OUTPUTDIR_FORCED}/logs"
-    fi
     _unset_variables
     _find_input "${INPUT}"
 
     MEDIAID=$(basename "${INPUT}" | cut -d. -f1)
+
+    if [[ -z "${OUTPUT_FORCED}" ]] ; then
+        [ -d "${INPUT}" ] && { OUTPUTDIR="${INPUT}/objects/access/gif" && LOGDIR="${INPUT}/metadata/logs" ;};
+        [ -f "${INPUT}" ] && { OUTPUTDIR=$(dirname "${INPUT}")"/access/gif" && LOGDIR="$(dirname "${INPUT}")/access/logs" ;};
+        [ ! "$OUTPUTDIR" ] && { OUTPUTDIR="${INPUT}/objects/access/gif" && LOGDIR="${INPUT}/metadata/logs" ;};
+        _set_up_output
+    else
+        if [[ -d "${OUTPUT_FORCED}" ]] ; then
+            OUTPUTDIR="${OUTPUT_FORCED}"
+            LOGDIR="${OUTPUT_FORCED}/logs"
+            OUTPUTDIR_FORCED="${OUTPUT_FORCED}"
+            _check_outputdir_forced
+        else
+            OUTPUTDIR="$(dirname "${OUTPUT_FORCED}")"
+            OUTPUT="${OUTPUT_FORCED}"
+            if [ -s "${OUTPUT}" ] ; then
+                _report -wt "WARNING ${OUTPUT} already exists, skipping transcode"
+                continue
+            fi
+        fi
+    fi
+
     _report_to_db
 
     # encoding options
@@ -70,7 +84,6 @@ while [ "${*}" != "" ] ; do
     _add_video_filter "thumbnail=4"
     MIDDLEOPTIONS+=(-update 1 -frames:v 1)
     _filter_to_middle_option
-    _set_up_output
     _log -b
     DURATION=$(ffprobe 2>/dev/null "${SOURCEFILE}" -show_format | grep duration | cut -d= -f2)
     _run_critical mkdir -p "${OUTPUTDIR}"
