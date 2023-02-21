@@ -67,7 +67,7 @@ while [ "${*}" != "" ] ; do
     if [[ "${CODEC_TAG_STRING}" == "mjp2" ]] ; then
          INPUTOPTIONS+=(-vcodec libopenjpeg)
     fi
-    _add_video_filter "scale=320:320/($DAR)"
+    _add_video_filter "scale=320:320/(${DAR})"
     _add_video_filter "thumbnail=4"
     MIDDLEOPTIONS+=(-frames:v 1)
     _filter_to_middle_option
