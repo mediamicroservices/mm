@@ -99,6 +99,9 @@ if [[ "${OUTPUT_TYPE}" == "broadcast" ]] ; then
     if [[ "${ADDSLATE}" = "Y" ]]; then
         SUFFIX="_SLATE"
     fi
+    if [[ "${TCBURN}" = "Y" ]]; then
+        SUFFIX="_TC"
+    fi
 elif [[ "${OUTPUT_TYPE}" == "broadcast_copy" ]] ; then
     EXTENSION="mov"
     RELATIVEPATH=""
@@ -108,10 +111,16 @@ elif [[ "${OUTPUT_TYPE}" == "prores" ]] ; then
     EXTENSION="mov"
     RELATIVEPATH="objects/access/prores"
     USEACCESSTIMES="Y"
+    if [[ "${TCBURN}" = "Y" ]]; then
+        SUFFIX="_TC"
+    fi
 elif [[ "${OUTPUT_TYPE}" == "youtube" ]] ; then
     EXTENSION="mp4"
     RELATIVEPATH="objects/access/youtube_up"
     USEACCESSTIMES="Y"
+    if [[ "${TCBURN}" = "Y" ]]; then
+        SUFFIX="_TC"
+    fi
 elif [[ "${OUTPUT_TYPE}" == "resourcespace" ]] ; then
     PREFERRED_SOURCE="service"
     EXTENSION="mp4"
