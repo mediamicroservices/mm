@@ -57,6 +57,36 @@ _file_rename(){
 }
 START=$(date -u "+%Y%m%dT%H%M%SZ")
 
+if [[ "${SCANTYPE}" == "a" ]] ; then
+	MIDDLE_OPTIONS+=(--adf)
+	_ask_doubleside
+	if [[ "${DOUBLESIDE}" == 2 ]] ; then
+		MIDDLE_OPTIONS+=(--duplex)
+	elif [[ "${DOUBLESIDE}" == 1 ]] ; then
+		break
+	else
+		_report -w "You said ${DOUBLESIDE} for the number of pages which is not valid, use 1 or 2."
+	fi
+	_scan_page
+elif [[ "${SCANTYPE}" == "f" ]] ; then
+	MIDDLE_OPTIONS+=(--flatbed)
+	COUNTER=1
+	_report -d -n "Hit enter to scan a page or q to stop scanning pages: "
+	read PAGE_ANSWER
+	
+	while [[ ! "${PAGE_ANSWER}" = "q" ]] ; do
+		_scan_page
+		_file_rename
+		((COUNTER++))
+		_report -d -n "Hit enter to scan a page or q to stop scanning pages (next page is ${COUNTER}): "
+		read PAGE_ANSWER
+	done
+		
+else
+	_report -w "You said ${SCANTYPE} for the scantype which is not valid, use 'a' or 'f'."
+	exit 1
+fi
+
 FIRST=$(find "${ORIGDIR}" -type f -mindepth 1 -maxdepth 1 ! -name ".*" -exec ls -1rt '{}' \; | head -n 1)
 LAST=$(ls -1t "${ORIGDIR}" | head -n 1)
 open "${FIRST}" "${ORIGDIR}/${LAST}"
