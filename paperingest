@@ -33,6 +33,7 @@ _ask_operator
 
 _ask_mediaid
 
+_ask_scantype
 _scan_page(){
 	COMMAND="fscanx "${MIDDLE_OPTIONS[@]}" --rgb --bits 8 --resolution 600 --auto-length --paper-width 10200 --paper-height 13200 --rotate-n-n --left 0 --width 10200 --top 0 --height 13200 --double-feed n --tiff --no-jpeg --images-per-file 1 --compress zlib '${ORIGDIR}/${MEDIAID}_${COUNTER}.tif'"
 	exec & >> "${LOGDIR}/fscanx_process.txt"
@@ -103,6 +104,7 @@ echo "model id: ${MODEL}" >> "${LOGDIR}/capture.log"
 echo "os: ${OS}" >> "${LOGDIR}/capture.log"
 echo "identifier: ${MEDIAID}" >> "${LOGDIR}/capture.log"
 echo "operator: ${OP}" >> "${LOGDIR}/capture.log"
+echo "scantype: ${SCANTYPE}" >> "${LOGDIR}/capture.log"
 echo "command: ${COMMAND}"  >> "${LOGDIR}/capture.log"
 
 echo done scanning "${MEDIAID}"
