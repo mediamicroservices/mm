@@ -26,6 +26,15 @@ _ask_doubleside(){
         [[ "${DOUBLESIDE}" = "q" ]] && exit 0
     fi
 }
+
+_ask_doctype(){
+    if [ -z "${DOCTYPE}" ] ; then
+        _report -qn "If document is from typewriter, enter 't', if from computer, enter 'c', if handwritten, enter 'h', if other, enter 'o': "
+        read -e DOCTYPE
+        [ -z "${DOCTYPE}" ] && _ask_doctype
+        [[ "${DOCTYPE}" = "q" ]] && exit 0
+    fi
+}
 trap _cleanup SIGHUP SIGINT SIGTERM
 _log -b
 
@@ -34,6 +43,7 @@ _ask_operator
 _ask_mediaid
 
 _ask_scantype
+_ask_doctype
 _scan_page(){
 	COMMAND="fscanx "${MIDDLE_OPTIONS[@]}" --rgb --bits 8 --resolution 600 --auto-length --paper-width 10200 --paper-height 13200 --rotate-n-n --left 0 --width 10200 --top 0 --height 13200 --double-feed n --tiff --no-jpeg --images-per-file 1 --compress zlib '${ORIGDIR}/${MEDIAID}_${COUNTER}.tif'"
 	exec & >> "${LOGDIR}/fscanx_process.txt"
@@ -105,6 +115,7 @@ echo "os: ${OS}" >> "${LOGDIR}/capture.log"
 echo "identifier: ${MEDIAID}" >> "${LOGDIR}/capture.log"
 echo "operator: ${OP}" >> "${LOGDIR}/capture.log"
 echo "scantype: ${SCANTYPE}" >> "${LOGDIR}/capture.log"
+echo "doctype: ${DOCTYPE}" >> "${LOGDIR}/capture.log"
 echo "command: ${COMMAND}"  >> "${LOGDIR}/capture.log"
 
 echo done scanning "${MEDIAID}"
