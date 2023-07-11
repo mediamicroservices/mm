@@ -1,7 +1,7 @@
 #!/bin/bash
 REQUIRECONFIG="Y"
 
-SCRIPTDIR=$(dirname "${0}")
+SCRIPTDIR="$(dirname "${0}")"
 . "${SCRIPTDIR}/mmfunctions" || { echo "Missing '${SCRIPTDIR}/mmfunctions'. Exiting." ; exit 1 ;};
 
 _cleanup(){
@@ -40,9 +40,9 @@ open -a /Applications/Preview.app/ "${FIRST}" "${ORIGDIR}/${LAST}"
 END=$(date -u "+%Y%m%dT%H%M%SZ")
 SYSTEM_DATA=$(system_profiler SPHardwareDataType)
 #These retrieved the right info on the Mac I'm using, but I don't know how standard the output is
-SERIAL_NUMBER=$(echo "${SYSTEM_DATA}" | grep "Serial Number" | awk '{ print $4 }')
-MODEL=$(echo "${SYSTEM_DATA}" | grep "Model Identifier" | awk '{ print $3; }')
 OS=$(system_profiler SPSoftwareDataType | grep "System Version" | awk '{ print substr(${0}, index(${0},$3)); }')
+SERIAL_NUMBER="$(echo "${SYSTEM_DATA}" | grep "Serial Number" | awk '{ print $4 }')"
+MODEL="$(echo "${SYSTEM_DATA}" | grep "Model Identifier" | awk '{ print $3; }')"
 echo "datetime_start: ${START}" >> "${LOGDIR}/capture.log"
 echo "datetime_end: ${END}" >> "${LOGDIR}/capture.log"
 echo "serial number: ${SERIAL_NUMBER}" >> "${LOGDIR}/capture.log"
