@@ -36,7 +36,7 @@ exec &> "${LOGDIR}/fscanx_process.txt"
 eval "${COMMAND}"
 FIRST=$(find "${ORIGDIR}" -type f -mindepth 1 -maxdepth 1 ! -name ".*" -exec ls -1rt '{}' \; | head -n 1)
 LAST=$(ls -1t "${ORIGDIR}" | head -n 1)
-open -a /Applications/Preview.app/ "${FIRST}" "${ORIGDIR}/${LAST}"
+open "${FIRST}" "${ORIGDIR}/${LAST}"
 END=$(date -u "+%Y%m%dT%H%M%SZ")
 SYSTEM_DATA=$(system_profiler SPHardwareDataType)
 #These retrieved the right info on the Mac I'm using, but I don't know how standard the output is
