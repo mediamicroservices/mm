@@ -51,6 +51,10 @@ LOGDIR="${OUTDIR_PAPER}/${MEDIAID}/metadata/logs"
 mkdir -p "${ORIGDIR}"
 mkdir -p "${LOGDIR}"
 
+_file_rename(){
+	for file in ${ORIGDIR}/*1.tif ; do mv -v -n "${file}" "${file//1.tif/.tiff}" ; done
+
+}
 START=$(date -u "+%Y%m%dT%H%M%SZ")
 
 FIRST=$(find "${ORIGDIR}" -type f -mindepth 1 -maxdepth 1 ! -name ".*" -exec ls -1rt '{}' \; | head -n 1)
