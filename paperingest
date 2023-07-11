@@ -9,6 +9,23 @@ _cleanup(){
     exit 1
 }
 
+_ask_scantype(){
+    if [ -z "${SCANTYPE}" ] ; then
+        _report -qn "Enter 'a' to use ADF or 'f' to use flatbed or 'q' to quit: "
+        read -e SCANTYPE
+        [ -z "${SCANTYPE}" ] && _ask_scantype
+        [[ "${SCANTYPE}" = "q" ]] && exit 0
+    fi
+}
+
+_ask_doubleside(){
+    if [ -z "${DOUBLESIDE}" ] ; then
+        _report -qn "Enter 1 if scanning only front or 2 if scanning both front and back or 'q' to quit: "
+        read -e DOUBLESIDE
+        [ -z "${DOUBLESIDE}" ] && _ask_doubleside
+        [[ "${DOUBLESIDE}" = "q" ]] && exit 0
+    fi
+}
 trap _cleanup SIGHUP SIGINT SIGTERM
 _log -b
 
