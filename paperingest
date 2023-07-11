@@ -16,6 +16,11 @@ _ask_operator
 
 _ask_mediaid
 
+_scan_page(){
+	COMMAND="fscanx "${MIDDLE_OPTIONS[@]}" --rgb --bits 8 --resolution 600 --auto-length --paper-width 10200 --paper-height 13200 --rotate-n-n --left 0 --width 10200 --top 0 --height 13200 --double-feed n --tiff --no-jpeg --images-per-file 1 --compress zlib '${ORIGDIR}/${MEDIAID}_${COUNTER}.tif'"
+	exec & >> "${LOGDIR}/fscanx_process.txt"
+	eval "${COMMAND}"
+}
 if [ -d "${OUTDIR_PAPER}/${MEDIAID}" ] ; then
     _report -wdt "It looks like this ${MEDIAID} was already scanned. If you want to overwrite the existing one please delete ${MEDIAID} first and then try again."
 exit
@@ -31,9 +36,6 @@ mkdir -p "${LOGDIR}"
 
 START=$(date -u "+%Y%m%dT%H%M%SZ")
 
-COMMAND="fscanx  --adf --rgb --bits 8 --resolution 600 --paper-width 10200 --paper-height 13200 --rotate-n-n --left 0 --width 10200 --top 0 --height 13200 --double-feed n --tiff --no-jpeg --images-per-file 1 --compress zlib '${ORIGDIR}/${MEDIAID}_.tif'"
-exec &> "${LOGDIR}/fscanx_process.txt"
-eval "${COMMAND}"
 FIRST=$(find "${ORIGDIR}" -type f -mindepth 1 -maxdepth 1 ! -name ".*" -exec ls -1rt '{}' \; | head -n 1)
 LAST=$(ls -1t "${ORIGDIR}" | head -n 1)
 open "${FIRST}" "${ORIGDIR}/${LAST}"
