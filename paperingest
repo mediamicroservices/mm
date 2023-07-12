@@ -28,11 +28,23 @@ _ask_doubleside(){
 }
 
 _ask_doctype(){
-    if [ -z "${DOCTYPE}" ] ; then
+    if [ -z "${DOCTYPE_ANSWER}" ] ; then
         _report -qn "If document is from typewriter, enter 't', if from computer, enter 'c', if handwritten, enter 'h', if other, enter 'o': "
-        read -e DOCTYPE
-        [ -z "${DOCTYPE}" ] && _ask_doctype
-        [[ "${DOCTYPE}" = "q" ]] && exit 0
+		read -e DOCTYPE_ANSWER
+        [ -z "${DOCTYPE_ANSWER}" ] && _ask_doctype
+        [[ "${DOCTYPE_ANSWER}" = "q" ]] && exit 0
+		
+		if [[ "${DOCTYPE_ANSWER}" = "t" ]] ; then
+			DOCTYPE="typewriter"
+ 	    elif [[ "${DOCTYPE_ANSWER}" = "c" ]] ; then
+			DOCTYPE="computer"
+		elif [[ "${DOCTYPE_ANSWER}" = "h" ]] ; then
+			DOCTYPE="handwritten"
+		elif [[ "${DOCTYPE_ANSWER}" = "o" ]] ; then
+			DOCTYPE="other"
+		else
+			_report -w "You said ${DOCTYPE_ANSWER} which is not valid."
+		fi
     fi
 }
 trap _cleanup SIGHUP SIGINT SIGTERM
