@@ -56,10 +56,13 @@ _ask_mediaid
 
 _ask_scantype
 _ask_doctype
+
+MIDDLE_OPTIONS+=(--rgb --bits 8 --resolution 600 --auto-length --paper-width 10200 --paper-height 13200 --rotate-n-n --left 0 --width 10200 --top 0 --height 13200 --double-feed n --tiff --no-jpeg --images-per-file 1 --compress zlib)
+
 _scan_page(){
-	COMMAND="fscanx "${MIDDLE_OPTIONS[@]}" --rgb --bits 8 --resolution 600 --auto-length --paper-width 10200 --paper-height 13200 --rotate-n-n --left 0 --width 10200 --top 0 --height 13200 --double-feed n --tiff --no-jpeg --images-per-file 1 --compress zlib '${ORIGDIR}/${MEDIAID}_${COUNTER}.tif'"
-	exec & >> "${LOGDIR}/fscanx_process.txt"
-	eval "${COMMAND}"
+	echo "Running: fscanx ${MIDDLE_OPTIONS[@]} ${ORIGDIR}/${MEDIAID}_${COUNTER}.tif" >> "${LOGDIR}/fscanx_process.txt"
+	fscanx "${MIDDLE_OPTIONS[@]}" "${ORIGDIR}/${MEDIAID}_${COUNTER}.tif" | tee -a "${LOGDIR}/fscanx_process.txt"
+
 }
 if [ -d "${OUTDIR_PAPER}/${MEDIAID}" ] ; then
     _report -wdt "It looks like this ${MEDIAID} was already scanned. If you want to overwrite the existing one please delete ${MEDIAID} first and then try again."
@@ -82,6 +85,7 @@ START=$(date -u "+%Y%m%dT%H%M%SZ")
 
 if [[ "${SCANTYPE}" == "a" ]] ; then
 	MIDDLE_OPTIONS+=(--adf)
+	SCANTYPE_ANSWER="ADF"
 	_ask_doubleside
 	if [[ "${DOUBLESIDE}" == 2 ]] ; then
 		MIDDLE_OPTIONS+=(--duplex)
@@ -93,6 +97,7 @@ if [[ "${SCANTYPE}" == "a" ]] ; then
 	_scan_page
 elif [[ "${SCANTYPE}" == "f" ]] ; then
 	MIDDLE_OPTIONS+=(--flatbed)
+	SCANTYPE_ANSWER="flatbed"
 	COUNTER=1
 	_report -d -n "Hit enter to scan a page or q to stop scanning pages: "
 	read PAGE_ANSWER
@@ -126,9 +131,9 @@ echo "model id: ${MODEL}" >> "${LOGDIR}/capture.log"
 echo "os: ${OS}" >> "${LOGDIR}/capture.log"
 echo "identifier: ${MEDIAID}" >> "${LOGDIR}/capture.log"
 echo "operator: ${OP}" >> "${LOGDIR}/capture.log"
-echo "scantype: ${SCANTYPE}" >> "${LOGDIR}/capture.log"
+echo "scantype: ${SCANTYPE_ANSWER}" >> "${LOGDIR}/capture.log"
 echo "doctype: ${DOCTYPE}" >> "${LOGDIR}/capture.log"
-echo "command: ${COMMAND}"  >> "${LOGDIR}/capture.log"
+echo "fscanx_options: ${MIDDLE_OPTIONS[@]}"  >> "${LOGDIR}/capture.log"
 
 echo done scanning "${MEDIAID}"
 
