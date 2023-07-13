@@ -77,8 +77,13 @@ LOGDIR="${OUTDIR_PAPER}/${MEDIAID}/metadata/logs"
 mkdir -p "${ORIGDIR}"
 mkdir -p "${LOGDIR}"
 
-_file_rename(){
+_file_rename_flatbed(){
 	for file in ${ORIGDIR}/*1.tif ; do mv -v -n "${file}" "${file//1.tif/.tiff}" ; done
+
+}
+
+_file_rename_adf(){
+	for file in ${ORIGDIR}/*.tif ; do mv -v -n "${file}" "${file//.tif/.tiff}" ; done
 
 }
 START=$(date -u "+%Y%m%dT%H%M%SZ")
@@ -95,6 +100,7 @@ if [[ "${SCANTYPE}" == "a" ]] ; then
 		_report -w "You said ${DOUBLESIDE} for the number of pages which is not valid, use 1 or 2."
 	fi
 	_scan_page
+	_file_rename_adf
 elif [[ "${SCANTYPE}" == "f" ]] ; then
 	MIDDLE_OPTIONS+=(--flatbed)
 	SCANTYPE_ANSWER="flatbed"
@@ -104,7 +110,7 @@ elif [[ "${SCANTYPE}" == "f" ]] ; then
 	
 	while [[ ! "${PAGE_ANSWER}" = "q" ]] ; do
 		_scan_page
-		_file_rename
+		_file_rename_flatbed
 		((COUNTER++))
 		_report -d -n "Hit enter to scan a page or q to stop scanning pages (next page is ${COUNTER}): "
 		read PAGE_ANSWER
