@@ -62,6 +62,13 @@ MIDDLE_OPTIONS+=(--rgb --bits 8 --resolution 600 --auto-length --paper-width 102
 _scan_page(){
 	echo "Running: fscanx ${MIDDLE_OPTIONS[@]} ${ORIGDIR}/${MEDIAID}_${COUNTER}.tif" >> "${LOGDIR}/fscanx_process.txt"
 	fscanx "${MIDDLE_OPTIONS[@]}" "${ORIGDIR}/${MEDIAID}_${COUNTER}.tif" | tee -a "${LOGDIR}/fscanx_process.txt"
+=======
+COMMAND_OPTIONS+=(--rgb --bits 8 --resolution 600 --auto-length --paper-width 10200 --paper-height 13200 --rotate-n-n --left 0 --width 10200 --top 0 --height 13200 --double-feed n --tiff --no-jpeg --images-per-file 1 --compress zlib)
+
+_scan_page(){
+	echo "Running: fscanx ${MIDDLE_OPTIONS[@]} ${COMMAND_OPTIONS[@]} ${ORIGDIR}/${MEDIAID}_scan${COUNTER}_${SCANTYPE_ANSWER}_.tif" >> "${LOGDIR}/fscanx_process.txt"
+	fscanx "${MIDDLE_OPTIONS[@]}" "${COMMAND_OPTIONS[@]}" "${ORIGDIR}/${MEDIAID}_scan${COUNTER}_${SCANTYPE_ANSWER}_.tif" | tee -a "${LOGDIR}/fscanx_process.txt"
+>>>>>>> Stashed changes
 
 }
 if [ -d "${OUTDIR_PAPER}/${MEDIAID}" ] ; then
@@ -79,6 +86,7 @@ mkdir -p "${LOGDIR}"
 
 _file_rename_flatbed(){
 	for file in ${ORIGDIR}/*1.tif ; do mv -v -n "${file}" "${file//1.tif/.tiff}" ; done
+	for file in ${ORIGDIR}/*1.tif ; do mv -v -n "${file}" "${file//1.tif/${COUNTER}.tiff}" ; done
 
 }
 
@@ -91,16 +99,23 @@ START=$(date -u "+%Y%m%dT%H%M%SZ")
 if [[ "${SCANTYPE}" == "a" ]] ; then
 	MIDDLE_OPTIONS+=(--adf)
 	SCANTYPE_ANSWER="ADF"
+_scan_page_adf() {
+	MIDDLE_OPTIONS=(--adf)
+	SCANTYPE_ANSWER="ADF"
+	_ask_doctype
 	_ask_doubleside
 	if [[ "${DOUBLESIDE}" == 2 ]] ; then
 		MIDDLE_OPTIONS+=(--duplex)
 	elif [[ "${DOUBLESIDE}" == 1 ]] ; then
 		break
+		:
+>>>>>>> Stashed changes
 	else
 		_report -w "You said ${DOUBLESIDE} for the number of pages which is not valid, use 1 or 2."
 	fi
 	_scan_page
 	_file_rename_adf
+<<<<<<< Updated upstream
 elif [[ "${SCANTYPE}" == "f" ]] ; then
 	MIDDLE_OPTIONS+=(--flatbed)
 	SCANTYPE_ANSWER="flatbed"
@@ -120,6 +135,66 @@ else
 	_report -w "You said ${SCANTYPE} for the scantype which is not valid, use 'a' or 'f'."
 	exit 1
 fi
+=======
+	DOUBLESIDE=""
+	DOCTYPE_ANSWER=""
+}
+
+_scan_page_flatbed(){
+	MIDDLE_OPTIONS=(--flatbed)
+	SCANTYPE_ANSWER="flatbed"
+	#((COUNTER++))
+	_report -d -n "Hit enter to scan a page or q to stop scanning pages: "
+		read PAGE_ANSWER
+		
+		while [[ "${PAGE_ANSWER}" != "q" && "${PAGE_ANSWER}" != "a" ]] ; do
+			_ask_doctype
+			_scan_page
+			_file_rename_flatbed
+			((COUNTER++))
+			_report -d -n "Hit enter to scan a page, a to change the scanner or q to stop scanning pages (next page is ${COUNTER}): "
+			read PAGE_ANSWER
+			if [[ "${PAGE_ANSWER}" == "a" ]] ; then
+				SCANTYPE="a"
+				echo "scantype is ${SCANTYPE} now."
+			fi
+			DOCTYPE_ANSWER=""
+			#echo "doctype is ${DOCTYPE_ANSWER}"
+			#_ask_doctype
+		done
+}
+
+
+
+COUNTER=1
+if [[ "${SCANTYPE}" == "f" ]] ; then
+	_scan_page_flatbed
+fi
+
+if [[ "${SCANTYPE}" == "a" ]] ; then
+	#((COUNTER++))
+	while [[ "${PAGE_ANSWER}" != "q" ]] ; do
+		_scan_page_adf
+		#echo "duplex is ${DOUBLESIDE}"
+		((COUNTER++))
+		_report -d -n "Hit a to continue scanning, f to change the scanner or q to stop scanning pages: "
+		read PAGE_ANSWER
+		if [[ "${PAGE_ANSWER}" == "f" ]] ; then
+			SCANTYPE="f"
+			echo "scantype is ${SCANTYPE} now."
+			_scan_page_flatbed
+		fi
+	done
+fi
+	
+if [[ "${SCANTYPE}" != "a" && "${SCANTYPE}" != "f" && "${SCANTYPE}" != "q" ]] ; then
+	_report -w "You said ${SCANTYPE} for the scantype which is not valid, use 'a' or 'f'."
+	exit 1
+fi
+	
+
+
+>>>>>>> Stashed changes
 
 FIRST=$(find "${ORIGDIR}" -type f -mindepth 1 -maxdepth 1 ! -name ".*" -exec ls -1rt '{}' \; | head -n 1)
 LAST=$(ls -1t "${ORIGDIR}" | head -n 1)
@@ -140,6 +215,7 @@ echo "operator: ${OP}" >> "${LOGDIR}/capture.log"
 echo "scantype: ${SCANTYPE_ANSWER}" >> "${LOGDIR}/capture.log"
 echo "doctype: ${DOCTYPE}" >> "${LOGDIR}/capture.log"
 echo "fscanx_options: ${MIDDLE_OPTIONS[@]}"  >> "${LOGDIR}/capture.log"
+echo "fscanx_options: ${MIDDLE_OPTIONS[@]} ${COMMAND_OPTIONS[@]}"  >> "${LOGDIR}/capture.log"
 
 echo done scanning "${MEDIAID}"
 
