@@ -1279,7 +1279,7 @@ _get_timecode_overlay(){
     else
         TIMECODEESACPE="01\\:00\\:00;00"
     fi
-    TIMECODEOVERLAY="drawtext=fontfile=/System/Library/Fonts/Monaco.dfont:timecode='${TIMECODEESACPE}':r=30000/1001:fontcolor=white:fontsize=24:shadowx=2:shadowy=2:box=1:boxcolor=gray@0.8:x=w/2-tw/2:y=h*0.8"
+    TIMECODEOVERLAY="drawtext=fontfile=/System/Library/Fonts/Monaco.dfont:timecode='${TIMECODEESACPE}':r=30000/1001:fontcolor=white:fontsize=96:shadowx=2:shadowy=2:box=1:boxcolor=gray@0.8:x=w/2-tw/2:y=h*0.8"
 }
 
 _get_timestamp_overlay(){
