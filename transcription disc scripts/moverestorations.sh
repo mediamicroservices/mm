@@ -10,13 +10,11 @@ _usage(){
     echo -e "${GREEN}\nThis script moves older transcription disc restorations into the restoration_old directory after a newer restoration is made using the mm/makederiv microservice.\n${NC}"
 }
 
-_usage
-
-# asks for a directory and checks it
-
-echo "Enter the directory path to begin:"
-if [[ ! -d "$user_directory" || -z "$(ls -A "$user_directory")" ]]; then
-    echo -e ${RED}"Directory not found or empty: $user_directory"${NC}
+# provide script usage instruction if no input provided
+if [[ $# -eq 0 ]]; then
+    script_name=$(basename "$0")
+    _usage
+    echo -e "Usage: $script_name <directory_path1> <directory_path2> <directory_path3> ... \n"
     exit 1
 fi
 
