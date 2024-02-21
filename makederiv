@@ -26,6 +26,7 @@ _usage(){
         echo "      waveform (png)"
         echo "      audiographs (png)"
         echo "      showwaves (mp4)"
+        echo "      transcriptiondisc (wav)"
 	echo "      streamable"
         echo "  -m                  (only use the first track)"
         echo "  -D                  (downmix the first two mono tracks, ignored if the first two audio tracks are not mono)"
@@ -163,6 +164,11 @@ elif [[ "${OUTPUT_TYPE}" == "spectogram" ]] ; then
     RELATIVEPATH="objects/access/showwaves"
     SUFFIX="_spectogram"
     USEACCESSTIMES="N"
+elif [[ "${OUTPUT_TYPE}" == "transcriptiondisc" ]] ; then
+    EXTENSION="wav"
+    RELATIVEPATH="objects/restoration"
+    SUFFIX="_transcriptiondisc"
+    USEACCESSTIMES="Y"
 else
     echo "No matches for specified output type."
     _usage
@@ -664,7 +670,6 @@ while [[ "${@}" != "" ]] ; do
             MIDDLEOPTIONS+=(-ar 48000)
             _get_audio_mapping -v "${SOURCEFILE}"
         elif [[ "${OUTPUT_TYPE}" == "mp3" ]] ; then
-            MIDDLEOPTIONS+=(-map 0:a:0)
             MIDDLEOPTIONS+=(-ac 2)
             MIDDLEOPTIONS+=(-r:a 44100)
             MIDDLEOPTIONS+=(-sample_fmt s16p)
@@ -696,6 +701,15 @@ while [[ "${@}" != "" ]] ; do
             MIDDLEOPTIONS+=(-vn)
             MIDDLEOPTIONS+=(-frames:v 1)
             _add_audio_filter "showspectrumpic=mode=combined:color=intensity:scale=log:fscale=lin:s=1024x1024"
+        elif [[ "${OUTPUT_TYPE}" == "transcriptiondisc" ]] ; then
+            MIDDLEOPTIONS+=(-ac 1)
+            _add_audio_filter "adeclick=window=55:overlap=75[DC1];
+            [DC1]acrossover=split=1500 8000:order=20th[LOW][MID][HIGH];
+            [LOW]adeclick=window=55:overlap=75[LOW1];
+            [MID]adeclick=window=55:overlap=75:t=1[MID1];
+            [HIGH]adeclick=window=55:overlap=75[HIGH1];
+            [LOW1][MID1][HIGH1]amix=inputs=3[DCMIX];
+            [DCMIX]highpass=f=60:t=s,lowpass=f=10000:t=s"
         elif [[ "${OUTPUT_TYPE}" == "audiographs" ]] ; then
             MIDDLEOPTIONS+=(-vn)
             MIDDLEOPTIONS+=(-frames:v 1)
