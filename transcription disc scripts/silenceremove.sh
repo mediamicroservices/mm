@@ -7,8 +7,14 @@ RED='\033[0;31m'
 NC='\033[0m'
 
 _usage(){
-    echo -e "${GREEN}\nThis script trims restored transcription disc recordings by .\n${NC}"
+    echo -e "${GREEN}\nThis script trims restored transcription disc recordings.\n${NC}"
 }
+
+# check if ffmpeg is installed
+if ! command -v ffmpeg &> /dev/null; then
+    echo -e "${RED}Error: FFmpeg is not installed. Aborting...${NC}"
+    exit 1
+fi
 
 # checks for wav header in file
 check_wav_header() {
