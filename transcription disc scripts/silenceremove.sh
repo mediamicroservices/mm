@@ -10,7 +10,7 @@ _usage(){
     echo -e "${GREEN}\nThis script trims restored transcription disc recordings.\n${NC}"
 }
 
-# check if ffmpeg is installed
+# checks if ffmpeg is installed
 if ! command -v ffmpeg &> /dev/null; then
     echo -e "${RED}Error: FFmpeg is not installed. Aborting...${NC}"
     exit 1
