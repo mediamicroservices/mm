@@ -416,7 +416,7 @@ while [[ "${@}" != "" ]] ; do
             MIDDLEOPTIONSIMX+=(-rc_max_vbv_use 1)
             MIDDLEOPTIONSIMX+=(-rc_min_vbv_use 1)
             MIDDLEOPTIONSIMX+=(-rc_buf_aggressivity 0.25)
-            MIDDLEOPTIONSIMX+=(-vbsf imxdump)
+            MIDDLEOPTIONSIMX+=(-bsf:v imxdump)
             MIDDLEOPTIONSIMX+=(-tag:v mx3n)
             # decide on an output codec, aspect ratio, and padding strategy
             DARRATIO=$(echo "scale=3 ; ${DAR}" | bc)
