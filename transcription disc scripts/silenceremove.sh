@@ -2,9 +2,11 @@
 # 1) identifies and extract 'in' & 'out' points to trim restored transcription disc recordings (wav) using the silencedetect audio filter
 # 2) inputs the 'in' & 'out' points into a temp. xml document as wav cue information
 # 3) uses bwf metaedit to import the 'in' & 'out' points through the xml into the desired wav file
+# written by matthew yang with contributions from sarah wardrop, feb 2024
 
 # color codes for messages
 GREEN='\033[0;32m'
+YELLOW='\033[0;33m'
 RED='\033[0;31m'
 NC='\033[0m'
 
@@ -44,15 +46,34 @@ get_sample_rate() {
     echo "$sample_rate"
 }
 
+# convert seconds to mins & seconds
+get_timecode() {
+    local input_seconds=$1
+
+    # calculate hours, minutes, and seconds using bc for floating-point arithmetic
+    local hours=$(echo "$input_seconds / 3600" | bc)
+    local minutes=$(echo "($input_seconds % 3600) / 60" | bc)
+    local seconds=$(echo "$input_seconds % 60" | bc)
+
+    # format the result directly without the need for additional variables
+    printf "%02d:%02d:%05.2f\n" $hours $minutes $seconds
+}
+
+
 # identifies in & out timecode to trim transcription disc recordings using the silencedetect audio filter and samples it from seconds
 get_silence_timecode() {
   local wav_file="$1"
   local sample_rate=$(get_sample_rate "$wav_file")
-  # calculates silence start & end timestamps using the ffmpeg adeclick & silencedetect audio filter
-  # ffmpeg script by sarah wardrop
+  
+  # calculates silence start & end timestamps using the ffmpeg adeclick & silencedetect audio filter ffmpeg script by sarah wardrop
   echo -e "${GREEN}[$(basename "$wav_file")]Identifying 'in' & 'out' points...${NC}"
-  silence_info=$(ffmpeg -hide_banner -i "$wav_file" -ac 1 -filter_complex "\
-      adeclick=window=55:overlap=75[DC1]; \
+  
+  # silence_graph=$(ffmpeg -i "$wav_file" -filter_complex \
+  # "[0:a]showwaves=s=1280x720:mode=line,format=yuv420p[v]" \
+  # -map "[v]" -map 0:a -c:v libx264 -c:a copy "$(basename "$wav_file" .wav)".mkv)
+
+  silence_info=$(ffmpeg -hide_banner -i "$wav_file" -ac 1 -filter_complex \
+      "adeclick=window=55:overlap=75[DC1]; \
       [DC1]acrossover=split=1500 8000:order=20th[LOW][MID][HIGH]; \
       [LOW]adeclick=window=55:overlap=75[LOW1]; \
       [MID]adeclick=window=55:overlap=75:t=1[MID1]; \
@@ -61,16 +82,22 @@ get_silence_timecode() {
       [DCMIX]highpass=f=60:t=s,lowpass=f=10000:t=s[silence]; \
       [silence]silencedetect=n=-25dB:d=5" -f null - 2>&1 | tee /dev/tty)
 
+  # echo -e "${GREEN}[$(basename "$wav_file")]Identifying 'in' & 'out' points...${NC}"
+  # silence_info=$(ffmpeg -hide_banner -i "$wav_file" -af silencedetect=n=0.8 -f null - 2>&1 | tee /dev/tty)
+
   # echoes ffmpeg output and greps the first occurence of silence_end to get the 'in' point (seconds)
   in_point=$(echo "$silence_info" | grep -oE 'silence_end: [0-9.]+' | grep -oE '[0-9.]+' | head -n 1)
 
   # echoes ffmpeg output and greps the last occurence of silence_end to get the 'out' point (seconds)
   out_point=$(echo "$silence_info" | grep -oE 'silence_end: [0-9.]+' | grep -oE '[0-9.]+' | tail -n 1)
 
+  # echoes the extracted values for debugging
+  # echo -e "${YELLOW}in_point: $in_point, out_point: $out_point${NC}"
+
   # check if in_point and out_point are empty
   if [[ -z "$in_point" || -z "$out_point" ]]; then
     echo -e "${RED}Error: No valid 'in' and 'out' points found. Aborting...${NC}"
-    echo -e "${RED}Debug: in_point=$in_point, out_point=$out_point${NC}"
+    # echo -e "${YELLOW}Debug: in_point=$in_point, out_point=$out_point${NC}"
     exit 1
   fi
 
@@ -86,8 +113,14 @@ get_silence_timecode() {
   # converts the 'out' point from seconds to samples
   out_point_sampled=$(echo "$out_point * $sample_rate" | bc | awk '{printf "%.0f\n", $1}')
 
-  echo -e "${GREEN}[$(basename "$wav_file") - IN] $in_point seconds (sample value: $in_point_sampled)${NC}"
-  echo -e "${GREEN}[$(basename "$wav_file") - OUT] $out_point seconds (sample value: $out_point_sampled)${NC}"
+  # converts the 'in' point from seconds to minutes & seconds
+  in_point_timecode=$(get_timecode "$in_point")
+
+  # converts the 'out' point from seconds to minutes & seconds
+  out_point_timecode=$(get_timecode "$out_point")
+
+  echo -e "${GREEN}[$(basename "$wav_file") - IN] $in_point seconds / $in_point_timecode (sample value: $in_point_sampled)${NC}"
+  echo -e "${GREEN}[$(basename "$wav_file") - OUT] $out_point seconds / $out_point_timecode (sample value: $out_point_sampled)${NC}"
 }
 
 # creates temporary XML file with cue information
@@ -138,7 +171,7 @@ create_cue() {
 
 # removes temp. xml file
 remove_xml() {
-    local xml_file="$(dirname "$input_file")/$(basename "$input_file").cue.xml"
+    local xml_file="$(dirname "$wav_file")/$(basename "$wav_file").cue.xml"
 
     if [[ -f "$xml_file" ]]; then
         rm -f "$xml_file"
@@ -148,12 +181,6 @@ remove_xml() {
     fi
 }
 
-# checks if bwf metaedit & ffmpeg & ffprobe is installed
-if ! command -v bwfmetaedit &> /dev/null || ! command -v ffmpeg &> /dev/null || ! command -v ffprobe &> /dev/null ; then
-    echo -e "${RED}Error: bwfmetaedit/ffmpeg/ffprobe is not installed. Aborting...${NC}"
-    exit 1
-fi
-
 # provide script usage instruction if no input provided
 if [[ $# -eq 0 ]]; then
     script_name=$(basename "$0")
@@ -162,29 +189,37 @@ if [[ $# -eq 0 ]]; then
     exit 1
 fi
 
+# checks if bwf metaedit & ffmpeg & ffprobe is installed 
+if ! command -v bwfmetaedit &> /dev/null || ! command -v ffmpeg &> /dev/null || ! command -v ffprobe &> /dev/null || ! command -v xxd &> /dev/null ; then
+    echo -e "${RED}Error: bwfmetaedit/ffmpeg/ffprobe is not installed. Aborting...${NC}"
+    exit 1
+fi
+
 # performs check_wav_header, creates xml file, import cue with bwf metaedit
-for input_file in "$@"; do
-    if check_wav_header "$input_file"; then
+for wav_file in "$@"; do
+    echo "============$(basename "$wav_file")============"
+    if check_wav_header "$wav_file"; then
         # gets wav file sample rate
-        SAMPLERATE=$(get_sample_rate "$input_file")
+        SAMPLERATE=$(get_sample_rate "$wav_file")
         # gets 'in' and 'out' points
-        get_silence_timecode "$input_file"
+        get_silence_timecode "$wav_file"
         
         # declare sampled 'in' and 'out' point
         INPOINT="$in_point_sampled"
         OUTPOINT="$out_point_sampled"
         
         # creates temporary xml file that accompanies input file
-        xml_file="$(dirname "$input_file")/$(basename "$input_file").cue.xml"
+        xml_file="$(dirname "$wav_file")/$(basename "$wav_file").cue.xml"
         generate_xml "$INPOINT" "$OUTPOINT" "$SAMPLERATE" > "$xml_file"
 
         # imports cue information (temp. xml) into the wav file using bwf metaedit
-        create_cue "$input_file"
+        create_cue "$wav_file"
 
         # removes temp. xml file after succesful import
         remove_xml "$xml_file"
 
-        echo -e "${GREEN}[$(basename "$input_file")]Success! 'in' & 'out' points added in cue chunk.${NC}"
+        echo -e "${GREEN}[$(basename "$wav_file")]Success! 'in' & 'out' points added in cue chunk.${NC}"
+        echo "============END============"
     fi
 done
 
