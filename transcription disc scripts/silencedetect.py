@@ -1,4 +1,4 @@
-
+# required tools - bwfmetaedit
 
 # required libraries
 from pyAudioAnalysis import audioBasicIO as aIO
