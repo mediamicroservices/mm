@@ -1071,8 +1071,8 @@ _find_input (){
         _report -dt "Using ${CONCATSOURCE} for transcoding."
         _report -dt "Using ${SOURCEFILE} for assessment."
         _report -wt "Extracting to ${MOUNTPATH}. Please unmount ${MOUNTPATH} later."
-    elif [[ "${SOURCEFILE#*.}" = "mkv" ]] ; then
-        # if the sorucefile is an mkv, then check if it has a Presentation Chapter Edition
+    elif [[ "${SOURCEFILE#*.}" = "mkv" || "${SOURCEFILE#*.}" = "mka" ]] ; then
+        # if the source file is an mkv or mka, then check if it has a Presentation Chapter Edition
         if [[ -n $(mkvextract tags "${SOURCEFILE}" | xmlstarlet sel -t -m "/Tags/Tag/Simple[String='Presentation']" -v String) ]] ; then
             _report -dt "The input file ($(basename "${SOURCEFILE}")) contains a Chapter Edition called 'Presentation', will use that for transcoding."
             LISTCHAPTERS=$(mkvextract chapters "${SOURCEFILE}" | xmlstarlet sel -t -m Chapters/EditionEntry[EditionFlagDefault='1']/ChapterAtom -v ChapterTimeStart -o "-" -v ChapterTimeEnd -o "-" -v ChapterSegmentUID -n -)
@@ -1097,7 +1097,7 @@ _find_input (){
                       MATCHMKV="${file}"
                       break 1
                     fi
-                  done < <(find "${MKVFOLDER}" -name "*.mkv" -type f)
+                  done < <(find "${MKVFOLDER}"( -name "*.mkv" -o -name "*.mka" \) -type f)
                   if [[ -n "${MATCHMKV}" ]]; then
                     INPUTFILE="$MATCHMKV"
                   else
