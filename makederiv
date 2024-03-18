@@ -109,9 +109,12 @@ elif [[ "${OUTPUT_TYPE}" == "prores" ]] ; then
     EXTENSION="mov"
     RELATIVEPATH="objects/access/prores"
     USEACCESSTIMES="Y"
-elif [[ "${OUTPUT_TYPE}" == "youtube" ]] ; then
+elif [[ "${OUTPUT_TYPE}" == "youtube" ]]; then
     EXTENSION="mp4"
     RELATIVEPATH="objects/access/youtube_up"
+    if [[ "${TCBURN}" == "Y" ]]; then
+        SUFFIX="_TCBURN"
+    fi
     USEACCESSTIMES="Y"
 elif [[ "${OUTPUT_TYPE}" == "resourcespace" ]] ; then
     PREFERRED_SOURCE="service"
