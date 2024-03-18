@@ -202,7 +202,7 @@ _db_error_check(){
         if [ "${table_name}" = "fixity" ] ; then
             IFS=$(echo -en "\n\b")
             for i in ${db_fixity} ; do
-	            LINE=$i;
+                LINE=$i;
                 messageDigestHASH=$(echo "$LINE" | cut -c -32 )
                 messageDigestPATH=$(_escape_for_db $(echo "$LINE" | cut -c 35- ))
                 messageDigestFILENAME=$(basename "${messageDigestPATH}")
@@ -1065,7 +1065,7 @@ _find_input (){
             7z e -r -o"${MOUNTPATH}" "${SOURCEFILE}"
         fi
         OLDSOURCEFILE="${SOURCEFILE}"
-		FFMPEGINPUT=(-i)
+        FFMPEGINPUT=(-i)
         FFMPEGINPUT+=("concat:$(find "${MOUNTPATH}" -iname "VTS*[1-9].VOB" | sort | sed -e :a -e '$!N;s/\n/|/;ta')")
         SOURCEFILE=$(find "${MOUNTPATH}" -iname "VTS_*_1.VOB" | head -1)
         _report -dt "Using ${CONCATSOURCE} for transcoding."
@@ -1097,7 +1097,7 @@ _find_input (){
                       MATCHMKV="${file}"
                       break 1
                     fi
-                  done < <(find "${MKVFOLDER}"( -name "*.mkv" -o -name "*.mka" \) -type f)
+                  done < <(find "${MKVFOLDER}" -type f \( -name "*.mkv" -o -name "*.mka" \))
                   if [[ -n "${MATCHMKV}" ]]; then
                     INPUTFILE="$MATCHMKV"
                   else
@@ -1327,7 +1327,7 @@ _get_phase_warning(){
         PHASETEMP=$(_maketemp)
         ffprobe 2>/dev/null -f lavfi -i amovie="${INPUT}",aphasemeter=r=0.2 -select_streams 0:a:0 -show_entries frame=pkt_dts_time:frame_tags=lavfi.aphasemeter.phase -of csv > "${PHASETEMP}"
     fi
-	PHASEREPORT=$(_maketemp)
+    PHASEREPORT=$(_maketemp)
     if [[ $(awk -F "," '$3<-0.18 {print $0}' "${PHASETEMP}" | wc -l | sed "s/ //g") -gt 1 ]] ; then
         PHASETEMPWARNINGS=$(_maketemp)
         _report -wt "Warning: PLEASE REVIEW. $(basename "${INPUT}") contains out of phase audio in these time ranges:"
