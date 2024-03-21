@@ -202,7 +202,7 @@ _db_error_check(){
         if [ "${table_name}" = "fixity" ] ; then
             IFS=$(echo -en "\n\b")
             for i in ${db_fixity} ; do
-	            LINE=$i;
+                LINE=$i;
                 messageDigestHASH=$(echo "$LINE" | cut -c -32 )
                 messageDigestPATH=$(_escape_for_db $(echo "$LINE" | cut -c 35- ))
                 messageDigestFILENAME=$(basename "${messageDigestPATH}")
@@ -1065,58 +1065,61 @@ _find_input (){
             7z e -r -o"${MOUNTPATH}" "${SOURCEFILE}"
         fi
         OLDSOURCEFILE="${SOURCEFILE}"
-		FFMPEGINPUT=(-i)
+        FFMPEGINPUT=(-i)
         FFMPEGINPUT+=("concat:$(find "${MOUNTPATH}" -iname "VTS*[1-9].VOB" | sort | sed -e :a -e '$!N;s/\n/|/;ta')")
         SOURCEFILE=$(find "${MOUNTPATH}" -iname "VTS_*_1.VOB" | head -1)
         _report -dt "Using ${CONCATSOURCE} for transcoding."
         _report -dt "Using ${SOURCEFILE} for assessment."
         _report -wt "Extracting to ${MOUNTPATH}. Please unmount ${MOUNTPATH} later."
-    elif [[ "${SOURCEFILE#*.}" = "mkv" ]] ; then
-        # if the sorucefile is an mkv, then check if it has a Presentation Chapter Edition
-        if [[ -n $(mkvextract tags "${SOURCEFILE}" | xmlstarlet sel -t -m "/Tags/Tag/Simple[String='Presentation']" -v String) ]] ; then
-            _report -dt "The input file ($(basename "${SOURCEFILE}")) contains a Chapter Edition called 'Presentation', will use that for transcoding."
-            LISTCHAPTERS=$(mkvextract chapters "${SOURCEFILE}" | xmlstarlet sel -t -m Chapters/EditionEntry[EditionFlagDefault='1']/ChapterAtom -v ChapterTimeStart -o "-" -v ChapterTimeEnd -o "-" -v ChapterSegmentUID -n -)
-            SegmentUIDs=$(mkvextract chapters "${SOURCEFILE}" | xmlstarlet sel -t -m Chapters/EditionEntry[EditionFlagDefault='1']/ChapterAtom/ChapterSegmentUID -v . -n | sort -u)
-            if [[ -n "${LISTCHAPTERS}" ]]; then
-              _report -d "Found this chapter list:"
-              _report -d "${LISTCHAPTERS}"
-              unset FFMPEGINPUT
-              INPUTOPTIONS+=(-f concat)
-              INPUTOPTIONS+=(-safe 0)
-              FFCONCATFILE=$(_maketemp)
-              while read chapter ; do
-                STARTTIME=$(echo "${chapter}" | cut -d- -f1)
-                ENDTIME=$(echo "${chapter}" | cut -d- -f2)
-                CHAPSEGMENTUID=$(echo "${chapter}" | cut -d- -f3)
-                if [[ -n "${CHAPSEGMENTUID}" ]]; then
-                  MKVFOLDER=$(dirname "${SOURCEFILE}")
-                  while read file ; do
-                    FILESEGMENTUID=$(mkvinfo "${file}" | grep "Segment UID:" | cut -d : -f2 | sed 's/0x//g;s/ //g')
-                    unset MATCHMKV
-                    if [[ "${CHAPSEGMENTUID}" == "${FILESEGMENTUID}" ]] ; then
-                      MATCHMKV="${file}"
-                      break 1
+    elif [[ "${SOURCEFILE#*.}" = "mkv" || "${SOURCEFILE#*.}" = "mka" ]] ; then
+        # loops through each file in INPUTFILES
+        while IFS= read -r INPUTFILE; do
+            # if the source file is an mkv or mka, then check if it has a Presentation Chapter Edition
+            if [[ -n $(mkvextract tags "${INPUTFILE}" | xmlstarlet sel -t -m "/Tags/Tag/Simple[String='Presentation']" -v String) ]] ; then
+                _report -dt "The input file ($(basename "${INPUTFILE}")) contains a Chapter Edition called 'Presentation', will use that for transcoding."
+                LISTCHAPTERS=$(mkvextract chapters "${INPUTFILE}" | xmlstarlet sel -t -m Chapters/EditionEntry[EditionFlagDefault='1']/ChapterAtom -v ChapterTimeStart -o "-" -v ChapterTimeEnd -o "-" -v ChapterSegmentUID -n -)
+                SegmentUIDs=$(mkvextract chapters "${INPUTFILE}" | xmlstarlet sel -t -m Chapters/EditionEntry[EditionFlagDefault='1']/ChapterAtom/ChapterSegmentUID -v . -n | sort -u)
+                if [[ -n "${LISTCHAPTERS}" ]]; then
+                  _report -d "Found this chapter list:"
+                  _report -d "${LISTCHAPTERS}"
+                  unset FFMPEGINPUT
+                  INPUTOPTIONS+=(-f concat)
+                  INPUTOPTIONS+=(-safe 0)
+                  FFCONCATFILE=$(_maketemp)
+                  while read chapter ; do
+                    STARTTIME=$(echo "${chapter}" | cut -d- -f1)
+                    ENDTIME=$(echo "${chapter}" | cut -d- -f2)
+                    CHAPSEGMENTUID=$(echo "${chapter}" | cut -d- -f3)
+                    if [[ -n "${CHAPSEGMENTUID}" ]]; then
+                      MKVFOLDER=$(dirname "${SOURCEFILE}")
+                      while read file ; do
+                        FILESEGMENTUID=$(mkvinfo "${file}" | grep "Segment UID:" | cut -d : -f2 | sed 's/0x//g;s/ //g')
+                        unset MATCHMKV
+                        if [[ "${CHAPSEGMENTUID}" == "${FILESEGMENTUID}" ]] ; then
+                          MATCHMKV="${file}"
+                          break 1
+                        fi
+                      done < <(find "${MKVFOLDER}" -type f \( -name "*.mkv" -o -name "*.mka" \))
+                      if [[ -n "${MATCHMKV}" ]]; then
+                        INPUTFILE="$MATCHMKV"
+                      else
+                        echo "Error: did not find a file to match ${CHAPSEGMENTUID}"
+                        exit
+                      fi
+                    else
+                      INPUTFILE="${INPUTFILE}"
                     fi
-                  done < <(find "${MKVFOLDER}" -name "*.mkv" -type f)
-                  if [[ -n "${MATCHMKV}" ]]; then
-                    INPUTFILE="$MATCHMKV"
-                  else
-                    echo "Error: did not find a file to match ${CHAPSEGMENTUID}"
-                    exit
-                  fi
-                else
-                  INPUTFILE="${SOURCEFILE}"
+                    printf "file " >> "${FFCONCATFILE}"
+                    printf '%q' "${INPUTFILE}" >> "${FFCONCATFILE}"
+                    echo >> "${FFCONCATFILE}"
+                    echo "inpoint ${STARTTIME}" >> "${FFCONCATFILE}"
+                    echo "outpoint ${ENDTIME}" >> "${FFCONCATFILE}"
+                  done < <(echo "${LISTCHAPTERS}")
+                  FFMPEGINPUT+=(-i)
+                  FFMPEGINPUT+=("${FFCONCATFILE}")
                 fi
-                printf "file " >> "${FFCONCATFILE}"
-                printf '%q' "${INPUTFILE}" >> "${FFCONCATFILE}"
-                echo >> "${FFCONCATFILE}"
-                echo "inpoint ${STARTTIME}" >> "${FFCONCATFILE}"
-                echo "outpoint ${ENDTIME}" >> "${FFCONCATFILE}"
-              done < <(echo "${LISTCHAPTERS}")
-              FFMPEGINPUT+=(-i)
-              FFMPEGINPUT+=("${FFCONCATFILE}")
             fi
-        fi
+        done < "$INPUTFILES"
     fi
 }
 
@@ -1327,7 +1330,7 @@ _get_phase_warning(){
         PHASETEMP=$(_maketemp)
         ffprobe 2>/dev/null -f lavfi -i amovie="${INPUT}",aphasemeter=r=0.2 -select_streams 0:a:0 -show_entries frame=pkt_dts_time:frame_tags=lavfi.aphasemeter.phase -of csv > "${PHASETEMP}"
     fi
-	PHASEREPORT=$(_maketemp)
+    PHASEREPORT=$(_maketemp)
     if [[ $(awk -F "," '$3<-0.18 {print $0}' "${PHASETEMP}" | wc -l | sed "s/ //g") -gt 1 ]] ; then
         PHASETEMPWARNINGS=$(_maketemp)
         _report -wt "Warning: PLEASE REVIEW. $(basename "${INPUT}") contains out of phase audio in these time ranges:"
