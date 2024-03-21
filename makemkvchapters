@@ -1,5 +1,5 @@
 #!/bin/bash
-#makemkvchapters creates ordered chapters in a matroska file
+#makemkvchapters creates ordered chapters in a matroska (mkv & mka) file
 SCRIPTDIR=$(dirname "${0}")
 . "${SCRIPTDIR}/mmfunctions" || { echo "Missing '${SCRIPTDIR}/mmfunctions'. Exiting." ; exit 1 ;};
 unset DEPENDENCIES
