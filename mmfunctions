@@ -1087,11 +1087,13 @@ _find_input (){
         _report -dt "Using ${SOURCEFILE} for assessment."
         _report -wt "Extracting to ${MOUNTPATH}. Please unmount ${MOUNTPATH} later."
     elif [[ "${SOURCEFILE#*.}" = "mkv" || "${SOURCEFILE#*.}" = "mka" ]] ; then
+        # loops through each file in INPUTFILES
+        while IFS= read -r INPUTFILE; do
         # if the source file is an mkv or mka, then check if it has a Presentation Chapter Edition
-        if [[ -n $(mkvextract tags "${SOURCEFILE}" | xmlstarlet sel -t -m "/Tags/Tag/Simple[String='Presentation']" -v String) ]] ; then
-            _report -dt "The input file ($(basename "${SOURCEFILE}")) contains a Chapter Edition called 'Presentation', will use that for transcoding."
-            LISTCHAPTERS=$(mkvextract chapters "${SOURCEFILE}" | xmlstarlet sel -t -m Chapters/EditionEntry[EditionFlagDefault='1']/ChapterAtom -v ChapterTimeStart -o "-" -v ChapterTimeEnd -o "-" -v ChapterSegmentUID -n -)
-            SegmentUIDs=$(mkvextract chapters "${SOURCEFILE}" | xmlstarlet sel -t -m Chapters/EditionEntry[EditionFlagDefault='1']/ChapterAtom/ChapterSegmentUID -v . -n | sort -u)
+        if [[ -n $(mkvextract tags "${INPUTFILE}" | xmlstarlet sel -t -m "/Tags/Tag/Simple[String='Presentation']" -v String) ]] ; then
+            _report -dt "The input file ($(basename "${INPUTFILE}")) contains a Chapter Edition called 'Presentation', will use that for transcoding."
+            LISTCHAPTERS=$(mkvextract chapters "${INPUTFILE}" | xmlstarlet sel -t -m Chapters/EditionEntry[EditionFlagDefault='1']/ChapterAtom -v ChapterTimeStart -o "-" -v ChapterTimeEnd -o "-" -v ChapterSegmentUID -n -)
+            SegmentUIDs=$(mkvextract chapters "${INPUTFILE}" | xmlstarlet sel -t -m Chapters/EditionEntry[EditionFlagDefault='1']/ChapterAtom/ChapterSegmentUID -v . -n | sort -u)
             if [[ -n "${LISTCHAPTERS}" ]]; then
               _report -d "Found this chapter list:"
               _report -d "${LISTCHAPTERS}"
@@ -1120,7 +1122,7 @@ _find_input (){
                     exit
                   fi
                 else
-                  INPUTFILE="${SOURCEFILE}"
+                  INPUTFILE="${INPUTFILE}"
                 fi
                 printf "file " >> "${FFCONCATFILE}"
                 printf '%q' "${INPUTFILE}" >> "${FFCONCATFILE}"
@@ -1132,6 +1134,7 @@ _find_input (){
               FFMPEGINPUT+=("${FFCONCATFILE}")
             fi
         fi
+        done < "$INPUTFILES"
     fi
 }
 
