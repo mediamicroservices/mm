@@ -35,6 +35,7 @@ _usage(){
         echo "  -t                  (burn timecode overlay)"
         echo "  -u subtitle_file    (burn in a subtitle file)"
         echo "  -w                  (burn pts overlay)"
+        echo "  -X                  (burn in timecode, pts, and clipname)"
         echo "  -C                  (generate chapter-based segmented output in addition to full output)"
         echo "  -S suffix           (add custom suffix to end of output filename)"
         echo "  -I starttime        (use a custom starting time from the source video, use HH:MM:SS.mmm format or something acceptable to ffmpeg)"
@@ -59,7 +60,7 @@ _usage(){
 
 user_input=${@}
 OPTIND=1
-while getopts ":T:lrmDv:d:o:e:E:F:scYp:tu:wCS:I:O:nh" OPT ; do
+while getopts ":T:lrmDv:d:o:e:E:F:scYp:tu:wXCS:I:O:nh" OPT ; do
     case "${OPT}" in
         T) OUTPUT_TYPE="${OPTARG}";;
         l) AUDIOMAP="L";;
@@ -79,6 +80,7 @@ while getopts ":T:lrmDv:d:o:e:E:F:scYp:tu:wCS:I:O:nh" OPT ; do
         t) TCBURN="Y";;
         u) SUBTITLE_FILE="${OPTARG}";;
         w) PTSBURN="Y";;
+        X) INFOBURN="Y";;
         C) CHAPTERIZE="Y";;
         S) SUFFIX="${OPTARG}";;
         I) INTIME="${OPTARG}";;
@@ -789,7 +791,10 @@ while [[ "${@}" != "" ]] ; do
 
     # timecode process
     TIMECODEOVERLAY=""
-    if [[ "${TCBURN}" == "Y" ]] ; then
+    if [[ "${INFOBURN}" == "Y" ]] ; then
+        _get_info_overlay "${SOURCEFILE}"
+        _add_video_filter "${INFOOVERLAY}"
+    elif [[ "${TCBURN}" == "Y" ]] ; then
         _get_timecode_overlay "${SOURCEFILE}"
         _add_video_filter "${TIMECODEOVERLAY}"
     elif [[ "${PTSBURN}" == "Y" ]] ; then
