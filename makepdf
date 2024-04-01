@@ -93,7 +93,7 @@ while [ "${*}" != "" ] ; do
         TIF_BASE_NAME="$(basename "${TIF%.*}")"
         JPG_NAME="${TMP_JPG_DIR}/${TIF_BASE_NAME}.jpg"
         if [[ ! -s "${JPG_NAME}" ]] ; then
-            ffmpeg -hide_banner -nostdin -i "${TIF}" -pix_fmt yuvj420p -s 1275x1650 "${JPG_NAME}"
+            ffmpeg -hide_banner -nostdin -i "${TIF}" -pix_fmt yuvj420p "${JPG_NAME}"
         fi
         TESSERACT_CONFIG=(-c tessedit_char_whitelist="abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#$%^\&*(){}[]\|\"':;?/>.<,~\` " -c textord_min_linesize=2.25 -c preserve_interword_spaces=1)
         tesseract "${JPG_NAME}" "${TMP_JPG_DIR}/${TIF_BASE_NAME}" -l eng --psm 4 "${TESSERACT_CONFIG[@]}" pdf
