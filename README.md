@@ -114,6 +114,7 @@ mediamicroservice dependencies:
 * rsync
 * tree
 * xmlstarlet
+* bwfmetaedit
 
 mediamicroservices also uses Pashua to run a graphical user interface. It is recommended to install Pashua before running media microservices. Type `brew install Pashua` into the command line and press enter. You will be prompted for your password. Enter your password, and then you will be able to run mediamicroservices scripts and options that utilize a GUI (Graphical User Interface).
 
@@ -341,6 +342,7 @@ To view the specific ffmpeg encoding options for each file, view the sourcecode 
     * waveform: makes a .png visual representation of the primary audio of the input
     * youtube: creates a high quality H264 .mp4 file suitable for uploading to youtube
         * youtube and resourcespace are similar, but youtube takes much higher maximum audio and video bit rates (resulting in a larger final filesize). youtube also takes the variable MAKEYOUTUBE_DELIVERY_EMAIL_TO, set in mmconfig.
+    * transcriptiondisc: removes clicks and applies a high-pass fitler on .wav files
 * Every derivative type in makederiv also takes the following options: l, r, t, v, d, o, e, E, n, h. Options can be combined, and the order of the options does not matter, as long as they are in between "makederiv" and your input. Some options require an argument following immediately after the option flag (e.g., -d must be followed with the path of the directory you specify: `-d [directory/path]`); these arguments are detailed below.
     * h: receive the usage information, including the list of the options below.
         * Your command will look like this: `[makederiv] -h`
@@ -415,7 +417,7 @@ To view the specific ffmpeg encoding options for each file, view the sourcecode 
 * makemets creates a mets.xml file that documents the structure of an archival information package created by ingestfile. The mets file also includes information from the dfxml file created in the makemetadata process.
 
 #### makemkvchapters
-* makemkvchapters creates chapters in a Matroksa file. It is an interactive script that will ask you to enter the chapter title, start and end times, and any linked files. 
+* makemkvchapters creates chapters in a Matroksa (.mka & .mkv) file. It is an interactive script that will ask you to enter the chapter title, start and end times, and any linked files. 
 * Here's how to use the script: enter this command: `makemkvchapters [matroskafile]`. Press enter. Enter the name of the chapter. Enter the start and end time of the chapter. Make sure these times are in HH:MM:SS.mmm format. It will then ask  you to ‘Enter linked file if any or press enter to proceed.’ At this point, you can drag in a linked file or you can leave this blank if you are not linking a file. You can continue to add chapters to the Matroska file, or you can press q to quit. 
 
 #### makemp3
