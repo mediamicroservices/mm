@@ -117,6 +117,11 @@ elif [[ "${OUTPUT_TYPE}" == "youtube" ]] ; then
     EXTENSION="mp4"
     RELATIVEPATH="objects/access/youtube_up"
     USEACCESSTIMES="Y"
+elif [[ "${OUTPUT_TYPE}" == "window" ]] ; then
+    EXTENSION="mp4"
+    RELATIVEPATH="objects/access/window"
+    SUFFIX="_WINDOW"
+    USEACCESSTIMES="Y"
 elif [[ "${OUTPUT_TYPE}" == "resourcespace" ]] ; then
     PREFERRED_SOURCE="service"
     EXTENSION="mp4"
@@ -535,7 +540,20 @@ while [[ "${@}" != "" ]] ; do
                 _add_video_filter "crop=720:480:0:32"
             fi
             _add_video_filter "yadif"
-	      elif [[ "${OUTPUT_TYPE}" == "streamable" ]]; then
+        elif [[ "${OUTPUT_TYPE}" == "window" ]] ; then
+            MIDDLEOPTIONS+=(-movflags faststart)
+            MIDDLEOPTIONS+=(-pix_fmt yuv420p)
+            MIDDLEOPTIONS+=(-c:v libx264)
+            MIDDLEOPTIONS+=(-force_key_frames chapters)
+            MIDDLEOPTIONS+=(-f mp4)
+            MIDDLEOPTIONS+=(-crf 21)
+            if  [[ "${WIDTH}" == 720 && "${HEIGHT}" == 486 ]] ; then
+                _add_video_filter "crop=720:480:0:4"
+            elif  [[ "${WIDTH}" == 720 && "${HEIGHT}" == 512 ]] ; then
+                _add_video_filter "crop=720:480:0:32"
+            fi
+            _add_video_filter "yadif"
+        elif [[ "${OUTPUT_TYPE}" == "streamable" ]]; then
             MIDDLEOPTIONS+=(-movflags faststart)
             MIDDLEOPTIONS+=(-pix_fmt yuv420p)
             MIDDLEOPTIONS+=(-c:v libx264)
