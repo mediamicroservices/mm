@@ -11,6 +11,7 @@ import librosa
 import logging
 import wave 
 import subprocess
+import shutil
 
 # escape codes for text color
 GREEN = '\033[92m'
@@ -91,8 +92,8 @@ def update_segments(filename, segments, sil_time):
     return ans
 
 # text output of the silence portions with start and end points in seconds
-def write_silence_to_txt(filename, silence_portions):
-    output_file = f"{filename}_silence_portions.txt"
+def write_silence_to_txt(filename, silence_portions, silencedetect_dir):
+    output_file = os.path.join(silencedetect_dir, f"{filename}_silence_portions.txt")
     with open(output_file, 'w') as file:
         file.write(f"Silence breakdown for {filename}:\n")
         for idx, portion in enumerate(silence_portions, start=1):
@@ -184,15 +185,53 @@ def process_audio_file(file_path, sil_time=0.020, generate_xml_file=True):
 
         print_green(f"[ORIGINAL DURATION] {duration_timecode} ({duration_timecode_sample})")
         print_green(f"[TRIMMED DURATION] {get_timecode(trim_duration)} ({trim_duration_sample})")
+        
+        # create /metadata/silencedetect directory
+        # root_parent_directory = os.path.dirname(os.path.dirname(os.path.dirname(file_path)))
+        # silencedetect_dir = os.path.join(root_parent_directory, "metadata", "silencedetect")
+        # if not os.path.exists(silencedetect_dir):
+        #     os.makedirs(silencedetect_dir)
 
-        write_silence_to_txt(filename, updated_segments)
+        # conditions to determine where to save the /metadata/silencedetect directory with sidecar files
+        if "/objects/restoration" in file_path:
+            levels_up = 3
+        elif "/objects" in file_path:
+            levels_up = 2
+        else:
+            levels_up = 1
+
+        root_parent_directory = file_path
+        for _ in range(levels_up):
+            root_parent_directory = os.path.dirname(root_parent_directory)
+
+        silencedetect_dir = os.path.join(root_parent_directory, "metadata", "silencedetect", filename)
+        if not os.path.exists(silencedetect_dir):
+            os.makedirs(silencedetect_dir)
+
+        write_silence_to_txt(filename, updated_segments, silencedetect_dir)
 
         generate_xml_file_function(filename, generate_xml_file, sample_rate, end_of_first_silence_sample, start_of_last_silence_sample)
 
         xml_file = f"{filename}.cue.xml"
         import_xml(file_path, xml_file)
+        export_new_xml(file_path, xml_file, filename, silencedetect_dir)
 
-        export_new_xml(file_path, xml_file, filename)
+        # output new duration information into silencedetect directory
+        output_file_path = os.path.join(silencedetect_dir, f"{filename}_new_duration.txt")
+        with open(output_file_path, 'w') as f:
+            f.write(f" {filename}\n")
+            f.write(f"[ORIGINAL DURATION]{duration_timecode} ({duration_timecode_sample})\n")
+            f.write(f"[TRIMMED DURATION]{get_timecode(trim_duration)} ({trim_duration_sample})\n")
+            f.write(f"[IN]{end_of_first_silence_timecode} ({end_of_first_silence_sample})\n")
+            f.write(f"[OUT]{start_of_last_silence_timecode} ({start_of_last_silence_sample})\n")
+
+        # output chapter information into silencedetect directory
+        output_file_path = os.path.join(silencedetect_dir, f"{filename}_chapterinfo.txt")
+        with open(output_file_path, 'w') as f:
+            f.write(f"CHAPTER01={end_of_first_silence_timecode} START\n")
+            f.write(f"CHAPTER01NAME=START\n")
+            f.write(f"CHAPTER02={start_of_last_silence_timecode} END\n")
+            f.write(f"CHAPTER02NAME=END\n")
 
         plt.figure(figsize=(30, 10))
         plt.plot(x)
@@ -206,7 +245,10 @@ def process_audio_file(file_path, sil_time=0.020, generate_xml_file=True):
         output_file = f"{filename}_plot_with_silence.png"
         plt.savefig(output_file)
         plt.close()
-        print_green(f"[{filename}] Graph saved as {output_file}")
+        shutil.move(output_file, os.path.join(silencedetect_dir, output_file))
+        print_green(f"[{filename}] Graph saved as {output_file} in {silencedetect_dir}.")
+
+        shutil.move(xml_file, os.path.join(silencedetect_dir, os.path.basename(xml_file)))
 
     except Exception as e:
         print_red(f"Error processing {filename}: {str(e)}")
@@ -227,19 +269,18 @@ def import_xml(wav_file, xml_file):
         exit(1)
 
 # exports xml file that contains updated chunk information
-def export_new_xml(wav_file, xml_file, filename):
+def export_new_xml(wav_file, xml_file, filename, silencedetect_dir):
     try:
         # execute the bwfmetaedit command and redirect the output to the specified XML file
         command = ['bwfmetaedit', '--out-xml', wav_file]
         result = subprocess.run(command, capture_output=True, text=True, check=True)
 
-
         # save the output to the filename_xml.txt file
-        output_text_file = f"{filename}_xml.txt"
+        output_text_file = os.path.join(silencedetect_dir, f"{filename}_xml.txt")
         with open(output_text_file, 'w') as text_file:
             text_file.write(result.stdout)
 
-        print_green(f"[{filename}] Exported XML with chunk information. Saved as {os.path.basename(xml_file)}")
+        print_green(f"[{filename}] Exported XML with chunk information. Saved as {os.path.basename(xml_file)}.")
     
     except subprocess.CalledProcessError as e:
         print_red(f"[{filename}] Error executing bwfmetaedit: {e}")
@@ -257,7 +298,11 @@ if __name__ == "__main__":
 
     # iterate through provided file paths and process each audio file
     for file_path in sys.argv[1:]:
+        # change directory to the directory of the file
+        file_directory = os.path.dirname(file_path)
+        os.chdir(file_directory)
         filename = os.path.basename(file_path)
+        
         print_green(f"============{filename}============")
         check_wav_header(file_path)
         process_audio_file(file_path)
