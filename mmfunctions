@@ -1171,11 +1171,12 @@ _get_sar(){
 }
 
 _has_first_two_tracks_mono(){
-    [ $(ffprobe 2>/dev/null "${1}" -show_streams | grep -c "codec_type=audio") -ge 2 ] && \
+    AUDIO_TRACK_COUNT="$(ffprobe 2>/dev/null "${1}" -show_streams | grep -c "codec_type=audio")"
+    [ "${AUDIO_TRACK_COUNT}" -ge 2 ] && \
     [ $(ffprobe 2>/dev/null "${1}" -show_streams -select_streams a:0 | grep "^channels=" | cut -d= -f2) = "1" ] && \
     [ $(ffprobe 2>/dev/null "${1}" -show_streams -select_streams a:1 | grep "^channels=" | cut -d= -f2) = "1" ] && \
     MULTIMONO=true
-    [ $(ffprobe 2>/dev/null "${1}" -show_streams | grep -c "codec_type=audio") -ge 2 ] && \
+    [ "${AUDIO_TRACK_COUNT}" -ge 2 ] && \
     [ $(ffprobe 2>/dev/null "${1}" -show_streams -select_streams a:0 | grep "^channels=" | cut -d= -f2) = "1" ] && \
     FIRSTMONO=true
 }
@@ -1231,6 +1232,14 @@ _get_audio_mapping(){
     elif [[ "${AUDIOMAP}" = "D" && "${FIRSTMONO}" = true ]] ; then
         _report -wt "Downmix first two mono tracks"
         _add_audio_filter "[0:a:0][0:a:1]amerge,pan=stereo|c0=0.5*c0+0.5*c1|c1=0.5*c0+0.5*c1"
+    elif [[ "${AUDIOMAP}" = "A" ]] ; then
+        unset AMERGE_LIST
+        for i in {0.."${AUDIO_TRACK_COUNT}"} ; do
+            AMERGE_LIST+="[0:a:$i]"
+        done
+        _report -wt "Will mix together ${AUDIO_TRACK_COUNT} tracks into a stereo output."
+        _add_audio_filter -p "${AMERGE_LIST}amerge=inputs=${AUDIO_TRACK_COUNT}"
+        _add_audio_filter "aformat=channel_layouts=stereo"
     elif [[ "${MULTIMONO}" = true && "${1#*.}" != "mkv" ]] ; then
         _report -wt "The first two audio tracks of this non matroska file are both mono. Considering track 1 for left and track 2 for right."
         _add_audio_filter -p "[0:a:0][0:a:1]amerge=inputs=2"

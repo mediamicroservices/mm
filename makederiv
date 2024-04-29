@@ -32,6 +32,7 @@ _usage(){
         echo "  -D                  (downmix the first two mono tracks, ignored if the first two audio tracks are not mono)"
         echo "  -l                  (only use the left channel of the first audio track)"
         echo "  -r                  (only use the right channel of the first audio track)"
+        echo "  -a                  (downmix all audio tracks into a stereo output)"
         echo "  -t                  (burn timecode overlay)"
         echo "  -u subtitle_file    (burn in a subtitle file)"
         echo "  -w                  (burn pts overlay)"
@@ -60,13 +61,14 @@ _usage(){
 
 user_input=${@}
 OPTIND=1
-while getopts ":T:lrmDv:d:o:e:E:F:scYp:tu:wXCS:I:O:nh" OPT ; do
+while getopts ":T:lrmDav:d:o:e:E:F:scYp:tu:wXCS:I:O:nh" OPT ; do
     case "${OPT}" in
         T) OUTPUT_TYPE="${OPTARG}";;
         l) AUDIOMAP="L";;
         r) AUDIOMAP="R";;
         m) AUDIOMAP="M";;
 		D) AUDIOMAP="D";;
+        a) AUDIOMAP="A";;
         v) VOLADJUST="${OPTARG}";;
         d) DELIVERDIR="${OPTARG}" && (_check_deliverdir) ;;
         o) OUTPUTDIR_FORCED="${OPTARG}" && (_check_outputdir_forced) ;;
@@ -291,6 +293,8 @@ while [[ "${@}" != "" ]] ; do
             AUDIOMAP="M"
         elif [[ "${AUDIODECISION}" == "Downmix the first two mono tracks" ]] ; then
             AUDIOMAP="D"
+        elif [[ "${AUDIODECISION}" == "Downmix all tracks" ]] ; then
+            AUDIOMAP="A"
         fi
     fi
 
