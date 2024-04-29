@@ -1,0 +1,17 @@
+#!/bin/bash
+# makewindow, makes a file with timecode burn-in starting at zero and a reference to the source file and its timecode
+# v 2.0 integrate with new microservice makederiv to streamline derivative creation
+VERSION="2.0"
+SCRIPTDIR=$(dirname $(which "${0}"))
+. "${SCRIPTDIR}/mmfunctions" || { echo "Missing '${SCRIPTDIR}/mmfunctions'. Exiting." ; exit 1 ;};
+
+_usage(){
+    echo
+    echo
+    _report -d "makewindow is an alias for the updated function makederiv (options below)."
+    _report -d "You can create a file for upload to YouTube with makederiv by typing: 'makederiv -T window -X [options] [input]'."
+    _report -d "Or continue to use makeyoutube using the valid options below."
+    "${SCRIPTDIR}/makederiv" -h
+}
+[ "${#}" = 0 ] && _usage
+"${SCRIPTDIR}/makederiv" -T window -X -a "${@}"

@@ -32,9 +32,11 @@ _usage(){
         echo "  -D                  (downmix the first two mono tracks, ignored if the first two audio tracks are not mono)"
         echo "  -l                  (only use the left channel of the first audio track)"
         echo "  -r                  (only use the right channel of the first audio track)"
+        echo "  -a                  (downmix all audio tracks into a stereo output)"
         echo "  -t                  (burn timecode overlay)"
         echo "  -u subtitle_file    (burn in a subtitle file)"
         echo "  -w                  (burn pts overlay)"
+        echo "  -X                  (burn in timecode, pts, and clipname)"
         echo "  -C                  (generate chapter-based segmented output in addition to full output)"
         echo "  -S suffix           (add custom suffix to end of output filename)"
         echo "  -I starttime        (use a custom starting time from the source video, use HH:MM:SS.mmm format or something acceptable to ffmpeg)"
@@ -59,13 +61,14 @@ _usage(){
 
 user_input=${@}
 OPTIND=1
-while getopts ":T:lrmDv:d:o:e:E:F:scYp:tu:wCS:I:O:nh" OPT ; do
+while getopts ":T:lrmDav:d:o:e:E:F:scYp:tu:wXCS:I:O:nh" OPT ; do
     case "${OPT}" in
         T) OUTPUT_TYPE="${OPTARG}";;
         l) AUDIOMAP="L";;
         r) AUDIOMAP="R";;
         m) AUDIOMAP="M";;
 		D) AUDIOMAP="D";;
+        a) AUDIOMAP="A";;
         v) VOLADJUST="${OPTARG}";;
         d) DELIVERDIR="${OPTARG}" && (_check_deliverdir) ;;
         o) OUTPUTDIR_FORCED="${OPTARG}" && (_check_outputdir_forced) ;;
@@ -79,6 +82,7 @@ while getopts ":T:lrmDv:d:o:e:E:F:scYp:tu:wCS:I:O:nh" OPT ; do
         t) TCBURN="Y";;
         u) SUBTITLE_FILE="${OPTARG}";;
         w) PTSBURN="Y";;
+        X) INFOBURN="Y";;
         C) CHAPTERIZE="Y";;
         S) SUFFIX="${OPTARG}";;
         I) INTIME="${OPTARG}";;
@@ -115,6 +119,11 @@ elif [[ "${OUTPUT_TYPE}" == "youtube" ]]; then
     if [[ "${TCBURN}" == "Y" ]]; then
         SUFFIX="_TCBURN"
     fi
+    USEACCESSTIMES="Y"
+elif [[ "${OUTPUT_TYPE}" == "window" ]] ; then
+    EXTENSION="mp4"
+    RELATIVEPATH="objects/access/window"
+    SUFFIX="_WINDOW"
     USEACCESSTIMES="Y"
 elif [[ "${OUTPUT_TYPE}" == "resourcespace" ]] ; then
     PREFERRED_SOURCE="service"
@@ -292,6 +301,8 @@ while [[ "${@}" != "" ]] ; do
             AUDIOMAP="M"
         elif [[ "${AUDIODECISION}" == "Downmix the first two mono tracks" ]] ; then
             AUDIOMAP="D"
+        elif [[ "${AUDIODECISION}" == "Downmix all tracks" ]] ; then
+            AUDIOMAP="A"
         fi
     fi
 
@@ -532,7 +543,20 @@ while [[ "${@}" != "" ]] ; do
                 _add_video_filter "crop=720:480:0:32"
             fi
             _add_video_filter "yadif"
-	      elif [[ "${OUTPUT_TYPE}" == "streamable" ]]; then
+        elif [[ "${OUTPUT_TYPE}" == "window" ]] ; then
+            MIDDLEOPTIONS+=(-movflags faststart)
+            MIDDLEOPTIONS+=(-pix_fmt yuv420p)
+            MIDDLEOPTIONS+=(-c:v libx264)
+            MIDDLEOPTIONS+=(-force_key_frames chapters)
+            MIDDLEOPTIONS+=(-f mp4)
+            MIDDLEOPTIONS+=(-crf 21)
+            if  [[ "${WIDTH}" == 720 && "${HEIGHT}" == 486 ]] ; then
+                _add_video_filter "crop=720:480:0:4"
+            elif  [[ "${WIDTH}" == 720 && "${HEIGHT}" == 512 ]] ; then
+                _add_video_filter "crop=720:480:0:32"
+            fi
+            _add_video_filter "yadif"
+        elif [[ "${OUTPUT_TYPE}" == "streamable" ]]; then
             MIDDLEOPTIONS+=(-movflags faststart)
             MIDDLEOPTIONS+=(-pix_fmt yuv420p)
             MIDDLEOPTIONS+=(-c:v libx264)
@@ -792,7 +816,10 @@ while [[ "${@}" != "" ]] ; do
 
     # timecode process
     TIMECODEOVERLAY=""
-    if [[ "${TCBURN}" == "Y" ]] ; then
+    if [[ "${INFOBURN}" == "Y" ]] ; then
+        _get_info_overlay "${SOURCEFILE}"
+        _add_video_filter "${INFOOVERLAY}"
+    elif [[ "${TCBURN}" == "Y" ]] ; then
         _get_timecode_overlay "${SOURCEFILE}"
         _add_video_filter "${TIMECODEOVERLAY}"
     elif [[ "${PTSBURN}" == "Y" ]] ; then

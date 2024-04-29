@@ -1040,17 +1040,43 @@ _find_input (){
                 VOLADJUST="N"
                 INPUTOPTIONS+=(-f concat)
                 INPUTOPTIONS+=(-safe 0)
-                FFCONCATFILE=$(_maketemp)
+                FFCONCATFILE="$(_maketemp).ffconcat"
+                FFMETADATAFILE="$(_maketemp).ffmetadata"
+                echo "$FFCONCATFILE $FFMETADATAFILE"
+                CHAPTER_TALLY=0
+                echo ";FFMETADATA1" > "${FFMETADATAFILE}"
+                echo >> "${FFMETADATAFILE}"
                 while read i ; do
                     duration4cat=$(ffprobe -loglevel quiet "${i}" -show_entries format=duration -of default=nw=1:nk=1)
+                    _get_timecode "${i}"
+                    if [[ "${TIMECODE}" ]] ; then
+                        TIMECODEESACPE=$(echo "${TIMECODE}" | sed 's|:|\\:|g')
+                        INFOOVERLAY+="drawtext=fontfile=/System/Library/Fonts/Monaco.dfont:timecode='${TIMECODEESACPE}':r=30000/1001:fontcolor=white@0.4:fontsize=32:shadowx=1:shadowy=1:box=1:boxcolor=DarkGray@0.2:x=32:y=h-32:enable=between(t\,${CHAPTER_TALLY}\,${CHAPTER_TALLY}+${duration4cat}),"
+                    fi
+                    if [[ "${INPUTFILECOUNT}" -gt 1 ]] ; then
+                        INFOOVERLAY+="drawtext=fontfile=/System/Library/Fonts/Monaco.dfont:text='    ${i#*objects/}':fontcolor=white@0.4:fontsize=32:shadowx=1:shadowy=1:box=1:boxcolor=DarkGray@0.2:x=32+224:y=h-32:enable=between(t\,${CHAPTER_TALLY}\,${CHAPTER_TALLY}+${duration4cat}),"
+                    fi
+
+                    # write to ffconcat
                     printf "file " >> "${FFCONCATFILE}"
                     printf '%q' "${i}" >> "${FFCONCATFILE}"
                     echo >> "${FFCONCATFILE}"
                     echo "duration $duration4cat" >> "${FFCONCATFILE}"
+
+                    # write to ffmetadata for chapters and data to subtitle file
+                    echo "[CHAPTER]" >> "${FFMETADATAFILE}"
+                    echo "TIMEBASE=1/100000" >> "${FFMETADATAFILE}"
+                    echo "START=$(echo "${CHAPTER_TALLY}*100000" | bc)" >> "${FFMETADATAFILE}"
+                    CHAPTER_TALLY="$(echo "scale=6; ${CHAPTER_TALLY}+${duration4cat}" | bc -l)"
+                    echo "END=$(echo "${CHAPTER_TALLY}*100000" | bc)" >> "${FFMETADATAFILE}"
+                    echo "title=${i#*objects/}" >> "${FFMETADATAFILE}"
                 done < "${INPUTFILES}"
                 SOURCEFILE=$(cat "${INPUTFILES}" | head -n 1)
                 FFMPEGINPUT+=(-i)
                 FFMPEGINPUT+=("${FFCONCATFILE}")
+                FFMPEGINPUT+=(-i)
+                FFMPEGINPUT+=("${FFMETADATAFILE}")
+                FFMPEGINPUT+=(-map_metadata 1)
             fi
         fi
     else
@@ -1154,11 +1180,12 @@ _get_sar(){
 }
 
 _has_first_two_tracks_mono(){
-    [ $(ffprobe 2>/dev/null "${1}" -show_streams | grep -c "codec_type=audio") -ge 2 ] && \
+    AUDIO_TRACK_COUNT="$(ffprobe 2>/dev/null "${1}" -show_streams | grep -c "codec_type=audio")"
+    [ "${AUDIO_TRACK_COUNT}" -ge 2 ] && \
     [ $(ffprobe 2>/dev/null "${1}" -show_streams -select_streams a:0 | grep "^channels=" | cut -d= -f2) = "1" ] && \
     [ $(ffprobe 2>/dev/null "${1}" -show_streams -select_streams a:1 | grep "^channels=" | cut -d= -f2) = "1" ] && \
     MULTIMONO=true
-    [ $(ffprobe 2>/dev/null "${1}" -show_streams | grep -c "codec_type=audio") -ge 2 ] && \
+    [ "${AUDIO_TRACK_COUNT}" -ge 2 ] && \
     [ $(ffprobe 2>/dev/null "${1}" -show_streams -select_streams a:0 | grep "^channels=" | cut -d= -f2) = "1" ] && \
     FIRSTMONO=true
 }
@@ -1214,6 +1241,14 @@ _get_audio_mapping(){
     elif [[ "${AUDIOMAP}" = "D" && "${FIRSTMONO}" = true ]] ; then
         _report -wt "Downmix first two mono tracks"
         _add_audio_filter "[0:a:0][0:a:1]amerge,pan=stereo|c0=0.5*c0+0.5*c1|c1=0.5*c0+0.5*c1"
+    elif [[ "${AUDIOMAP}" = "A" ]] ; then
+        unset AMERGE_LIST
+        for i in {0.."${AUDIO_TRACK_COUNT}"} ; do
+            AMERGE_LIST+="[0:a:$i]"
+        done
+        _report -wt "Will mix together ${AUDIO_TRACK_COUNT} tracks into a stereo output."
+        _add_audio_filter -p "${AMERGE_LIST}amerge=inputs=${AUDIO_TRACK_COUNT}"
+        _add_audio_filter "aformat=channel_layouts=stereo"
     elif [[ "${MULTIMONO}" = true && "${1#*.}" != "mkv" ]] ; then
         _report -wt "The first two audio tracks of this non matroska file are both mono. Considering track 1 for left and track 2 for right."
         _add_audio_filter -p "[0:a:0][0:a:1]amerge=inputs=2"
@@ -1281,18 +1316,34 @@ _get_timecode(){
     TIMECODE=$(ffprobe "${1}" -select_streams v -show_streams -show_format -of flat 2>/dev/null | grep "timecode=\"[0-9]" | head -n 1 | cut -d = -f 2 | sed 's/"//g')
 }
 
+_get_framerate(){
+    FRAMERATE="$(ffprobe -v 0 -i "${1}" -select_streams v:0 -show_entries stream=r_frame_rate -of default=nw=1:nk=1)"
+}
+
 _get_timecode_overlay(){
     _get_timecode "${1}"
     if [[ "${TIMECODE}" ]] ; then
         TIMECODEESACPE=$(echo "${TIMECODE}" | sed 's|:|\\:|g')
     else
-        TIMECODEESACPE="01\\:00\\:00;00"
+        TIMECODEESACPE="00\\:00\\:00;00"
     fi
     TIMECODEOVERLAY="drawtext=fontfile=/System/Library/Fonts/Monaco.dfont:timecode='${TIMECODEESACPE}':r=30000/1001:fontcolor=white:fontsize=96:shadowx=2:shadowy=2:box=1:boxcolor=gray@0.8:x=w/2-tw/2:y=h*0.8"
 }
 
 _get_timestamp_overlay(){
     TIMECODEOVERLAY="drawtext=fontfile=/System/Library/Fonts/Monaco.dfont:text=%{pts\\\:hms}:fontcolor=white:fontsize=96:shadowx=2:shadowy=2:box=1:boxcolor=gray@0.8:x=w/2-tw/2:y=h*0.8"
+}
+
+_get_info_overlay(){
+    _get_framerate "${1}"
+    _get_timecode "${1}"
+    if [[ "${FRAMERATE}" == "30000/1001" ]] ; then
+        TIMECODE="00:00:00;00"
+    else
+        TIMECODE="00:00:00:00"
+    fi
+    TIMECODEESACPE=$(echo "${TIMECODE}" | sed 's|:|\\:|g')
+    INFOOVERLAY+="drawtext=fontfile=/System/Library/Fonts/Monaco.dfont:timecode='${TIMECODEESACPE}':r=${FRAMERATE}:fontcolor=white@0.8:fontsize=96:shadowx=2:shadowy=2:box=1:boxcolor=DarkGray@0.8:x=(w/2)-(tw/2):y=h*0.8"
 }
 
 _get_subtitle_overlay(){
@@ -1325,6 +1376,11 @@ _seconds_to_hhmmss(){
     m=`expr "$num"  % 3600 / 60`
     s=`expr "$num" % 60`
     printf "%02d:%02d:%02d\n" $h $m $s
+}
+
+_seconds_to_hhmmssmmm(){
+    num=$1
+    awk -v v1="${num}" 'BEGIN {printf "%02d:%02d:%06.3f\n", v1/3600, (v1%3600)/60, (v1%60)}'
 }
 
 _get_phase_warning(){
