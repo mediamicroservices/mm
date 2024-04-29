@@ -394,7 +394,7 @@ AUDIODECISION.option = Default audio mapping [first audio track used for stereo 
 AUDIODECISION.option = Only use left of the first audio track [for 21st Century]
 AUDIODECISION.option = Only use right of the first audio track
 AUDIODECISION.option = Only use the first track
-AUDIODECISION.option = Downmix first two mono tracks
+AUDIODECISION.option = Downmix the first two mono tracks
 AUDIODECISION.option = Downmix all tracks
 AUDIODECISION.width = 400
 
