@@ -1,5 +1,7 @@
 #!/bin/bash
 
+# required tools - ffmpeg & mkvtoolnix
+
 # color codes for messages
 GREEN='\033[0;32m'
 YELLOW='\033[0;33m'
@@ -48,7 +50,7 @@ check_wav_header() {
 }
 
 # make_restored_mka() {
-# 	ffmpeg -hide_banner -i "$wav_file" -ac 1 -filter_complex \
+#   ffmpeg -hide_banner -i "$wav_file" -ac 1 -filter_complex \
 #       "adeclick=window=55:overlap=75[DC1]; \
 #       [DC1]acrossover=split=1500 8000:order=20th[LOW][MID][HIGH]; \
 #       [LOW]adeclick=window=55:overlap=75[LOW1]; \
@@ -58,11 +60,11 @@ check_wav_header() {
 #       [DCMIX]highpass=f=60:t=s,lowpass=f=10000:t=s" \
 #       -c copy "$(basename "$wav_file")".mkv)
 
-# 	mv "$(basename "$wav_file")".mkv) mka
+#   mv "$(basename "$wav_file")".mkv) mka
 # }
 
 make_mka() {
-	local wav_file="$1"
+    local wav_file="$1"
     local mka_directory="$(dirname "$wav_file")/mka"
 
     mkdir -p "$mka_directory"
@@ -70,7 +72,7 @@ make_mka() {
     # extract filename without extension
     local filename_no_extension="$(basename "$wav_file" .wav)"
 
-	ffmpeg -hide_banner -i "$wav_file" \
+    ffmpeg -hide_banner -i "$wav_file" \
       -c copy "$mka_directory/$filename_no_extension".mka
 }
 
@@ -83,7 +85,7 @@ if [[ $# -eq 0 ]]; then
 fi
 
 for directory in "$@"; do
-	# check if directory is empty
+    # check if directory is empty
     if ! check_empty_directory "$directory"; then
         continue
     fi
@@ -94,8 +96,27 @@ for directory in "$@"; do
         if check_wav_header "$wav_file"; then
             # convert WAV to MKA and move it to 'mka' directory
             make_mka "$wav_file"
+            mka_files+=("$(dirname "$wav_file")/mka/$(basename "$wav_file" .wav).mka")
             echo -e "${GREEN}[$(basename "$wav_file")]Success! MKA created.${NC}"
             echo "============END============"
         fi
     done
 done
+
+echo -e "${YELLOW}Do you want to add chapter information to the MKA file(s)? (y/n): ${NC}"
+read -p "(y/n): " add_chapters
+
+if [[ $add_chapters == "y" || $add_chapters == "Y" ]]; then
+    for mka_file in "${mka_files[@]}"; do
+        # prompt user for the chapter information file
+        read -p "Please provide the path to the .txt file containing chapter information for $(basename "$mka_file"): " chapter_file
+        if [[ -f "$chapter_file" ]]; then
+            mkvpropedit "$mka_file" --chapters "$chapter_file"
+            echo -e "${GREEN}[Chapter Info Added] ${mka_file}${NC}"
+        else
+            echo -e "${YELLOW}[Warning] Chapter information file not found: ${chapter_file}${NC}"
+        fi
+    done
+else
+    echo -e "${YELLOW}No chapter information added.${NC}"
+fi
