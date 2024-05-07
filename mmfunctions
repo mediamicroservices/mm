@@ -1013,14 +1013,14 @@ _find_input (){
             find "${LOOKHERE}" -type f -size +0 "${OBJECTS_FIND_EXCLUSIONS[@]}" | sort | while read file ; do
                 streamcount=$(ffprobe -loglevel quiet "$file" -show_entries format=nb_streams -of default=nw=1:nk=1)
                 duration_ts=$(ffprobe -loglevel quiet "$file" -show_entries stream=duration_ts -of default=nw=1:nk=1)
-                
-                # Cast empty value into 0 integer
-                if [ -z "$streamcount" ]; then
-                    streamcount=0
-                fi
-                if [ -z "$duration_ts" ]; then
-                    duration_ts=0
-                fi
+	
+		# Cast empty value into 0 integer
+		if [ -z "$streamcount" ]; then
+		    streamcount=0
+		fi
+		if [ -z "$duration_ts" ]; then
+		    duration_ts=0
+		fi
 		
                 if [[ "$streamcount" > 0  && "${duration_ts}" != 1 ]] ; then
                     _report -d "Input file: $file"
@@ -1107,18 +1107,11 @@ _find_input (){
         _report -dt "Using ${SOURCEFILE} for assessment."
         _report -wt "Extracting to ${MOUNTPATH}. Please unmount ${MOUNTPATH} later."
     elif [[ "${SOURCEFILE#*.}" = "mkv" || "${SOURCEFILE#*.}" = "mka" ]] ; then
-        # flag to track if presentation information is found
-        presentation_found=false
-        # variable to store the first file with presentation information
-        FIRST_PRESENTATION_FILE=""
-
-        # loops through each file in INPUTFILES
-        while IFS= read -r INPUTFILE; do
         # if the source file is an mkv or mka, then check if it has a Presentation Chapter Edition
-        if [[ -n $(mkvextract tags "${INPUTFILE}" | xmlstarlet sel -t -m "/Tags/Tag/Simple[String='Presentation']" -v String) ]] ; then
-            _report -dt "The input file ($(basename "${INPUTFILE}")) contains a Chapter Edition called 'Presentation', will use that for transcoding."
-            LISTCHAPTERS=$(mkvextract chapters "${INPUTFILE}" | xmlstarlet sel -t -m Chapters/EditionEntry[EditionFlagDefault='1']/ChapterAtom -v ChapterTimeStart -o "-" -v ChapterTimeEnd -o "-" -v ChapterSegmentUID -n -)
-            SegmentUIDs=$(mkvextract chapters "${INPUTFILE}" | xmlstarlet sel -t -m Chapters/EditionEntry[EditionFlagDefault='1']/ChapterAtom/ChapterSegmentUID -v . -n | sort -u)
+        if [[ -n $(mkvextract tags "${SOURCEFILE}" | xmlstarlet sel -t -m "/Tags/Tag/Simple[String='Presentation']" -v String) ]] ; then
+            _report -dt "The input file ($(basename "${SOURCEFILE}")) contains a Chapter Edition called 'Presentation', will use that for transcoding."
+            LISTCHAPTERS=$(mkvextract chapters "${SOURCEFILE}" | xmlstarlet sel -t -m Chapters/EditionEntry[EditionFlagDefault='1']/ChapterAtom -v ChapterTimeStart -o "-" -v ChapterTimeEnd -o "-" -v ChapterSegmentUID -n -)
+            SegmentUIDs=$(mkvextract chapters "${SOURCEFILE}" | xmlstarlet sel -t -m Chapters/EditionEntry[EditionFlagDefault='1']/ChapterAtom/ChapterSegmentUID -v . -n | sort -u)
             if [[ -n "${LISTCHAPTERS}" ]]; then
               _report -d "Found this chapter list:"
               _report -d "${LISTCHAPTERS}"
@@ -1142,15 +1135,12 @@ _find_input (){
                   done < <(find "${MKVFOLDER}" -type f \( -name "*.mkv" -o -name "*.mka" \))
                   if [[ -n "${MATCHMKV}" ]]; then
                     INPUTFILE="$MATCHMKV"
-                    if [[ -z "${FIRST_PRESENTATION_FILE}" ]]; then
-                        FIRST_PRESENTATION_FILE="${INPUTFILE}"
-                    fi 
                   else
                     echo "Error: did not find a file to match ${CHAPSEGMENTUID}"
                     exit
                   fi
                 else
-                  INPUTFILE="${INPUTFILE}"
+                  INPUTFILE="${SOURCEFILE}"
                 fi
                 printf "file " >> "${FFCONCATFILE}"
                 printf '%q' "${INPUTFILE}" >> "${FFCONCATFILE}"
@@ -1160,17 +1150,7 @@ _find_input (){
               done < <(echo "${LISTCHAPTERS}")
               FFMPEGINPUT+=(-i)
               FFMPEGINPUT+=("${FFCONCATFILE}")
-              # set flag to true if presentation information is found
-              presentation_found=true
-              # exit loop if presentation information is found
-              break
             fi
-        fi
-        done < "$INPUTFILES"
-        # report and exit if no presentation is found
-        if ! $presentation_found; then
-            _report -d "No presentation chapters found in any input file."
-            exit
         fi
     fi
 }
