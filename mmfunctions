@@ -1209,7 +1209,7 @@ _get_channel_layout(){
 _get_audio_mapping(){
     OPTIND=1
     unset PBSMIX
-    unset ADD_VOLADJ
+    ADD_VOLADJ="N"
     while getopts ":bvlr" OPT ; do
         case "${OPT}" in
             b) PBSMIX="Y" ;;
@@ -1243,8 +1243,10 @@ _get_audio_mapping(){
         _add_audio_filter "[0:a:0][0:a:1]amerge,pan=stereo|c0=0.5*c0+0.5*c1|c1=0.5*c0+0.5*c1"
     elif [[ "${AUDIOMAP}" = "A" ]] ; then
         unset AMERGE_LIST
-        for i in {0.."${AUDIO_TRACK_COUNT}"} ; do
+        C=0
+        while "$C" -lte "${AUDIO_TRACK_COUNT}" ; do
             AMERGE_LIST+="[0:a:$i]"
+            ((C++))
         done
         _report -wt "Will mix together ${AUDIO_TRACK_COUNT} tracks into a stereo output."
         _add_audio_filter -p "${AMERGE_LIST}amerge=inputs=${AUDIO_TRACK_COUNT}"
