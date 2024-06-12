@@ -983,6 +983,7 @@ _find_input (){
     CONCATSOURCE=""
     SOURCEFILE=""
     ISOBJECT=""
+    INFOOVERLAY=""
     unset FFMPEGINPUT
     if [ -f "${1}" ] ; then
         # if the input is a file then just `-i file`
