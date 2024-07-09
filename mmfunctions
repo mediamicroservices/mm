@@ -1393,7 +1393,7 @@ _get_phase_warning(){
         PHASETEMP="$INPUT"
     else
         PHASETEMP=$(_maketemp)
-        ffprobe 2>/dev/null -f lavfi -i amovie="${INPUT}",aphasemeter=r=0.2 -select_streams 0:a:0 -show_entries frame=pkt_dts_time:frame_tags=lavfi.aphasemeter.phase -of csv > "${PHASETEMP}"
+        ffprobe 2>/dev/null -f lavfi -i amovie="${INPUT}":s=da,aphasemeter=r=0.2:video=0 -show_entries frame=pkt_dts_time:frame_tags=lavfi.aphasemeter.phase -of csv > "${PHASETEMP}"
     fi
     PHASEREPORT=$(_maketemp)
     if [[ $(awk -F "," '$3<-0.18 {print $0}' "${PHASETEMP}" | wc -l | sed "s/ //g") -gt 1 ]] ; then
