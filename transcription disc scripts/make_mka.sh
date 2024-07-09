@@ -91,7 +91,7 @@ for directory in "$@"; do
     fi
 
     # find all WAV files in the directory and its subdirectories
-    for wav_file in $(find "$directory" -type f -name "*.wav"); do
+    find "$directory" -type f -name "*.wav" -print0 | while IFS= read -r -d '' wav_file; do
         echo "============$(basename "$wav_file")============"
         if check_wav_header "$wav_file"; then
             # convert WAV to MKA and move it to 'mka' directory
@@ -109,7 +109,7 @@ read -p "(y/n): " add_chapters
 if [[ $add_chapters == "y" || $add_chapters == "Y" ]]; then
     for mka_file in "${mka_files[@]}"; do
         # prompt user for the chapter information file
-        read -p "Please provide the path to the .txt file containing chapter information for $(basename "$mka_file"): " chapter_file
+        read -rp "Please provide the path to the .txt file containing chapter information for $(basename "$mka_file"): " chapter_file
         if [[ -f "$chapter_file" ]]; then
             mkvpropedit "$mka_file" --chapters "$chapter_file"
             echo -e "${GREEN}[Chapter Info Added] ${mka_file}${NC}"
