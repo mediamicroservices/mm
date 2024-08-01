@@ -1,7 +1,7 @@
 #!/bin/bash
 REQUIRECONFIG="Y"
 
-SCRIPTDIR=$(dirname "${0}")
+SCRIPTDIR="$(dirname "${0}")"
 . "${SCRIPTDIR}/mmfunctions" || { echo "Missing '${SCRIPTDIR}/mmfunctions'. Exiting." ; exit 1 ;};
 
 _cleanup(){
@@ -9,6 +9,44 @@ _cleanup(){
     exit 1
 }
 
+_ask_scantype(){
+    if [ -z "${SCANTYPE}" ] ; then
+        _report -qn "Enter 'a' to use ADF or 'f' to use flatbed or 'q' to quit: "
+        read -e SCANTYPE
+        [ -z "${SCANTYPE}" ] && _ask_scantype
+        [[ "${SCANTYPE}" = "q" ]] && exit 0
+    fi
+}
+
+_ask_doubleside(){
+    if [ -z "${DOUBLESIDE}" ] ; then
+        _report -qn "Enter 1 if scanning only front or 2 if scanning both front and back or 'q' to quit: "
+        read -e DOUBLESIDE
+        [ -z "${DOUBLESIDE}" ] && _ask_doubleside
+        [[ "${DOUBLESIDE}" = "q" ]] && exit 0
+    fi
+}
+
+_ask_doctype(){
+    if [ -z "${DOCTYPE_ANSWER}" ] ; then
+        _report -qn "If document is from typewriter, enter 't', if from computer, enter 'c', if handwritten, enter 'h', if other, enter 'o': "
+		read -e DOCTYPE_ANSWER
+        [ -z "${DOCTYPE_ANSWER}" ] && _ask_doctype
+        [[ "${DOCTYPE_ANSWER}" = "q" ]] && exit 0
+		
+		if [[ "${DOCTYPE_ANSWER}" = "t" ]] ; then
+			DOCTYPE="typewriter"
+ 	    elif [[ "${DOCTYPE_ANSWER}" = "c" ]] ; then
+			DOCTYPE="computer"
+		elif [[ "${DOCTYPE_ANSWER}" = "h" ]] ; then
+			DOCTYPE="handwritten"
+		elif [[ "${DOCTYPE_ANSWER}" = "o" ]] ; then
+			DOCTYPE="other"
+		else
+			_report -w "You said ${DOCTYPE_ANSWER} which is not valid."
+		fi
+    fi
+}
 trap _cleanup SIGHUP SIGINT SIGTERM
 _log -b
 
@@ -16,6 +54,23 @@ _ask_operator
 
 _ask_mediaid
 
+_ask_scantype
+_ask_doctype
+
+MIDDLE_OPTIONS+=(--rgb --bits 8 --resolution 600 --auto-length --paper-width 10200 --paper-height 13200 --rotate-n-n --left 0 --width 10200 --top 0 --height 13200 --double-feed n --tiff --no-jpeg --images-per-file 1 --compress zlib)
+
+_scan_page(){
+	echo "Running: fscanx ${MIDDLE_OPTIONS[@]} ${ORIGDIR}/${MEDIAID}_${COUNTER}.tif" >> "${LOGDIR}/fscanx_process.txt"
+	fscanx "${MIDDLE_OPTIONS[@]}" "${ORIGDIR}/${MEDIAID}_${COUNTER}.tif" | tee -a "${LOGDIR}/fscanx_process.txt"
+=======
+COMMAND_OPTIONS+=(--rgb --bits 8 --resolution 600 --auto-length --paper-width 10200 --paper-height 13200 --rotate-n-n --left 0 --width 10200 --top 0 --height 13200 --double-feed n --tiff --no-jpeg --images-per-file 1 --compress zlib)
+
+_scan_page(){
+	echo "Running: fscanx ${MIDDLE_OPTIONS[@]} ${COMMAND_OPTIONS[@]} ${ORIGDIR}/${MEDIAID}_scan${COUNTER}_${SCANTYPE_ANSWER}_.tif" >> "${LOGDIR}/fscanx_process.txt"
+	fscanx "${MIDDLE_OPTIONS[@]}" "${COMMAND_OPTIONS[@]}" "${ORIGDIR}/${MEDIAID}_scan${COUNTER}_${SCANTYPE_ANSWER}_.tif" | tee -a "${LOGDIR}/fscanx_process.txt"
+>>>>>>> Stashed changes
+
+}
 if [ -d "${OUTDIR_PAPER}/${MEDIAID}" ] ; then
     _report -wdt "It looks like this ${MEDIAID} was already scanned. If you want to overwrite the existing one please delete ${MEDIAID} first and then try again."
 exit
@@ -29,20 +84,127 @@ LOGDIR="${OUTDIR_PAPER}/${MEDIAID}/metadata/logs"
 mkdir -p "${ORIGDIR}"
 mkdir -p "${LOGDIR}"
 
+_file_rename_flatbed(){
+	for file in ${ORIGDIR}/*1.tif ; do mv -v -n "${file}" "${file//1.tif/.tiff}" ; done
+	for file in ${ORIGDIR}/*1.tif ; do mv -v -n "${file}" "${file//1.tif/${COUNTER}.tiff}" ; done
+
+}
+
+_file_rename_adf(){
+	for file in ${ORIGDIR}/*.tif ; do mv -v -n "${file}" "${file//.tif/.tiff}" ; done
+
+}
 START=$(date -u "+%Y%m%dT%H%M%SZ")
 
-COMMAND="fscanx  --adf --rgb --bits 8 --resolution 600 --paper-width 10200 --paper-height 13200 --rotate-n-n --left 0 --width 10200 --top 0 --height 13200 --double-feed n --tiff --no-jpeg --images-per-file 1 --compress zlib '${ORIGDIR}/${MEDIAID}_.tif'"
-exec &> "${LOGDIR}/fscanx_process.txt"
-eval "${COMMAND}"
+if [[ "${SCANTYPE}" == "a" ]] ; then
+	MIDDLE_OPTIONS+=(--adf)
+	SCANTYPE_ANSWER="ADF"
+_scan_page_adf() {
+	MIDDLE_OPTIONS=(--adf)
+	SCANTYPE_ANSWER="ADF"
+	_ask_doctype
+	_ask_doubleside
+	if [[ "${DOUBLESIDE}" == 2 ]] ; then
+		MIDDLE_OPTIONS+=(--duplex)
+	elif [[ "${DOUBLESIDE}" == 1 ]] ; then
+		break
+		:
+>>>>>>> Stashed changes
+	else
+		_report -w "You said ${DOUBLESIDE} for the number of pages which is not valid, use 1 or 2."
+	fi
+	_scan_page
+	_file_rename_adf
+<<<<<<< Updated upstream
+elif [[ "${SCANTYPE}" == "f" ]] ; then
+	MIDDLE_OPTIONS+=(--flatbed)
+	SCANTYPE_ANSWER="flatbed"
+	COUNTER=1
+	_report -d -n "Hit enter to scan a page or q to stop scanning pages: "
+	read PAGE_ANSWER
+	
+	while [[ ! "${PAGE_ANSWER}" = "q" ]] ; do
+		_scan_page
+		_file_rename_flatbed
+		((COUNTER++))
+		_report -d -n "Hit enter to scan a page or q to stop scanning pages (next page is ${COUNTER}): "
+		read PAGE_ANSWER
+	done
+		
+else
+	_report -w "You said ${SCANTYPE} for the scantype which is not valid, use 'a' or 'f'."
+	exit 1
+fi
+=======
+	DOUBLESIDE=""
+	DOCTYPE_ANSWER=""
+}
+
+_scan_page_flatbed(){
+	MIDDLE_OPTIONS=(--flatbed)
+	SCANTYPE_ANSWER="flatbed"
+	#((COUNTER++))
+	_report -d -n "Hit enter to scan a page or q to stop scanning pages: "
+		read PAGE_ANSWER
+		
+		while [[ "${PAGE_ANSWER}" != "q" && "${PAGE_ANSWER}" != "a" ]] ; do
+			_ask_doctype
+			_scan_page
+			_file_rename_flatbed
+			((COUNTER++))
+			_report -d -n "Hit enter to scan a page, a to change the scanner or q to stop scanning pages (next page is ${COUNTER}): "
+			read PAGE_ANSWER
+			if [[ "${PAGE_ANSWER}" == "a" ]] ; then
+				SCANTYPE="a"
+				echo "scantype is ${SCANTYPE} now."
+			fi
+			DOCTYPE_ANSWER=""
+			#echo "doctype is ${DOCTYPE_ANSWER}"
+			#_ask_doctype
+		done
+}
+
+
+
+COUNTER=1
+if [[ "${SCANTYPE}" == "f" ]] ; then
+	_scan_page_flatbed
+fi
+
+if [[ "${SCANTYPE}" == "a" ]] ; then
+	#((COUNTER++))
+	while [[ "${PAGE_ANSWER}" != "q" ]] ; do
+		_scan_page_adf
+		#echo "duplex is ${DOUBLESIDE}"
+		((COUNTER++))
+		_report -d -n "Hit a to continue scanning, f to change the scanner or q to stop scanning pages: "
+		read PAGE_ANSWER
+		if [[ "${PAGE_ANSWER}" == "f" ]] ; then
+			SCANTYPE="f"
+			echo "scantype is ${SCANTYPE} now."
+			_scan_page_flatbed
+		fi
+	done
+fi
+	
+if [[ "${SCANTYPE}" != "a" && "${SCANTYPE}" != "f" && "${SCANTYPE}" != "q" ]] ; then
+	_report -w "You said ${SCANTYPE} for the scantype which is not valid, use 'a' or 'f'."
+	exit 1
+fi
+	
+
+
+>>>>>>> Stashed changes
+
 FIRST=$(find "${ORIGDIR}" -type f -mindepth 1 -maxdepth 1 ! -name ".*" -exec ls -1rt '{}' \; | head -n 1)
 LAST=$(ls -1t "${ORIGDIR}" | head -n 1)
-open -a /Applications/Preview.app/ "${FIRST}" "${ORIGDIR}/${LAST}"
+open "${FIRST}" "${ORIGDIR}/${LAST}"
 END=$(date -u "+%Y%m%dT%H%M%SZ")
 SYSTEM_DATA=$(system_profiler SPHardwareDataType)
 #These retrieved the right info on the Mac I'm using, but I don't know how standard the output is
-SERIAL_NUMBER=$(echo "${SYSTEM_DATA}" | grep "Serial Number" | awk '{ print $4 }')
-MODEL=$(echo "${SYSTEM_DATA}" | grep "Model Identifier" | awk '{ print $3; }')
-OS=$(system_profiler SPSoftwareDataType | grep "System Version" | awk '{ print substr(${0}, index(${0},$3)); }')
+SERIAL_NUMBER="$(echo "${SYSTEM_DATA}" | grep "Serial Number" | awk '{ print $4 }')"
+MODEL="$(echo "${SYSTEM_DATA}" | grep "Model Identifier" | awk '{ print $3; }')"
+OS="$(system_profiler SPSoftwareDataType | grep "System Version" | cut -d ":" -f 2- | awk '{$1=$1;print}')"
 echo "datetime_start: ${START}" >> "${LOGDIR}/capture.log"
 echo "datetime_end: ${END}" >> "${LOGDIR}/capture.log"
 echo "serial number: ${SERIAL_NUMBER}" >> "${LOGDIR}/capture.log"
@@ -50,7 +212,10 @@ echo "model id: ${MODEL}" >> "${LOGDIR}/capture.log"
 echo "os: ${OS}" >> "${LOGDIR}/capture.log"
 echo "identifier: ${MEDIAID}" >> "${LOGDIR}/capture.log"
 echo "operator: ${OP}" >> "${LOGDIR}/capture.log"
-echo "command: ${COMMAND}"  >> "${LOGDIR}/capture.log"
+echo "scantype: ${SCANTYPE_ANSWER}" >> "${LOGDIR}/capture.log"
+echo "doctype: ${DOCTYPE}" >> "${LOGDIR}/capture.log"
+echo "fscanx_options: ${MIDDLE_OPTIONS[@]}"  >> "${LOGDIR}/capture.log"
+echo "fscanx_options: ${MIDDLE_OPTIONS[@]} ${COMMAND_OPTIONS[@]}"  >> "${LOGDIR}/capture.log"
 
 echo done scanning "${MEDIAID}"
 
