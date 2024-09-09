@@ -496,8 +496,7 @@ while [[ "${@}" != "" ]] ; do
                 MIDDLEOPTIONS+=("${MIDDLEOPTIONSIMX[@]}")
             fi
             _add_video_filter "format=yuv422p"
-            _add_video_filter "lut=y=if(gt(val\,235)\,235\,val):u=if(gt(val\,235)\,235\,val):v=if(gt(val\,235)\,235\,val)"
-            _add_video_filter "lut=y=if(lt(val\,16)\,16\,val):u=if(lt(val\,16)\,16\,val):v=if(lt(val\,16)\,16\,val)"
+            _add_video_filter "lutyuv=clipval"
         elif [[ "${OUTPUT_TYPE}" == "broadcast_copy" ]] ; then
             MIDDLEOPTIONS+=(-map 0:v)
             MIDDLEOPTIONS+=(-c:v copy)
