@@ -9,20 +9,11 @@ brew install wget
 
 # more apps
 
-brew install atom
-brew install audacity
 brew install cyberduck
-brew install firefox
 brew install github
 brew install google-chrome
-brew install iterm2
-brew install libreoffice
-brew install mediaconch-gui
 brew install mpv
 brew install qctools
-brew install qlvideo
-brew install sequel-pro
-brew install slack
 brew install textmate
 brew install the-unarchiver
 brew install vlc
