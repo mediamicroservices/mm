@@ -67,7 +67,7 @@ while getopts ":T:lrmDav:d:o:e:E:F:scYp:tu:wXCS:I:O:nh" OPT ; do
         l) AUDIOMAP="L";;
         r) AUDIOMAP="R";;
         m) AUDIOMAP="M";;
-		D) AUDIOMAP="D";;
+        D) AUDIOMAP="D";;
         a) AUDIOMAP="A";;
         v) VOLADJUST="${OPTARG}";;
         d) DELIVERDIR="${OPTARG}" && (_check_deliverdir) ;;
