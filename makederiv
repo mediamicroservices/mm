@@ -712,7 +712,7 @@ while [[ "${@}" != "" ]] ; do
             _get_audio_mapping -v "${SOURCEFILE}"
         elif [[ "${OUTPUT_TYPE}" == "waveform" ]] ; then
             MIDDLEOPTIONS+=(-vn)
-            MIDDLEOPTIONS+=(-frames:v 1)
+            MIDDLEOPTIONS+=(-update 1 -frames:v 1)
             _add_audio_filter "acrossover=split='15 250 1000 4000'[a01][a02][a03][a04][a05];
             [a01]showwavespic=split_channels=1:scale=log:s=1920x240:colors=0x3030FF@0.8[v01];
             [a02]showwavespic=split_channels=1:scale=log:s=1920x240:colors=0x5050FF@0.8[v02];
@@ -725,7 +725,7 @@ while [[ "${@}" != "" ]] ; do
             [v4][v05]overlay"
         elif [[ "${OUTPUT_TYPE}" == "spectogram" ]] ; then
             MIDDLEOPTIONS+=(-vn)
-            MIDDLEOPTIONS+=(-frames:v 1)
+            MIDDLEOPTIONS+=(-update 1 -frames:v 1)
             _add_audio_filter "showspectrumpic=mode=combined:color=intensity:scale=log:fscale=lin:s=1024x1024"
         elif [[ "${OUTPUT_TYPE}" == "transcriptiondisc" ]] ; then
             MIDDLEOPTIONS+=(-ac 1)
@@ -738,7 +738,7 @@ while [[ "${@}" != "" ]] ; do
             [DCMIX]highpass=f=60:t=s,lowpass=f=10000:t=s"
         elif [[ "${OUTPUT_TYPE}" == "audiographs" ]] ; then
             MIDDLEOPTIONS+=(-vn)
-            MIDDLEOPTIONS+=(-frames:v 1)
+            MIDDLEOPTIONS+=(-update 1 -frames:v 1)
             MIDDLEOPTIONS+=(-map "[chart]")
             _ss_to_hhmmss(){
                 # if milliseconds are used it will round down to nearest second for instance 60.9, will return 1:00
