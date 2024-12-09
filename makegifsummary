@@ -99,7 +99,7 @@ while [ "${*}" != "" ] ; do
         _run_critical_event ffmpeg -nostdin -y ${INPUTOPTIONS[@]} -v warning -ss "$START" "${FFMPEGINPUT[@]}" "${MIDDLEOPTIONS[@]}" "${TEMPIMAGES}.${IMAGENUMBER}.png"
     done
     PALETTE="$(_maketemp)"
-    ffmpeg -nostdin -f image2 -framerate 6 -i "${TEMPIMAGES}.%01d.png" -vf palettegen "${PALETTE}.png"
+    ffmpeg -nostdin -f image2 -framerate 6 -i "${TEMPIMAGES}.%01d.png" -update 1 -frames:v 1 -vf palettegen "${PALETTE}.png"
     ffmpeg -nostdin -f image2 -framerate 6 -i "${TEMPIMAGES}.%01d.png" -i "${PALETTE}.png" -filter_complex paletteuse "${OUTPUT}"
     echo
     if [ -d "${DELIVERDIR}" ] ; then

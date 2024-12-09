@@ -44,6 +44,7 @@ _usage(){
         echo "  -v Y|N              (run the video through a volume adjustment filter, then adjust the volume accordingly during transcoding, slower; defaults to ${VOLADJUST})"
         echo "  -d directory        (directory to deliver the resulting file to)"
         echo "  -o directory        (directory to write the resulting file to)"
+        echo "  -N filename         (provide a custom filename for the output, use with -o to provide the full path)"
         echo "  -e emailaddress     (send an email about the delivery; only valid if -d is used)"
         echo "  -E emailaddress     (send an email about process outcome)"
         echo "  -n                  (dry-run mode: show the commands that would be run but don't do anything)"
@@ -61,17 +62,18 @@ _usage(){
 
 user_input=${@}
 OPTIND=1
-while getopts ":T:lrmDav:d:o:e:E:F:scYp:tu:wXCS:I:O:nh" OPT ; do
+while getopts ":T:lrmDav:d:o:N:e:E:F:scYp:tu:wXCS:I:O:nh" OPT ; do
     case "${OPT}" in
         T) OUTPUT_TYPE="${OPTARG}";;
         l) AUDIOMAP="L";;
         r) AUDIOMAP="R";;
         m) AUDIOMAP="M";;
-		D) AUDIOMAP="D";;
+        D) AUDIOMAP="D";;
         a) AUDIOMAP="A";;
         v) VOLADJUST="${OPTARG}";;
         d) DELIVERDIR="${OPTARG}" && (_check_deliverdir) ;;
         o) OUTPUTDIR_FORCED="${OPTARG}" && (_check_outputdir_forced) ;;
+        N) OUTPUTNAME_FORCED="${OPTARG}" ;;
         e) EMAILADDRESS_DELIVERY="${OPTARG}" && (_check_emailaddress "${EMAILADDRESS_DELIVERY}") ;;
         E) EMAILADDRESS_OUTCOME="${OPTARG}" && (_check_emailaddress "${EMAILADDRESS_OUTCOME}") ;;
         F) FORMULA="${OPTARG}";;
@@ -710,7 +712,7 @@ while [[ "${@}" != "" ]] ; do
             _get_audio_mapping -v "${SOURCEFILE}"
         elif [[ "${OUTPUT_TYPE}" == "waveform" ]] ; then
             MIDDLEOPTIONS+=(-vn)
-            MIDDLEOPTIONS+=(-frames:v 1)
+            MIDDLEOPTIONS+=(-update 1 -frames:v 1)
             _add_audio_filter "acrossover=split='15 250 1000 4000'[a01][a02][a03][a04][a05];
             [a01]showwavespic=split_channels=1:scale=log:s=1920x240:colors=0x3030FF@0.8[v01];
             [a02]showwavespic=split_channels=1:scale=log:s=1920x240:colors=0x5050FF@0.8[v02];
@@ -723,7 +725,7 @@ while [[ "${@}" != "" ]] ; do
             [v4][v05]overlay"
         elif [[ "${OUTPUT_TYPE}" == "spectogram" ]] ; then
             MIDDLEOPTIONS+=(-vn)
-            MIDDLEOPTIONS+=(-frames:v 1)
+            MIDDLEOPTIONS+=(-update 1 -frames:v 1)
             _add_audio_filter "showspectrumpic=mode=combined:color=intensity:scale=log:fscale=lin:s=1024x1024"
         elif [[ "${OUTPUT_TYPE}" == "transcriptiondisc" ]] ; then
             MIDDLEOPTIONS+=(-ac 1)
@@ -736,7 +738,7 @@ while [[ "${@}" != "" ]] ; do
             [DCMIX]highpass=f=60:t=s,lowpass=f=10000:t=s"
         elif [[ "${OUTPUT_TYPE}" == "audiographs" ]] ; then
             MIDDLEOPTIONS+=(-vn)
-            MIDDLEOPTIONS+=(-frames:v 1)
+            MIDDLEOPTIONS+=(-update 1 -frames:v 1)
             MIDDLEOPTIONS+=(-map "[chart]")
             _ss_to_hhmmss(){
                 # if milliseconds are used it will round down to nearest second for instance 60.9, will return 1:00

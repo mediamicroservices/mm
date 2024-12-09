@@ -1618,7 +1618,11 @@ _set_accesstimes(){
 _set_up_output(){
     # set up output
     _log -b
-    OUTPUT="${OUTPUTDIR}/${MEDIAID%.*}${SUFFIX}.${EXTENSION}"
+    if [[ -n "${OUTPUTNAME_FORCED}" ]] ; then
+        OUTPUT="${OUTPUTDIR}/${OUTPUTNAME_FORCED}"
+    else
+        OUTPUT="${OUTPUTDIR}/${MEDIAID%.*}${SUFFIX}.${EXTENSION}"
+    fi
     if [ -s "${OUTPUT}" ] ; then
         _report -wt "WARNING ${OUTPUT} already exists, skipping transcode"
         continue
