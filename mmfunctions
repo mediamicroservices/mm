@@ -1107,6 +1107,59 @@ _find_input (){
         _report -dt "Using ${CONCATSOURCE} for transcoding."
         _report -dt "Using ${SOURCEFILE} for assessment."
         _report -wt "Extracting to ${MOUNTPATH}. Please unmount ${MOUNTPATH} later."
+    
+    # looks for cue information in wav files to determine 'in' and 'out' points
+    elif [[ "${SOURCEFILE##*.}" == "wav" ]]; then
+        _report -dt ".wav file detected. Looking for cue chunk information"
+
+        # check if bwfmetaedit is installed
+        if ! command -v bwfmetaedit &>/dev/null; then
+            _report -dt "Error: bwfmetaedit not found. Please install bwfmetaedit."
+            return 1
+        fi
+
+        # use bwfmetaedit to get cue points
+        cue_data=$(bwfmetaedit --out-xml "${SOURCEFILE}" 2>&1)
+        if [[ $? -eq 0 ]]; then
+            _report -dt "Found cue information in ${SOURCEFILE}"
+            _report -dt "${cue_data}"
+
+            # extract sample rate from XML
+            SAMPLE_RATE=$(echo "${cue_data}" | xmlstarlet sel -t -m "/conformance_point_document/File/Technical/SampleRate" -v .)
+
+            if [[ -z "${SAMPLE_RATE}" ]]; then
+                _report -wt "Warning: Sample rate not found in XML. Using default sample rate."
+                SAMPLE_RATE="96000"  # default sample rate of the script
+            fi
+
+            _report -dt "Sample Rate: ${SAMPLE_RATE} samples per second"
+
+            # extract STARTTIME (Position in sample offset) and SAMPLELENGTH (SampleLength in sample offset)
+            STARTTIME_samples=$(echo "${cue_data}" | xmlstarlet sel -t -m "/conformance_point_document/File/Cues/Cue/Position" -v .)
+            SAMPLELENGTH_samples=$(echo "${cue_data}" | xmlstarlet sel -t -m "/conformance_point_document/File/Cues/Cue/LabeledText/SampleLength" -v .)
+
+            if [[ -z "${STARTTIME_samples}" ]]; then
+                _report -wt "Warning: STARTTIME not found in cue data."
+                STARTTIME_samples="0"  # default value or handle missing STARTTIME
+            fi
+
+            if [[ -z "${SAMPLELENGTH_samples}" ]]; then
+                _report -wt "Warning: SAMPLELENGTH not found in cue data."
+                SAMPLELENGTH_samples="0"  # default value or handle missing SAMPLELENGTH
+            fi
+
+            # convert STARTTIME and SAMPLELENGTH from samples to seconds using the sample rate
+            STARTTIME_seconds=$(echo "scale=6; ${STARTTIME_samples} / ${SAMPLE_RATE}" | bc) # user may add or subtract seconds to fine tune 'START' time  (-ss)
+            SAMPLELENGTH_seconds=$(echo "scale=6; ${SAMPLELENGTH_samples} / ${SAMPLE_RATE}" | bc) # user may add or subtract seconds to fine tune 'DURATION' (-t)
+
+            _report -dt "STARTTIME (seconds): ${STARTTIME_seconds}"
+            _report -dt "SAMPLELENGTH (seconds): ${SAMPLELENGTH_seconds}"
+            # construct ffmpeg command with start time and duration in seconds
+            FFMPEGINPUT=(-ss "${STARTTIME_seconds}" -i "${SOURCEFILE}" -t "${SAMPLELENGTH_seconds}")
+        else
+            _report -dt "Error: Failed to retrieve cue information from ${SOURCEFILE}"
+        fi
+
     elif [[ "${SOURCEFILE#*.}" = "mkv" || "${SOURCEFILE#*.}" = "mka" ]] ; then
         # if the source file is an mkv or mka, then check if it has a Presentation Chapter Edition
         if [[ -n $(mkvextract tags "${SOURCEFILE}" | xmlstarlet sel -t -m "/Tags/Tag/Simple[String='Presentation']" -v String) ]] ; then
