@@ -396,6 +396,7 @@ AUDIODECISION.option = Only use right of the first audio track
 AUDIODECISION.option = Only use the first track
 AUDIODECISION.option = Downmix the first two mono tracks
 AUDIODECISION.option = Downmix all tracks
+AUDIODECISION.option = Downmix all tracks plus keep originals as extra tracks
 AUDIODECISION.width = 400
 
 # cropping strategy
