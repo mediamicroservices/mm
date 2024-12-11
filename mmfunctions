@@ -1245,8 +1245,8 @@ _get_audio_mapping(){
     elif [[ "${AUDIOMAP}" = "A" ]] ; then
         unset AMERGE_LIST
         C=0
-        while "$C" -lte "${AUDIO_TRACK_COUNT}" ; do
-            AMERGE_LIST+="[0:a:$i]"
+        while [[ "$C" -lt "${AUDIO_TRACK_COUNT}" ]] ; do
+            AMERGE_LIST+="[0:a:${C}]"
             ((C++))
         done
         _report -wt "Will mix together ${AUDIO_TRACK_COUNT} tracks into a stereo output."
