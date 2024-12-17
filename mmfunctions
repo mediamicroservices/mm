@@ -1038,7 +1038,6 @@ _find_input (){
                 FFMPEGINPUT+=(-i)
                 FFMPEGINPUT+=("${SOURCEFILE}")
             else
-                VOLADJUST="N"
                 INPUTOPTIONS+=(-f concat)
                 INPUTOPTIONS+=(-safe 0)
                 FFCONCATFILE="$(_maketemp).ffconcat"
@@ -1116,9 +1115,6 @@ _find_input (){
             if [[ -n "${LISTCHAPTERS}" ]]; then
               _report -d "Found this chapter list:"
               _report -d "${LISTCHAPTERS}"
-              unset FFMPEGINPUT
-              INPUTOPTIONS+=(-f concat)
-              INPUTOPTIONS+=(-safe 0)
               FFCONCATFILE=$(_maketemp)
               while read chapter ; do
                 STARTTIME=$(echo "${chapter}" | cut -d- -f1)
@@ -1149,6 +1145,9 @@ _find_input (){
                 echo "inpoint ${STARTTIME}" >> "${FFCONCATFILE}"
                 echo "outpoint ${ENDTIME}" >> "${FFCONCATFILE}"
               done < <(echo "${LISTCHAPTERS}")
+              unset FFMPEGINPUT
+              FFMPEGINPUT+=(-f concat)
+              FFMPEGINPUT+=(-safe 0)
               FFMPEGINPUT+=(-i)
               FFMPEGINPUT+=("${FFCONCATFILE}")
             fi
@@ -1272,7 +1271,7 @@ _get_audio_mapping(){
             LOUD_ADJ=$(_readingestlog "loudness_adjustment")
         fi
         if [ ! "${LOUD_ADJ}" ] ; then
-            _get_volume_adjustment "${SOURCEFILE}"
+            _get_volume_adjustment "${FFMPEGINPUT[@]}"
         fi
         if [[ "${measured_I}" == "inf" ]] || [[ "${measured_I}" == "-inf" ]] ; then
             VOLADJUST="N"
@@ -1435,7 +1434,7 @@ _get_volume_adjustment(){
     LOUD_ADJ=""
     LOUDNESS_OPT_START=""
     LOUDNESS_OPT_END=""
-    INPUT_MOVIE="${1}"
+    VOL_FFMPEG_INPUT="${*}"
     if [[ -n "${INTIME}" ]] ; then
         _report -dt "Loudness reading will start at intime (${INTIME})."
         LOUDNESS_OPT_START="-ss ${INTIME}"
@@ -1444,8 +1443,8 @@ _get_volume_adjustment(){
         _report -dt "Loudness reading will end at outtime (${OUTTIME})."
         LOUDNESS_OPT_END="-to ${OUTTIME}"
     fi
-    _report -dt "Getting loudness data for $(basename "${INPUT_MOVIE}") ..."
-    LOUDNESS_DATA=$(ffmpeg -nostdin ${LOUDNESS_OPT_START} -i "${1}" ${LOUDNESS_OPT_END} -vn -filter_complex "${AUDIOFILTERCHAIN},loudnorm=print_format=json" -f null - 2>&1)
+    _report -dt "Getting loudness data for '${VOL_FFMPEG_INPUT[*]}' ..."
+    LOUDNESS_DATA=$(ffmpeg -nostdin ${LOUDNESS_OPT_START} ${VOL_FFMPEG_INPUT[*]} ${LOUDNESS_OPT_END} -vn -filter_complex "${AUDIOFILTERCHAIN},loudnorm=print_format=json" -f null - 2>&1)
     VOLUME_EXIT_CODE="${?}"
     if [ "${VOLUME_EXIT_CODE}" -ne 0 ] ; then
         _report -wt "Volume analysis for ${INPUT_MOVIE} exited with ${VOLUME_EXIT_CODE}."
