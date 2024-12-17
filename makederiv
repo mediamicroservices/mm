@@ -311,15 +311,21 @@ while [[ "${@}" != "" ]] ; do
         if [[ "${CODEC_TAG_STRING}" == "mjp2" ]] ; then
              INPUTOPTIONS+=(-vcodec libopenjpeg)
         fi
+        CROPADJ=$(_readingestlog "crop_filter")
+        if [[ -n "${CROPADJ}" ]] ; then
+            _report -dt "A directive to crop the input object with ${CROPADJ} was found in the capture.log. Will apply."
+        fi
+        if [[ "${CROPDETECT}" = "Y" && -z "${CROPADJ}" ]] ; then
+            _get_cropdetection "${SOURCEFILE}"
+        fi
+        if [[ -n "${CROPADJ}" ]] ; then
+            _add_video_filter "${CROPADJ}"
+            WIDTH=$(echo "${CROPADJ}" | cut -d= -f2 | cut -d: -f1)
+            HEIGHT=$(echo "${CROPADJ}" | cut -d= -f2 | cut -d: -f2)
+            DAR="(${WIDTH}/${HEIGHT})*${SAR}"
+        fi
         if [[ "${OUTPUT_TYPE}" == "broadcast" ]] ; then
             _get_broadcastduration "${SOURCEFILE}"
-            if [ "${CROPDETECT}" = "Y" ] ; then
-                _get_cropdetection "${SOURCEFILE}"
-                _add_video_filter "${CROPADJ}"
-                WIDTH=$(echo "${CROPADJ}" | cut -d= -f2 | cut -d: -f1)
-                HEIGHT=$(echo "${CROPADJ}" | cut -d= -f2 | cut -d: -f2)
-                DAR="(${WIDTH}/${HEIGHT})*${SAR}"
-            fi
             # set options for zeroing timecode if input is MXF
             if [[ "${FORMAT}" == "mxf" ]] ; then
                 metadata_option="-metadata"
