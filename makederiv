@@ -455,7 +455,7 @@ while [[ "${@}" != "" ]] ; do
                 _add_video_filter "setdar=16/9"
                 _add_video_filter "fps=fps=ntsc"
                 MIDDLEOPTIONS+=("${MIDDLEOPTIONSXDCAM[@]}")
-            elif [ $(echo "scale=3 ; $DARRATIO > (3/2)" | bc -l) = 1 -o "${ADDSLATE}" = "Y" ] ; then
+            elif [ $(echo "scale=3 ; $DARRATIO > (3/2)" | bc -l) = 1 -o "${HEIGHT}" -gt "512" -o "${ADDSLATE}" = "Y" ] ; then
                 _add_video_filter "scale=size=hd1080:interl=1:force_original_aspect_ratio=decrease"
                 _add_video_filter "pad=1920:1080:(ow-iw)/2:(oh-ih)/2"
                 _add_video_filter "setdar=16/9"
