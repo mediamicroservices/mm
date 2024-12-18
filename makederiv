@@ -217,7 +217,6 @@ while [[ "${@}" != "" ]] ; do
         INGESTLOG="${INPUT}/metadata/submissionDocumentation/logs/capture.log"
         _report -wt "The capture.log is found in the ./metadata/submissionDocumentation/logs/ directory. Using that for now but consider moving it to ./metadata/logs/"
     fi
-    _report_to_db
 
     # get information on the input
     _get_height "${SOURCEFILE}"
