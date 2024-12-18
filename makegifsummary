@@ -71,8 +71,6 @@ while [ "${*}" != "" ] ; do
         fi
     fi
 
-    _report_to_db
-
     # encoding options
     _get_codectagstring "${SOURCEFILE}"
     _get_dar "${SOURCEFILE}"

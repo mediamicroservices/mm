@@ -11,16 +11,12 @@ table of contents
     2. [installing mediamicroservices](https://github.com/mediamicroservices/mm#installing-mediamicroservices)
     3. [configuring mediamicroservices](https://github.com/mediamicroservices/mm#configuring-mediamicroservices)
         1. [variable explanations](https://github.com/mediamicroservices/mm#variable-explanations)
-3. [Database Instructions](#database-instructions)
-	1. [Database Configuration](#database-configuration)
-	2. [Database Backup](#database-backup)
-4. [mediamicroservices functions and instructions for use](https://github.com/mediamicroservices/mm#mediamicroservices-functions-and-instructions-for-use)
+3. [mediamicroservices functions and instructions for use](https://github.com/mediamicroservices/mm#mediamicroservices-functions-and-instructions-for-use)
 	* [aipupgrade](https://github.com/mediamicroservices/mm#aipupgrade)
     * [barcodeinterpret](https://github.com/mediamicroservices/mm#barcodeinterpret)
     * [blackatends](https://github.com/mediamicroservices/mm#blackatends)
     * [checksum2filemaker](https://github.com/mediamicroservices/mm#checksum2filemaker)
     * [checksumpackage](https://github.com/mediamicroservices/mm#checksumpackage)
-    * [createpremisdb](#createpremisdb)
     * [finishpackage](https://github.com/mediamicroservices/mm#finishpackage)
     * [fix_left2stereo](https://github.com/mediamicroservices/mm#fix_left2stereo)
     * [fix_rewrap](https://github.com/mediamicroservices/mm#fix_rewrap)
@@ -198,46 +194,8 @@ this variable stores the name of the FileMaker database that is used in checksum
 **21. VOLADJUST**
 This variable must be set to yes (Y) or no (N). If set to yes, volume will be run through a volume adjustment filter and adjusted accordingly during transcoding.
 
-**22. PREMIS_DB**
-This variable must be set to yes (Y) or no (N). If set to yes, database reporting for mm will be enabled.
-
-**23. SQL_ERROR_EMAIL_TO**
-This can be set to include an email address to receive error reports for database insertion.
-
-**24. PREMIS_PROFILE**
-Enter the login path information for the database here. (Use the output supplied by the createpremisdb script, or create your own using mysql_config_editor).
-** PREMIS_NAME**
-Enter the name of the database used for mm reporting.
-**26 PERCEPTUAL_HASH**
-Set this to 1 (on) to enable the creation of perceptual hashes during the ingestfile process
-**27. Quit**
+**22. Quit**
 if editing in the terminal, use this option to leave the configuration file editor.
-
-***
-
-## Database Instructions
-
-Media Microservices can be integrated with a database for the capture of a variety of preservation metadata generated through the mm workflow. Currently the MM Database supports PREMIS event information, fixity information, perceptual hashes for video files, mediainfo output and ingest logs.
-
-### Database specific scripts
-* createpremisdb
-* dbbackup
-* makefingerprint
-* searchfingerprint
-* updatingplist
-
-### Database Configuration
-
-To configure the database, run the command `createpremisdb -c` on your __host__ computer and follow the prompts.  This will set up the database as well as facilitate user creation. To create users without creating a new database, use the command `createpremisdb -u`.  At the end of user creation, the script will supply a command to create a log-in profile for the database.  It should look something like this: `mysql_config_editor set --login-path=your_user_config --host=xx.xx.xxx.xxx --user=your_user --password`. Run this command on your __user__ computer and enter the password for the user you created when prompted.  This will create the SQL log-in profile that you will use when configuring the microservices. NOTE: When supplying the suggested command, the script does its best to auto-fill the host IP address.  You may wish to verify that this is the correct IP.
-
-To finalize the database setup, run `mmconfig` (GUI mode) or `mmconfig -t` (CLI) and select 'Y' in the PREMIS Database logging section, (or set to Y if using CLI). Enter the database name and log-in profile you have created to finalize DB connectivity. Additional database options (such as fingerprint generation) can be set at this time.
-
-![Database GUI Example](https://github.com/mediamicroservices/mm/blob/master/Resources/mmgui_dbsetup.png)
-
-### Database Backup
-MM includes a script for database backup.  This can be either run manually or set up as an automated process.  After configuring the backup script, running `dbbackup` will create a zipped backup in the chosen location.  To automate this process use Brew Services.  Typing `brew services start mm` will cause the db to be backed up automatically using the included plist file.  By default, backups will occur daily at 2:00 AM.
-
-To configure database backup use the command `dbbackup -e`. This will open the config file in a terminal editor. Set the necessary variables to your desired values.
 
 ***
 
@@ -274,18 +232,6 @@ To view the specific ffmpeg encoding options for each file, view the sourcecode 
 * If you only want to check that filenames and filesizes are the same as in existing files, use option -c. Type  `checksumpackage -c [input]` and if no existing checksum file exists, one will be created.
 * Another option is to use -c in conjunction with -u, which will create new checksums and version the previous ones if the check is unsuccessful, meaning your checksums have changed. Type  `checksumpackage -cu [input]` for this option.
 * Finally, use -v as an option if you want to fully verify checksums. If no checksums exist, the script will create the initial ones. Verification will version existing checksums by adding the date they were created to the filename and create new ones, and log the difference to a checksumprocess log, which will be placed in the metadata directory of the package. To use -v, type  `checksumpackage -v [input]`.
-
-#### createmmdb
-* createmmdb configures a database, users and login profiles. Your command will look like this 'Usage: -c (create database) -u (create user) -h (help)'.
-
-#### createpremisdb
-* createpremisdb will create a database for the logging of microservices information as well as facilitate user creation.  For more information on use, see the [database configuration](#configuring-premisfixity-logging-database) section of this readme.
-* commands are `createpremisdb -c` for database creation and `createpremisdb -u` for user creation.
-
-#### dbbackup
-* Creates backups of selected database. Allows a user specified number of backups to be saved. Script can be run manually or set up as a recurring task using the `brew services start mm` command.
-
-* Usage: -e edit configurations, -c create login credentials for backup -h help
 
 #### finishpackage
 * finishpackage is a combination of the microservices makelossless, makebroadcast, makeyoutube, makemetadata, and checksumpackage. The purpose is to losslessly transcode, create access copies, and create metadata and directory structure information for a file or package input. To use finishpackage, type finishpackage and drag your input into the command line: `finishpackage [input]`. finish package is typically used in conjunction with restructureForCompliance.
