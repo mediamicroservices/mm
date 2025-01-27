@@ -96,8 +96,8 @@ _check_dfxml(){
 _version_dfxml(){
     PACKAGE="${ABS_PATH}"
     _report -wdt "Creating a new version of the checksum files."
-    LASTMD5="${PACKAGE}/${OUTDIR}/${CHECKSUMNAME%.*}_$(stat -t '%Y%m%d-%H%M%S' -l "${PACKAGE}/${OUTDIR}/${CHECKSUMNAME}" | awk '{print $6}').md5"
-    LASTDFXML="${PACKAGE}/${OUTDIR}/${DFXMLNAME%.*}_$(stat -t '%Y%m%d-%H%M%S' -l "${PACKAGE}/${OUTDIR}/${DFXMLNAME}" | awk '{print $6}').xml"
+    LASTMD5="${PACKAGE}/${OUTDIR}/${CHECKSUMNAME%.*}_$(gdate -r "${PACKAGE}/${OUTDIR}/${CHECKSUMNAME}" '+%Y%m%d-%H%M%S').md5"
+    LASTDFXML="${PACKAGE}/${OUTDIR}/${DFXMLNAME%.*}_$(gdate -r "${PACKAGE}/${OUTDIR}/${CHECKSUMNAME}" '+%Y%m%d-%H%M%S').xml"
     mv -v "${PACKAGE}/${OUTDIR}/${CHECKSUMNAME}" "${LASTMD5}"
     mv -v "${PACKAGE}/${OUTDIR}/${DFXMLNAME}" "${LASTDFXML}"
     echo "$(_get_iso8601): $(basename "${0}"):${VERSION}: checksums are versioned - ${DFXMLNAME} -> ${LASTDFXML}" >> "${PACKAGE}/${OUTDIR}/${CHECKSUMPROCESSLOG}"
