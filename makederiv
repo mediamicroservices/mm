@@ -434,6 +434,7 @@ while [[ "${@}" != "" ]] ; do
             MIDDLEOPTIONSIMX+=(-rc_buf_aggressivity 0.25)
             MIDDLEOPTIONSIMX+=(-bsf:v imxdump)
             MIDDLEOPTIONSIMX+=(-tag:v mx3n)
+            INPUTOPTIONS+=(-apply_cropping 0)
             # decide on an output codec, aspect ratio, and padding strategy
             DARRATIO=$(echo "scale=3 ; ${DAR}" | bc)
             if [ "${FORMULA}" = "tff" ] ; then
@@ -531,8 +532,10 @@ while [[ "${@}" != "" ]] ; do
                 fi
             fi
             if  [[ "${WIDTH}" == 720 && "${HEIGHT}" == 486 ]] ; then
+                 INPUTOPTIONS+=(-apply_cropping 0)
                 _add_video_filter "crop=720:480:0:4"
             elif  [[ "${WIDTH}" == 720 && "${HEIGHT}" == 512 ]] ; then
+                INPUTOPTIONS+=(-apply_cropping 0)
                 _add_video_filter "crop=720:480:0:32"
             fi
             _add_video_filter "yadif"
@@ -544,8 +547,10 @@ while [[ "${@}" != "" ]] ; do
             MIDDLEOPTIONS+=(-f mp4)
             MIDDLEOPTIONS+=(-crf 21)
             if  [[ "${WIDTH}" == 720 && "${HEIGHT}" == 486 ]] ; then
+                INPUTOPTIONS+=(-apply_cropping 0)
                 _add_video_filter "crop=720:480:0:4"
             elif  [[ "${WIDTH}" == 720 && "${HEIGHT}" == 512 ]] ; then
+                INPUTOPTIONS+=(-apply_cropping 0)
                 _add_video_filter "crop=720:480:0:32"
             fi
             _add_video_filter "yadif"
@@ -577,8 +582,10 @@ while [[ "${@}" != "" ]] ; do
                 fi
             fi
             if  [[ "${WIDTH}" == 720 && "${HEIGHT}" == 486 ]] ; then
+                INPUTOPTIONS+=(-apply_cropping 0)
                 _add_video_filter "crop=720:480:0:4"
             elif  [[ "${WIDTH}" == 720 && "${HEIGHT}" == 512 ]] ; then
+                INPUTOPTIONS+=(-apply_cropping 0)
                 _add_video_filter "crop=720:480:0:32"
             fi
             _add_video_filter "yadif"    
@@ -625,8 +632,10 @@ while [[ "${@}" != "" ]] ; do
             MIDDLEOPTIONS+=(-lmax 200000)
             MIDDLEOPTIONS+=(-aspect "${ASPECT}")
             if  [[ "${WIDTH}" == 720 && "${HEIGHT}" == 486 ]] ; then
+                INPUTOPTIONS+=(-apply_cropping 0)
                 _add_video_filter "crop=720:480:0:4"
             elif  [[ "${WIDTH}" == 720 && "${HEIGHT}" == 512 ]] ; then
+                INPUTOPTIONS+=(-apply_cropping 0)
                 _add_video_filter "crop=720:480:0:32"
             elif  [[ "${WIDTH}" != 720 && "${HEIGHT}" != 480 ]] ; then
                 _add_video_filter "scale=720:480:interl=1"
