@@ -88,16 +88,16 @@ fi
 
 for dir in ${BATCHPROCESS_DIR}/*/                    
 do
-    _batchlog -c "Batch processing files migrated from XDCAM disks."
+    _batchlog -c "Batch processing files migrated from XDCAM disk "$(basename "${dir}")
     echo "Making Youtube Derivative for $dir"
     makeyoutube $dir
-    _batchlog -c "makeyoutube $dir complete"
+    _batchlog -c "makeyoutube "$(basename "${dir}")" complete"
     echo "Making Broadcast Derivative for $dir"
     makebroadcast $dir
-    _batchlog -c "makebroadcast $dir complete"
+    _batchlog -c "makebroadcast "$(basename "${dir}")" complete"
     echo "Making Window Derivative for $dir"
     makewindow $dir
-    _batchlog -c "makewindow $dir complete"
+    _batchlog -c "makewindow "$(basename "${dir}")" complete"
 done
 
 _log -e
