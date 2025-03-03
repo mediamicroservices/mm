@@ -276,7 +276,7 @@ else
     echo $concatdir
     echo "$concatdir" > ${OUTDIR_INGESTXDCAM}/${MEDIAID}/objects/list1.txt
     echo "$(awk '{ print "file ", $0 }' ${OUTDIR_INGESTXDCAM}/${MEDIAID}/objects/list1.txt > ${OUTDIR_INGESTXDCAM}/${MEDIAID}/objects/activelist.txt)"
-    ffmpeg -f concat -safe 0 -i ${OUTDIR_INGESTXDCAM}/${MEDIAID}/objects/activelist.txt -map 0:v -map 0:a -c copy ${OUTDIR_INGESTXDCAM}/${MEDIAID}/objects/output.mkv
+    ffmpeg -f concat -safe 0 -i ${OUTDIR_INGESTXDCAM}/${MEDIAID}/objects/activelist.txt -map 0:v -map 0:a -c copy ${OUTDIR_INGESTXDCAM}/${MEDIAID}/objects/${MEDIAID}.mkv
     rm ${OUTDIR_INGESTXDCAM}/${MEDIAID}/objects/list1.txt
     rm ${OUTDIR_INGESTXDCAM}/${MEDIAID}/objects/activelist.txt
     _xdcamlog -c ".MXF Files have been concatenated."
@@ -302,9 +302,8 @@ _xdcamlog -c "Chapters created in .MKV files."
 
 _log -e
 _xdcamlog -e
-mv ${LOGDIR}/${LOGNAME} ${OUTDIR_INGESTXDCAM}/${MEDIAID}/metadata/logs/
+mv ${LOGDIR}${LOGNAME} ${OUTDIR_INGESTXDCAM}/${MEDIAID}/metadata/logs/
 
+     #finish
 
-#finish
-#takes about 14 minutes for initial checksum, 10 mins to transfer and 2-3 mins to verify.
-
+     #takes about 14 minutes for initial checksum, 10 mins to transfer and 2-3 mins to verify.
