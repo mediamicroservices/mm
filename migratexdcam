@@ -290,7 +290,7 @@ do
     echo "Review the file below and select timestamps to proceed with making chapters."
     echo "If no chapters are required, press q" 
     echo $file_mkv
-    open $file_mkv
+    open -a "mpv" $file_mkv
     makemkvchapters $file_mkv
 done    
 
