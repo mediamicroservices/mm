@@ -1,0 +1,116 @@
+#!/bin/bash
+#migratexdcam2
+#batch processes youtube, window, broadcast derivatives for all folder-packages within a directory. Folder-packages created after running migratexdcam1. 
+
+
+SCRIPTDIR=$(dirname "${0}")
+. "${SCRIPTDIR}/mmfunctions" || { echo "Missing '${SCRIPTDIR}/mmfunctions'. Exiting." ; exit 1 ;};
+
+
+
+_batchlog(){
+    LOGNAME="batchprocessing.log"
+    LOGDIR="/Users/$USER/Desktop/"
+    LOGFILE="${LOGDIR}/${LOGNAME}"
+    if [ ! -d "${LOGDIR}" ] ; then
+        _mkdir2 "${LOGDIR}"
+        if [ "${?}" -ne 0 ]; then
+            echo "${0}: Can't create log directory at ${LOGDIR}, exiting..."
+            exit 1
+        fi
+    fi
+    OPTIND=1
+        while getopts ":beacw" OPT; do
+            case "${OPT}" in
+                b) STATUS="start" ;;                                    # script is beginning
+                e) STATUS="end"   ;;                                    # script is ending
+                a) STATUS="abort" ;;                                    # script is aborted
+                c) STATUS="comment" ;;                                  # comment about what script is doing
+                w) STATUS="warning" ;;                                  # warning information
+            esac
+        done
+        shift $(( ${OPTIND} - 1 ))
+        NOTE="${1}"
+        echo $(_get_iso8601)", $(basename "${0}"), ${STATUS}, ${NOTE}" >> "${LOGFILE}"
+}
+
+_cleanup(){
+    _log -a "Process aborted"
+    _batchlog -a
+    exit 1
+}
+trap _cleanup SIGHUP SIGINT SIGTERM
+
+_log -b
+_batchlog -b
+
+
+_usage(){
+    echo
+    echo "$(basename "${0}") ${VERSION}"
+    echo "This script is intended to be run without interaction to batch process a folder of AIPs, making access derivatives."
+    echo "_usage: $(basename ${0}) [ -c directory_of_folder_containing_AIPs ]"
+    echo "  -c directory_of_folder_containing_AIPs (else will default to ${MM_CONFIG_FILE})"
+    echo
+    exit
+}
+
+
+OPTIND=1
+while getopts ":hc:" OPT; do
+    case "${OPT}" in
+        h) _usage ;;
+        c) BATCHPROCESS_DIR="${OPTARG}" ;;
+        \?) _report -w "Invalid option: -${OPTARG}" ; exit 1 ;;
+        :) _report -w "Option -${OPTARG} requires an argument" ; exit 1 ;;
+    esac
+    done
+    
+if [ ! -d "${BATCHPROCESS_DIR}" ] ; then
+    _report -w "The batch prcoessing folder directory must be set. Use [ -c /path/to/batch/processing/folder ]."
+    exit 1
+fi
+
+
+
+if [ ! -f ${BATCHPROCESS_DIR}/*/objects/*.MXF ]
+then
+    echo "All .MXF files have already been removed."
+else
+    for MXFfile in ${BATCHPROCESS_DIR}/*/objects/*.MXF
+    do
+        echo "The Following .MXF files will be deleted"
+        echo $MXFfile
+        rm $MXFfile
+        echo ".MXF files have been removed"
+    done
+fi
+
+for dir in ${BATCHPROCESS_DIR}/*/                    
+do
+    _batchlog -c "Batch processing files migrated from XDCAM disks."
+    echo "Making Youtube Derivative for $dir"
+    makeyoutube $dir
+    _batchlog -c "makeyoutube $dir complete"
+    echo "Making Broadcast Derivative for $dir"
+    makebroadcast $dir
+    _batchlog -c "makebroadcast $dir complete"
+    echo "Making Window Derivative for $dir"
+    makewindow $dir
+    _batchlog -c "makewindow $dir complete"
+done
+
+_log -e
+_batchlog -e
+
+mv ${LOGDIR}/${LOGNAME} ${BATCHPROCESS_DIR}/
+
+
+
+
+#INCOMPLETE
+#for folder in ${BATCHPROCESS_DIR}/*/
+#do 
+    #mkdir ${folder}objects/access
+    #mv ${folder}/objects/youtube_up ${folder}/objects/window ${folder}objects/access
+#done
