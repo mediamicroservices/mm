@@ -104,13 +104,3 @@ _log -e
 _batchlog -e
 
 mv ${LOGDIR}/${LOGNAME} ${BATCHPROCESS_DIR}/
-
-
-
-
-#INCOMPLETE
-#for folder in ${BATCHPROCESS_DIR}/*/
-#do 
-    #mkdir ${folder}objects/access
-    #mv ${folder}/objects/youtube_up ${folder}/objects/window ${folder}objects/access
-#done
