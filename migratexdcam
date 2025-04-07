@@ -1,11 +1,9 @@
-#!/bin/bash
-# migratexdcam1 
-# ver 5 - migrates with checksum verification + concatenation + rewrap to MKV + makechapters
-# ver 6 - logs are all local to the folder now - AS WELL AS - having logs at the custom-location-log as per mmconfig and mmfunctions
-# ver 7 - logs are stored temporarily in desktop while allowing script to be run in any local environment without having to change desktop directory based on local user. This is necessary in the current script since the package structure isn't created when logging begins. At the end of the script the locally created log moves to the pacakge/metadata/logs folder. 
+#<<=========================== XDCAMVER8 ===================================>>
 
 SCRIPTDIR=$(dirname "${0}")
 . "${SCRIPTDIR}/mmfunctions" || { echo "Missing '${SCRIPTDIR}/mmfunctions'. Exiting." ; exit 1 ;};
+
+#<<============ Creating xdcam logging function ================>>
 
 _xdcamlog(){
     LOGNAME="xdcam.log"
@@ -34,21 +32,21 @@ _xdcamlog(){
 }
 
 
+
+#<<====== Cleanup and trap ========>>
 _cleanup(){
     _log -a "Process aborted"
     _xdcamlog -a "Migration/Checksum aborted"
     exit 1
 }
 
-#_checksumabort(){
-    #_xdcamlog -a "Process aborted"
-    #exit 1
-    #}
-
 trap _cleanup SIGHUP SIGINT SIGTERM
 _log -b
 _xdcamlog -b "XDCam Migration Script."
 
+
+
+#<<====== Usage and getopts ========>>
 _usage(){
     echo
     echo "$(basename "${0}") ${VERSION}"
@@ -57,7 +55,7 @@ _usage(){
     echo "  -c output_directory_for_xdcam (else will default to ${MM_CONFIG_FILE})"
     exit
 }
-# command-line options to set mediaid and original variables
+
 OPTIND=1
 while getopts ":hc:" OPT; do
     case "${OPT}" in
@@ -73,7 +71,23 @@ if [ ! -d "${OUTDIR_INGESTXDCAM}" ] ; then
     exit 1
 fi
 
-#Interview the operator
+
+
+
+
+#<<================== ffmpeg decode function, check for integrity errors  ==================>> 
+decodeintegrity(){
+    input=$1
+        err=$(ffmpeg -i ${1} -f null - 2>&1 | grep -c "^\[mpeg2video") 
+        if [ "$err" -eq 0 ]; then
+            echo "No issue with file integrity detected."
+        else
+            echo "There are ${err} errors identified in the file integrity. Please review the errors and re-transfer the file."
+        fi
+}
+
+
+#<<====== Interview the operator ========>>
     _report -qn "Please enter a valid Media ID. If there is no Media ID, please enter the Format Identifier: "
     read -e MEDIAID
     if [ "${MEDIAID}" == "q" ]; then
@@ -103,9 +117,12 @@ fi
         exit 0
     fi
     
-#Pick deck of multiple.
-    VOLUME_ARRAY=($(find /Volumes -name "XDCAM*" -maxdepth 1 | sort))
 
+
+
+#<<====== Deck Selection ========>>
+    VOLUME_ARRAY=($(find /Volumes -name "XDCAM*" -maxdepth 1 | sort))
+    
     _report -d "Let's get started!"
     echo "Select the deck you'd like to use:"
     PS3="Which XDCAM deck?"
@@ -116,21 +133,22 @@ fi
     if [ ! "${XDCAM_VOLUME}" ] ; then
         echo "Error: You selected an invalid option."
         _xdcamlog -w "Invalid deck-selection. Exiting."
-        exit 1
-        
+        exit 1  
     fi
-    echo "You picked ${XDCAM_VOLUME}"
-      
+    
+    echo "You picked ${XDCAM_VOLUME}"  
     XDCAM_MOUNT="${XDCAM_VOLUME}"
     DECK1=$(basename "${XDCAM_MOUNT}")
     _report -dt "We're almost ready to begin transfer.  I found the XDCAM deck: ${DECK1}"
     
-    #find deck information and save in variable $driveinfo
+    
+#<<==find deck information and save in variable $driveinfo =====>>
     tempSP=$(mktemp)
     system_profiler SPUSBDataType | grep "Serial Number" -B5 > "$tempSP"
     driveinfo=$(awk '/PDW/{if(++i>2)exit} i' $tempSP)
 
-    #report results of OP interview
+
+#<<=========report results of OP interview ===========>>
     MEDIAID="${MEDIAID}"
     FORMATID="${FORMATID}"
     DEVICEID1="${XDCAM_VOLUME}"
@@ -160,32 +178,38 @@ fi
         echo
         exit 1
     else
-        # check for existing output
+        
+        #<<================== SCRIPT WORKING AFTER OP INTERVIEW AND REPORTING ========================>>
+        
+        #<<========== check for existing output ==============>>
         if [ -d "${OUTDIR_INGESTXDCAM}/${MEDIAID}" ] ; then
             _report -dt "It looks like ${MEDIAID} was already ingested. These things happen! If you want to overwrite the existing one please just delete ${OUTDIR_INGESTXDCAM}/${MEDIAID} first and then try again."
         else
-            #create ingest log file and directory
+            
+            #<<========== create ingest log file and directories ==============>>
             mkdir -p "${OUTDIR_INGESTXDCAM}/${MEDIAID}/metadata/logs"
             INGESTLOG="${OUTDIR_INGESTXDCAM}/${MEDIAID}/metadata/logs/capture.log"
             _writeingestlog "media ID" "${MEDIAID}"
             _writeingestlog "XDCAM drive information" "$driveinfo" 
             _writeingestlog "operator" "${OP}"
-            _writeingestlog "made by" "xdcamv5"
+            _writeingestlog "made by" "xdcamv7"
             _writeingestlog "ingest_process_dir" "${OUTDIR_INGESTXDCAM}"
             _writeingestlog "disc label info" "${LABELINPUT}"
             _writeingestlog "datetime_start" "$(_get_iso8601)"
 
+
+            #<<========== ChecksumCalcs ==============>>
             _xdcamlog -c "Checksum calculation for XDCAM disk ${MEDIAID} is starting."
             
-            #make check sum of source
-            _report -dt "Calculating hash for the source"
             
+            #<<======= checksum calc source =======>>
+            _report -dt "Calculating hash for the source"
             xdcamsource_hash=$(sha256sum /Volumes/${DECK1}/Clip/* > /${OUTDIR_INGESTXDCAM}/${MEDIAID}/metadata/source_checksum.txt)
             hashprintsource=$(awk '{print $1}' /${OUTDIR_INGESTXDCAM}/${MEDIAID}/metadata/source_checksum.txt)
-            
             _xdcamlog -c "Source checksum calculated. Migrating XDCAM Files."
             
-            # start xdcam ingest process 
+            
+            #<<======= XDCAM Migration - rsync =======>>
             START=$(date -u "+%Y%m%dT%H%M%SZ")
             mkdir -p "${OUTDIR_INGESTXDCAM}/${MEDIAID}/objects"
             _report -dt "migrating video..."
@@ -195,22 +219,19 @@ fi
             
             diskutil info "${XDCAM_MOUNT}" > "${OUTDIR_INGESTXDCAM}/${MEDIAID}/metadata/logs/diskutilinfo.log"
             end=$(date -u "+%Y%m%dT%H%M%SZ")
-            
-            
             _report -dt "Transfer complete. Verifying integrity of transfer."
             _xdcamlog -c "Target checksum for ${OUTDIR_INGESTXDCAM}/${MEDIAID}/objects/ is being calculated."
             
-            #make check sum of target
-             
+            
+            #<<======= checksum cal target =======>>             
             target_hash=$(sha256sum ${OUTDIR_INGESTXDCAM}/${MEDIAID}/objects/* > /${OUTDIR_INGESTXDCAM}/${MEDIAID}/metadata/target_checksum.txt)
             hashprinttarget=$(awk '{print $1}' /${OUTDIR_INGESTXDCAM}/${MEDIAID}/metadata/target_checksum.txt)
             echo $hashprinttarget
-            
             _xdcamlog -c "Target checksum is calculated."
             _xdcamlog -c "Checksums are being verified against each other."
              
-            #verify checksums against each other
-             
+            
+            #<<======= verify checksums =======>>
             if [ "$hashprintsource" == "$hashprinttarget" ]; then
                 echo "The files are identical."
                 _xdcamlog -c "The files are identical."
@@ -222,15 +243,17 @@ fi
              
             echo "Checksum verification complete. XDCAM PD Disc will be ejected now."
             fi
-             
             
+             
+            #<<======= Eject disk =======>>
             hdiutil eject "/Volumes/${DECK1}"
             mv -v -n "${OUTDIR_INGESTXDCAM}/${MEDIAID}/objects/"*.XML "${OUTDIR_INGESTXDCAM}/${MEDIAID}/metadata/logs/"
             _writeingestlog "datetime_end" "$(_get_iso8601)"
             _xdcamlog -c "XDCAM Disc is ejected"
+           
+           
             
-            
-            #rename files
+            #<<======= file renames =======>>
             for FILE in $(find "${OUTDIR_INGESTXDCAM}/${MEDIAID}/objects" -iname "*.MXF" -type f | sort) ; do
                 MXFNAME="$(basename "${FILE}")"
                 MXFDIR="$(dirname "${FILE}")"
@@ -238,6 +261,24 @@ fi
                 mv -v -n "${FILE}" "${NEWNAME}"
             done
             _xdcamlog -c "Files renamed and organized into package."
+            
+            
+            
+            #<<=== RUNNING TRANSFER .MXF INTEGRITY CHECK ====>>
+            package=${OUTDIR_INGESTXDCAM}/${MEDIAID}/objects
+            for file in $package/*.MXF ; 
+            do 
+                file_base=$(basename "$file")
+                decoder=$(decodeintegrity "$file")
+                if [ "$decoder" == "No issue with file integrity detected." ]; then
+                    _report -d "${file_base} passed file integrity test."
+                    _xdcamlog -c "Passed file-decode-integrity check for ${file_base}."
+                else 
+                    _report -w "${file_base} failed file integrity test. Check for issues and re-transfer from XDCAM Disk."
+                    exit 1
+                fi
+            done
+            
             
         echo "-----------------------------------------------------------"
         _report -d "Don't forget to grab your disc from the machine!"
@@ -247,8 +288,9 @@ fi
 
 _xdcamlog -c "Migration and checksum verification complete."
 
-#to concatenate or not to concatenate
 
+
+#<<================== to concatenate or not to concatenate ========================>>
 echo "Please review .MXF files before proceeding with concatenation."
 open ${OUTDIR_INGESTXDCAM}/${MEDIAID}/objects/
 _xdcamlog -c "Operator asked to proceed with or without concatenation."
@@ -283,8 +325,9 @@ else
 fi
 
 
-#make chapters within the re-wrapped files using makemkvchapters
 
+
+#<<========================= #make chapters ===============================>>
 for file_mkv in ${OUTDIR_INGESTXDCAM}/${MEDIAID}/objects/*.mkv
 do 
     echo "Review the file below and select timestamps to proceed with making chapters."
@@ -293,7 +336,6 @@ do
     open -a "mpv" $file_mkv
     makemkvchapters $file_mkv
 done    
-
 echo "XDCAM disk has been migrated with fixity verification, rewrapped to .mkv and chapters created."
 echo "Kindly ensure that .MXF files remaining in the objects folder are backed-up if still required. They
      will be deleted in the batch processing."
@@ -303,7 +345,3 @@ _xdcamlog -c "Chapters created in .MKV files."
 _log -e
 _xdcamlog -e
 mv ${LOGDIR}${LOGNAME} ${OUTDIR_INGESTXDCAM}/${MEDIAID}/metadata/logs/
-
-     #finish
-
-     #takes about 14 minutes for initial checksum, 10 mins to transfer and 2-3 mins to verify.
