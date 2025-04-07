@@ -1,13 +1,15 @@
 #!/bin/bash
-#migratexdcam2
 #batch processes youtube, window, broadcast derivatives for all folder-packages within a directory. Folder-packages created after running migratexdcam1. 
+#ver 2 - added logs for all processes 
+#ver 3 - adding makemetadata and checksumpackage
+#ver 4 - adding removeDSStore
 
 
 SCRIPTDIR=$(dirname "${0}")
 . "${SCRIPTDIR}/mmfunctions" || { echo "Missing '${SCRIPTDIR}/mmfunctions'. Exiting." ; exit 1 ;};
 
 
-
+#LOGGING SETUP
 _batchlog(){
     LOGNAME="batchprocessing.log"
     LOGDIR="/Users/$USER/Desktop/"
@@ -44,7 +46,7 @@ trap _cleanup SIGHUP SIGINT SIGTERM
 _log -b
 _batchlog -b
 
-
+#USAGE AND OPTIONS
 _usage(){
     echo
     echo "$(basename "${0}") ${VERSION}"
@@ -55,7 +57,6 @@ _usage(){
     exit
 }
 
-
 OPTIND=1
 while getopts ":hc:" OPT; do
     case "${OPT}" in
@@ -65,6 +66,7 @@ while getopts ":hc:" OPT; do
         :) _report -w "Option -${OPTARG} requires an argument" ; exit 1 ;;
     esac
     done
+    shift $(( OPTIND - 1 ))
     
 if [ ! -d "${BATCHPROCESS_DIR}" ] ; then
     _report -w "The batch prcoessing folder directory must be set. Use [ -c /path/to/batch/processing/folder ]."
@@ -72,7 +74,11 @@ if [ ! -d "${BATCHPROCESS_DIR}" ] ; then
 fi
 
 
+#Interviewing operator for tape serial and for source directory
 
+
+
+#REMOVE .MXF FILES
 if [ ! -f ${BATCHPROCESS_DIR}/*/objects/*.MXF ]
 then
     echo "All .MXF files have already been removed."
@@ -86,8 +92,14 @@ else
     done
 fi
 
-for dir in ${BATCHPROCESS_DIR}/*/                    
+
+#BATCH PROCESSING DERIVATIVES WITH MAKEMETADATA AND CHECKSUMPACKAGE
+for dir in ${BATCHPROCESS_DIR}/*/                    #objects/*.mkv alternative 
 do
+    removeDSStore $dir
+    removeDSStore $dir
+    removeDSStore $dir
+    removeDSStore $dir
     _batchlog -c "Batch processing files migrated from XDCAM disk "$(basename "${dir}")
     echo "Making Youtube Derivative for $dir"
     makeyoutube $dir
@@ -98,9 +110,35 @@ do
     echo "Making Window Derivative for $dir"
     makewindow $dir
     _batchlog -c "makewindow "$(basename "${dir}")" complete"
+    echo "Making Metadata report for $dir"
+    makemetadata $dir
+    _batchlog -c "makemetadata "$(basename "${dir}")" complete"
+    echo "Making checksumpackage for $dir"
+    checksumpackage $dir
+    _batchlog -c "Checksumpackage for "$(basename "${dir}")" complete"
+    
 done
 
-_log -e
-_batchlog -e
+_batchlog -c "Batch processing of derivatives is complete. Moving to LTO."
+echo "Batch processing of derivatives is complete. Moving to LTO."
 
+_batchlog -e
+_log -e
+
+#moving log from $user home to the batchprocess directory
 mv ${LOGDIR}/${LOGNAME} ${BATCHPROCESS_DIR}/
+
+
+
+
+
+
+
+
+
+
+
+
+
+    
+    
