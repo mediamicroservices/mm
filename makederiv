@@ -33,6 +33,7 @@ _usage(){
         echo "  -l                  (only use the left channel of the first audio track)"
         echo "  -r                  (only use the right channel of the first audio track)"
         echo "  -a                  (downmix all audio tracks into a stereo output)"
+        echo "  -A                  (downmix all audio tracks into a stereo output plus keep individual tracks as extra audio channels)"
         echo "  -t                  (burn timecode overlay)"
         echo "  -u subtitle_file    (burn in a subtitle file)"
         echo "  -w                  (burn pts overlay)"
@@ -62,7 +63,7 @@ _usage(){
 
 user_input=${@}
 OPTIND=1
-while getopts ":T:lrmDav:d:o:N:e:E:F:scYp:tu:wXCS:I:O:nh" OPT ; do
+while getopts ":T:lrmDaAv:d:o:N:e:E:F:scYp:tu:wXCS:I:O:nh" OPT ; do
     case "${OPT}" in
         T) OUTPUT_TYPE="${OPTARG}";;
         l) AUDIOMAP="L";;
@@ -70,6 +71,7 @@ while getopts ":T:lrmDav:d:o:N:e:E:F:scYp:tu:wXCS:I:O:nh" OPT ; do
         m) AUDIOMAP="M";;
         D) AUDIOMAP="D";;
         a) AUDIOMAP="A";;
+        A) AUDIOMAP="A+";;
         v) VOLADJUST="${OPTARG}";;
         d) DELIVERDIR="${OPTARG}" && (_check_deliverdir) ;;
         o) OUTPUTDIR_FORCED="${OPTARG}" && (_check_outputdir_forced) ;;
@@ -305,6 +307,8 @@ while [[ "${@}" != "" ]] ; do
             AUDIOMAP="D"
         elif [[ "${AUDIODECISION}" == "Downmix all tracks" ]] ; then
             AUDIOMAP="A"
+        elif [[ "${AUDIODECISION}" == "Downmix all tracks plus keep originals as extra tracks" ]] ; then
+            AUDIOMAP="A+"
         fi
     fi
 

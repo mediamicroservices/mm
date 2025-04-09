@@ -1245,13 +1245,26 @@ _get_audio_mapping(){
     elif [[ "${AUDIOMAP}" = "A" ]] ; then
         unset AMERGE_LIST
         C=0
-        while "$C" -lte "${AUDIO_TRACK_COUNT}" ; do
-            AMERGE_LIST+="[0:a:$i]"
+        while [[ "$C" -lt "${AUDIO_TRACK_COUNT}" ]] ; do
+            AMERGE_LIST+="[0:a:${C}]"
             ((C++))
         done
         _report -wt "Will mix together ${AUDIO_TRACK_COUNT} tracks into a stereo output."
         _add_audio_filter -p "${AMERGE_LIST}amerge=inputs=${AUDIO_TRACK_COUNT}"
         _add_audio_filter "aformat=channel_layouts=stereo"
+    elif [[ "${AUDIOMAP}" = "A+" ]] ; then
+        unset AMERGE_LIST
+        C=0
+        MIDDLEOPTIONS+=(-map "[downmix]")
+        MIDDLEOPTIONS+=(-disposition:a:1 default)
+        while [[ "$C" -lt "${AUDIO_TRACK_COUNT}" ]] ; do
+            AMERGE_LIST+="[0:a:${C}]"
+            MIDDLEOPTIONS+=(-map "0:a:${C}")
+            ((C++))
+        done
+        _report -wt "Will mix together ${AUDIO_TRACK_COUNT} tracks into a stereo output."
+        _add_audio_filter -p "${AMERGE_LIST}amerge=inputs=${AUDIO_TRACK_COUNT}"
+        _add_audio_filter "aformat=channel_layouts=stereo[downmix]"
     elif [[ "${MULTIMONO}" = true && "${1#*.}" != "mkv" ]] ; then
         _report -wt "The first two audio tracks of this non matroska file are both mono. Considering track 1 for left and track 2 for right."
         _add_audio_filter -p "[0:a:0][0:a:1]amerge=inputs=2"

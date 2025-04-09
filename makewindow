@@ -14,4 +14,4 @@ _usage(){
     "${SCRIPTDIR}/makederiv" -h
 }
 [ "${#}" = 0 ] && _usage
-"${SCRIPTDIR}/makederiv" -T window -X -a "${@}"
+"${SCRIPTDIR}/makederiv" -T window -X -A "${@}"
