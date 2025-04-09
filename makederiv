@@ -316,15 +316,21 @@ while [[ "${@}" != "" ]] ; do
         if [[ "${CODEC_TAG_STRING}" == "mjp2" ]] ; then
              INPUTOPTIONS+=(-vcodec libopenjpeg)
         fi
+        CROPADJ=$(_readingestlog "crop_filter")
+        if [[ -n "${CROPADJ}" ]] ; then
+            _report -dt "A directive to crop the input object with ${CROPADJ} was found in the capture.log. Will apply."
+        fi
+        if [[ "${CROPDETECT}" = "Y" && -z "${CROPADJ}" ]] ; then
+            _get_cropdetection "${SOURCEFILE}"
+        fi
+        if [[ -n "${CROPADJ}" ]] ; then
+            _add_video_filter "${CROPADJ}"
+            WIDTH=$(echo "${CROPADJ}" | cut -d= -f2 | cut -d: -f1)
+            HEIGHT=$(echo "${CROPADJ}" | cut -d= -f2 | cut -d: -f2)
+            DAR="(${WIDTH}/${HEIGHT})*${SAR}"
+        fi
         if [[ "${OUTPUT_TYPE}" == "broadcast" ]] ; then
             _get_broadcastduration "${SOURCEFILE}"
-            if [ "${CROPDETECT}" = "Y" ] ; then
-                _get_cropdetection "${SOURCEFILE}"
-                _add_video_filter "${CROPADJ}"
-                WIDTH=$(echo "${CROPADJ}" | cut -d= -f2 | cut -d: -f1)
-                HEIGHT=$(echo "${CROPADJ}" | cut -d= -f2 | cut -d: -f2)
-                DAR="(${WIDTH}/${HEIGHT})*${SAR}"
-            fi
             # set options for zeroing timecode if input is MXF
             if [[ "${FORMAT}" == "mxf" ]] ; then
                 metadata_option="-metadata"
@@ -461,13 +467,7 @@ while [[ "${@}" != "" ]] ; do
                 _add_video_filter "setdar=16/9"
                 _add_video_filter "fps=fps=ntsc"
                 MIDDLEOPTIONS+=("${MIDDLEOPTIONSXDCAM[@]}")
-            elif [ $(echo "scale=3 ; ${DARRATIO} > (16/9)" | bc -l) = 1 ] ; then
-                _add_video_filter "scale=size=hd1080:interl=1:force_original_aspect_ratio=decrease"
-                _add_video_filter "pad=1920:1080:(ow-iw)/2:(oh-ih)/2"
-                _add_video_filter "setdar=16/9"
-                _add_video_filter "fps=fps=ntsc"
-                MIDDLEOPTIONS+=("${MIDDLEOPTIONSXDCAM[@]}")
-            elif [ $(echo "scale=3 ; $DARRATIO > (3/2)" | bc -l) = 1 -o "${ADDSLATE}" = "Y" ] ; then
+            elif [ $(echo "scale=3 ; $DARRATIO > (3/2)" | bc -l) = 1 -o "${HEIGHT}" -gt "512" -o "${ADDSLATE}" = "Y" ] ; then
                 _add_video_filter "scale=size=hd1080:interl=1:force_original_aspect_ratio=decrease"
                 _add_video_filter "pad=1920:1080:(ow-iw)/2:(oh-ih)/2"
                 _add_video_filter "setdar=16/9"
