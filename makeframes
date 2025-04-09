@@ -50,7 +50,6 @@ while [ "${*}" != "" ] ; do
     _find_input "${INPUT}"
 
     MEDIAID=$(basename "${INPUT}" | cut -d. -f1)
-    _report_to_db
 
     # encoding options
     _get_codectagstring "${SOURCEFILE}"

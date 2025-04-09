@@ -107,42 +107,10 @@ export MAIN_DIALOG=$(cat << MAINFORM
           </vbox>
           $(funcEntry DVDLABELPREFIX "Please enter the prefix you would like added to the filename in makedvd. You may leave this blank:" "80")
         </hbox>
-        <hbox space-expand="true">
-          <text>
-            <label>Please choose Y or N to enable database logging:</label>
-          </text>
-          <vbox>
-            <radiobutton>
-              <action>if true enable:PREMIS_PROFILE</action>
-              <action>if true enable:PREMIS_NAME</action>
-              <label>"Y"</label>
-              <variable>PREMIS_DB</variable>
-            </radiobutton>
-            <radiobutton active="true">
-              <action>if true disable:PREMIS_PROFILE</action>
-              <action>if true disable:PREMIS_NAME</action>
-              <label>"N"</label>
-              <variable export="false">PREMIS_DBN</variable>
-            </radiobutton>
-          </vbox>
-          $(funcEntry PREMIS_PROFILE "Enter the name of the database profile:" "60")
-          $(funcEntry PREMIS_NAME "Enter the name of the database:" "60")
-        </hbox>
-        <hbox>
-          <checkbox>
-            <label>Auto update MySQL .plist?</label>
-            <variable>PREMIS_PLIST</variable>
-          </checkbox>
-          <checkbox>
-            <label>Generate video fingerprint?</label>
-            <variable>PERCEPTUAL_HASH</variable>
-          </checkbox>
-        </hbox>
       </frame>
       <frame Email Settings>
         <hbox homogeneous="true">
           $(funcEntry EMAIL_FROM "Please enter the email account that notifications will be sent from:" "80")
-          $(funcEntry SQL_ERROR_EMAIL_TO "Please the email account for the delivery of SQL Error Reports:" "80")
         </hbox>
         <hbox homogeneous="true">
           $(funcEntry MAKEBROADCAST_DELIVERY_EMAIL_TO "Please enter the email account (or multiple accounts separated by a comma) makebroadcast notifications will be delivered to:" "80")
@@ -181,21 +149,6 @@ elif [[ "${EXIT}" = "OK" ]] ; then
   else
     VOLADJUST="N"
   fi
-  if [[ "${PREMIS_DB}" = "true" ]] ; then
-    PREMIS_DB="Y"
-  else
-    PREMIS_DB="N"
-  fi
-  if [[ "${PREMIS_PLIST}" = "true" ]] ; then
-    PREMIS_PLIST="1"
-  else
-    PREMIS_PLIST="0"
-  fi
-  if [[ "${PERCEPTUAL_HASH}" = "true" ]] ; then
-    PERCEPTUAL_HASH="1"
-  else
-    PERCEPTUAL_HASH="0"
-  fi
   #echo "${VOLADJUST}" | sed 's:true:Y:g;s:false:N:g'
   echo "  OUTDIR_INGESTFILE = ${OUTDIR_INGESTFILE}"
   echo "  OUTDIR_INGESTXDCAM = ${OUTDIR_INGESTXDCAM}"
@@ -217,13 +170,7 @@ elif [[ "${EXIT}" = "OK" ]] ; then
   echo "  MAKEYOUTUBE_DELIVERY_EMAIL_TO = ${MAKEYOUTUBE_DELIVERY_EMAIL_TO}"
   echo "  MAKEBROADCAST_DELIVERY_EMAIL_TO = ${MAKEBROADCAST_DELIVERY_EMAIL_TO}"
   echo "  FILE_MAKER_DB = ${FILE_MAKER_DB}"
-  echo "  SQL_ERROR_EMAIL_TO = ${SQL_ERROR_EMAIL_TO}"
   echo "  VOLADJUST = ${VOLADJUST}"
-  echo "  PREMIS_DB = ${PREMIS_DB}"
-  echo "  PREMIS_PROFILE = ${PREMIS_PROFILE}"
-  echo "  PREMIS_NAME = ${PREMIS_NAME}"
-  echo "  PREMIS_PLIST = ${PREMIS_PLIST}"
-  echo "  PERCEPTUAL_HASH = ${PERCEPTUAL_HASH}"
   {
         echo "OUTDIR_INGESTFILE=\"${OUTDIR_INGESTFILE}\""
         echo "OUTDIR_INGESTXDCAM=\"${OUTDIR_INGESTXDCAM}\""
@@ -245,12 +192,6 @@ elif [[ "${EXIT}" = "OK" ]] ; then
         echo "MAKEYOUTUBE_DELIVERY_EMAIL_TO=\"${MAKEYOUTUBE_DELIVERY_EMAIL_TO}\""
         echo "MAKEBROADCAST_DELIVERY_EMAIL_TO=\"${MAKEBROADCAST_DELIVERY_EMAIL_TO}\""
         echo "FILE_MAKER_DB=\"${FILE_MAKER_DB}\""
-        echo "SQL_ERROR_EMAIL_TO=\"${SQL_ERROR_EMAIL_TO}\""
         echo "VOLADJUST=\"${VOLADJUST}\""
-        echo "PREMIS_DB=\"${PREMIS_DB}\""
-        echo "PREMIS_PROFILE=\"${PREMIS_PROFILE}\""
-        echo "PREMIS_NAME=\"${PREMIS_NAME}\""
-        echo "PREMIS_PLIST=\"${PREMIS_PLIST}\""
-        echo "PERCEPTUAL_HASH=\"${PERCEPTUAL_HASH}\""
     } > "${MM_CONFIG_FILE}"
 fi

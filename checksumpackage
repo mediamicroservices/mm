@@ -125,7 +125,6 @@ while [ "${*}" != "" ] ; do
         fi
         #perform checking and verification
         if [ "${CHECK}" = "Y" ] ; then
-            _report_to_db
             if [ -s "${PACKAGE}/${OUTDIR}/${DFXMLNAME}" ] ; then
                 _check_dfxml "${PACKAGE}"
                 if [ "${CHECKERR}" != "0" ] ; then
@@ -182,11 +181,8 @@ while [ "${*}" != "" ] ; do
         else
             xmlstarlet sel -T -t -m "/dfxml/fileobject" -v "hashdigest" -o "  " -v "filename" -n "${PACKAGE}/${OUTDIR}/${DFXMLNAME}" > "${PACKAGE}/${OUTDIR}/${CHECKSUMNAME}"
         fi
-        db_source="${PACKAGE}/${OUTDIR}/${CHECKSUMNAME}"
-        db_fixity=$(cat "${PACKAGE}/${OUTDIR}/${CHECKSUMNAME}")
-        _report_to_db
+
         echo "$(_get_iso8601): $(basename "${0}"):${VERSION}: ${CHECKSUMNAME} is generated" >> "${PACKAGE}/${OUTDIR}/${CHECKSUMPROCESSLOG}"
-        event_outcome="Fixity Creation"
 
         if [ "${UPDATE}" = "Y" ] ; then
             exit
@@ -233,9 +229,6 @@ while [ "${*}" != "" ] ; do
     else
         _report -dt "ERROR: ${0} requires directories as input and ${PACKAGE} is not a directory."
     fi
-    _eventoutcome_update
-    _report_fixity_db
-    _db_email_delivery "${SQL_ERROR_EMAIL_TO}"
     _log -e
     shift
 done
