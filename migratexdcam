@@ -219,10 +219,12 @@ decodeintegrity(){
             #<<======= XDCAM Migration - rsync =======>>
             START=$(date -u "+%Y%m%dT%H%M%SZ")
             mkdir -p "${OUTDIR_INGESTXDCAM}/${MEDIAID}/objects"
+            mkdir -p "${OUTDIR_INGESTXDCAM}/${MEDIAID}/objects/reformatted"
             _report -dt "migrating video..."
             rsync -rtv --stats --progress --log-file="${OUTDIR_INGESTXDCAM}/${MEDIAID}/metadata/logs/rsync_$(_get_iso8601_c)_$(basename $0)_${VERSION}.txt" "/Volumes/${DECK1}/Clip/"           "${OUTDIR_INGESTXDCAM}/${MEDIAID}/objects/"
          
-            rsync -rtv "/Volumes/${DECK1}/INDEX.XML" "${OUTDIR_INGESTXDCAM}/${MEDIAID}/metadata/"
+            #rsync -rtv "/Volumes/${DECK1}/INDEX.XML" "${OUTDIR_INGESTXDCAM}/${MEDIAID}/metadata/"
+            rsync -rtv "/Volumes/${DECK1}/*" "${OUTDIR_INGESTXDCAM}/${MEDIAID}/objects/reformatted/"
             
             diskutil info "${XDCAM_MOUNT}" > "${OUTDIR_INGESTXDCAM}/${MEDIAID}/metadata/logs/diskutilinfo.log"
             end=$(date -u "+%Y%m%dT%H%M%SZ")
