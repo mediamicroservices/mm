@@ -78,7 +78,7 @@ while [ "${*}" != "" ] ; do
             FFMPEGINPUT="${CONCATSOURCE}"
         fi
 
-        _run_critical_event ffmpeg -y ${INPUTOPTIONS[@]} -v warning -ss "$START" "${FFMPEGINPUT[@]}" "${MIDDLEOPTIONS[@]}" "${OUTPUT}"
+        _run_critical ffmpeg -y ${INPUTOPTIONS[@]} -v warning -ss "$START" "${FFMPEGINPUT[@]}" "${MIDDLEOPTIONS[@]}" "${OUTPUT}"
     done
     echo
     if [ -d "${DELIVERDIR}" ] ; then

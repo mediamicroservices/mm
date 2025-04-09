@@ -222,14 +222,6 @@ _run_critical(){
     fi
 }
 
-_run_critical_event(){
-    _run "${@}"
-        _eventoutcome_update
-    if [[ "${RUN_ERR}" != 0 ]] ; then
-        _report -wts "The process ran into a critical error and can not proceed."
-        exit 1
-    fi
-}
 
 _black_at_ends(){
     INPUT_MOVIE="${1}"

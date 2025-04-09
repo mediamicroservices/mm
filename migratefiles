@@ -44,6 +44,6 @@ while [ "${*}" != "" ] ; do
     if [ "${REMOVESOURCEFILES}" == "Y" ] ; then
         EXTRAOUTPUTS+=(--remove-source-files)
     fi
-    _run_critical_event rsync -rtvPih "${EXTRAOUTPUTS[@]}" --log-file="${LOGFILE}" --log-file-format="${DATE} '%f' %l '${TARGET}'" "${INPUT}" "${TARGET}"
+    _run_critical rsync -rtvPih "${EXTRAOUTPUTS[@]}" --log-file="${LOGFILE}" --log-file-format="${DATE} '%f' %l '${TARGET}'" "${INPUT}" "${TARGET}"
     _eventoutcome_update
 done
