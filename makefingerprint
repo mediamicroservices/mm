@@ -28,7 +28,7 @@ while [ "${*}" != "" ] ; do
     fi
     #Generate Fingerprint
     SIGNATURE="${MEDIAID}""${SUFFIX}"."${EXTENSION}"
-    _run_critical_event ffmpeg "${FFMPEGINPUT[@]}" -vf signature=format=xml:filename="${FINGERDIR}/${SIGNATURE}" -map 0:v -f null -
+    _run_critical ffmpeg "${FFMPEGINPUT[@]}" -vf signature=format=xml:filename="${FINGERDIR}/${SIGNATURE}" -map 0:v -f null -
     FINGERPRINT_XML="${FINGERDIR}/${SIGNATURE}"
 
     #Report to DB

@@ -94,7 +94,7 @@ while [ "${*}" != "" ] ; do
         if [ "${CONCATSOURCE}" != "" ] ; then
             FFMPEGINPUT="${CONCATSOURCE}"
         fi
-        _run_critical_event ffmpeg -nostdin -y ${INPUTOPTIONS[@]} -v warning -ss "$START" "${FFMPEGINPUT[@]}" "${MIDDLEOPTIONS[@]}" "${TEMPIMAGES}.${IMAGENUMBER}.png"
+        _run_critical ffmpeg -nostdin -y ${INPUTOPTIONS[@]} -v warning -ss "$START" "${FFMPEGINPUT[@]}" "${MIDDLEOPTIONS[@]}" "${TEMPIMAGES}.${IMAGENUMBER}.png"
     done
     PALETTE="$(_maketemp)"
     ffmpeg -nostdin -f image2 -framerate 6 -i "${TEMPIMAGES}.%01d.png" -update 1 -frames:v 1 -vf palettegen "${PALETTE}.png"
