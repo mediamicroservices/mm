@@ -31,14 +31,4 @@ while [ "${*}" != "" ] ; do
     _run_critical ffmpeg "${FFMPEGINPUT[@]}" -vf signature=format=xml:filename="${FINGERDIR}/${SIGNATURE}" -map 0:v -f null -
     FINGERPRINT_XML="${FINGERDIR}/${SIGNATURE}"
 
-    #Report to DB
-    if [ "${PERCEPTUAL_HASH}" = "1" ] && [ "${PREMIS_DB}" = "Y" ]; then
-        _fingerprint_to_db
-        _report_to_db
-        _report_fingerprint_db
-        _eventoutcome_update
-        gzip "${FINGERPRINT_XML}"
-    else
-        gzip "${FINGERPRINT_XML}"
-    fi
 done

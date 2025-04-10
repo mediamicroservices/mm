@@ -28,7 +28,6 @@ DATE=$(_get_iso8601_c)
 
 while [ "${*}" != "" ] ; do
     INPUT="${1}"
-    _report_to_db
     echo "The input is: ${INPUT}"
     echo "The target is: ${TARGET}"
 
@@ -45,5 +44,4 @@ while [ "${*}" != "" ] ; do
         EXTRAOUTPUTS+=(--remove-source-files)
     fi
     _run_critical rsync -rtvPih "${EXTRAOUTPUTS[@]}" --log-file="${LOGFILE}" --log-file-format="${DATE} '%f' %l '${TARGET}'" "${INPUT}" "${TARGET}"
-    _eventoutcome_update
 done
