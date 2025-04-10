@@ -27,8 +27,6 @@ while [ "${*}" != "" ] ; do
         _mkdir2 "${FINGERDIR}"
     fi
     #Generate Fingerprint
-    SIGNATURE="${MEDIAID}""${SUFFIX}"."${EXTENSION}"
-    _run_critical ffmpeg "${FFMPEGINPUT[@]}" -vf signature=format=xml:filename="${FINGERDIR}/${SIGNATURE}" -map 0:v -f null -
-    FINGERPRINT_XML="${FINGERDIR}/${SIGNATURE}"
-
+    FINGERPRINT_XML="${FINGERDIR}/${MEDIAID}${SUFFIX}.${EXTENSION}"
+    _run_critical ffmpeg "${FFMPEGINPUT[@]}" -vf "signature=format=xml:filename=${FINGERPRINT_XML}" -map 0:v -f null -
 done
