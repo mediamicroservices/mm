@@ -193,6 +193,15 @@ _writeingestlog(){
     echo "${KEY}: ${VALUE}" >> "${INGESTLOG}"
 }
 
+_writeingestlog_if(){
+    if [ -f "${INGESTLOG}" ] ; then
+        KEY="${1}"
+        VALUE="${2}"
+        # need to add yaml style escaping
+        echo "${KEY}: ${VALUE}" >> "${INGESTLOG}"
+    fi
+}
+
 _readingestlog(){
     if [ -f "${INGESTLOG}" ] ; then
         KEY="${1}"
@@ -996,7 +1005,7 @@ _get_audio_mapping(){
             LOUD_ADJ=$(_readingestlog "loudness_adjustment")
         fi
         if [ ! "${LOUD_ADJ}" ] ; then
-            _get_volume_adjustment "${FFMPEGINPUT[@]}"
+            _get_volume_adjustment
         fi
         if [[ "${measured_I}" == "inf" ]] || [[ "${measured_I}" == "-inf" ]] ; then
             VOLADJUST="N"
@@ -1159,17 +1168,18 @@ _get_volume_adjustment(){
     LOUD_ADJ=""
     LOUDNESS_OPT_START=""
     LOUDNESS_OPT_END=""
-    VOL_FFMPEG_INPUT="${*}"
+    declare -a VOL_FFMPEG_INPUT
     if [[ -n "${INTIME}" ]] ; then
         _report -dt "Loudness reading will start at intime (${INTIME})."
-        LOUDNESS_OPT_START="-ss ${INTIME}"
+        VOL_FFMPEG_INPUT+=(-ss "${INTIME}")
     fi
+    VOL_FFMPEG_INPUT+=("${FFMPEGINPUT[@]}")
     if [[ -n "${OUTTIME}" ]] ; then
         _report -dt "Loudness reading will end at outtime (${OUTTIME})."
-        LOUDNESS_OPT_END="-to ${OUTTIME}"
+        VOL_FFMPEG_INPUT+=(-to "${OUTTIME}")
     fi
     _report -dt "Getting loudness data for '${VOL_FFMPEG_INPUT[*]}' ..."
-    LOUDNESS_DATA=$(ffmpeg -nostdin ${LOUDNESS_OPT_START} ${VOL_FFMPEG_INPUT[*]} ${LOUDNESS_OPT_END} -vn -filter_complex "${AUDIOFILTERCHAIN},loudnorm=print_format=json" -f null - 2>&1)
+    LOUDNESS_DATA=$(ffmpeg -nostdin "${VOL_FFMPEG_INPUT[@]}"  -vn -filter_complex "${AUDIOFILTERCHAIN},loudnorm=print_format=json" -f null - 2>&1)
     VOLUME_EXIT_CODE="${?}"
     if [ "${VOLUME_EXIT_CODE}" -ne 0 ] ; then
         _report -wt "Volume analysis for ${INPUT_MOVIE} exited with ${VOLUME_EXIT_CODE}."
@@ -1181,13 +1191,14 @@ _get_volume_adjustment(){
         target_offset=$(echo "$LOUDNESS_DATA" | grep "target_offset" | awk -F\" '{print $4}')
         LOUD_ADJ=$(echo "($measured_I - -24)*-1" | bc)
         if [[ -z "${INTIME}" ]] ; then
-            _writeingestlog "measured_true_peak" "${measured_TP}"
-            _writeingestlog "r128_loudness_range" "${measured_LRA}"
-            _writeingestlog "r128_integrated_loudness" "${measured_I}"
-            _writeingestlog "measured_threshold" "${measured_thresh}"
-            _writeingestlog "target_offset" "${target_offset}"
-            _writeingestlog "loudness_adjustment" "${LOUD_ADJ}"
+            _writeingestlog_if "measured_true_peak" "${measured_TP}"
+            _writeingestlog_if "r128_loudness_range" "${measured_LRA}"
+            _writeingestlog_if "r128_integrated_loudness" "${measured_I}"
+            _writeingestlog_if "measured_threshold" "${measured_thresh}"
+            _writeingestlog_if "target_offset" "${target_offset}"
+            _writeingestlog_if "loudness_adjustment" "${LOUD_ADJ}"
         fi
+        _report "Audio analysis found: ${LOUDNESS_DATA}"
     fi
 }
 
