@@ -726,15 +726,15 @@ _find_input(){
             find "${LOOKHERE}" -type f -size +0 "${OBJECTS_FIND_EXCLUSIONS[@]}" | sort | while read file ; do
                 streamcount=$(ffprobe -loglevel quiet "$file" -show_entries format=nb_streams -of default=nw=1:nk=1)
                 duration_ts=$(ffprobe -loglevel quiet "$file" -show_entries stream=duration_ts -of default=nw=1:nk=1)
-	
-		# Cast empty value into 0 integer
-		if [ -z "$streamcount" ]; then
-		    streamcount=0
-		fi
-		if [ -z "$duration_ts" ]; then
-		    duration_ts=0
-		fi
-		
+
+                # Cast empty value into 0 integer
+                if [ -z "$streamcount" ]; then
+                    streamcount=0
+                fi
+                if [ -z "$duration_ts" ]; then
+                    duration_ts=0
+                fi
+
                 if [[ "$streamcount" > 0  && "${duration_ts}" != 1 ]] ; then
                     _report -d "Input file: $file"
                     echo "$file" >> "${INPUTFILES}"
