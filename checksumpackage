@@ -75,7 +75,7 @@ _check_dfxml(){
     cd "${PACKAGE}/${INDIR}"
     find . -type f ! -name '.DS_Store' | while read i ; do
         echo -n "$i "
-        ls -l "$i" | awk '{print $5}'
+        stat -f%z "$i"
     done | sort > "${NEW_FILELIST}"
     cd "${PWD}"
     # compare them
