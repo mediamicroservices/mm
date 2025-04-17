@@ -331,12 +331,6 @@ while [[ "${@}" != "" ]] ; do
         fi
         if [[ "${OUTPUT_TYPE}" == "broadcast" ]] ; then
             _get_broadcastduration "${SOURCEFILE}"
-            # set options for zeroing timecode if input is MXF
-            if [[ "${FORMAT}" == "mxf" ]] ; then
-                metadata_option="-metadata"
-            else
-                metadata_option="-metadata:s:v:0"
-            fi
             # if adding a slate: request metadata
             if [[ "${ADDSLATE}" == "Y" ]] ; then
                 MEDIAID4SLATE=$(_readingestlog "media ID slate")
@@ -390,9 +384,11 @@ while [[ "${@}" != "" ]] ; do
                     -f lavfi -i "aevalsrc=0:d=${BLACK_SECS}:s=48000:c=stereo" \
                     -f lavfi -i "color=black:s=1920x1080:r=30000/1001:sar=16/9:d=${END_BLACK_SECS}" \
                     -f lavfi -i "aevalsrc=0:d=${END_BLACK_SECS}:s=48000:c=stereo")
-                MIDDLEOPTIONS+=("$metadata_option" timecode=00:58:30\;00)
+                MIDDLEOPTIONS+=(-metadata timecode=00:58:30\;00)
+                MIDDLEOPTIONS+=(-metadata:s:v:0 timecode=00:58:30\;00)
             else
-                MIDDLEOPTIONS+=("$metadata_option" timecode=00:00:00.00)
+                MIDDLEOPTIONS+=(-metadata timecode=00:00:00.00)
+                MIDDLEOPTIONS+=(-metadata:s:v:0 timecode=00:00:00.00)
             fi
             # determine filter choice if set in capture
             if [[ -f "${INGESTLOG}" && "${ISOBJECT}" = "Y" ]] ; then
@@ -497,12 +493,8 @@ while [[ "${@}" != "" ]] ; do
         elif [[ "${OUTPUT_TYPE}" == "broadcast_copy" ]] ; then
             MIDDLEOPTIONS+=(-map 0:v)
             MIDDLEOPTIONS+=(-c:v copy)
-            if [[ "${FORMAT}" == "mxf" ]] ; then
-                metadata_option="-metadata"
-            else
-                metadata_option="-metadata:s:v:0"
-            fi
-            MIDDLEOPTIONS+=("$metadata_option" timecode=00:00:00.00)
+            MIDDLEOPTIONS+=(-metadata timecode=00:00:00.00)
+            MIDDLEOPTIONS+=(-metadata:s:v:0 timecode=00:00:00.00)
         elif [[ "${OUTPUT_TYPE}" == "prores" ]] ; then
             MIDDLEOPTIONS+=(-map 0:v)
             MIDDLEOPTIONS+=(-c:v prores_ks)
