@@ -50,6 +50,7 @@ while [ "${*}" != "" ] ; do
         OUTPUTDIR="${OUTPUTDIR_FORCED}"
         LOGDIR="${OUTPUTDIR}/logs"
     fi
+	INGESTLOG="${LOGDIR}/capture.log"
     OUTPUTDIRTEXT="${INPUT}/objects/access/txt_1"
     _run mkdir -p "${LOGDIR}"
     exec > >(tee "${LOGDIR}/$(basename "${0}")_$(_get_iso8601_c)_$(basename "${0}")_${VERSION}.txt")
@@ -75,7 +76,7 @@ while [ "${*}" != "" ] ; do
     TMP_JPG_DIR="${TMP_MAKEPDF_DIR}/jpgs"
     _run mkdir -p "${TMP_MAKEPDF_DIR}" "${TMP_JPG_DIR}" "${OUTPUTDIRTEXT}"
 
-    for TIF in $(find "${SOURCEDIR}" -maxdepth 1 -mindepth 1 -iname "*.tif" -type f | sort) ; do
+    for TIF in $(find "${SOURCEDIR}" -maxdepth 1 -mindepth 1 \( -iname "*.tif" -o -iname "*.tiff" \) -type f | sort) ; do
         tifname="$(basename "${TIF}")"
         _report -dt "Working on ${tifname}..."
         pageno="$(echo "${tifname}" | cut -d_ -f2 | cut -d. -f1)"
@@ -95,20 +96,30 @@ while [ "${*}" != "" ] ; do
         if [[ ! -s "${JPG_NAME}" ]] ; then
             ffmpeg -hide_banner -nostdin -i "${TIF}" -pix_fmt yuvj420p "${JPG_NAME}"
         fi
-        TESSERACT_CONFIG=(-c tessedit_char_whitelist="abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#$%^\&*(){}[]\|\"':;?/>.<,~\` " -c textord_min_linesize=2.25 -c preserve_interword_spaces=1)
+		
+		if [[ -f "$INGESTLOG" ]] ; then
+			DOCTYPE=$(_readingestlog "doctype")
+		fi
+		
+		if [[ "${DOCTYPE}" == "t" ]] ; then
+			TESSERACT_CONFIG=(-c tessedit_char_whitelist="abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#$%^\&*(){}[]\|\"':;?/>.<,~\` " -c textord_min_linesize=2.25 -c preserve_interword_spaces=1)
+			_report -dt "ATTENTION: Character whitelist will be used for reading."
+		elif [[ "${DOCTYPE}" == "c" ]] ; then
+			TESSERACT_CONFIG=(-c textord_min_linesize=2.25 -c preserve_interword_spaces=1)
+		fi	
         tesseract "${JPG_NAME}" "${TMP_JPG_DIR}/${TIF_BASE_NAME}" -l eng --psm 4 "${TESSERACT_CONFIG[@]}" pdf
         tesseract "${JPG_NAME}" "${TMP_JPG_DIR}/${TIF_BASE_NAME}" -l eng --psm 4 "${TESSERACT_CONFIG[@]}" txt
     done
 
-    _report -dt "Checking for PBCore data"
-    SCRIPT_TITLE=$(fmpbcore "${MEDIAID}" | xmlstarlet 'select' -N "p=http://www.pbcore.org/PBCore/PBCoreNamespace.html" -t -v "/p:pbcoreCollection/p:pbcoreDescriptionDocument/p:pbcoreTitle[@titleType='Series']" -o ": " -v "/p:pbcoreCollection/p:pbcoreDescriptionDocument/p:pbcoreTitle[@titleType='Episode']")
-    if [[ -n "${SCRIPT_TITLE}" ]] ; then
-        MIDDLE_OPTIONS+=(--pdftitle "${SCRIPT_TITLE}")
-    fi
-    SCRIPT_AUTHOR=$(fmpbcore "${MEDIAID}" | xmlstarlet 'select' -N "p=http://www.pbcore.org/PBCore/PBCoreNamespace.html" -t -m "/p:pbcoreCollection/p:pbcoreDescriptionDocument/p:pbcoreCreator" -v "p:creatorRole" -o ": " -v "p:creator" -o " ; ")
-    if [[ -n "${SCRIPT_AUTHOR}" ]] ; then
-        MIDDLE_OPTIONS+=(--pdfauthor "${SCRIPT_AUTHOR}")
-    fi
+    #_report -dt "Checking for PBCore data"
+    #SCRIPT_TITLE=$(fmpbcore "${MEDIAID}" | xmlstarlet 'select' -N "p=http://www.pbcore.org/PBCore/PBCoreNamespace.html" -t -v "/p:pbcoreCollection/p:pbcoreDescriptionDocument/p:pbcoreTitle[@titleType='Series']" -o ": " -v "/p:pbcoreCollection/p:pbcoreDescriptionDocument/p:pbcoreTitle[@titleType='Episode']")
+    #if [[ -n "${SCRIPT_TITLE}" ]] ; then
+    #    MIDDLE_OPTIONS+=(--pdftitle "${SCRIPT_TITLE}")
+    #fi
+    #SCRIPT_AUTHOR=$(fmpbcore "${MEDIAID}" | xmlstarlet 'select' -N "p=http://www.pbcore.org/PBCore/PBCoreNamespace.html" -t -m "/p:pbcoreCollection/p:pbcoreDescriptionDocument/p:pbcoreCreator" -v "p:creatorRole" -o ": " -v "p:creator" -o " ; ")
+    #if [[ -n "${SCRIPT_AUTHOR}" ]] ; then
+    #    MIDDLE_OPTIONS+=(--pdfauthor "${SCRIPT_AUTHOR}")
+    #fi
 
     pdfjoin "${MIDDLE_OPTIONS[@]}" --pdfkeywords "${MEDIAID}" --fitpaper 'false' --rotateoversize 'false' --paper letter $(find "${TMP_JPG_DIR}" -name "*.pdf" | sort | xargs) --outfile "${OUTPUT}"
 
