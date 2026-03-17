@@ -1,0 +1,138 @@
+#!/bin/bash
+INPUT="$1"
+INPUT_DIR="$(dirname "$(dirname "$INPUT")")"
+ OTHER_FILES_START_WITHIN_X_SECS=5
+FPS_NUM=30000
+FPS_DEN=1001
+FPS_DEC=$(echo "scale=6; $FPS_NUM/$FPS_DEN" | bc)
+
+tc_to_frames() {
+    TC="$1"
+    HH=${TC:0:2}
+    MM=${TC:3:2}
+    SS=${TC:6:2}
+    FF=${TC:9:2}
+    echo $((10#$HH*108000 + 10#$MM*1800 + 10#$SS*30 + 10#$FF))
+}
+
+frames_to_tc() {
+    F=$1
+    HH=$((F/108000))
+    MM=$(((F%108000)/1800))
+    SS=$(((F%1800)/30))
+    FF=$((F%30))
+    printf "%02d:%02d:%02d;%02d" $HH $MM $SS $FF
+}
+
+# get creation time of input file
+BIRTH_TIME=$(stat -f %SB -t %s "$INPUT")
+START_RANGE=$((BIRTH_TIME- OTHER_FILES_START_WITHIN_X_SECS))
+END_RANGE=$((BIRTH_TIME+ OTHER_FILES_START_WITHIN_X_SECS))
+
+# find matching files
+FILE_MATCHES=()
+while read -r FILE ; do
+    OTHER_BIRTH=$(stat -f %SB -t %s "$FILE")
+    if [[ "$OTHER_BIRTH" -ge "$START_RANGE" ]] && [[ "$OTHER_BIRTH" -le "$END_RANGE" ]] ; then
+        FILE_MATCHES+=("$FILE")
+    fi
+done < <(find "$INPUT_DIR" -maxdepth 2 -type f -name "*.mov" | awk 'BEGIN{IGNORECASE=1} /Line Cut/ {print "1|" $0; next} /Clean/ {print "2|" $0; next} {print "3|" $0}' | sort | cut -d'|' -f2)
+
+NUM_INPUTS=${#FILE_MATCHES[@]}
+if (( NUM_INPUTS == 0 )); then
+    echo "No matching files found in $INPUT_DIR"
+    exit 1
+fi
+
+# parse timecodes and prepare ffmpeg inputs
+FFMPEG_INPUTS=()
+TC_FRAMES=()
+DURATIONS=()
+for FILE in "${FILE_MATCHES[@]}" ; do
+    TC=$(ffprobe -v error -show_entries format_tags=timecode -of default=nw=1:nk=1 "$FILE")
+    if [[ -z "$TC" ]]; then
+        echo "WARNING: no TC in $FILE, using 00:00:00;00"
+        TC="00:00:00;00"
+    fi
+    DURATION=$(ffprobe -v error -show_entries format=duration -of default=nw=1:nk=1 "$FILE")
+    echo "$FILE  $TC  duration=$DURATION"
+    FFMPEG_INPUTS+=(-i "$FILE")
+    FRAMES=$(tc_to_frames "$TC")
+    TC_FRAMES+=("$FRAMES")
+    DURATIONS+=("$DURATION")
+done
+
+# find earliest timecode
+EARLIEST_FRAME=${TC_FRAMES[0]}
+for F in "${TC_FRAMES[@]}" ; do
+    if ((F < EARLIEST_FRAME)); then
+        EARLIEST_FRAME=$F
+    fi
+done
+MASTER_TC=$(frames_to_tc "$EARLIEST_FRAME")
+ESC_TC="${MASTER_TC//:/\\:}"
+ESC_TC="${ESC_TC//;/\\;}"
+PARENT_FOLDER="$(basename "$INPUT_DIR")"
+
+# determine grid size
+COLS=$(awk -v n="$NUM_INPUTS" 'BEGIN{print int(sqrt(n)+0.999)}')
+ROWS=$(( (NUM_INPUTS + COLS - 1) / COLS ))
+CELL_W=$((1920 / COLS))
+CELL_H=$((1080 / ROWS))
+
+FILTER=""
+LAYOUT=""
+
+# find longest duration to set tpad for final output
+MAX_DURATION=0
+for D in "${DURATIONS[@]}"; do
+    COMP=$(echo "$D > $MAX_DURATION" | bc -l)
+    if (( COMP )); then
+        MAX_DURATION=$D
+    fi
+done
+
+for ((i=0;i<NUM_INPUTS;i++)) ; do
+    FILE="${FILE_MATCHES[i]}"
+    BASENAME="$(basename "$FILE")"
+    REC_TIME="$(echo "$BASENAME" | sed -E 's/^([0-9]{8}-[0-9]{6}).*/\1/')"
+
+    OFFSET_FRAMES=$(( TC_FRAMES[i] - EARLIEST_FRAME ))
+    OFFSET_SECONDS="0$(echo "$OFFSET_FRAMES * $FPS_DEN / $FPS_NUM" | bc -l)"
+
+    # pad to align inputs, then pad end to match longest duration
+    if [[ "${i}" = "0" ]] ; then
+        OFFSET_MS=$(echo "$OFFSET_SECONDS * 1000" | bc -l | cut -d'.' -f1)
+        EXTRA_ASPLIT="[${i}a8]adelay=${OFFSET_MS}|${OFFSET_MS}|${OFFSET_MS}|${OFFSET_MS}|${OFFSET_MS}|${OFFSET_MS}|${OFFSET_MS}|${OFFSET_MS},asplit=2[${i}a8][aout];"
+    else
+        EXTRA_ASPLIT=""
+    fi
+    FILTER+="[$i:a:0][$i:a:1][$i:a:2][$i:a:3][$i:a:4][$i:a:5][$i:a:6][$i:a:7]amerge=inputs=8[${i}a8];${EXTRA_ASPLIT}[${i}a8]showvolume=r=30000/1001:t=0:v=0:w=240:h=30:o=h:dm=1:p=0.3:m=p[${i}vum];[$i:v]tpad=start_duration=${OFFSET_SECONDS}:stop_duration=$(echo "$MAX_DURATION - $OFFSET_SECONDS" | bc -l)[${i}vv];[${i}vv][${i}vum]overlay=0:0,scale=${CELL_W}:${CELL_H}:force_original_aspect_ratio=decrease,pad=${CELL_W}:${CELL_H}:(ow-iw)/2:(oh-ih)/2,drawtext=text='${BASENAME}':x=10:y=h-26:fontsize=16:fontcolor=white:box=1:boxcolor=black@0.8[v$i];"
+
+    if (( NUM_INPUTS > 1 )); then
+        X=$(( (i % COLS) * CELL_W ))
+        Y=$(( (i / COLS) * CELL_H ))
+        [[ -n "$LAYOUT" ]] && LAYOUT+="|"
+        LAYOUT+="${X}_${Y}"
+    fi
+done
+
+# build xstack only if more than 1 input
+if (( NUM_INPUTS > 1 )); then
+    for ((i=0;i<NUM_INPUTS;i++)); do
+        FILTER+="[v$i]"
+    done
+    FILTER+="xstack=inputs=${NUM_INPUTS}:layout=${LAYOUT}:fill=gray[stack];"
+    FILTER+="[stack]"
+else
+    FILTER+="[v0]"
+fi
+
+# overlays: timecode + parent folder header
+FILTER+="drawtext=timecode='${ESC_TC}':r=${FPS_DEC}:x=20:y=20:fontsize=36:fontcolor=yellow:box=1:boxcolor=black@0.6,"
+FILTER+="drawtext=text='${PARENT_FOLDER}':x=360:y=20:fontsize=36:fontcolor=yellow:box=1:boxcolor=black@0.6[vout]"
+
+OUTPUT_FILENAME="$(basename "${INPUT_DIR}")_$(basename "${INPUT}" | cut -c 1-15)_MULTIVIEW.mp4"
+
+# run ffmpeg
+/opt/homebrew/opt/ffmpeg-full/bin/ffmpeg -guess_layout_max 0 -y -nostdin "${FFMPEG_INPUTS[@]}" -filter_complex "${FILTER}" -map "[vout]" -map "[aout]" -ac 2 -c:v libx264 -crf 24 -preset fast -pix_fmt yuv420p -s 1920x1080 "${OUTPUT_FILENAME}"
