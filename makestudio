@@ -132,7 +132,23 @@ fi
 FILTER+="drawtext=timecode='${ESC_TC}':r=${FPS_DEC}:x=20:y=20:fontsize=36:fontcolor=yellow:box=1:boxcolor=black@0.6,"
 FILTER+="drawtext=text='${PARENT_FOLDER}':x=360:y=20:fontsize=36:fontcolor=yellow:box=1:boxcolor=black@0.6[vout]"
 
-OUTPUT_FILENAME="$(basename "${INPUT_DIR}")_$(basename "${INPUT}" | cut -c 1-15)_MULTIVIEW.mp4"
+OUTPUT_DIR="$(dirname "$(dirname "${INPUT}")")/${PARENT_FOLDER}_MULTIVIEWS"
+OUTPUT_FILENAME="${OUTPUT_DIR}/$(basename "${INPUT_DIR}")_$(basename "${INPUT}" | cut -c 1-15)_MULTIVIEW.mp4"
+TMP_OUTPUT_FILENAME="/tmp/$(basename "${INPUT_DIR}")_$(basename "${INPUT}" | cut -c 1-15)_MULTIVIEW.mp4"
 
-# run ffmpeg
-/opt/homebrew/opt/ffmpeg-full/bin/ffmpeg -guess_layout_max 0 -y -nostdin "${FFMPEG_INPUTS[@]}" -filter_complex "${FILTER}" -map "[vout]" -map "[aout]" -ac 2 -c:v libx264 -crf 24 -preset fast -pix_fmt yuv420p -s 1920x1080 "${OUTPUT_FILENAME}"
+if [[ ! -d "${OUTPUT_DIR}" ]] ; then
+    mkdir -p "${OUTPUT_DIR}"
+fi
+if [[ -f "${OUTPUT_FILENAME}" ]] ; then
+    echo "${OUTPUT_FILENAME} already exists, exiting..."
+else
+    echo "inputs ${FILE_MATCHES[@]}"
+    METADATA_SOURCES=""
+    for FILE in "${FILE_MATCHES[@]}"; do
+        METADATA_SOURCES+="${FILE}\n"
+    done
+    METADATA_SOURCES_ESCAPED=$(printf "%b" "$METADATA_SOURCES")
+    # run ffmpeg
+    /opt/homebrew/opt/ffmpeg-full/bin/ffmpeg -guess_layout_max 0 -y -nostdin "${FFMPEG_INPUTS[@]}" -filter_complex "${FILTER}" -map "[vout]" -map "[aout]" -ac 2 -c:v libx264 -crf 24 -preset fast -pix_fmt yuv420p -s 1920x1080 -metadata comment="$METADATA_SOURCES_ESCAPED" "${TMP_OUTPUT_FILENAME}"
+    rsync -rtvP --remove-source-files "${TMP_OUTPUT_FILENAME}" "${OUTPUT_FILENAME}"
+fi
