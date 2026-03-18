@@ -46,10 +46,10 @@ LOGDIR="$BR_TESTDIR/logs/broadcast"
 mkdir -p "$ROOTDIR" "${TESTDIR}" "${YT_TESTDIR}" "${BR_TESTDIR}" "${PR_TESTDIR}" "${RS_TESTDIR}" "${MP3_TESTDIR}" "${POD_TESTDIR}" "${LOGDIR}"
 
 # create test files
-ffmpeg -f lavfi -i testsrc2=r=25:s=320x240 -f lavfi -i "aevalsrc=exprs=sin(440*2*PI*t)|sin(44*2*PI*t):s=48000:c=stereo" -map 0 -map 1 -t 5 -c:v ffv1 -c:a flac -y "$TESTDIR/sample1.nut"
-ffmpeg -f lavfi -i testsrc2=r=30000/1001:s=1920x1080 -f lavfi -i "aevalsrc=exprs=cos(440*2*PI*t)|sin(44*2*PI*t):s=48000:c=stereo" -map 0 -map 1 -t 5 -c:v ffv1 -c:a flac -y "$TESTDIR/sample2.nut"
-ffmpeg -f lavfi -i mandelbrot=r=25:s=320x240 -f lavfi -i "aevalsrc=exprs=sin(440*2*PI*t)|cos(44*2*PI*t):s=48000:c=stereo" -map 0 -map 1 -t 5 -c:v ffv1 -c:a flac -y "$TESTDIR/sample3.nut"
-ffmpeg -f lavfi -i testsrc=r=25:s=720x480 -f lavfi -i "aevalsrc=exprs=cos(440*2*PI*t)|cos(44*2*PI*t):s=48000:c=stereo" -map 0 -map 1 -t 5 -c:v ffv1 -c:a flac -y "$TESTDIR/sample4.nut"
+"${FFMPEG_BIN}" -f lavfi -i testsrc2=r=25:s=320x240 -f lavfi -i "aevalsrc=exprs=sin(440*2*PI*t)|sin(44*2*PI*t):s=48000:c=stereo" -map 0 -map 1 -t 5 -c:v ffv1 -c:a flac -y "$TESTDIR/sample1.nut"
+"${FFMPEG_BIN}" -f lavfi -i testsrc2=r=30000/1001:s=1920x1080 -f lavfi -i "aevalsrc=exprs=cos(440*2*PI*t)|sin(44*2*PI*t):s=48000:c=stereo" -map 0 -map 1 -t 5 -c:v ffv1 -c:a flac -y "$TESTDIR/sample2.nut"
+"${FFMPEG_BIN}" -f lavfi -i mandelbrot=r=25:s=320x240 -f lavfi -i "aevalsrc=exprs=sin(440*2*PI*t)|cos(44*2*PI*t):s=48000:c=stereo" -map 0 -map 1 -t 5 -c:v ffv1 -c:a flac -y "$TESTDIR/sample3.nut"
+"${FFMPEG_BIN}" -f lavfi -i testsrc=r=25:s=720x480 -f lavfi -i "aevalsrc=exprs=cos(440*2*PI*t)|cos(44*2*PI*t):s=48000:c=stereo" -map 0 -map 1 -t 5 -c:v ffv1 -c:a flac -y "$TESTDIR/sample4.nut"
 
 # set slate options
 INGESTLOG="$LOGDIR/capture.log" ; touch "$INGESTLOG"
@@ -105,7 +105,7 @@ else
     _report -wt "Checksums did not match for the following derivative files:"
     _report -w "$FAILEDCHECKSUMS"
 fi
-echo "This regression test was built on FFmpeg version 3.4 and may return mismatches when used with other versions. You are running FFmpeg version $(ffmpeg -version | grep "ffmpeg version" | awk '{print $3}')."
+echo "This regression test was built on FFmpeg version 3.4 and may return mismatches when used with other versions. You are running FFmpeg version $("${FFMPEG_BIN}" -version | grep "ffmpeg version" | awk '{print $3}')."
 
 # delete all test files after 10 minutes
 echo "mmtest will delete test files from /tmp in 5 minutes; press control-C to keep files in /tmp folder."

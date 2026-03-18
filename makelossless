@@ -23,7 +23,7 @@ _usage(){
 [ "${#}" = 0 ] && _usage
 
 _get_ffv1_version(){
-    FFV1_VERSION="$(ffmpeg -nostdin -debug 1 -i "${1}" -vframes 1 -f null - 2>&1 | grep -m 1 "^\[ffv1" | grep -o "ver:[0-9.]*" | cut -d":" -f2)"
+    FFV1_VERSION="$("${FFMPEG_BIN}" -nostdin -debug 1 -i "${1}" -vframes 1 -f null - 2>&1 | grep -m 1 "^\[ffv1" | grep -o "ver:[0-9.]*" | cut -d":" -f2)"
 }
 
 _get_frame_rate(){
@@ -171,12 +171,12 @@ while [ "${*}" != "" ] ; do
                 _prep_ffmpeg_log
                 _filter_to_middle_option
                 _report -dt "Creating a framemd5 report and lossless ffv1 for ${SOURCEFILENAME}."
-                _run_critical ffmpeg ${INPUTOPTIONS[@]} -i "${SOURCEFILE}"  ${MIDDLEOPTIONS[@]} "${LOSSLESS_OUTPUT}" -f framemd5 -an "${SOURCE_FRAMEMD5_OUTPUT}"
+                _run_critical "${FFMPEG_BIN}" ${INPUTOPTIONS[@]} -i "${SOURCEFILE}"  ${MIDDLEOPTIONS[@]} "${LOSSLESS_OUTPUT}" -f framemd5 -an "${SOURCE_FRAMEMD5_OUTPUT}"
                 _report -dt "Create a framemd5 for the output to verify against ${SOURCEFILENAME}."
                 if [ "${CODEC_TAG_STRING}" == "2vuy" ] ; then
-                    _run_critical ffmpeg ${INPUTOPTIONS[@]} -i "${LOSSLESS_OUTPUT}" -f framemd5 -pix_fmt uyvy422 -an "${LOSSLESS_FRAMEMD5_OUTPUT}"
+                    _run_critical "${FFMPEG_BIN}" ${INPUTOPTIONS[@]} -i "${LOSSLESS_OUTPUT}" -f framemd5 -pix_fmt uyvy422 -an "${LOSSLESS_FRAMEMD5_OUTPUT}"
                 else
-                    _run_critical ffmpeg ${INPUTOPTIONS[@]} ${INPUTOPTIONSFRAMEMD5[@]} -i "${LOSSLESS_OUTPUT}" -f framemd5 -an "${LOSSLESS_FRAMEMD5_OUTPUT}"
+                    _run_critical "${FFMPEG_BIN}" ${INPUTOPTIONS[@]} ${INPUTOPTIONSFRAMEMD5[@]} -i "${LOSSLESS_OUTPUT}" -f framemd5 -an "${LOSSLESS_FRAMEMD5_OUTPUT}"
                 fi
                 if [ $(grep -v "^#" "${SOURCE_FRAMEMD5_OUTPUT}" | md5 -q) = $(grep -v "^#" "${LOSSLESS_FRAMEMD5_OUTPUT}" | md5 -q) ] ; then
                     _report -dt "Everything looks safe. Going to move original to reformatted directory."

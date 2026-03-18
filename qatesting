@@ -118,7 +118,7 @@ while [ "${*}" != "" ] ; do
         _get_mediainfo_interlacement(){
            CONTAINER_INTERLACEMENT=$(mediainfo --inform="Video;%ScanOrder%" "${INPUT_MOVIE}")
         }
-            IDET_INTERLACEMENT=$(ffmpeg -i "${INPUT_MOVIE}" -vf idet -f null -an - 2>&1 | grep "Multi frame detection:")
+            IDET_INTERLACEMENT=$("${FFMPEG_BIN}" -i "${INPUT_MOVIE}" -vf idet -f null -an - 2>&1 | grep "Multi frame detection:")
             IDET_SUMMARY=$(echo "${IDET_INTERLACEMENT}" | cut -d: -f2- | awk '{print $1 " " $2 "\n" $3 " " $4 "\n" $5 " " $6 "\n" $7 " " $8}')
             IDET_TOP=$(echo "${IDET_INTERLACEMENT}" | cut -d: -f2- | awk '{print $1 " " $2 "\n" $3 " " $4 "\n" $5 " " $6 "\n" $7 " " $8}' | sort -n -k2 | tail -n1 | cut -d: -f1)
         echo "Testing with ffmpeg says this file is ${IDET_TOP}"

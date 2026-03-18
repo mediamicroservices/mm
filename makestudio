@@ -149,6 +149,6 @@ else
     done
     METADATA_SOURCES_ESCAPED=$(printf "%b" "$METADATA_SOURCES")
     # run ffmpeg
-    /opt/homebrew/opt/ffmpeg-full/bin/ffmpeg -guess_layout_max 0 -y -nostdin "${FFMPEG_INPUTS[@]}" -filter_complex "${FILTER}" -map "[vout]" -map "[aout]" -ac 2 -c:v libx264 -crf 24 -preset fast -pix_fmt yuv420p -s 1920x1080 -metadata comment="$METADATA_SOURCES_ESCAPED" "${TMP_OUTPUT_FILENAME}"
+    "${FFMPEG_BIN}" -guess_layout_max 0 -y -nostdin "${FFMPEG_INPUTS[@]}" -filter_complex "${FILTER}" -map "[vout]" -map "[aout]" -ac 2 -c:v libx264 -crf 24 -preset fast -pix_fmt yuv420p -s 1920x1080 -metadata comment="$METADATA_SOURCES_ESCAPED" "${TMP_OUTPUT_FILENAME}"
     rsync -rtvP --remove-source-files "${TMP_OUTPUT_FILENAME}" "${OUTPUT_FILENAME}"
 fi

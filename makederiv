@@ -855,7 +855,7 @@ while [[ "${@}" != "" ]] ; do
     MIDDLEOPTIONS+=(-metadata creation_time=now)
 
     _filter_to_middle_option
-    _run_critical ffmpeg "${INPUTOPTIONS[@]}" "${FFMPEGINPUT[@]}" "${MIDDLEOPTIONS[@]}" "${OUTPUT}"
+    _run_critical "${FFMPEG_BIN}" "${INPUTOPTIONS[@]}" "${FFMPEGINPUT[@]}" "${MIDDLEOPTIONS[@]}" "${OUTPUT}"
 
     # DVD VIDEO_TS folder process: chapters every 5 minutes, dvdauthor will ignore chapter markers greater than duration
     if [[ "${OUTPUT_TYPE}" == "dvd" ]] ; then

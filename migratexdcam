@@ -85,7 +85,7 @@ fi
 #<<================== ffmpeg decode function, check for integrity errors  ==================>> 
 decodeintegrity(){
     input=$1
-        err=$(ffmpeg -i ${1} -f null - 2>&1 | grep -c "^\[mpeg2video") 
+        err=$("${FFMPEG_BIN}" -i ${1} -f null - 2>&1 | grep -c "^\[mpeg2video") 
         if [ "$err" -eq 0 ]; then
             echo "No issue with file integrity detected."
         else
@@ -317,7 +317,7 @@ if [ "${OPTION}" != "Yes" ] ; then
     
     for file in ${OUTDIR_INGESTXDCAM}/${MEDIAID}/objects/*.MXF
     do 
-        ffmpeg -i $file -map 0:v -map 0:a -c copy $(echo $file | awk -F'.' '{print $1}').mkv
+        "${FFMPEG_BIN}" -i $file -map 0:v -map 0:a -c copy $(echo $file | awk -F'.' '{print $1}').mkv
     _xdcamlog -c ".MXF Files for ${MEDIAID} have not been concatenated."
     done    
     
@@ -327,7 +327,7 @@ else
     echo $concatdir
     echo "$concatdir" > ${OUTDIR_INGESTXDCAM}/${MEDIAID}/objects/list1.txt
     echo "$(awk '{ print "file ", $0 }' ${OUTDIR_INGESTXDCAM}/${MEDIAID}/objects/list1.txt > ${OUTDIR_INGESTXDCAM}/${MEDIAID}/objects/activelist.txt)"
-    ffmpeg -f concat -safe 0 -i ${OUTDIR_INGESTXDCAM}/${MEDIAID}/objects/activelist.txt -map 0:v -map 0:a -c copy ${OUTDIR_INGESTXDCAM}/${MEDIAID}/objects/${MEDIAID}.mkv
+    "${FFMPEG_BIN}" -f concat -safe 0 -i ${OUTDIR_INGESTXDCAM}/${MEDIAID}/objects/activelist.txt -map 0:v -map 0:a -c copy ${OUTDIR_INGESTXDCAM}/${MEDIAID}/objects/${MEDIAID}.mkv
     rm ${OUTDIR_INGESTXDCAM}/${MEDIAID}/objects/list1.txt
     rm ${OUTDIR_INGESTXDCAM}/${MEDIAID}/objects/activelist.txt
     _xdcamlog -c ".MXF Files for ${MEDIAID} have been concatenated."

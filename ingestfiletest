@@ -31,7 +31,7 @@ local,56ae6da019aaea25552fb94174368f4d"
 # create test file
 TESTDIR="/tmp/ingestfiletest$(date +%Y%m%d%H%M%S)"
 mkdir -p "$TESTDIR"
-ffmpeg -f lavfi -i mandelbrot=r=25:s=320x240 -f lavfi -i "aevalsrc=exprs=sin(440*2*PI*t)|cos(44*2*PI*t):s=48000:c=stereo" -map 0 -map 1 -t 5 -c:v ffv1 -c:a flac -y "$TESTDIR/sample.nut"
+"${FFMPEG_BIN}" -f lavfi -i mandelbrot=r=25:s=320x240 -f lavfi -i "aevalsrc=exprs=sin(440*2*PI*t)|cos(44*2*PI*t):s=48000:c=stereo" -map 0 -map 1 -t 5 -c:v ffv1 -c:a flac -y "$TESTDIR/sample.nut"
 sleep 1
 
 # assign directories
