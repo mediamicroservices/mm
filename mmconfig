@@ -105,7 +105,6 @@ export MAIN_DIALOG=$(cat << MAINFORM
               <variable export="false">VOLADJUSTN</variable>
             </radiobutton>
           </vbox>
-          $(funcEntry DVDLABELPREFIX "Please enter the prefix you would like added to the filename in makedvd. You may leave this blank:" "80")
         </hbox>
       </frame>
       <frame Email Settings>
@@ -159,7 +158,6 @@ elif [[ "${EXIT}" = "OK" ]] ; then
   echo "  TMPDIR = ${TMPDIR}"
   echo "  REGEX4PODCAST = ${REGEX4PODCAST}"
   echo "  REGEX4IA = ${REGEX4IA}"
-  echo "  DVDLABELPREFIX = ${DVDLABELPREFIX}"
   echo "  OMNEONIP = ${OMNEONIP}"
   echo "  OMNEONPATH = ${OMNEONPATH}"
   echo "  CUSTOM_LOG_DIR = ${CUSTOM_LOG_DIR}"
@@ -181,7 +179,6 @@ elif [[ "${EXIT}" = "OK" ]] ; then
         echo "TMPDIR=\"${TMPDIR}\""
         echo "REGEX4PODCAST=\"${REGEX4PODCAST}\""
         echo "REGEX4IA=\"${REGEX4IA}\""
-        echo "DVDLABELPREFIX=\"${DVDLABELPREFIX}\""
         echo "OMNEONIP=\"${OMNEONIP}\""
         echo "OMNEONPATH=\"${OMNEONPATH}\""
         echo "CUSTOM_LOG_DIR=\"${CUSTOM_LOG_DIR}\""
