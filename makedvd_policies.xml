@@ -1,8 +1,0 @@
-<?xml version="1.0"?>
-<policy type="and" name="Check validity of makedvd files">
-  <description>This policy tests files made using makedvd and checks their validity</description>
-  <policy type="and" name="True for makedvd">
-    <rule name="Is it ISO 9660?" value="Format" tracktype="General" operator="=">ISO 9660</rule>
-    <rule name="Is the file size greater than zero?" value="FileSize" tracktype="General" operator=">">0</rule>
-  </policy>
-</policy>
