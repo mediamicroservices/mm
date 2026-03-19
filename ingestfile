@@ -115,7 +115,7 @@ _get_xmp_info(){
 }
 
 _audioreport(){
-    ffmpeg -nostdin -i "${INPUT}" -vn -filter_complex "silencedetect,astats,loudnorm=print_format=json,agate=attack=0.01:release=0.01:ratio=9000,aphasemeter=r=0.2:video=0,ametadata=mode=print:key=lavfi.aphasemeter.phase:value=-0.18:function=less" -f null - 2>&1 |  tr "\r" "\n" > /tmp/loud
+    "${FFMPEG_BIN}" -nostdin -i "${INPUT}" -vn -filter_complex "silencedetect,astats,loudnorm=print_format=json,agate=attack=0.01:release=0.01:ratio=9000,aphasemeter=r=0.2:video=0,ametadata=mode=print:key=lavfi.aphasemeter.phase:value=-0.18:function=less" -f null - 2>&1 |  tr "\r" "\n" > /tmp/loud
     MEASURED_I=$(cat /tmp/loud | grep "input_i" | awk -F\" '{print $4}')
     MEASURED_LRA=$(cat /tmp/loud | grep "input_lra" | awk -F\" '{print $4}')
     MEASURED_TP=$(cat /tmp/loud | grep "input_tp" | awk -F\" '{print $4}')

@@ -75,7 +75,7 @@ while [ "${*}" != "" ] ; do
                 _report -dt "Integrated loudness for $(basename "${INPUT_MOVIE}") is ${INTEGRATED_LOUDNESS}dB. Reference is ${REFERENCE}dB. Will adjust by ${VOLADJ}dB."
                 MIDDLEOPTIONS+=(-af volume=${VOLADJ}dB)
                 _report -dt "Generating ${OUTPUT_MOVIE} ... using these options: ${MIDDLEOPTIONS[*]}"
-                ffmpeg -report -i "${SOURCEFILE}" "${MIDDLEOPTIONS[@]}" "${OUTPUT_MOVIE}"
+                "${FFMPEG_BIN}" -report -i "${SOURCEFILE}" "${MIDDLEOPTIONS[@]}" "${OUTPUT_MOVIE}"
                 _report -dst "Done with ${NAME}."
             fi
         fi

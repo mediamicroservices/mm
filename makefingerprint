@@ -28,5 +28,5 @@ while [ "${*}" != "" ] ; do
     fi
     #Generate Fingerprint
     FINGERPRINT_XML="${FINGERDIR}/${MEDIAID}${SUFFIX}.${EXTENSION}"
-    _run_critical ffmpeg "${FFMPEGINPUT[@]}" -vf "signature=format=xml:filename=${FINGERPRINT_XML}" -map 0:v -f null -
+    _run_critical "${FFMPEG_BIN}" "${FFMPEGINPUT[@]}" -vf "signature=format=xml:filename=${FINGERPRINT_XML}" -map 0:v -f null -
 done

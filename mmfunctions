@@ -23,6 +23,22 @@ elif [ ! "${CONFIG}" = "Y" -a "${REQUIRECONFIG}" = "Y" ] ; then
     exit 1
 fi
 
+# find ffmpeg-full to use
+if [[ -x /opt/homebrew/opt/ffmpeg-full/bin/ffmpeg ]] ; then
+    FFMPEG_BIN="/opt/homebrew/opt/ffmpeg-full/bin/ffmpeg"
+elif [[ -x "$(brew --prefix ffmpeg-full)/bin/ffmpeg" ]] ; then
+    FFMPEG_BIN="/opt/homebrew/opt/ffmpeg-full/bin/ffmpeg"
+elif [[ -x "$(which ffmpeg)" ]] ; then
+    FFMPEG_BIN="$(which ffmpeg)"
+    echo
+    echo "WARNING: many mm scripts need ffmpeg-full but this might be running a regular ffmpeg. Try running 'brew install ffmpeg-full'."
+    echo
+else
+    echo
+    echo "ERROR: No ffmpeg is installed. Try running 'brew install ffmpeg-full'."
+    echo
+fi
+
 _check_for_lto_md5_flags(){
     if [ -z "${LTO_MD5_FLAGS}" ] ; then
         LTO_MD5_FLAGS="md5deep -rel"
@@ -237,9 +253,9 @@ _black_at_ends(){
     ANALYSIS_HEAD_SECONDS=10
     ANALYSIS_TAIL_SECONDS=-10
     _report -dt "Analyzing $(basename "${INPUT_MOVIE}") for excessive black at head or tail."
-    HEAD_BLACK=$(ffmpeg -t "${ANALYSIS_HEAD_SECONDS}" -i "${1}" -an -filter_complex     blackdetect=pix_th=0.05 -loglevel debug -f null - 2>&1 | grep -c -o picture_black_ratio:1)
+    HEAD_BLACK=$("${FFMPEG_BIN}" -t "${ANALYSIS_HEAD_SECONDS}" -i "${1}" -an -filter_complex     blackdetect=pix_th=0.05 -loglevel debug -f null - 2>&1 | grep -c -o picture_black_ratio:1)
     _report -dt "Black frames in first ${ANALYSIS_HEAD_SECONDS} seconds: ${HEAD_BLACK}."
-    TAIL_BLACK=$(ffmpeg -sseof "${ANALYSIS_TAIL_SECONDS}" -i "${1}" -an -filter_complex     blackdetect=pix_th=0.05 -loglevel debug -f null - 2>&1 | grep -c -o picture_black_ratio:1)
+    TAIL_BLACK=$("${FFMPEG_BIN}" -sseof "${ANALYSIS_TAIL_SECONDS}" -i "${1}" -an -filter_complex     blackdetect=pix_th=0.05 -loglevel debug -f null - 2>&1 | grep -c -o picture_black_ratio:1)
     _report -dt "Black frames in last  ${ANALYSIS_HEAD_SECONDS} seconds: ${TAIL_BLACK}."
 }
 
@@ -630,7 +646,7 @@ _make_mezz_for_xdcam(){
     REL_START=$(echo "scale=3; ${SOM_FC} - ${TMC_SEC}" | bc)
     pushd $(dirname "${4}")
     _report -dt "Starting ffmpeg to trim mxf file at $(date) This will take a few minutes..."
-    ffmpeg 2</dev/null -report -y -ss "${REL_START}" -t "${DUR_FC}" -i "${3}" -map 0:v -map 0:a:0 -map 0:a:1 -c copy "${4}"
+    "${FFMPEG_BIN}" 2</dev/null -report -y -ss "${REL_START}" -t "${DUR_FC}" -i "${3}" -map 0:v -map 0:a:0 -map 0:a:1 -c copy "${4}"
     popd
 }
 
@@ -1030,7 +1046,7 @@ _get_format(){
 _get_codectagstring(){
     CODEC_TAG_STRING=$(ffprobe "${1}" -show_streams -select_streams v:0 2> /dev/null | grep "^codec_tag_string=" | cut -d = -f 2)
     if [[ "${CODEC_TAG_STRING}" = "FFV1" ]] ; then
-        FFV1_VERSION=$(ffmpeg -nostdin -debug 1 -i "${1}" -t 0.1 -f null - </dev/null 2>&1 | grep -o "ver:[0-9]*" | tail -n1 | cut -d: -f2)
+        FFV1_VERSION=$("${FFMPEG_BIN}" -nostdin -debug 1 -i "${1}" -t 0.1 -f null - </dev/null 2>&1 | grep -o "ver:[0-9]*" | tail -n1 | cut -d: -f2)
     else
         FFV1_VERSION=""
     fi
@@ -1179,7 +1195,7 @@ _get_volume_adjustment(){
         VOL_FFMPEG_INPUT+=(-to "${OUTTIME}")
     fi
     _report -dt "Getting loudness data for '${VOL_FFMPEG_INPUT[*]}' ..."
-    LOUDNESS_DATA=$(ffmpeg -nostdin "${VOL_FFMPEG_INPUT[@]}"  -vn -filter_complex "${AUDIOFILTERCHAIN},loudnorm=print_format=json" -f null - 2>&1)
+    LOUDNESS_DATA=$("${FFMPEG_BIN}" -nostdin "${VOL_FFMPEG_INPUT[@]}"  -vn -filter_complex "${AUDIOFILTERCHAIN},loudnorm=print_format=json" -f null - 2>&1)
     VOLUME_EXIT_CODE="${?}"
     if [ "${VOLUME_EXIT_CODE}" -ne 0 ] ; then
         _report -wt "Volume analysis for ${INPUT_MOVIE} exited with ${VOLUME_EXIT_CODE}."
@@ -1209,7 +1225,7 @@ _get_interlacement_full(){
        CONTAINER_INTERLACEMENT=$(mediainfo --inform="Video;%ScanOrder%" "${INPUT_MOVIE}")
     }
 
-    IDET_INTERLACEMENT=$(ffmpeg -i "${INPUT_MOVIE}" -vf idet -f null -an - 2>&1 | grep "Multi frame detection:")
+    IDET_INTERLACEMENT=$("${FFMPEG_BIN}" -i "${INPUT_MOVIE}" -vf idet -f null -an - 2>&1 | grep "Multi frame detection:")
     echo "${IDET_INTERLACEMENT}"
     IDET_SUMMARY=$(echo "${IDET_INTERLACEMENT}" | cut -d: -f2- | awk '{print $1 " " $2 "\n" $3 " " $4 "\n" $5 " " $6 "\n" $7 " " $8}')
     echo "${IDET_SUMMARY}"
@@ -1256,7 +1272,7 @@ _get_interlacement_full(){
 _get_cropdetection(){
     INPUT_MOVIE="${1}"
     _report -dt "Getting cropping data for $(basename "${INPUT_MOVIE}") ..."
-    CROP_DATA=$(ffmpeg -i "${INPUT_MOVIE}" -an -filter_complex cropdetect -f null - 2>&1 | grep -o "crop=[0-9:]*")
+    CROP_DATA=$("${FFMPEG_BIN}" -i "${INPUT_MOVIE}" -an -filter_complex cropdetect -f null - 2>&1 | grep -o "crop=[0-9:]*")
     CROP_ERR="${?}"
     [ "${CROP_ERR}" -ne 0 ] && { _report -wt "Crop detection analysis for ${INPUT_MOVIE} exited with ${CROP_ERR}." ; exit ;};
     for i in $(echo "${CROP_DATA}") ; do
