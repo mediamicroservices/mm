@@ -705,14 +705,10 @@ while [[ "${@}" != "" ]] ; do
             MIDDLEOPTIONS+=(-sample_fmt s16p)
             _get_audio_mapping -v "${SOURCEFILE}"
         elif [[ "${OUTPUT_TYPE}" == "podcast" ]] ; then
+            MIDDLEOPTIONS+=(-ac 2)
             MIDDLEOPTIONS+=(-c:a aac)
             MIDDLEOPTIONS+=(-ar 48000)
-            if [[ "${VIDEOSTREAMCOUNT}" -gt 0 ]] ; then
-                MIDDLEOPTIONS+=(-b:a 96k)
-            else
-                MIDDLEOPTIONS+=(-b:a 128k)
-                MIDDLEOPTIONS+=(-sample_fmt fltp)
-            fi
+            MIDDLEOPTIONS+=(-b:a 256k)
             _get_audio_mapping -v "${SOURCEFILE}"
         elif [[ "${OUTPUT_TYPE}" == "waveform" ]] ; then
             MIDDLEOPTIONS+=(-vn)
