@@ -159,6 +159,18 @@ for FILE in "${FILE_MATCHES[@]}"; do
     METADATA_SOURCES+="${FILE}\n"
 done
 METADATA_SOURCES_ESCAPED=$(printf "%b" "$METADATA_SOURCES")
+
+MIDDLEOPTIONS=(-movflags faststart)
+MIDDLEOPTIONS+=(-pix_fmt yuv420p)
+MIDDLEOPTIONS+=(-c:v libx264)
+MIDDLEOPTIONS+=(-preset veryfast)
+MIDDLEOPTIONS+=(-crf 25)
+MIDDLEOPTIONS+=(-f mp4)
+_add_video_filter "scale=-1:min(ih\,720)"
+MIDDLEOPTIONS+=(-c:a aac)
+MIDDLEOPTIONS+=(-ac 2)
+MIDDLEOPTIONS+=(-b:a 128k)
+MIDDLEOPTIONS+=(-ar 48000)
 # run ffmpeg
-"${FFMPEG_BIN}" -y -guess_layout_max 0 -y -nostdin "${FFMPEG_INPUTS[@]}" -filter_complex "${FILTER}" -metadata timecode="${MASTER_TC}" -map "[vout]" -map "[aout]" -ac 2 -c:v libx264 -crf 23 -preset fast -pix_fmt yuv420p -s 1920x1080 -metadata comment="$METADATA_SOURCES_ESCAPED" "${TMP_OUTPUT_FILENAME}"
+"${FFMPEG_BIN}" -y -guess_layout_max 0 -y -nostdin "${FFMPEG_INPUTS[@]}" -filter_complex "${FILTER}" -metadata timecode="${MASTER_TC}" -map "[vout]" -map "[aout]" "${MIDDLEOPTIONS[@]}" -metadata comment="$METADATA_SOURCES_ESCAPED" "${TMP_OUTPUT_FILENAME}"
 rsync -rtvP --remove-source-files "${TMP_OUTPUT_FILENAME}" "${OUTPUT_FILENAME}"
