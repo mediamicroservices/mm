@@ -38,6 +38,14 @@ else
     echo "ERROR: No ffmpeg is installed. Try running 'brew install ffmpeg-full'."
     echo
 fi
+# see if h264 GPU is available
+#if "${FFMPEG_BIN}" -f lavfi -i nullsrc -t 1 -c:v h264_videotoolbox -f null - 2>/dev/null ; then
+#    echo "videotoolbox available"
+#    USE_VT="Yes"
+#else
+#    echo "videotoolbox not available"
+#    USE_VT="No"
+#fi
 
 _check_for_lto_md5_flags(){
     if [ -z "${LTO_MD5_FLAGS}" ] ; then

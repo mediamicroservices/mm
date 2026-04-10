@@ -537,9 +537,14 @@ while [[ "${@}" != "" ]] ; do
         elif [[ "${OUTPUT_TYPE}" == "window" ]] ; then
             MIDDLEOPTIONS+=(-movflags faststart)
             MIDDLEOPTIONS+=(-pix_fmt yuv420p)
+#           if [[ "${USE_VT}" == "Yes" ]] ; then
+#               MIDDLEOPTIONS+=(-c:v h264_videotoolbox)
+#               MIDDLEOPTIONS+=(-q:v 40)
+#           else
             MIDDLEOPTIONS+=(-c:v libx264)
             MIDDLEOPTIONS+=(-preset veryfast)
             MIDDLEOPTIONS+=(-crf 25)
+#           fi
             MIDDLEOPTIONS+=(-force_key_frames chapters)
             MIDDLEOPTIONS+=(-f mp4)
             _add_video_filter "scale=-1:min(ih\,720)"
