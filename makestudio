@@ -1,7 +1,18 @@
 #!/bin/bash
+SCRIPTDIR="$(dirname "$(which "${0}")")"
+. "${SCRIPTDIR}/mmfunctions" || { echo "Missing '${SCRIPTDIR}/mmfunctions'. Exiting." ; exit 1 ;};
 INPUT="$1"
 INPUT_DIR="$(dirname "$(dirname "$INPUT")")"
- OTHER_FILES_START_WITHIN_X_SECS=5
+PARENT_FOLDER="$(basename "$INPUT_DIR")"
+OUTPUT_DIR="$(dirname "$(dirname "${INPUT}")")/${PARENT_FOLDER}_MULTIVIEWS"
+OUTPUT_FILENAME="${OUTPUT_DIR}/$(basename "${INPUT_DIR}")_$(basename "${INPUT}" | cut -c 1-15)_MULTIVIEW.mp4"
+TMP_OUTPUT_FILENAME="/tmp/$(basename "${INPUT_DIR}")_$(basename "${INPUT}" | cut -c 1-15)_MULTIVIEW.mp4"
+if [[ -f "${OUTPUT_FILENAME}" ]] ; then
+    echo "${OUTPUT_FILENAME} already exists, exiting..."
+    exit
+fi
+
+OTHER_FILES_START_WITHIN_X_SECS=5
 FPS_NUM=30000
 FPS_DEN=1001
 FPS_DEC=$(echo "scale=6; $FPS_NUM/$FPS_DEN" | bc)
@@ -72,7 +83,6 @@ done
 MASTER_TC=$(frames_to_tc "$EARLIEST_FRAME")
 ESC_TC="${MASTER_TC//:/\\:}"
 ESC_TC="${ESC_TC//;/\\;}"
-PARENT_FOLDER="$(basename "$INPUT_DIR")"
 
 # determine grid size
 COLS=$(awk -v n="$NUM_INPUTS" 'BEGIN{print int(sqrt(n)+0.999)}')
@@ -83,12 +93,17 @@ CELL_H=$((1080 / ROWS))
 FILTER=""
 LAYOUT=""
 
-# find longest duration to set tpad for final output
-MAX_DURATION=0
-for D in "${DURATIONS[@]}"; do
-    COMP=$(echo "$D > $MAX_DURATION" | bc -l)
+# Calculate the true end time for each clip (offset + duration)
+MAX_END=0
+END_TIMES=()
+for ((i=0;i<NUM_INPUTS;i++)); do
+    OFFSET_FRAMES=$(( TC_FRAMES[i] - EARLIEST_FRAME ))
+    OFFSET_SECS="0$(echo "$OFFSET_FRAMES * $FPS_DEN / $FPS_NUM" | bc -l)"
+    END=$(echo "${OFFSET_SECS} + ${DURATIONS[i]}" | bc -l)
+    END_TIMES+=("$END")
+    COMP=$(echo "$END > $MAX_END" | bc -l)
     if (( COMP )); then
-        MAX_DURATION=$D
+        MAX_END=$END
     fi
 done
 
@@ -99,6 +114,8 @@ for ((i=0;i<NUM_INPUTS;i++)) ; do
 
     OFFSET_FRAMES=$(( TC_FRAMES[i] - EARLIEST_FRAME ))
     OFFSET_SECONDS="0$(echo "$OFFSET_FRAMES * $FPS_DEN / $FPS_NUM" | bc -l)"
+    OFFSET_MS="0$(echo "$OFFSET_SECONDS * 1000" | bc -l | cut -d'.' -f1)"
+    STOP_PAD="0$(echo "$MAX_END - $OFFSET_SECONDS - ${DURATIONS[i]}" | bc -l)"
 
     # pad to align inputs, then pad end to match longest duration
     if [[ "${i}" = "0" ]] ; then
@@ -107,7 +124,7 @@ for ((i=0;i<NUM_INPUTS;i++)) ; do
     else
         EXTRA_ASPLIT=""
     fi
-    FILTER+="[$i:a:0][$i:a:1][$i:a:2][$i:a:3][$i:a:4][$i:a:5][$i:a:6][$i:a:7]amerge=inputs=8[${i}a8];${EXTRA_ASPLIT}[${i}a8]showvolume=r=30000/1001:t=0:v=0:w=240:h=30:o=h:dm=1:p=0.3:m=p[${i}vum];[$i:v]tpad=start_duration=${OFFSET_SECONDS}:stop_duration=$(echo "$MAX_DURATION - $OFFSET_SECONDS" | bc -l)[${i}vv];[${i}vv][${i}vum]overlay=0:0,scale=${CELL_W}:${CELL_H}:force_original_aspect_ratio=decrease,pad=${CELL_W}:${CELL_H}:(ow-iw)/2:(oh-ih)/2,drawtext=text='${BASENAME}':x=10:y=h-26:fontsize=16:fontcolor=white:box=1:boxcolor=black@0.8[v$i];"
+    FILTER+="[$i:a:0][$i:a:1][$i:a:2][$i:a:3][$i:a:4][$i:a:5][$i:a:6][$i:a:7]amerge=inputs=8[${i}a8];${EXTRA_ASPLIT}[${i}a8]showvolume=r=30000/1001:t=0:v=0:w=240:h=30:o=h:dm=1:p=0.3:m=p[${i}vum];[$i:v]tpad=start_duration=${OFFSET_SECONDS}:stop_duration=${STOP_PAD}[${i}vv];[${i}vv][${i}vum]overlay=0:0,scale=${CELL_W}:${CELL_H}:force_original_aspect_ratio=decrease,pad=${CELL_W}:${CELL_H}:(ow-iw)/2:(oh-ih)/2,drawtext=text='${BASENAME}':x=10:y=h-26:fontsize=16:fontcolor=white:box=1:boxcolor=black@0.8[v$i];"
 
     if (( NUM_INPUTS > 1 )); then
         X=$(( (i % COLS) * CELL_W ))
@@ -132,23 +149,16 @@ fi
 FILTER+="drawtext=timecode='${ESC_TC}':r=${FPS_DEC}:x=20:y=20:fontsize=36:fontcolor=yellow:box=1:boxcolor=black@0.6,"
 FILTER+="drawtext=text='${PARENT_FOLDER}':x=360:y=20:fontsize=36:fontcolor=yellow:box=1:boxcolor=black@0.6[vout]"
 
-OUTPUT_DIR="$(dirname "$(dirname "${INPUT}")")/${PARENT_FOLDER}_MULTIVIEWS"
-OUTPUT_FILENAME="${OUTPUT_DIR}/$(basename "${INPUT_DIR}")_$(basename "${INPUT}" | cut -c 1-15)_MULTIVIEW.mp4"
-TMP_OUTPUT_FILENAME="/tmp/$(basename "${INPUT_DIR}")_$(basename "${INPUT}" | cut -c 1-15)_MULTIVIEW.mp4"
-
 if [[ ! -d "${OUTPUT_DIR}" ]] ; then
     mkdir -p "${OUTPUT_DIR}"
 fi
-if [[ -f "${OUTPUT_FILENAME}" ]] ; then
-    echo "${OUTPUT_FILENAME} already exists, exiting..."
-else
-    echo "inputs ${FILE_MATCHES[@]}"
-    METADATA_SOURCES=""
-    for FILE in "${FILE_MATCHES[@]}"; do
-        METADATA_SOURCES+="${FILE}\n"
-    done
-    METADATA_SOURCES_ESCAPED=$(printf "%b" "$METADATA_SOURCES")
-    # run ffmpeg
-    "${FFMPEG_BIN}" -guess_layout_max 0 -y -nostdin "${FFMPEG_INPUTS[@]}" -filter_complex "${FILTER}" -map "[vout]" -map "[aout]" -ac 2 -c:v libx264 -crf 24 -preset fast -pix_fmt yuv420p -s 1920x1080 -metadata comment="$METADATA_SOURCES_ESCAPED" "${TMP_OUTPUT_FILENAME}"
-    rsync -rtvP --remove-source-files "${TMP_OUTPUT_FILENAME}" "${OUTPUT_FILENAME}"
-fi
+
+echo "inputs ${FILE_MATCHES[@]}"
+METADATA_SOURCES=""
+for FILE in "${FILE_MATCHES[@]}"; do
+    METADATA_SOURCES+="${FILE}\n"
+done
+METADATA_SOURCES_ESCAPED=$(printf "%b" "$METADATA_SOURCES")
+# run ffmpeg
+"${FFMPEG_BIN}" -y -guess_layout_max 0 -y -nostdin "${FFMPEG_INPUTS[@]}" -filter_complex "${FILTER}" -metadata timecode="${MASTER_TC}" -map "[vout]" -map "[aout]" -ac 2 -c:v libx264 -crf 23 -preset fast -pix_fmt yuv420p -s 1920x1080 -metadata comment="$METADATA_SOURCES_ESCAPED" "${TMP_OUTPUT_FILENAME}"
+rsync -rtvP --remove-source-files "${TMP_OUTPUT_FILENAME}" "${OUTPUT_FILENAME}"
