@@ -545,6 +545,7 @@ while [[ "${@}" != "" ]] ; do
                 INPUTOPTIONS+=(-apply_cropping 0)
                 _add_video_filter "crop=720:480:0:32"
             fi
+            MIDDLEOPTIONS+=(-metadata comment="$(cat "${INPUTFILES}")")
         elif [[ "${OUTPUT_TYPE}" == "streamable" ]]; then
             MIDDLEOPTIONS+=(-movflags faststart)
             MIDDLEOPTIONS+=(-pix_fmt yuv420p)
