@@ -779,7 +779,6 @@ _find_input(){
                 INPUTOPTIONS+=(-safe 0)
                 FFCONCATFILE="$(_maketemp).ffconcat"
                 FFMETADATAFILE="$(_maketemp).ffmetadata"
-                echo "$FFCONCATFILE $FFMETADATAFILE"
                 CHAPTER_TALLY=0
                 echo ";FFMETADATA1" > "${FFMETADATAFILE}"
                 echo >> "${FFMETADATAFILE}"
