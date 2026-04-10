@@ -23,7 +23,7 @@ table of contents
     * [fix_volume](https://github.com/mediamicroservices/mm#fix_volume)
     * [ingestfile](https://github.com/mediamicroservices/mm#ingestfile)
     * [makederiv](https://github.com/mediamicroservices/mm#makederiv) 
-        * (formerly: makebroadcast, makedvd, makemp3, makepodcast, makeprores, makeresourcespace, makewaveform, makeyoutube)
+        * (formerly: makebroadcast, makemp3, makepodcast, makeprores, makeresourcespace, makewaveform, makeyoutube)
     * [makebroadcast](https://github.com/mediamicroservices/mm#makebroadcast)
     * [makedvd](https://github.com/mediamicroservices/mm#makedvd)
     * [makefingerprint](https://github.com/mediamicroservices/mm/#makefingerprint)
@@ -97,8 +97,6 @@ mediamicroservices is dependent on other open source software to run. If you do 
 mediamicroservice dependencies:
 
 * cowsay
-* dvdrtools
-* dvdauthor
 * exiftool
 * sdl
 * ffmpeg
@@ -161,40 +159,37 @@ set this variable to a temporary directory. it is used in the uploadomneon micro
 **10. REGEX4PODCAST**
 this variable holds regular expressions that are queried when makepodcast is run, in order to determine if a file qualifies for podcast creation. If you want all of your files to qualify for podcast creation, enter a "." which matches (almost) any character. Learn more about [regex](https://en.wikipedia.org/wiki/Regular_expression).
 
-**11. DVDLABELPREFIX**
-this variable is for adding a set prefix to the filename for DVDs in makedvd. You may leave this variable blank if you do not want to have a prefix uniformly assigned.
-
-**12. OMNEONIP**
+**11. OMNEONIP**
 this variable sets the IP address for delivery of files to the omneon server in uploadomneon and ingestfile. this variable can be set to the IP address of any server that you'd like to have the broadcast copy of your files delivered to.
 
-**13. OMNEONPATH**
+**12. OMNEONPATH**
 this variable is the file path to the specific directory you'd like assets to be delivered to on the omneon server.
 
-**14. CUSTOM_LOG_DIR**
+**13. CUSTOM_LOG_DIR**
 this variable is the directory that stores processing logs for all of the media microservices, and is used when the `_log` function is called. Consider creating a directory called mmlogs in your documents directory, and assigning it to this variable.
 
-**15. LTO_INDEX_DIR**
+**14. LTO_INDEX_DIR**
 this variable is the directory that stores the .schema files created when LTOs are mounted and written to. If you are not using LTO in your workflow, you do not need to create this variable. If you do use LTO in your workflow, consider creating a directory called LTO Indexes, to be housed in your documents directory, and assigning it to this variable.
 
-**16. LOCAL_MM_DIR**
+**15. LOCAL_MM_DIR**
 this variable is the directory that stores mediamicroservices scripts locally.
 
-**17. EMAIL_FROM**
+**16. EMAIL_FROM**
 this variable is the email address that notifications will be sent from once processes have been completed. You may leave this variable blank if you do not want any notification emails sent once actions have been performed on files.
 
-**18. MAKEYOUTUBE_DELIVERY_EMAIL_TO**
+**17. MAKEYOUTUBE_DELIVERY_EMAIL_TO**
 this variable is the email address (or addresses) that notifications will be sent to once makeyoutube has been run on a file.
 
-**19. MAKEBROADCAST_DELIVERY_EMAIL_TO**
+**18. MAKEBROADCAST_DELIVERY_EMAIL_TO**
 this variable is the email address (or addresses) that notifications will be sent to once makebroadcast has been run on a file.
 
-**20. FILEMAKER_DB**
+**19. FILEMAKER_DB**
 this variable stores the name of the FileMaker database that is used in checksum2filemaker to upload metadata from processed files to a FileMaker database. You may leave this variable blank if you do not use FileMaker.
 
-**21. VOLADJUST**
+**20. VOLADJUST**
 This variable must be set to yes (Y) or no (N). If set to yes, volume will be run through a volume adjustment filter and adjusted accordingly during transcoding.
 
-**22. Quit**
+**21. Quit**
 if editing in the terminal, use this option to leave the configuration file editor.
 
 ***
@@ -254,7 +249,7 @@ To view the specific ffmpeg encoding options for each file, view the sourcecode 
 	* carries out several tests and will alert the user to discrepancies. You may select a formula that will perform an interlacement test on the file (this should only be done if you have a concern that the file may have interlacement issues). ingestfile will also test for: the frame count (if there is a discrepancy between the reported and actual framecount, it will prompt the operator to quit or proceed); black frames at the beginning and end of the file (requests in and out times if needed); and out-of-phase audio (if there is out-of-phase audio, it will prompt the operator to quit or proceed).
     * sets up the structure of the AIP, writes out the input from the user queries to a log file, and uses rsync to move the original file into the objects directory.
     * transcodes a file for broadcast and delivers it to the omneon server.
-    * creates access copies using makederiv (mp3, dvd, youtube, podcast, waveform, and frames), and delivers youtube and podcast files.
+    * creates access copies using makederiv (mp3, youtube, podcast, waveform, and frames), and delivers youtube and podcast files.
     * creates metadata, checksums, and maps the directory's contents.
     * finishes by delivering the AIP to the specified AIP_STORAGE location.
 
@@ -280,7 +275,6 @@ To view the specific ffmpeg encoding options for each file, view the sourcecode 
 * makederiv creates several types of derivative files from a video file or package input (list below). Your command will look like this: `makederiv -T [derivativetype] [input]`. It was created to streamline the editing process and standardize options for the many types of derivatives these microservices make. Deprecated commands (e.g. `makeyoutube [file]`) may still be used; they are rerouted through makederiv.
 * Option T specifies the derivative type and is required. Derivative types are:
     * broadcast: creates an .mov file suitable for broadcast or editing
-    * dvd: creates a DVD .iso file
     * mp3: creates an .mp3 file
     * podcast: creates an .mov Quicktime file that is suitable for podcasting
     * prores: creates a ProRes/Quicktime .mov file
@@ -321,15 +315,9 @@ To view the specific ffmpeg encoding options for each file, view the sourcecode 
     * youtube derivatives also take the following option: Y
         * Y: attempt to use uploadyoutube on the resulting file.
             * Your command will look like this: `makederiv -T youtube -Y [input]`
-    * dvd derivatives also take the following option: p
-        * p: add a DVD label prefix. Must be followed with the prefix you want to use.
-            * Your command will look like this: `makederiv -T dvd -p [dvdlabelprefix] [input]`
 
 #### makedvd
-* makedvd is an alias for the updated umbrella function [makederiv](https://github.com/mediamicroservices/mm#makederiv). It creates a DVD .iso file from a video file or package input.
-* You can create a DVD .iso file with makederiv by typing: `makederiv -T dvd [input]`.
-* You can also create an identical derivative file by typing: `makedvd [input]`, which will route your command through makederiv.
-* Both makederiv and makedvd may use the full list of options under [makederiv](https://github.com/mediamicroservices/mm#makederiv).
+* makedvd was removed on March 19, 2026. The last version that supported it was mm_v2.23.
 
 #### makefingerprint
 * makefingerprint creates perceptual hashes from input video files and packages. It is also capable of reporting fingerprint information into a centralized database set up through mm.
@@ -417,7 +405,6 @@ To view the specific ffmpeg encoding options for each file, view the sourcecode 
         * prores
         * resourcespace (removed -bufsize flag to get consistent test files)
         * youtube (removed -bufsize flag to get consistent test files)
-    * mmtest does not test dvd derivatives, as iso file checksums cannot match consistently.
 * To run mmtest, type: `mmtest`.
 
 #### paperingest
@@ -452,7 +439,7 @@ To view the specific ffmpeg encoding options for each file, view the sourcecode 
 * uploadomneon uploads a file or group of files, in sequential order, to a server using rsync. Although the script is called uploadomneon because that is the name of the server at CUNY Television, it can be set to any server and directory path in mmconfig. To run uploadomneon, the server IP address, path, and tmpdir variables must be set. Your command will look like this: `uploadomneon [input1] [input2]`.
 
 #### verifypackage
-* verifypackage checks the validity of files created with makebraodcast, makedvd, and makeyoutube. Your command will look like this: 'verifypackage [package]'.
+* verifypackage checks the validity of files created with makebraodcast, and makeyoutube. Your command will look like this: 'verifypackage [package]'.
 
 #### verifytree
 * verifytree uses a series of xpath statements and the tree.xml document created by maketree to validate the contents of an Archival Information Package. verifytree outputs mismatches and unexpected items found in AIPs into the terminal window. It must be used in conjunction with maketree. Your command will look like: `verifytree [package]`.

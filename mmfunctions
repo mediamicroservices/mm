@@ -1109,21 +1109,6 @@ _get_subtitle_overlay(){
     SUBTITLEOVERLAY="subtitles=${SUBTITLE_FILE}"
 }
 
-_get_maxdvdbitrate(){
-    _get_duration "${1}"
-    local DVDCAPACITY=30794400000  # in bits, minus 10%
-    local CAPDVDBITRATE=6000000    # in bits/second
-    MAXDVDBITRATE=$(echo "(${DVDCAPACITY} - ( ${DURATION} * 224000 )) / ${DURATION}" | bc)
-    _report -dt "Data rate could be up to ${MAXDVDBITRATE}"
-    if ! [[ "${MAXDVDBITRATE}" =~ ^[0-9]+$ ]] ; then
-        _report -wt "Calculation of dvd bitrate failed. Evaluated to ${MAXDVDBITRATE}. Using 4000000 as bitrate instead."
-        MAXDVDBITRATE=4000000
-    elif [ "${MAXDVDBITRATE}" -gt "${CAPDVDBITRATE}" ] ; then
-        MAXDVDBITRATE="${CAPDVDBITRATE}"
-    fi
-    _report -dt "Data rate for DVD is evaluated to ${MAXDVDBITRATE}"
-}
-
 _is_video(){
     # use ffmpeg's index value and stream specifier to determine if the input is a recognized as a video file by ffmpeg
     ffprobe "${1}" -show_streams -select_streams v:0 2>/dev/null | grep "^index="

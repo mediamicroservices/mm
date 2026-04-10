@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 # verifypackage checks the validity of files created with makebroadcast,
-# makeyoutube, and makedvd
+# makeyoutube
 
 _usage(){
         echo
@@ -116,15 +116,6 @@ while [ "${*}" != "" ] ; do
         fi
         if [[ "${ALL_TESTS}" == "Y"  ]] || [[ "${VOL_TEST}" == "Y"  ]] ; then
             _assess_volume "${PACKAGE}/objects/access/youtube_up/${MEDIAID}.mp4"
-        fi
-    fi
-    #verify the makedvd file
-    if [ -f "${PACKAGE}/objects/access/dvd/${MEDIAID}.iso" ] ; then
-        STATUS=$(mediaconch --force -fx -p "${SCRIPTDIR}/makedvd_policies.xml" "${PACKAGE}/objects/access/dvd/${MEDIAID}.iso" | xmlstarlet sel -N mc="https://mediaarea.net/mediaconch" -t -v mc:MediaConch/mc:media/mc:policy/@outcome -n)
-        if [[ "$STATUS" = "pass" ]] ; then
-            _report -dt "Pass: ${PACKAGE}/objects/access/dvd/${MEDIAID}.iso"
-        else
-            mediaconch --force -fs -p "${SCRIPTDIR}/makedvd_policies.xml" "${PACKAGE}/objects/access/dvd/${MEDIAID}.iso"
         fi
     fi
     #verify the audio podcast file
