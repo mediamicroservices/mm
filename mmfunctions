@@ -26,8 +26,10 @@ fi
 # find ffmpeg-full to use
 if [[ -x /opt/homebrew/opt/ffmpeg-full/bin/ffmpeg ]] ; then
     FFMPEG_BIN="/opt/homebrew/opt/ffmpeg-full/bin/ffmpeg"
+elif [[ -x /usr/local/opt/ffmpeg-full/bin/ffmpeg ]] ; then
+    FFMPEG_BIN="/usr/local/opt/ffmpeg-full/bin/ffmpeg"
 elif [[ -x "$(brew --prefix ffmpeg-full)/bin/ffmpeg" ]] ; then
-    FFMPEG_BIN="/opt/homebrew/opt/ffmpeg-full/bin/ffmpeg"
+    FFMPEG_BIN="$(brew --prefix ffmpeg-full)/bin/ffmpeg"
 elif [[ -x "$(which ffmpeg)" ]] ; then
     FFMPEG_BIN="$(which ffmpeg)"
     echo
