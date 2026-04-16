@@ -36,15 +36,48 @@ frames_to_tc() {
 }
 
 # get creation time of input file
-BIRTH_TIME=$(stat -f %SB -t %s "$INPUT")
-START_RANGE=$((BIRTH_TIME- OTHER_FILES_START_WITHIN_X_SECS))
-END_RANGE=$((BIRTH_TIME+ OTHER_FILES_START_WITHIN_X_SECS))
+#BIRTH_TIME=$(stat -f %SB -t %s "$INPUT")
+#START_RANGE=$((BIRTH_TIME- OTHER_FILES_START_WITHIN_X_SECS))
+#END_RANGE=$((BIRTH_TIME+ OTHER_FILES_START_WITHIN_X_SECS))
+#
+# find matching files
+#FILE_MATCHES=()
+#while read -r FILE ; do
+#    OTHER_BIRTH=$(stat -f %SB -t %s "$FILE")
+#    if [[ "$OTHER_BIRTH" -ge "$START_RANGE" ]] && [[ "$OTHER_BIRTH" -le "$END_RANGE" ]] ; then
+#        FILE_MATCHES+=("$FILE")
+#    fi
+#done < <(find "$INPUT_DIR" -maxdepth 2 -type f -name "*.mov" | awk 'BEGIN{IGNORECASE=1} /Line Cut/ {print "1|" $0; next} /Clean/ {print "2|" $0; next} {print "3|" $0}' | sort | cut -d'|' -f2)
+
+# get datetime embedded in input filename
+filename_to_epoch() {
+    local FNAME
+    FNAME="$(basename "$1")"
+    local DT
+    DT="$(echo "$FNAME" | sed -E 's/^([0-9]{8})-([0-9]{6}).*/\1 \2/')"
+    local DATE_PART TIME_PART
+    DATE_PART="$(echo "$DT" | cut -d' ' -f1)"
+    TIME_PART="$(echo "$DT" | cut -d' ' -f2)"
+    date -j -f "%Y%m%d %H%M%S" "${DATE_PART} ${TIME_PART}" "+%s" 2>/dev/null
+}
+
+INPUT_TIME=$(filename_to_epoch "$INPUT")
+if [[ -z "$INPUT_TIME" ]]; then
+    echo "ERROR: Could not parse datetime from filename: $(basename "$INPUT")"
+    exit 1
+fi
+START_RANGE=$((INPUT_TIME - OTHER_FILES_START_WITHIN_X_SECS))
+END_RANGE=$((INPUT_TIME + OTHER_FILES_START_WITHIN_X_SECS))
 
 # find matching files
 FILE_MATCHES=()
 while read -r FILE ; do
-    OTHER_BIRTH=$(stat -f %SB -t %s "$FILE")
-    if [[ "$OTHER_BIRTH" -ge "$START_RANGE" ]] && [[ "$OTHER_BIRTH" -le "$END_RANGE" ]] ; then
+    OTHER_TIME=$(filename_to_epoch "$FILE")
+    if [[ -z "$OTHER_TIME" ]]; then
+        echo "WARNING: Could not parse datetime from filename: $(basename "$FILE"), skipping."
+        continue
+    fi
+    if [[ "$OTHER_TIME" -ge "$START_RANGE" ]] && [[ "$OTHER_TIME" -le "$END_RANGE" ]] ; then
         FILE_MATCHES+=("$FILE")
     fi
 done < <(find "$INPUT_DIR" -maxdepth 2 -type f -name "*.mov" | awk 'BEGIN{IGNORECASE=1} /Line Cut/ {print "1|" $0; next} /Clean/ {print "2|" $0; next} {print "3|" $0}' | sort | cut -d'|' -f2)
