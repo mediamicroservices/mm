@@ -3,7 +3,7 @@
 VERSION="0.2"
 SCRIPTDIR=$(dirname "${0}")
 . "${SCRIPTDIR}/mmfunctions" || { echo "Missing '${SCRIPTDIR}/mmfunctions'. Exiting." ; exit 1 ;};
-DEPENDENCIES=(ffprobe mediaconch exiftool)
+DEPENDENCIES=(ffprobe mediaconch)
 _initialize_make
 
 _usage(){
@@ -62,12 +62,8 @@ while [ "${*}" != "" ] ; do
         fi
         FFPROBEXML="${FILEOUTPUT}/${FILENAMEROOT}_ffprobe.xml"
         MEDIAINFOXML="${FILEOUTPUT}/${FILENAMEROOT}_mediainfo.xml"
-        MEDIAINFOTRACE="${FILEOUTPUT}/${FILENAMEROOT}_mediatrace.xml"
-        EXIFTOOLXML="${FILEOUTPUT}/${FILENAMEROOT}_exiftool.xml"
         ffprobe 2> /dev/null "${FILE}" -show_format -show_streams -show_data -show_error -show_versions -show_chapters -noprivate -of xml="q=1:x=1" > "${FFPROBEXML}"
         mediaconch -mi -fx "${FILE}" | xmlstarlet fo > "${MEDIAINFOXML}"
-        mediaconch -mi -mt -fx "${FILE}" | xmlstarlet fo > "${MEDIAINFOTRACE}"
-        exiftool -X "${FILE}" > "${EXIFTOOLXML}"
     done < "${FILELIST}"
     cd "${MMPWD}"
     "${SCRIPTDIR}/makemets" "${PACKAGE_PATH}"
