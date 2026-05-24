@@ -55,7 +55,7 @@ while [ "${*}" != "" ] ; do
         AUDIO_EXTENSION_LIST="|mp3|aif|aiff|wav|m4a|aac|"
         if [[ "${AUDIO_EXTENSION_LIST}" =~ "|${MOSTCOMMONEXTENSION_LOWER}|" ]] ; then
             _report -dt "running verifytree in audio mode on ${PACKAGE}" #the name of the package being verified
-             # Here are tests for audio packages specifically
+             #Here are tests for audio packages specifically
              #makes sure there is a podcast directory
              _runtest -i "This package is missing the podcast directory!" xmlstarlet sel -t -v "/tree/directory/directory[@name='objects']/directory[@name='access']/directory[@name='podcast']/@name" -n "${TEMPTREE}"
              #makes sure there is a mp3 directory
@@ -87,33 +87,70 @@ while [ "${*}" != "" ] ; do
             _runtest "There are unexpected directories in the access directory." xmlstarlet sel -t -v "/tree/directory/directory[@name='objects']/directory[@name='access']/directory[@name!='pdf_1' and @name!='txt_1']/@name" -n "${TEMPTREE}"
         else
              _report -dt "running verifytree in video mode on ${PACKAGE}" #the name of the package being verified
+            
             # Here are tests for non-audio packages (video and text-based) specifically
-            #makes sure there is a service directory
-            _runtest -i "This package is missing the service directory!" xmlstarlet sel -t -v "/tree/directory/directory[@name='objects']/directory[@name='service']/@name" -n "${TEMPTREE}"
-            #makes sure there is a youtube directory
-            _runtest -i "This package is missing the youtube directory!" xmlstarlet sel -t -v "/tree/directory/directory[@name='objects']/directory[@name='access']/directory[@name='youtube_up']/@name" -n "${TEMPTREE}"
-            #looks in logs directory for any files that aren't .log, .txt, .md5 or .qctools.mkv
-            _runtest "There are files in the logs directory that do not belong!" xmlstarlet sel -t -v "/tree/directory/directory[@name='metadata']/directory[@name='logs']/file[substring(@name,string-length(@name)-2)!='log' and substring(@name,string-length(@name)-2)!='txt' and substring(@name,string-length(@name)-10)!='qctools.mkv' and substring(@name,string-length(@name)-3)!='jpeg' and substring(@name,string-length(@name)-2)!='.gz' and substring(@name,string-length(@name)-2)!='md5']/@name" -n "${TEMPTREE}"
-            #looks in fileMeta access for unexpected directories that are not dvd, mp3, podcast, or youtube_up
-            _runtest "There are directories in the fileMeta access directory that do not belong!" xmlstarlet sel -t -v "/tree/directory/directory[@name='metadata']/directory[@name='fileMeta']/directory[@name='objects']/directory[@name='access']/directory[@name!='dvd' and @name!='mp3' and @name!='podcast' and @name!='resourcespace' and @name!='youtube_up' and @name!='pdf_1' and @name!='txt_1']/@name" -n "${TEMPTREE}"
-            #looks for unexpected files in podcast directory
-            _runtest "There are unexpected files in the podcast directory!" xmlstarlet sel -t -v "/tree/directory/directory[@name='objects']/directory[@name='access']/directory[@name='podcast']/file[@name!='${MEDIAID}_podcast.mov']/@name" -n  "${TEMPTREE}"
-            #looks for any directories within access directory that are not dvd, images, mp3, podcast, or youtube_up
-            _runtest "There are unexpected directories in the access directory." xmlstarlet sel -t -v "/tree/directory/directory[@name='objects']/directory[@name='access']/directory[@name!='dvd' and @name!='images' and @name!='mp3' and @name!='podcast' and @name!='resourcespace' and @name!='youtube_up']/@name" -n "${TEMPTREE}"
-        fi
+            
+            #detect if window directory exists
+            HAS_WINDOW=$(xmlstarlet sel -t -v "/tree/directory/directory[@name='objects']/directory[@name='access']/directory[@name='window']/@name" -n "${TEMPTREE}")
+            
+            if [[ -n "${HAS_WINDOW}" ]]; then
+                VIDEO_TYPE="camera_card_package"
+                _report -dt "Detected camera card video package"
+            else
+                VIDEO_TYPE="edited"
+                _report -dt "Detected edited video package"
+            fi
+
+            # camera card video packages #
+
+            if [[ "${VIDEO_TYPE}" == "camera_card_package" ]]; then
+
+                #makes sure there is a file in the windowdirectory
+                _runtest -i "This package is missing the window directory!" xmlstarlet sel -t -v "/tree/directory/directory[@name='objects']/directory[@name='access']/directory[@name='window']/@name" -n "${TEMPTREE}"
+ 
+                 #makes sure there is a .mp4 file and it is named correctly 
+                _runtest "The window file must be named ${MEDIAID}_WINDOW.mp4!" xmlstarlet sel -t -v "/tree/directory/directory[@name='objects']/directory[@name='access']/directory[@name='window']/file[not(starts-with(@name,'.')) and @name!='${MEDIAID}_WINDOW.mp4']/@name" -n "${TEMPTREE}"
+                
+                #allow files in subdirectory
+                _runtest -i "There isn't an object in the objects directory!" xmlstarlet sel -t -v "/tree/directory/directory[@name='objects']//file/@name" -n "${TEMPTREE}"
+
+            #edited video packages #
+            
+            else
+
+                _runtest -i "There isn't an object file directly in the objects directory!" xmlstarlet sel -t -v "/tree/directory/directory[@name='objects']/file/@name" -n "${TEMPTREE}"
+                #window directory must not exist
+                _runtest "There's a window directory!" xmlstarlet sel -t -v "/tree/directory/directory[@name='objects']/directory[@name='access']/directory[@name='window']/@name" -n "${TEMPTREE}"
+                #looks for any directories that are not access, service, or captions within the objects directory
+                _runtest "There are directories other than access and service in the objects directory!" xmlstarlet sel -t -v "/tree/directory/directory[@name='objects']/directory[@name!='access' and @name!='reformatted' and @name!='service' and @name!='trimmed_materials' and @name!='captions' and @name!='restoration']/@name" -n "${TEMPTREE}"
+                #looks for any directories in fileMeta objects subdirectory that are not access or service
+                _runtest "There are directories in the fileMeta objects directory that are not access or service." xmlstarlet sel -t -v "/tree/directory/directory[@name='metadata']/directory[@name='fileMeta']/directory[@name='objects']/directory[@name!='access' and @name!='reformatted' and @name!='service' and @name!='trimmed_materials' and @name!='restoration' and @name!='captions']/@name" -n "${TEMPTREE}"
+                #makes sure there is a service directory
+                _runtest -i "This package is missing the service directory!" xmlstarlet sel -t -v "/tree/directory/directory[@name='objects']/directory[@name='service']/@name" -n "${TEMPTREE}"
+                #makes sure there is a youtube directory
+                _runtest -i "This package is missing the youtube directory!" xmlstarlet sel -t -v "/tree/directory/directory[@name='objects']/directory[@name='access']/directory[@name='youtube_up']/@name" -n "${TEMPTREE}"
+                #looks in logs directory for any files that aren't .log, .txt, .md5 or .qctools.mkv               
+                _runtest "There are files in the logs directory that do not belong!" xmlstarlet sel -t -v "/tree/directory/directory[@name='metadata']/directory[@name='logs']/file[substring(@name,string-length(@name)-2)!='log' and substring(@name,string-length(@name)-2)!='txt' and substring(@name,string-length(@name)-10)!='qctools.mkv' and substring(@name,string-length(@name)-3)!='jpeg' and substring(@name,string-length(@name)-2)!='.gz' and substring(@name,string-length(@name)-2)!='md5']/@name" -n "${TEMPTREE}"
+                #looks in fileMeta access for unexpected directories that are not dvd, mp3, podcast, or youtube_up
+                _runtest "There are directories in the fileMeta access directory that do not belong!" xmlstarlet sel -t -v "/tree/directory/directory[@name='metadata']/directory[@name='fileMeta']/directory[@name='objects']/directory[@name='access']/directory[@name!='dvd' and @name!='mp3' and @name!='podcast' and @name!='resourcespace' and @name!='youtube_up' and @name!='pdf_1' and @name!='txt_1' and @name!='window']/@name" -n "${TEMPTREE}"
+                #looks for unexpected files in podcast directory
+                _runtest "There are unexpected files in the podcast directory!" xmlstarlet sel -t -v "/tree/directory/directory[@name='objects']/directory[@name='access']/directory[@name='podcast']/file[@name!='${MEDIAID}_podcast.mov']/@name" -n  "${TEMPTREE}"
+                #looks for any directories within access directory that are not dvd, images, mp3, podcast, or youtube_up
+                _runtest "There are unexpected directories in the access directory." xmlstarlet sel -t -v "/tree/directory/directory[@name='objects']/directory[@name='access']/directory[@name!='dvd' and @name!='images' and @name!='mp3' and @name!='podcast' and @name!='resourcespace' and @name!='youtube_up']/@name" -n "${TEMPTREE}"
+            fi
         #searching for upper-level directories
 
         #looks for any directories that are not objects or metadata or tmp (for digitized materials)
         _runtest "There are directories that are not objects, metadata, or tmp in this package." xmlstarlet sel -t -v "/tree/directory/directory[@name!='objects' and @name!='metadata' and @name!='tmp']/@name" -n "${TEMPTREE}"
         #makes sure there is an objects directory
         _runtest -i "This package is missing an objects directory!" xmlstarlet sel -t -v "/tree/directory/directory[@name='objects']/@name" -n "${TEMPTREE}"
-	    #makes sure there is an metadata directory
+        #makes sure there is an metadata directory
         _runtest -i "This package is missing a metadata directory!" xmlstarlet sel -t -v "/tree/directory/directory[@name='metadata']/@name" -n "${TEMPTREE}"
 
-		#checks to see if there are files in directories
-		  _runtest "This package has empty directories!" xmlstarlet sel -t -v "/tree/directory//directory[not(directory|file)]/@name" -n "${TEMPTREE}"
-	   
-	    #begin search of metadata
+	   #checks to see if there are files in directories
+	   _runtest "This package has empty directories!" xmlstarlet sel -t -v "/tree/directory//directory[not(directory|file)]/@name" -n "${TEMPTREE}"
+   
+        #begin search of metadata
 
         #looks for any unexpected files in the upper level metadata directory -- files that aren't .md5, .log, .xml
         _runtest "There are files in the metadata directory that do not belong!" xmlstarlet sel -t -v "/tree/directory/directory[@name='metadata']/file[@name!='checksum.md5' and @name!='checksumchecks.log' and @name!='dfxml.xml' and @name!='mets.xml' and not(contains(@name,'checksum')) and not(contains(@name,'dfxml'))]/@name" -n "${TEMPTREE}"
@@ -127,8 +164,7 @@ while [ "${*}" != "" ] ; do
         _runtest -i "This package needs a fileMeta directory!" xmlstarlet sel -t -v "/tree/directory/directory[@name='metadata']/directory[@name='fileMeta']/@name" -n "${TEMPTREE}"
         #looks for any directories in fileMeta that are not objects
         _runtest "There are directories in fileMeta that are not objects." xmlstarlet sel -t -v "/tree/directory/directory[@name='metadata']/directory[@name='fileMeta']/directory[@name!='objects']/@name" -n "${TEMPTREE}"
-        #looks for any directories in fileMeta objects subdirectory that are not access or service
-        _runtest "There are directories in the fileMeta objects directory that are not access or service." xmlstarlet sel -t -v "/tree/directory/directory[@name='metadata']/directory[@name='fileMeta']/directory[@name='objects']/directory[@name!='access' and @name!='reformatted' and @name!='service' and @name!='trimmed_materials' and @name!='restoration' and @name!='captions']/@name" -n "${TEMPTREE}"
+    
         #and any files that aren't .txt, .xml, .json
         _runtest "There are files in the fileMeta objects directory that do not belong!" xmlstarlet sel -t -v "/tree/directory/directory[@name='metadata']/directory[@name='fileMeta']/directory[@name='objects']/file[substring(@name,string-length(@name)-2)!='xml' and substring(@name,string-length(@name)-2)!='txt' and substring(@name,string-length(@name)-3)!='json']/@name" -n "${TEMPTREE}"
         #looks in fileMeta service subdirectory for that aren't .txt, .xml, .json
@@ -138,10 +174,8 @@ while [ "${*}" != "" ] ; do
 
         #begin search of objects
 
-        #looks for any directories that are not access, service, or captions within the objects directory
-        _runtest "There are directories other than access and service in the objects directory!" xmlstarlet sel -t -v "/tree/directory/directory[@name='objects']/directory[@name!='access' and @name!='reformatted' and @name!='service' and @name!='trimmed_materials' and @name!='captions' and @name!='restoration']/@name" -n "${TEMPTREE}"
         #makes sure there is an object in the objects directory
-        _runtest -i "There isn't an object in the objects directory!" xmlstarlet sel -t -v "/tree/directory/directory[@name='objects']/file[count(@name)>0]/@name" -n "${TEMPTREE}"
+        #_runtest -i "There isn't an object in the objects directory!" xmlstarlet sel -t -v "/tree/directory/directory[@name='objects']/file[count(@name)>0]/@name" -n "${TEMPTREE}"
         #looks for unexpected files in youtube_up directory
         _runtest "There are unexpected files in the youtube_up directory!" xmlstarlet sel -t -v "/tree/directory/directory[@name='objects']/directory[@name='access']/directory[@name='youtube_up']/file[@name!='${MEDIAID}.mp4' and not(starts-with(@name,'${MEDIAID}_SEG') and substring(@name,string-length(@name)-3)='.mp4')]/@name" -n  "${TEMPTREE}"
         #looks for unexpected directories in youtube_up directory
@@ -184,5 +218,6 @@ while [ "${*}" != "" ] ; do
 
         #finds any hidden files
         _runtest "There are hidden files in this package!" xmlstarlet sel -t -v "//file[starts-with(@name,'.')]/@name" -n  "${TEMPTREE}"
-    fi
+    fi 
+fi
 done
