@@ -5,14 +5,14 @@ table of contents
 -------------------
 
 1. [summary](https://github.com/mediamicroservices/mm#summary)
-	* [License](#license)
+    * [License](#license)
 2. [installing and configuring mediamicroservices](https://github.com/mediamicroservices/mm#installing-and-configuring-mediamicroservices)
     1. [installing homebrew](https://github.com/mediamicroservices/mm#installing-homebrew)
     2. [installing mediamicroservices](https://github.com/mediamicroservices/mm#installing-mediamicroservices)
     3. [configuring mediamicroservices](https://github.com/mediamicroservices/mm#configuring-mediamicroservices)
         1. [variable explanations](https://github.com/mediamicroservices/mm#variable-explanations)
 3. [mediamicroservices functions and instructions for use](https://github.com/mediamicroservices/mm#mediamicroservices-functions-and-instructions-for-use)
-	* [aipupgrade](https://github.com/mediamicroservices/mm#aipupgrade)
+    * [aipupgrade](https://github.com/mediamicroservices/mm#aipupgrade)
     * [barcodeinterpret](https://github.com/mediamicroservices/mm#barcodeinterpret)
     * [blackatends](https://github.com/mediamicroservices/mm#blackatends)
     * [checksum2filemaker](https://github.com/mediamicroservices/mm#checksum2filemaker)
@@ -246,7 +246,7 @@ To view the specific ffmpeg encoding options for each file, view the sourcecode 
 #### ingestfile
 * ingestfile is a combination of multiple microservices for the purposes of creating an Archival Information Package (AIP) from an input of a video file. Included in the AIP are the original file, access copies, and corresponding technical metadata. Running ingestfile also sets a unique identifier for a video file, and bases the directory and metadata naming on this unique identifier. To run ingestfile, you must have the following variables set: OUTDIR\_INGESTFILE, AIP_STORAGE, PODCASTDELIVER, YOUTUBEDELIVER. the default use of ingestfile runs the following processes on a file:
     * queries the user, via terminal prompt or command line, about audio mapping settings, cropping of the video, formula of the video, whether a slate should be created for the file, and whether the original file should be removed after successful ingest. ingestfile also has a queue function, which allows for the user to set up many files at a time.
-	* carries out several tests and will alert the user to discrepancies. You may select a formula that will perform an interlacement test on the file (this should only be done if you have a concern that the file may have interlacement issues). ingestfile will also test for: the frame count (if there is a discrepancy between the reported and actual framecount, it will prompt the operator to quit or proceed); black frames at the beginning and end of the file (requests in and out times if needed); and out-of-phase audio (if there is out-of-phase audio, it will prompt the operator to quit or proceed).
+    * carries out several tests and will alert the user to discrepancies. You may select a formula that will perform an interlacement test on the file (this should only be done if you have a concern that the file may have interlacement issues). ingestfile will also test for: the frame count (if there is a discrepancy between the reported and actual framecount, it will prompt the operator to quit or proceed); black frames at the beginning and end of the file (requests in and out times if needed); and out-of-phase audio (if there is out-of-phase audio, it will prompt the operator to quit or proceed).
     * sets up the structure of the AIP, writes out the input from the user queries to a log file, and uses rsync to move the original file into the objects directory.
     * transcodes a file for broadcast and delivers it to the omneon server.
     * creates access copies using makederiv (mp3, youtube, podcast, waveform, and frames), and delivers youtube and podcast files.
