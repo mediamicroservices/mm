@@ -5,10 +5,13 @@ INPUT="$1"
 INPUT_DIR="$(dirname "$(dirname "$INPUT")")"
 PARENT_FOLDER="$(basename "$INPUT_DIR")"
 OUTPUT_DIR="$(dirname "$(dirname "${INPUT}")")/${PARENT_FOLDER}_MULTIVIEWS"
-OUTPUT_FILENAME="${OUTPUT_DIR}/$(basename "${INPUT_DIR}")_$(basename "${INPUT}" | cut -c 1-15)_MULTIVIEW.mp4"
-TMP_OUTPUT_FILENAME="/tmp/$(basename "${INPUT_DIR}")_$(basename "${INPUT}" | cut -c 1-15)_MULTIVIEW.mp4"
+OUTPUT_FILENAME="${OUTPUT_DIR}/$(basename "${INPUT}" | cut -c 1-15)_$(basename "${INPUT_DIR}")_MULTIVIEW.mp4"
+OLD_OUTPUT_FILENAME="${OUTPUT_DIR}/$(basename "${INPUT_DIR}")_$(basename "${INPUT}" | cut -c 1-15)_MULTIVIEW.mp4"
+TMP_OUTPUT_FILENAME="/tmp/$(basename "${INPUT}" | cut -c 1-15)_$(basename "${INPUT_DIR}")_MULTIVIEW.mp4"
 if [[ -f "${OUTPUT_FILENAME}" ]] ; then
     echo "${OUTPUT_FILENAME} already exists, exiting..."
+elif [[ -f "${OLD_OUTPUT_FILENAME}" ]] ; then
+    echo "${OLD_OUTPUT_FILENAME} already exists, exiting..."
     exit
 fi
 
