@@ -157,10 +157,16 @@ for ((i=0;i<NUM_INPUTS;i++)) ; do
     if [[ "${i}" = "0" ]] ; then
         OFFSET_MS=$(echo "$OFFSET_SECONDS * 1000" | bc -l | cut -d'.' -f1)
         EXTRA_ASPLIT="[${i}a8]adelay=${OFFSET_MS}|${OFFSET_MS}|${OFFSET_MS}|${OFFSET_MS}|${OFFSET_MS}|${OFFSET_MS}|${OFFSET_MS}|${OFFSET_MS},asplit=2[${i}a8][aout];"
+        # TC overlay on raw input before tpad so 00:00:00;00 = first real frame
+        TC_OVERLAY="[0:v]drawtext=fontfile=/System/Library/Fonts/Monaco.dfont:timecode='00\\:00\\:00\\;00':r=${FPS_NUM}/${FPS_DEN}:fontcolor=white:fontsize=96:shadowx=2:shadowy=2:box=1:boxcolor=gray@0.8:x=w/2-tw/2:y=h*0.8[0vtc];"
+        VIDEO_IN="[0vtc]"
     else
         EXTRA_ASPLIT=""
+        TC_OVERLAY=""
+        VIDEO_IN="[$i:v]"
     fi
-    FILTER+="[$i:a:0][$i:a:1][$i:a:2][$i:a:3][$i:a:4][$i:a:5][$i:a:6][$i:a:7]amerge=inputs=8[${i}a8];${EXTRA_ASPLIT}[${i}a8]showvolume=r=30000/1001:t=0:v=0:w=240:h=30:o=h:dm=1:p=0.3:m=p[${i}vum];[$i:v]tpad=start_duration=${OFFSET_SECONDS}:stop_duration=${STOP_PAD}[${i}vv];[${i}vv][${i}vum]overlay=0:0,scale=${CELL_W}:${CELL_H}:force_original_aspect_ratio=decrease,pad=${CELL_W}:${CELL_H}:(ow-iw)/2:(oh-ih)/2,drawtext=text='${BASENAME}':x=10:y=h-26:fontsize=16:fontcolor=white:box=1:boxcolor=black@0.8[v$i];"
+    FILTER+="${TC_OVERLAY}"
+    FILTER+="[$i:a:0][$i:a:1][$i:a:2][$i:a:3][$i:a:4][$i:a:5][$i:a:6][$i:a:7]amerge=inputs=8[${i}a8];${EXTRA_ASPLIT}[${i}a8]showvolume=r=30000/1001:t=0:v=0:w=240:h=30:o=h:dm=1:p=0.3:m=p[${i}vum];${VIDEO_IN}tpad=start_duration=${OFFSET_SECONDS}:stop_duration=${STOP_PAD}[${i}vv];[${i}vv][${i}vum]overlay=0:0,scale=${CELL_W}:${CELL_H}:force_original_aspect_ratio=decrease,pad=${CELL_W}:${CELL_H}:(ow-iw)/2:(oh-ih)/2,drawtext=text='${BASENAME}':x=10:y=h-26:fontsize=16:fontcolor=white:box=1:boxcolor=black@0.8[v$i];"
 
     if (( NUM_INPUTS > 1 )); then
         X=$(( (i % COLS) * CELL_W ))
