@@ -44,11 +44,11 @@ OUTPUTDIR="./metadata/fileMeta"
 while [ "${*}" != "" ] ; do
     PACKAGE_PATH="${1}"
     MMPWD=$(pwd)
-	shift
-	_set_up_filemeta
-	if [[ "${DELETEFILEMETA}" = "Y" && -d "${PACKAGE_PATH}/${OUTPUTDIR}" ]] ; then
-		rm -rv "${PACKAGE_PATH}/${OUTPUTDIR}"
-	fi
+    shift
+    _set_up_filemeta
+    if [[ "${DELETEFILEMETA}" = "Y" && -d "${PACKAGE_PATH}/${OUTPUTDIR}" ]] ; then
+        rm -rv "${PACKAGE_PATH}/${OUTPUTDIR}"
+    fi
     cd "${PACKAGE_PATH}"
     FILELIST=$(_maketemp)
     find "./objects" -type f ! -name ".*" ! -path "*/access/images/*" > "${FILELIST}"

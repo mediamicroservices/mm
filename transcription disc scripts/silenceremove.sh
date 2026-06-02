@@ -125,11 +125,11 @@ get_silence_timecode() {
 
 # creates temporary XML file with cue information
 generate_xml() {
-	local INPOINT=$1
-	local OUTPOINT=$2
-	local SAMPLERATE=$3
+    local INPOINT=$1
+    local OUTPOINT=$2
+    local SAMPLERATE=$3
 
-	cat <<EOF
+    cat <<EOF
 <Cues samplerate="$SAMPLERATE">
     <Cue>
         <ID>1</ID>
@@ -159,13 +159,13 @@ create_cue() {
     local wav_file="$1"
     local xml_file="$(dirname "$wav_file")/$(basename "$wav_file").cue.xml"
 
-   	if [[ -s "$xml_file" ]]; then
-  		 # bwf metaedit command to initiate xml file import
-      	xml_import=$(bwfmetaedit --in-cue-xml "$wav_file")
-      	echo -e "${GREEN}[$(basename "$wav_file")]XML imported successfully.${NC}"
-  	else
-  		echo -e "${RED}[$(basename "$wav_file")]Error: XML file not present or empty. Aborting...${NC}"
-  		exit 1
+    if [[ -s "$xml_file" ]]; then
+        # bwf metaedit command to initiate xml file import
+        xml_import=$(bwfmetaedit --in-cue-xml "$wav_file")
+        echo -e "${GREEN}[$(basename "$wav_file")]XML imported successfully.${NC}"
+    else
+        echo -e "${RED}[$(basename "$wav_file")]Error: XML file not present or empty. Aborting...${NC}"
+        exit 1
     fi
 }
 
