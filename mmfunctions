@@ -797,10 +797,10 @@ _find_input(){
                     _get_timecode "${i}"
                     if [[ "${TIMECODE}" ]] ; then
                         TIMECODEESACPE=$(echo "${TIMECODE}" | sed 's|:|\\:|g')
-                        INFOOVERLAY+="drawtext=fontfile=/System/Library/Fonts/Monaco.dfont:timecode='${TIMECODEESACPE}':r=30000/1001:fontcolor=white@0.4:fontsize=32:shadowx=1:shadowy=1:box=1:boxcolor=DarkGray@0.2:x=32:y=h-32:enable=between(t\,${CHAPTER_TALLY}\,${CHAPTER_TALLY}+${duration4cat}),"
+                        INFOOVERLAY+="drawtext=fontfile=/System/Library/Fonts/Monaco.dfont:timecode='${TIMECODEESACPE}':r=30000/1001:fontcolor=white@0.4:fontsize=32:shadowx=1:shadowy=1:box=1:boxcolor=DarkGray@0.2:x=32:y=8:enable=between(t\,${CHAPTER_TALLY}\,${CHAPTER_TALLY}+${duration4cat}),"
                     fi
                     if [[ "${INPUTFILECOUNT}" -gt 1 ]] ; then
-                        INFOOVERLAY+="drawtext=fontfile=/System/Library/Fonts/Monaco.dfont:text='    ${i#*objects/}':fontcolor=white@0.4:fontsize=32:shadowx=1:shadowy=1:box=1:boxcolor=DarkGray@0.2:x=32+224:y=h-32:enable=between(t\,${CHAPTER_TALLY}\,${CHAPTER_TALLY}+${duration4cat}),"
+                        INFOOVERLAY+="drawtext=fontfile=/System/Library/Fonts/Monaco.dfont:text='    ${i#*objects/}':fontcolor=white@0.4:fontsize=32:shadowx=1:shadowy=1:box=1:boxcolor=DarkGray@0.2:x=32+224:y=8:enable=between(t\,${CHAPTER_TALLY}\,${CHAPTER_TALLY}+${duration4cat}),"
                     fi
 
                     # write to ffconcat
