@@ -802,7 +802,7 @@ while [[ "${@}" != "" ]] ; do
 
     echo
     _summarize_make
-    if [[ "${OUTPUT_TYPE}" == "broadcast" ]] && [[ -z "${MAKEBROADCAST_DELIVERY_EMAIL_TO}" ]] ; then
+    if [[ "${OUTPUT_TYPE}" == "broadcast" ]] && [[ -n "${MAKEBROADCAST_DELIVERY_EMAIL_TO}" ]] ; then
         _deliver_output "${MAKEBROADCAST_DELIVERY_EMAIL_TO}"
     else
         _deliver_output "${EMAILADDRESS_DELIVERY}"
