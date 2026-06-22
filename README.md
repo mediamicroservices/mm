@@ -414,6 +414,3 @@ To view the specific ffmpeg encoding options for each file, view the sourcecode 
 
 #### verifytree
 * verifytree uses a series of xpath statements and the tree.xml document created by maketree to validate the contents of an Archival Information Package. verifytree outputs mismatches and unexpected items found in AIPs into the terminal window. It must be used in conjunction with maketree. Your command will look like: `verifytree [package]`.
-
-#### xdcamingest
-* xdcamingest performs ingest of files read from an XDCam disk. the script will prompt the user via the command line for values, and write output to an operator log, and create access copies of xdcamfiles. this script is no longer in use and development is not supported.
