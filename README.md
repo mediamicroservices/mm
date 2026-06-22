@@ -13,7 +13,6 @@ table of contents
         1. [variable explanations](https://github.com/mediamicroservices/mm#variable-explanations)
 3. [mediamicroservices functions and instructions for use](https://github.com/mediamicroservices/mm#mediamicroservices-functions-and-instructions-for-use)
     * [aipupgrade](https://github.com/mediamicroservices/mm#aipupgrade)
-    * [barcodeinterpret](https://github.com/mediamicroservices/mm#barcodeinterpret)
     * [blackatends](https://github.com/mediamicroservices/mm#blackatends)
     * [checksum2filemaker](https://github.com/mediamicroservices/mm#checksum2filemaker)
     * [checksumpackage](https://github.com/mediamicroservices/mm#checksumpackage)
@@ -25,9 +24,7 @@ table of contents
     * [makederiv](https://github.com/mediamicroservices/mm#makederiv) 
         * (formerly: makebroadcast, makemp3, makepodcast, makeprores, makeresourcespace, makewaveform, makeyoutube)
     * [makebroadcast](https://github.com/mediamicroservices/mm#makebroadcast)
-    * [makedvd](https://github.com/mediamicroservices/mm#makedvd)
     * [makefingerprint](https://github.com/mediamicroservices/mm/#makefingerprint)
-    * [makeflv](https://github.com/mediamicroservices/mm#makeflv)
     * [makeframemd5](https://github.com/mediamicroservices/mm/#makeframemd5)
     * [makeframes](https://github.com/mediamicroservices/mm#makeframes)
     * [makelossless](https://github.com/mediamicroservices/mm#makelossless)
@@ -213,9 +210,6 @@ To view the specific ffmpeg encoding options for each file, view the sourcecode 
 * this script takes an audio package and reports on data associated with the AIP. This is helpful for audio QC. 
 * you can run the script two ways. The first way is to type in the command line the following: `audiotest [package1] [package2] [package3]`. The data will print directly in the command line. If you would like to create a csv instead, run the following command: `audiotest [package1] [package2] [package3] >mycsv.csv`. This csv file will be created in the home folder, but you can direct it to anywhere on your computer.
 
-#### barcodeinterpret
-* barcodeinterpret works with xdcamingest to gather metadata about an XDCam disk by scanning the barcode on the disk case. This script is no longer in use and development is not supported.
-
 #### blackatends
 * blackatends reports on the number of black frames at the beginning and end of a video file. The report is output into the terminal window. Your command will look like this: `blackatends [file1] [file2]`.
 
@@ -316,25 +310,11 @@ To view the specific ffmpeg encoding options for each file, view the sourcecode 
         * Y: attempt to use uploadyoutube on the resulting file.
             * Your command will look like this: `makederiv -T youtube -Y [input]`
 
-#### makedvd
-* makedvd was removed on March 19, 2026. The last version that supported it was mm_v2.23.
-
 #### makefingerprint
 * makefingerprint creates perceptual hashes from input video files and packages. It is also capable of reporting fingerprint information into a centralized database set up through mm.
 
-#### makeflv
-* makeflv creates a flash file from a video file or package input. Your command will look like this: `makeflv [input]`.
-* makeflv has options d, o, n, e, E. To read what those options mean, see [makederiv](https://github.com/mediamicroservices/mm#makederiv).
-    * If you use options o or d, your command will look like this: `makeflv -o` OR `-d [path/to/directory] [input]`.
-    * If you use option n, your command will look like this: `makeflv -n [input]`.
-    * If you use option e, your command will look like this: `makeflv -e -d [path/to/directory] [input]`.
-    * If you use option E, your command will look like this: `makeflv -E [input]`.
-
 #### makeframemd5
 * Creates a frame md5 for video files in target package. Relies on package structure used in mm.
-
-#### makeframes
-* makeframes creates 10 still images from a video file or package input. Your command will look like: `makeframes [input]`. To deliver still images to a specific directory, use this command  `ingestfile -d [path/to/directory] [input]`.
 
 #### makegifsummery
 * makegifsummery will make a gif as a visual representation of a video. Your command will look like this: `makegifsummery [ -d /path/to/diliver/to ] fileorpackage1 [fileorpackage2]`.
@@ -421,15 +401,6 @@ To view the specific ffmpeg encoding options for each file, view the sourcecode 
 
 #### removeDSStore
 * removeDSStore is a script to remove hidden .DS\_Store files from a package input. Your command will look like this: `removeDSStore [input]`.
-
-#### restructureForCompliance
-* restructureForCompliance is a script that takes one or multiple directory or file input and creates an archival information directory structure.
-* If the input is a file, the script creates an upper level directory named by the media ID, named with the same name as the input file, and within that an objects directory and a metadata directory. The metadata directory contains a fileMeta folder and a logs folder. The script also moves the input file into the objects directory.
-* If the input is a directory, the script creates the objects and metadata directory within the input directory, as well as a fileMeta and logs directory within the metadata directory. The script also moves the input file into the objects directory.
-* Your command will look like this: `restructureForCompliance [file or directory input] [file or directory input 2]`.
-
-#### rewrapmf 
-* This application takes an input video file and produces an mxf file. Timecode will be set to 00:00:00;00. Your command should look like this: `rewrapmxf file1 [file2]`.
 
 #### searchfingerprint
 * Generates fingerprints (perceptual hashes) from whole or specified portion of an input video file and compares them against fingerprints stored in the mm database. Outputs any detected matches in 500 frame segments both in the terminal and in an optional preview window. Preview window will attempt to locate the portions of input video for which matches were found.
