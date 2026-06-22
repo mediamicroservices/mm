@@ -194,7 +194,8 @@ while [[ "${@}" != "" ]] ; do
             OUTPUTDIR=$(dirname "${INPUT}")"/$(basename "${RELATIVEPATH}")"
             LOGDIR="$(dirname "${INPUT}")/$(basename "${RELATIVEPATH}")/logs"
         else
-            OUTPUTDIR="${INPUT}/${RELATIVEPATH}"LOGDIR="${INPUT}/metadata/logs"
+            OUTPUTDIR="${INPUT}/${RELATIVEPATH}"
+            LOGDIR="${INPUT}/metadata/logs"
         fi
     else
         OUTPUTDIR="${OUTPUTDIR_FORCED}"
