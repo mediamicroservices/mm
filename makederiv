@@ -220,18 +220,64 @@ while [[ "${@}" != "" ]] ; do
     # processing for chapter-based segmented output
     if [[ "${CHAPTERIZE}" == "Y" ]] ; then
         _get_chapterlist "${SOURCEFILE}"
-        _report -d "${SOURCEFILE} contains a chapter list."
-        echo "${CHAPTER_LIST}"
-        echo "${CHAPTER_LIST}" | while read chapter ; do
-            CHAP_ID="$(echo "${chapter}" | cut -d"|" -f1)"
-            CHAP_START="$(echo "${chapter}" | cut -d"|" -f2)"
-            CHAP_END="$(echo "${chapter}" | cut -d"|" -f3)"
-            CHAP_TITLE="$(echo "${chapter}" | cut -d"|" -f4- | sed 's/ /_/g;s/[^a-zA-Z0-9_]//g;s/__/_/g')"
-            CHAP_SUFFIX="_SEG$(printf "%02d\n" "${CHAP_ID}")_${CHAP_TITLE}"
-            echo "Creating ${OUTPUT_TYPE} chapter output ${CHAP_TITLE} (${CHAP_START}-${CHAP_END})"
-            ("${SCRIPTDIR}/makederiv" -T "${OUTPUT_TYPE}" -I "$CHAP_START" -O "${CHAP_END}" -S "$CHAP_SUFFIX" "${INPUT}")
+        if [[ -z "${CHAPTER_LIST}" ]] ; then
+            _report -wt "makederiv: -C specified but no chapters found in ${SOURCEFILE}"
+            exit 1
+        fi
+        _report -dt "makederiv: chapter-based output requested for $(basename "${SOURCEFILE}")"
+
+        # Build the primary output path directly. do NOT use _set_up_output as it calls 'continue' when the file exists, which exits this context
+        if [[ -n "${OUTPUTNAME_FORCED}" ]] ; then
+            OUTPUT="${OUTPUTDIR}/${OUTPUTNAME_FORCED}"
+        else
+            OUTPUT="${OUTPUTDIR}/${MEDIAID%.*}${SUFFIX}.${EXTENSION}"
+        fi
+
+        if [[ ! -f "${OUTPUT}" ]] ; then
+            _report -wt "makederiv: primary output not found at ${OUTPUT} -- run without -C first"
+            exit 1
+        fi
+        _mkdir2 "${OUTPUTDIR}"
+
+        # Decide once: stream-copy if I-frames are confirmed at chapter points
+        COPY_MODE=""
+        if _check_iframes_at_chapters "${OUTPUT}" ; then
+            COPY_MODE="copy"
+            _report -dt "makederiv: I-frames confirmed at chapter points -- using stream-copy for chapter segments"
+        else
+            COPY_MODE="reencode"
+            _report -wt "makederiv: I-frames not confirmed at chapter points -- re-encoding chapter segments"
+        fi
+
+        echo "${CHAPTER_LIST}" | while IFS='|' read -r CHAP_ID CHAP_START CHAP_END CHAP_TITLE_RAW ; do
+            CHAP_TITLE="$(echo "${CHAP_TITLE_RAW}" | sed 's/ /_/g;s/[^a-zA-Z0-9_]//g;s/__*/_/g')"
+            CHAP_SUFFIX="_SEG$(printf "%02d" "${CHAP_ID}")_${CHAP_TITLE}"
+            CHAP_OUTPUT="${OUTPUTDIR}/${MEDIAID}${CHAP_SUFFIX}.mp4"
+
+            if [[ -f "${CHAP_OUTPUT}" ]] ; then
+                _report -wt "makederiv: ${CHAP_OUTPUT} already exists, skipping."
+                continue
+            fi
+            _report -dt "makederiv: creating chapter segment $(basename "${CHAP_OUTPUT}") (${CHAP_START} – ${CHAP_END})"
+
+            if [[ "${COPY_MODE}" == "copy" ]] ; then
+                "${FFMPEG_BIN}" -y -nostdin -ss "${CHAP_START}" -to "${CHAP_END}" -i "${OUTPUT}" -c copy -map_chapters -1 -avoid_negative_ts make_zero -movflags faststart "${CHAP_OUTPUT}"
+            else
+                "${FFMPEG_BIN}" -y -nostdin -ss "${CHAP_START}" -to "${CHAP_END}" -i "${OUTPUT}" -c:v libx264 -crf 18 -c:a copy -map_chapters -1 -avoid_negative_ts make_zero -movflags faststart "${CHAP_OUTPUT}"
+            fi
+
+            if [[ "${?}" -ne 0 ]] ; then
+                _report -wt "makederiv: chapter segment failed: $(basename "${CHAP_OUTPUT}")"
+            else
+                _report -dt "makederiv: chapter segment done: $(basename "${CHAP_OUTPUT}")"
+                # deliver segment alongside primary output
+                if [[ -n "${DELIVERDIR}" && -d "${DELIVERDIR}" ]] ; then
+                    _report -dt "makederiv: delivering $(basename "${CHAP_OUTPUT}") to ${DELIVERDIR}"
+                    cp -av "${CHAP_OUTPUT}" "${DELIVERDIR}/"
+                fi
+            fi
         done
-        exit
+        exit 0
     fi
 
     if [[ "${OUTPUT_TYPE}" == "podcast" ]] ; then

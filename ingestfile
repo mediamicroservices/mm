@@ -194,6 +194,7 @@ _makeaccesscopies(){
     if [ "${MODE}" != "audio" ] ; then
         "${SCRIPTDIR}/makederiv" -T mp3 "${OUTDIR_INGESTFILE}/${MEDIAID}"
         "${SCRIPTDIR}/makederiv" -T youtube "${MAKEDERIVOPTS[@]}" "${YOUTUBEOPTS[@]}" "${OUTDIR_INGESTFILE}/${MEDIAID}"
+        "${SCRIPTDIR}/makederiv" -T youtube -C "${YOUTUBEOPTS[@]}" "${OUTDIR_INGESTFILE}/${MEDIAID}"
         if [ $(echo "${MEDIAID}" | grep -E "${REGEX4PODCAST}") ] ; then
             _report -dt "${MEDIAID} qualifies for podcast creation."
             "${SCRIPTDIR}/makederiv" -T podcast "${MAKEDERIVOPTS[@]}" "${PODCASTOPTS[@]}" "${OUTDIR_INGESTFILE}/${MEDIAID}"

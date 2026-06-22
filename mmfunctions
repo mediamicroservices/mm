@@ -526,6 +526,35 @@ _get_chapterlist(){
     CHAPTER_LIST="$(ffprobe -v 0 "${1}" -show_entries chapter=id,start_time,end_time:chapter_tags=title -of compact=p=0:nk=1)"
 }
 
+_check_iframes_at_chapters(){
+    local INPUT_FILE="${1}"
+    local CHAPTERS AVG_FRAME_RATE TOLERANCE
+    CHAPTERS="$(ffprobe -v 0 "${INPUT_FILE}" -show_entries chapter=id,start_time -of compact=p=0:nk=1)"
+    if [[ -z "${CHAPTERS}" ]] ; then
+        return 0
+    fi
+    AVG_FRAME_RATE="$(ffprobe -v 0 "${INPUT_FILE}" -select_streams v:0 -show_entries stream=avg_frame_rate -of compact=p=0:nk=1)"
+    TOLERANCE="$(echo "${AVG_FRAME_RATE}" | awk -F'/' '{if (NF==2 && $1+0>0 && $2+0>0) printf "%.6f", $2/$1; else printf "%.6f", 1/25}')"
+
+    while IFS='|' read -r CHAP_ID CHAP_START ; do
+        local INTERVAL_START INTERVAL_END NEAREST_KF MATCHED
+        INTERVAL_START="$(awk -v t="${CHAP_START}" -v tol="${TOLERANCE}" 'BEGIN{v=t-tol; if(v<0)v=0; printf "%.6f", v}')"
+        INTERVAL_END="$(awk -v t="${CHAP_START}" -v tol="${TOLERANCE}" 'BEGIN{printf "%.6f", t+tol}')"
+        NEAREST_KF="$(ffprobe -v 0 -select_streams v:0 -skip_frame nokey -show_entries frame=pts_time -of compact=p=0:nk=1 -read_intervals "${INTERVAL_START}%${INTERVAL_END}" "${INPUT_FILE}" | tail -1 | tr -d '|')"
+        if [[ -z "${NEAREST_KF}" ]] ; then
+            _report -wt "_check_iframes_at_chapters: could not read keyframe near chapter ${CHAP_ID} start (${CHAP_START}s) in $(basename "${INPUT_FILE}") -- falling back to re-encode"
+            return 1
+        fi
+        MATCHED="$(awk -v kf="${NEAREST_KF}" -v target="${CHAP_START}" -v tol="${TOLERANCE}" 'BEGIN{diff=kf-target; if(diff<0)diff=-diff; if(diff<=tol) print 1; else print 0}')"
+        if [[ "${MATCHED}" != "1" ]] ; then
+            _report -wt "_check_iframes_at_chapters: nearest keyframe to chapter ${CHAP_ID} (${CHAP_START}s) is at ${NEAREST_KF}s -- delta outside tolerance (${TOLERANCE}s), falling back to re-encode"
+            return 1
+        fi
+    done < <(echo "${CHAPTERS}")
+    _report -dt "_check_iframes_at_chapters: all chapter start points confirmed to have I-frames in $(basename "${INPUT_FILE}")"
+    return 0
+}
+
 _email_delivery(){
     EMAILTO="${1}"
     if [ "${EMAILTO}" ] ; then
