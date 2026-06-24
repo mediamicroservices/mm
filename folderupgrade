@@ -1,0 +1,82 @@
+#!/bin/bash
+#script to remove the submissionDocumentation folder
+#calling mmfunctions
+SCRIPTDIR=$(dirname $(which "${0}"))
+. "${SCRIPTDIR}/mmfunctions" || { echo "Missing '${SCRIPTDIR}/mmfunctions'. Exiting." ; exit 1 ;};
+while [ "${*}" != "" ] ; do
+	echo "removing the submissionsDocumentation folder"
+	INPUTFILE="${1}"
+	echo "The input is ${INPUTFILE}"
+	SUBDOC="${INPUTFILE}/metadata/submissionDocumentation/"
+	METADOC="${INPUTFILE}/metadata/"
+	OBJECTDOC="${INPUTFILE}/objects/Preservation/"
+	shift
+	"${SCRIPTDIR}/removeDSStore" "${INPUTFILE}"
+	#remove unnecessary directory
+	if [ -d "${SUBDOC}" ] ; then
+		mv -v -n "${SUBDOC}"* "${METADOC}"
+		#mv "${SUBDOC}"*
+		echo "going to delete for realsies"
+		rmdir "${SUBDOC}"
+	fi
+	
+	for entry in "${OBJECTDOC}"* ; do
+		echo "here is file $entry"
+		if [ -d "$entry" ] ; then
+			cd "$entry"
+			mv -v -n * .[^.]* "${INPUTFILE}/objects/"
+	
+			echo "deleting unnecessary folders"
+		
+			rmdir "$entry"
+		
+			#moving images folder to metadata and renaming
+			mkdir -p ${METADOC}depictions/ ; mv -n "${INPUTFILE}/objects/Image"* "${METADOC}depictions/object_photos"
+			
+			#removing extra Image folder
+			if [ -d "${METADOC}depictions/object_photos/Image" ] ; then
+				cd "${METADOC}depictions/object_photos/Image"
+				mv -v -n * .[^.]* ..
+				echo "deleting extra Image folder"
+				rmdir "${METADOC}depictions/object_photos/Image"
+			fi
+				
+		
+			#removing Preservation folder
+			mv -n "${INPUTFILE}/objects/Preservation Master/"* "${INPUTFILE}/objects/"
+			echo "removing empty preservation folder"
+			rmdir "${INPUTFILE}/objects/Preservation Master"
+			rmdir "${OBJECTDOC}"
+		
+			#renaming restoration/access folder
+			if [ -d "${INPUTFILE}/objects/Restoration" ] ; then
+				mv -v "${INPUTFILE}/objects/Restoration" "${INPUTFILE}/objects/restoration"
+			fi
+			
+			#renaming access folder
+			if [ -d "${INPUTFILE}/objects/Access/" ] ; then
+				echo "moving to restoration folder"
+				mkdir -p ${INPUTFILE}/objects/restoration/
+				echo "created restoration folder" 
+				for object in "${INPUTFILE}/objects/Access/" ; do
+					echo "here is $object"
+					cd $object
+					mv -n * .[^.]* "${INPUTFILE}/objects/restoration/"
+				done 
+				rmdir "${INPUTFILE}/objects/Access"
+			fi
+		fi
+	done
+done
+#checksum verification
+cd ${INPUTFILE}/objects &&
+for file in *; do
+	if [[ -f "$file" ]] ; then
+		echo "file is $file.md5"
+		NEWMD5="$(md5 -q "$file")"
+		OLDMD5="$(cat ${METADOC}${file}.md5)"
+	fi
+done
+if [[ "${NEWMD5}" =  "${OLDMD5}" ]] ; then
+	echo "checksums match"
+fi
