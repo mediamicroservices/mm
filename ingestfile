@@ -15,7 +15,7 @@ if [ -f "${TEMP_INGEST}" ] ; then
     AUDIODECISION="$(_readingestlog "AUDIODECISION")"
     CROPDECISION="$(_readingestlog "CROPDECISION")"
     SLATE=$(_readingestlog "SLATE")
-    FORMULA="$(_readingestlog "AUDIODECISION")"
+    FORMULA="$(_readingestlog "FORMULA")"
     CLEANUPDECISION="$(_readingestlog "CLEANUPDECISION")"
     PRIORITY="$(_readingestlog "PRIORITY")"
 fi
@@ -75,7 +75,7 @@ _remove_mediaid_from_queue(){
 _ask_digitization_logs(){
     _report -qn "Drag in any logs from digitization: "
     read -e -a FILES
-    [[ "$FILES[0]" = "q" ]] && exit 0
+    [[ "${FILES[0]}" = "q" ]] && exit 0
     [[ ! -z "${FILES}" ]] && _writeingestlog "digitization_logs: ${FILES}\n"
 }
 
@@ -194,6 +194,7 @@ _makeaccesscopies(){
     if [ "${MODE}" != "audio" ] ; then
         "${SCRIPTDIR}/makederiv" -T mp3 "${OUTDIR_INGESTFILE}/${MEDIAID}"
         "${SCRIPTDIR}/makederiv" -T youtube "${MAKEDERIVOPTS[@]}" "${YOUTUBEOPTS[@]}" "${OUTDIR_INGESTFILE}/${MEDIAID}"
+        "${SCRIPTDIR}/makederiv" -T youtube -C "${YOUTUBEOPTS[@]}" "${OUTDIR_INGESTFILE}/${MEDIAID}"
         if [ $(echo "${MEDIAID}" | grep -E "${REGEX4PODCAST}") ] ; then
             _report -dt "${MEDIAID} qualifies for podcast creation."
             "${SCRIPTDIR}/makederiv" -T podcast "${MAKEDERIVOPTS[@]}" "${PODCASTOPTS[@]}" "${OUTDIR_INGESTFILE}/${MEDIAID}"
@@ -333,7 +334,6 @@ _setup_package(){
     INGESTLOG="${LOGDIR}/capture.log"
 }
 
-trap _cleanup SIGHUP SIGINT SIGTERM
 trap _cleanup_ingest SIGHUP SIGINT SIGTERM
 
 # check environment
@@ -511,7 +511,7 @@ if [ "${TERMINAL_MODE}" != "Y" ] ; then
     echo ""
 fi
 
-if [[ "${cb}" -eq 1 ]] ; then
+if [[ "${cb}" == "1" ]] ; then
     exit 1
 fi
 if [ ! -z $(echo "${MEDIAID}" | grep -v "^[A-Z0-9_-]*$") ] ; then
