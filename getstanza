@@ -1,0 +1,113 @@
+#!/usr/bin/env bash
+# getstanza: poll STT operation, fetch TTML, convert to SRT
+# Usage: getstanza [-w] <file.stanza>
+#   -w   wait/poll for STT to finish first
+
+set -euo pipefail
+
+SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
+source "${SCRIPT_DIR}/mm.conf"
+
+WAIT=false
+if [[ "${1:-}" == "-w" ]]; then
+  WAIT=true
+  shift
+fi
+
+SIDECAR="$1"
+source "${SIDECAR}"   # loads PROJECT_ID, PROGRAM_ID, OPERATION_ID, SOURCE
+
+BASE="${SIDECAR%.*}"
+TTML_OUT="${BASE}.ttml"
+SRT_OUT="${BASE}.srt"
+
+echo "[getstanza] Getting JWT token..."
+TOKEN=$(curl -k -s -X POST "${STANZA_BASE}/api/users/jwt-login" \
+  -H "Content-Type: application/json" \
+  -d "{\"userName\":\"${STANZA_USER}\",\"password\":\"${STANZA_PASSWORD}\"}" \
+  | python3 -c "import sys,json; print(json.load(sys.stdin)['token'])")
+
+if [[ "${WAIT}" == "true" ]]; then
+  echo "[getstanza] Polling operation ${OPERATION_ID}..."
+  while true; do
+    OP=$(curl -k -s "${STANZA_BASE}/api/operations/${OPERATION_ID}" \
+      -H "Authorization: Bearer ${TOKEN}")
+    STATUS=$(echo "${OP}" | python3 -c "
+import sys,json
+d=json.load(sys.stdin)
+print((d[0] if isinstance(d,list) else d).get('status','Unknown'))
+" 2>/dev/null || echo "Unknown")
+    echo "[getstanza]   status: ${STATUS}"
+    if [[ "${STATUS}" == "Finished" ]]; then break; fi
+    if [[ "${STATUS}" == "Failed" ]]; then
+      echo "[getstanza] STT Failed:"
+      echo "${OP}" | python3 -c "
+import sys,json
+d=json.load(sys.stdin)
+print((d[0] if isinstance(d,list) else d).get('error','(no error detail)'))" 2>/dev/null
+      exit 1
+    fi
+    sleep 15
+  done
+fi
+
+echo "[getstanza] Fetching TTML..."
+HTTP_CODE=$(curl -k -s -w "%{http_code}" "${STANZA_BASE}/api/projects/${PROJECT_ID}/${PROGRAM_ID}/ttml" -H "Authorization: Bearer ${TOKEN}" -o "${TTML_OUT}")
+
+if [[ "${HTTP_CODE}" != "200" ]]; then
+  echo "[getstanza] Error: server returned HTTP ${HTTP_CODE}"
+  rm -f "${TTML_OUT}"
+  exit 1
+fi
+echo "[getstanza] Wrote ${TTML_OUT}"
+echo "[getstanza] Converting TTML to SRT..."
+python3 - "${TTML_OUT}" "${SRT_OUT}" << 'PYEOF'
+import re, sys
+from xml.etree import ElementTree as ET
+
+NS = {'tt': 'http://www.w3.org/ns/ttml'}
+
+def tc_to_seconds(tc):
+    tc = tc.strip()
+    if re.match(r'^\d+\.\d+s$', tc): return float(tc[:-1])
+    if re.match(r'^\d+s$', tc):      return float(tc[:-1])
+    parts = re.split('[:.]', tc)
+    if len(parts) == 4:
+        h,m,s,ms = parts; return int(h)*3600+int(m)*60+int(s)+int(ms)/1000
+    if len(parts) == 3:
+        h,m,s = parts; return int(h)*3600+int(m)*60+float(s)
+    return 0.0
+
+def to_srt_tc(s):
+    ms=int((s%1)*1000); s=int(s); h,r=divmod(s,3600); m,sec=divmod(r,60)
+    return f"{h:02d}:{m:02d}:{sec:02d},{ms:03d}"
+
+tree = ET.parse(sys.argv[1])
+root = tree.getroot()
+body = root.find('tt:body', NS)
+cues = []
+if body:
+    for div in body.findall('tt:div', NS):
+        for p in div.findall('tt:p', NS):
+            begin, end = p.get('begin',''), p.get('end','')
+            if not begin or not end: continue
+            parts = [p.text.strip() if p.text else '']
+            for span in p.findall('tt:span', NS):
+                if span.text: parts.append(span.text.strip())
+                if span.tail: parts.append(span.tail.strip())
+            text = ' '.join(x for x in parts if x)
+            if text: cues.append((tc_to_seconds(begin), tc_to_seconds(end), text))
+
+cues.sort(key=lambda x: x[0])
+with open(sys.argv[2], 'w') as f:
+    for i,(b,e,t) in enumerate(cues, 1):
+        f.write(f"{i}\n{to_srt_tc(b)} --> {to_srt_tc(e)}\n{t}\n\n")
+print(f"Wrote {len(cues)} cues to {sys.argv[2]}")
+PYEOF
+
+echo "[getstanza] Done."
+rm -v "${TTML_OUT}"
+echo "  SRT:  ${SRT_OUT}"
+if [[ -s "${SRT_OUT}" ]] ; then
+    rm -v "${SIDECAR}"
+fi
