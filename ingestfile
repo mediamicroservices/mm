@@ -191,9 +191,10 @@ _deliveraccessopts(){
 _makeaccesscopies(){
     _report -dt "STATUS Making access copies."
     "${SCRIPTDIR}/makederiv" -T waveform "${OUTDIR_INGESTFILE}/${MEDIAID}"
+    "${SCRIPTDIR}/makederiv" -T mp3 "${OUTDIR_INGESTFILE}/${MEDIAID}"
     if [ "${MODE}" != "audio" ] ; then
-        "${SCRIPTDIR}/makederiv" -T mp3 "${OUTDIR_INGESTFILE}/${MEDIAID}"
         "${SCRIPTDIR}/makederiv" -T youtube "${MAKEDERIVOPTS[@]}" "${YOUTUBEOPTS[@]}" "${OUTDIR_INGESTFILE}/${MEDIAID}"
+        "${SCRIPTDIR}/upload2stanza" "${OUTDIR_INGESTFILE}/${MEDIAID}/objects/access/youtube_up/${MEDIAID}.mp4"
         "${SCRIPTDIR}/makederiv" -T youtube -C "${YOUTUBEOPTS[@]}" "${OUTDIR_INGESTFILE}/${MEDIAID}"
         if [ $(echo "${MEDIAID}" | grep -E "${REGEX4PODCAST}") ] ; then
             _report -dt "${MEDIAID} qualifies for podcast creation."
@@ -203,7 +204,7 @@ _makeaccesscopies(){
             _writeerrorlog "makederiv" -T podcast "${MEDIAID} did not qualify for podcast creation and was skipped."
         fi
     else
-        "${SCRIPTDIR}/makederiv" -T mp3 "${OUTDIR_INGESTFILE}/${MEDIAID}"
+        "${SCRIPTDIR}/upload2stanza" "${OUTDIR_INGESTFILE}/${MEDIAID}/objects/access/mp3/${MEDIAID}.mp3"
         "${SCRIPTDIR}/makederiv" -T podcast "${MAKEDERIVOPTS[@]}" "${PODCASTOPTS[@]}" -e "$MAKEYOUTUBE_DELIVERY_EMAIL_TO" "${OUTDIR_INGESTFILE}/${MEDIAID}"
         "${SCRIPTDIR}/makederiv" -T showwaves "${MAKEDERIVOPTS[@]}" "${OUTDIR_INGESTFILE}/${MEDIAID}"
         "${SCRIPTDIR}/makederiv" -T audiographs "${OUTDIR_INGESTFILE}/${MEDIAID}"
