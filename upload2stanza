@@ -6,6 +6,7 @@
 
 VERSION="1.1"
 SCRIPT_NAME="$(basename "${0}")"
+SCRIPTDIR=$(dirname $(which "${0}"))
 . "${SCRIPTDIR}/mmfunctions" || { echo "Missing '${SCRIPTDIR}/mmfunctions'. Exiting." ; exit 1 ;};
 
 # the following should be set in mm.conf
