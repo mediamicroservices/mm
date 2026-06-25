@@ -1,0 +1,165 @@
+#!/usr/bin/env bash
+# upload2stanza
+# Delivers a video file to Stanza, creates a project, and triggers local STT.
+# By default returns immediately after STT is queued. Use -w to wait and export SRT.
+# Usage: upload2stanza [options] /path/to/file.mp4
+
+VERSION="1.1"
+SCRIPT_NAME="$(basename "${0}")"
+
+# the following should be set in mm.conf
+#STANZA_BASE
+#STANZA_USER
+#STANZA_PASSWORD
+#STANZA_TRANSCRIPTION_DIR
+#STANZA_SERVER_INGEST_DIR # the path from the server, use double-slashes, like "D:\\Telestream\\Stanza\\Incoming"
+#STANZA_EXPORT_DIR
+STANZA_MODEL="${STANZA_MODEL:-LargeV3}"
+STANZA_LANGUAGE="${STANZA_LANGUAGE:-en}"
+
+_report(){
+    local RED="\033[0;31m"
+    local CYAN="\033[0;36m"
+    local RESET="\033[0m"
+    local SEVERITY="${1}" ; shift
+    local MESSAGE="${*}"
+    local TIMESTAMP
+    TIMESTAMP="$(date +%FT%T)"
+    case "${SEVERITY}" in
+        -w) printf "${RED}[${TIMESTAMP}] WARNING: %s${RESET}\n" "${MESSAGE}" >&2 ;;
+        -d) printf "${CYAN}[${TIMESTAMP}] %s${RESET}\n" "${MESSAGE}" ;;
+         *) printf "[${TIMESTAMP}] %s\n" "${MESSAGE}" ;;
+    esac
+}
+
+_usage(){
+    cat <<EOF
+${SCRIPT_NAME} v${VERSION}
+Deliver a video file to Stanza and start local STT captioning.
+
+Usage:
+  ${SCRIPT_NAME} [options] /path/to/file.mp4
+
+Options:
+  -m MODEL      Whisper model size: Tiny, Base, Small, Medium, LargeV2, LargeV3
+                (default: ${STANZA_MODEL})
+  -l LANGUAGE   Language code (default: ${STANZA_LANGUAGE})
+  -w            Wait for STT to complete and export SRT alongside input file
+  -h            Show this help
+
+Output:
+  A .stanza sidecar file is written alongside the input file containing
+  project/operation IDs for later polling and caption export.
+  With -w: also exports a .srt file alongside the input file.
+
+Environment / mm.conf overrides:
+  STANZA_BASE               Stanza server URL  (default: ${STANZA_BASE})
+  STANZA_USER               Stanza username
+  STANZA_PASSWORD           Stanza password
+  STANZA_TRANSCRIPTION_DIR  Local mount of Stanza Incoming share
+  STANZA_SERVER_INGEST_DIR  Windows-side path to Stanza Incoming share
+  STANZA_MODEL              Whisper model size
+  STANZA_LANGUAGE           Language code
+
+Examples:
+  ${SCRIPT_NAME} /path/to/WW950010.mp4
+  ${SCRIPT_NAME} -w /path/to/WW950010.mp4
+  ${SCRIPT_NAME} -w -m Medium -l en /path/to/WW950010.mp4
+EOF
+}
+
+# Source mm.conf if available
+source ./mm.conf
+
+# Parse options
+while getopts ":m:l:h" OPT ; do
+    case "${OPT}" in
+        m) STANZA_MODEL="${OPTARG}" ;;
+        l) STANZA_LANGUAGE="${OPTARG}" ;;
+        h) _usage ; exit 0 ;;
+        *) _report -w "Unknown option: -${OPTARG}" ; _usage ; exit 1 ;;
+    esac
+done
+shift $((OPTIND - 1))
+
+DELIVERYFILE="${1}"
+
+# Validate inputs
+if [[ -z "${DELIVERYFILE}" ]] ; then
+    _usage
+    exit 1
+fi
+if [[ ! -f "${DELIVERYFILE}" ]] ; then
+    _report -w "File not found: ${DELIVERYFILE}"
+    exit 1
+fi
+if [[ -z "${STANZA_BASE}" || -z "${STANZA_USER}" || -z "${STANZA_PASSWORD}" || \
+      -z "${STANZA_TRANSCRIPTION_DIR}" || -z "${STANZA_SERVER_INGEST_DIR}" ]] ; then
+    _report -w "Required STANZA_* variables not set. Set them in mm.conf or environment."
+    exit 1
+fi
+
+BASENAME="$(basename "${DELIVERYFILE}")"
+PROJECT_NAME="${BASENAME%.*}"
+SIDECAR="${STANZA_EXPORT_DIR}/${BASENAME%.*}.stanza"
+SRT_OUTPUT="${DELIVERYFILE%.*}.srt"
+
+# 1. Copy file to Stanza ingest share
+_report -d "Copying ${BASENAME} to Stanza ingest share"
+cp "${DELIVERYFILE}" "${STANZA_TRANSCRIPTION_DIR}/${BASENAME}"
+if [[ ! -f "${STANZA_TRANSCRIPTION_DIR}/${BASENAME}" ]] ; then
+    _report -w "Failed to copy file to ${STANZA_TRANSCRIPTION_DIR}"
+    exit 1
+fi
+_report -d "File copied to ${STANZA_TRANSCRIPTION_DIR}/${BASENAME}"
+
+# 2. Get JWT token
+_report -d "Authenticating with Stanza at ${STANZA_BASE}"
+TOKEN="$(curl -k -s -X POST "${STANZA_BASE}/api/users/jwt-login" \
+    -H "Content-Type: application/json" \
+    -d "{\"userName\":\"${STANZA_USER}\",\"password\":\"${STANZA_PASSWORD}\"}" \
+    | python3 -c "import sys,json; print(json.load(sys.stdin)['token'])" 2>/dev/null)"
+if [[ -z "${TOKEN}" ]] ; then
+    _report -w "Failed to get JWT token from ${STANZA_BASE}"
+    exit 1
+fi
+_report -d "Authenticated OK"
+
+# 3. Create project
+_report -d "Creating Stanza project: ${PROJECT_NAME}"
+STANZA_WIN_PATH="${STANZA_SERVER_INGEST_DIR//\\/\\\\}"
+JSON_PAYLOAD="{\"projectName\":\"${PROJECT_NAME}\",\"videoFile\":\"${STANZA_WIN_PATH}\\\\${BASENAME}\",\"language\":\"en-US\",\"videoFileOpen\":false}"
+PROJECT_RESPONSE="$(curl -k -s -X POST "${STANZA_BASE}/api/projects/add-project" \
+    -H "Authorization: Bearer ${TOKEN}" \
+    -H "Content-Type: application/json" \
+    -d "${JSON_PAYLOAD}")"
+PROJECT_ID="$(echo "${PROJECT_RESPONSE}" | python3 -c \
+    "import sys,json; print(json.load(sys.stdin)['id'])" 2>/dev/null)"
+PROGRAM_ID="$(echo "${PROJECT_RESPONSE}" | python3 -c \
+    "import sys,json; print(json.load(sys.stdin)['programs'][0]['id'])" 2>/dev/null)"
+if [[ -z "${PROJECT_ID}" || -z "${PROGRAM_ID}" ]] ; then
+    _report -w "Project creation failed -- ${PROJECT_RESPONSE}"
+    exit 1
+fi
+_report -d "Project created (id=${PROJECT_ID})"
+
+# 4. Trigger local STT
+_report -d "Triggering local STT (model=${STANZA_MODEL}, language=${STANZA_LANGUAGE})"
+STT_RESPONSE="$(curl -k -s -X POST \
+    "${STANZA_BASE}/api/projects/${PROJECT_ID}/${PROGRAM_ID}/local-speech-to-text?model=${STANZA_MODEL}&language=${STANZA_LANGUAGE}" \
+    -H "Authorization: Bearer ${TOKEN}")"
+OPERATION_ID="$(echo "${STT_RESPONSE}" | python3 -c \
+    "import sys,json; print(json.load(sys.stdin)['entity']['id'])" 2>/dev/null)"
+if [[ -z "${OPERATION_ID}" ]] ; then
+    _report -w "Failed to trigger STT -- ${STT_RESPONSE}"
+    exit 1
+fi
+_report -d "STT queued (operation_id=${OPERATION_ID})"
+
+# 5. Write sidecar
+printf "PROJECT_ID=%s\nPROGRAM_ID=%s\nOPERATION_ID=%s\nSOURCE_FILE=%s\nSUBMITTED=%s\nSTANZA_BASE=%s\nSTANZA_MODEL=%s\nSTANZA_LANGUAGE=%s\n" \
+    "${PROJECT_ID}" "${PROGRAM_ID}" "${OPERATION_ID}" "${DELIVERYFILE}" \
+    "$(date -u +%Y-%m-%dT%H:%M:%SZ)" "${STANZA_BASE}" "${STANZA_MODEL}" "${STANZA_LANGUAGE}" \
+    > "${SIDECAR}"
+_report -d "Sidecar written to ${SIDECAR}"
+
