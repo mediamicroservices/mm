@@ -6,6 +6,7 @@
 
 VERSION="1.1"
 SCRIPT_NAME="$(basename "${0}")"
+. "${SCRIPTDIR}/mmfunctions" || { echo "Missing '${SCRIPTDIR}/mmfunctions'. Exiting." ; exit 1 ;};
 
 # the following should be set in mm.conf
 #STANZA_BASE
@@ -67,9 +68,6 @@ Examples:
   ${SCRIPT_NAME} -w -m Medium -l en /path/to/WW950010.mp4
 EOF
 }
-
-# Source mm.conf if available
-source ./mm.conf
 
 # Parse options
 while getopts ":m:l:h" OPT ; do
