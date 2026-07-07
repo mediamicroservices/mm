@@ -3,7 +3,7 @@
 VERSION="1.0"
 SCRIPTDIR="$(dirname "$(which "${0}")")"
 . "${SCRIPTDIR}/mmfunctions" || { echo "Missing '${SCRIPTDIR}/mmfunctions'. Exiting." ; exit 1 ;};
-DEPENDENCIES=(ffmpeg pdfjoin tesseract)
+DEPENDENCIES=(ffmpeg pdfunite tesseract)
 _initialize_make
 
 _usage(){
@@ -121,7 +121,7 @@ while [ "${*}" != "" ] ; do
     #    MIDDLE_OPTIONS+=(--pdfauthor "${SCRIPT_AUTHOR}")
     #fi
 
-    pdfjoin "${MIDDLE_OPTIONS[@]}" --pdfkeywords "${MEDIAID}" --fitpaper 'false' --rotateoversize 'false' --paper letter $(find "${TMP_JPG_DIR}" -name "*.pdf" | sort | xargs) --outfile "${OUTPUT}"
+    pdfunite $(find "${TMP_JPG_DIR}" -name "*.pdf" | sort) "${OUTPUT}"
 
     find "${TMP_JPG_DIR}" -name "*.txt" | sort | while read page ; do
         PAGENAME="$(basename "${page%.*}")"
