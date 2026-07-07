@@ -132,9 +132,9 @@ while [ "${*}" != "" ] ; do
         cat "${page}" >> "${OUTPUTDIRTEXT}/${MEDIAID}.txt"
     done
 
-    #if [ -d "${TMP_MAKEPDF_DIR}" ] ; then
-    #    _run rm -rvf "${TMP_MAKEPDF_DIR}"
-    #fi
+    if [ -d "${TMP_MAKEPDF_DIR}" ] ; then
+        _run rm -rvf "${TMP_MAKEPDF_DIR}"
+    fi
     _summarize_make
     _deliver_output "${MAKEYOUTUBE_DELIVERY_EMAIL_TO}"
     _log -e
