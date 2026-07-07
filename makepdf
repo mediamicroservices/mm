@@ -94,7 +94,7 @@ while [ "${*}" != "" ] ; do
         TIF_BASE_NAME="$(basename "${TIF%.*}")"
         JPG_NAME="${TMP_JPG_DIR}/${TIF_BASE_NAME}.jpg"
         if [[ ! -s "${JPG_NAME}" ]] ; then
-            "${FFMPEG_BIN}" -hide_banner -nostdin -i "${TIF}" -pix_fmt yuvj420p "${JPG_NAME}"
+            "${FFMPEG_BIN}" -hide_banner -nostdin -i "${TIF}" -pix_fmt yuv420p "${JPG_NAME}"
         fi
 		
 		if [[ -f "$INGESTLOG" ]] ; then
