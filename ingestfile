@@ -346,6 +346,8 @@ fi
 [ -z "${AIP_STORAGE}" ] && { echo "The AIP Storage directory must be set. Use [ -a /path/to/AIP/storage/directory ] or run mmconfig to set AIP_STORAGE." ; exit 1 ;};
 [ -z "${PODCASTDELIVER}" ] && { echo "A directory for podcast delivery must be set. Use [ -w /path/to/deliver/podcastfiles] or run mmconfig to set PODCASTDELIVER." ; exit 1 ;};
 [ -z "${YOUTUBEDELIVER}" ] && { echo "A directory for youtube delivery must be set. Use [ -y /path/to/deliver/youtubefiles] or run mmconfig to set YOUTUBEDELIVER." ; exit 1 ;};
+[ ! -w "${YOUTUBEDELIVER}" ] && { echo "Warning: ${YOUTUBEDELIVER} is not writable. Please check connection. Please check connection or press enter to continue." ; read ;};
+[ -n "${STANZA_TRANSCRIPTION_DIR}" ] && [ ! -w "${STANZA_TRANSCRIPTION_DIR}" ] && { echo "Warning: ${STANZA_TRANSCRIPTION_DIR} is not writable. Please check connection or press enter to continue." ; read ;};
 
 # pashua interface settings
 CONF="
