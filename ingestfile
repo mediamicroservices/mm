@@ -195,7 +195,13 @@ _makeaccesscopies(){
     if [ "${MODE}" != "audio" ] ; then
         "${SCRIPTDIR}/makederiv" -T youtube "${MAKEDERIVOPTS[@]}" "${YOUTUBEOPTS[@]}" "${OUTDIR_INGESTFILE}/${MEDIAID}"
         "${SCRIPTDIR}/upload2stanza" "${OUTDIR_INGESTFILE}/${MEDIAID}/objects/access/youtube_up/${MEDIAID}.mp4"
-        "${SCRIPTDIR}/makederiv" -T youtube -C "${YOUTUBEOPTS[@]}" "${OUTDIR_INGESTFILE}/${MEDIAID}"
+        
+        if [ "${MODE}" = "preservation" ] ; then
+            "${SCRIPTDIR}/makederiv" -T youtube "${YOUTUBEOPTS[@]}" "${OUTDIR_INGESTFILE}/${MEDIAID}"
+        else
+            "${SCRIPTDIR}/makederiv" -T youtube -C "${YOUTUBEOPTS[@]}" "${OUTDIR_INGESTFILE}/${MEDIAID}"
+        fi
+
         if [ $(echo "${MEDIAID}" | grep -E "${REGEX4PODCAST}") ] ; then
             _report -dt "${MEDIAID} qualifies for podcast creation."
             "${SCRIPTDIR}/makederiv" -T podcast "${MAKEDERIVOPTS[@]}" "${PODCASTOPTS[@]}" "${OUTDIR_INGESTFILE}/${MEDIAID}"
