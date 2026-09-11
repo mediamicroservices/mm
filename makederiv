@@ -436,12 +436,11 @@ while [[ "${@}" != "" ]] ; do
             MIDDLEOPTIONS+=(-intra_vlc 1)
             MIDDLEOPTIONS+=(-non_linear_quant 1)
             MIDDLEOPTIONS+=(-qmin 5)
-            MIDDLEOPTIONS+=(-dc 10)
+            MIDDLEOPTIONS+=(-intra_dc_precision 2)
             MIDDLEOPTIONS+=(-lmin QP2LAMBDA)
             MIDDLEOPTIONS+=(-ps 1)
             MIDDLEOPTIONS+=(-flags +ildct+ilme)
             MIDDLEOPTIONS+=(-pix_fmt yuv422p)
-            MIDDLEOPTIONS+=(-top 1)
             MIDDLEOPTIONS+=(-mpv_flags strict_gop)
             MIDDLEOPTIONS+=(-drop_frame_timecode 1)
             #xdcam options
