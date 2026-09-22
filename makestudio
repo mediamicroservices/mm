@@ -219,5 +219,6 @@ MIDDLEOPTIONS+=(-ac 2)
 MIDDLEOPTIONS+=(-b:a 128k)
 MIDDLEOPTIONS+=(-ar 48000)
 # run ffmpeg
-"${FFMPEG_BIN}" -y -guess_layout_max 0 -y -nostdin "${FFMPEG_INPUTS[@]}" -filter_complex "${FILTER}" -metadata timecode="${MASTER_TC}" -map "[vout]" -map "[aout]" "${MIDDLEOPTIONS[@]}" -metadata comment="$METADATA_SOURCES_ESCAPED" "${TMP_OUTPUT_FILENAME}"
+_run_critical  "${FFMPEG_BIN}" -y -guess_layout_max 0 -y -nostdin "${FFMPEG_INPUTS[@]}" -filter_complex "${FILTER}" -metadata timecode="${MASTER_TC}" -map "[vout]" -map "[aout]" "${MIDDLEOPTIONS[@]}" -metadata comment="$METADATA_SOURCES_ESCAPED" "${TMP_OUTPUT_FILENAME}"
+
 rsync -rtvP --remove-source-files "${TMP_OUTPUT_FILENAME}" "${OUTPUT_FILENAME}"
