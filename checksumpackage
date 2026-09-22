@@ -40,7 +40,6 @@ _cleanup(){
     exit 1
 }
 
-user_input="${*}"
 # command-line options
 CHECK=""
 VERIFY=""
