@@ -40,6 +40,8 @@ _cleanup(){
     exit 1
 }
 
+_nfc(){ iconv -f UTF-8-MAC -t UTF-8 ; }
+
 # command-line options
 CHECK=""
 VERIFY=""
@@ -64,18 +66,18 @@ _check_dfxml(){
     # make temp file that lists filenames and filesizes from dfxml.xml
     DFXML_FILELIST="$(_maketemp)"
     if [ ! -z "$(xmlstarlet sel -T -t -m "/_:dfxml/_:fileobject" -v "_:filename" -o " " -v "_:filesize" -n "${PACKAGE}/${OUTDIR}/${DFXMLNAME}" 2>/dev/null)" ] ; then
-        xmlstarlet sel -T -t -m "/_:dfxml/_:fileobject" -v "_:filename" -o " " -v "_:filesize" -n "${PACKAGE}/${OUTDIR}/${DFXMLNAME}" | sort > "${DFXML_FILELIST}"
+        xmlstarlet sel -T -t -m "/_:dfxml/_:fileobject" -v "_:filename" -o " " -v "_:filesize" -n "${PACKAGE}/${OUTDIR}/${DFXMLNAME}" | _nfc | LC_ALL=C sort > "${DFXML_FILELIST}"
     else
-        xmlstarlet sel -T -t -m "/dfxml/fileobject" -v "filename" -o " " -v "filesize" -n "${PACKAGE}/${OUTDIR}/${DFXMLNAME}" | sort > "${DFXML_FILELIST}"
+        xmlstarlet sel -T -t -m "/dfxml/fileobject" -v "filename" -o " " -v "filesize" -n "${PACKAGE}/${OUTDIR}/${DFXMLNAME}" | _nfc | LC_ALL=C sort > "${DFXML_FILELIST}"
     fi
     PWD=$(pwd)
     # make temp file that lists filenames and filesizes from current objects directory
     NEW_FILELIST="$(_maketemp)"
     cd "${PACKAGE}/${INDIR}"
-    find . -type f ! -name '.DS_Store' | while read i ; do
+    find . -type f ! -name '.DS_Store' | while IFS= read -r i ; do
         echo -n "$i "
         stat -f%z "$i"
-    done | sort > "${NEW_FILELIST}"
+    done | _nfc | LC_ALL=C sort > "${NEW_FILELIST}"
     cd "${PWD}"
     # compare them
     if [[ $(diff "${DFXML_FILELIST}" "${NEW_FILELIST}") ]] ; then
@@ -189,9 +191,9 @@ while [ "${*}" != "" ] ; do
         if [ "${VERIFY}" = "Y" ] ; then
             #verify checksums by creating tmp checksum file and comparing with previously created checksums
             CHECKSUMCMP1=$(_maketemp)
-            sort -k2 "${PACKAGE}/${OUTDIR}/${CHECKSUMNAME}" > "${CHECKSUMCMP1}"
+            _nfc | LC_ALL=C sort -k2 "${PACKAGE}/${OUTDIR}/${CHECKSUMNAME}" > "${CHECKSUMCMP1}"
             CHECKSUMCMP2=$(_maketemp)
-            sort -k2 "${LASTMD5}" > "${CHECKSUMCMP2}"
+            _nfc | LC_ALL=C sort -k2 "${LASTMD5}" > "${CHECKSUMCMP2}"
             if [[ $(diff "${CHECKSUMCMP1}" "${CHECKSUMCMP2}") ]] ; then
                 #setup check for file paths
                 original_file_manifest=$(cat "${CHECKSUMCMP2}" | cut -c 37-)
