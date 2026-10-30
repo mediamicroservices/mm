@@ -1107,7 +1107,7 @@ _get_timecode(){
 }
 
 _get_framerate(){
-    FRAMERATE="$(ffprobe -v 0 -i "${1}" -select_streams v:0 -show_entries stream=r_frame_rate -of default=nw=1:nk=1)"
+    FRAMERATE="$(ffprobe -v 0 -i "${1}" -select_streams v:0 -show_entries stream=r_frame_rate -of default=nw=1:nk=1 | head -n 1)"
 }
 
 _get_timecode_overlay(){
