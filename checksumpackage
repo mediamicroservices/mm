@@ -40,7 +40,13 @@ _cleanup(){
     exit 1
 }
 
-_nfc(){ iconv -f UTF-8-MAC -t UTF-8 ; }
+_nfc(){
+    if [ -t 0 ] ; then
+        _report -w "_nfc called with a terminal on stdin (missing redirect?) - refusing to block."
+        return 1
+    fi
+    iconv -f UTF-8-MAC -t UTF-8
+}
 
 # command-line options
 CHECK=""
@@ -191,9 +197,9 @@ while [ "${*}" != "" ] ; do
         if [ "${VERIFY}" = "Y" ] ; then
             #verify checksums by creating tmp checksum file and comparing with previously created checksums
             CHECKSUMCMP1=$(_maketemp)
-            _nfc | LC_ALL=C sort -k2 "${PACKAGE}/${OUTDIR}/${CHECKSUMNAME}" > "${CHECKSUMCMP1}"
+            _nfc < "${PACKAGE}/${OUTDIR}/${CHECKSUMNAME}" | LC_ALL=C sort -k2 > "${CHECKSUMCMP1}"
             CHECKSUMCMP2=$(_maketemp)
-            _nfc | LC_ALL=C sort -k2 "${LASTMD5}" > "${CHECKSUMCMP2}"
+            _nfc < "${LASTMD5}" | LC_ALL=C sort -k2 > "${CHECKSUMCMP2}"
             if [[ $(diff "${CHECKSUMCMP1}" "${CHECKSUMCMP2}") ]] ; then
                 #setup check for file paths
                 original_file_manifest=$(cat "${CHECKSUMCMP2}" | cut -c 37-)
