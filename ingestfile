@@ -41,7 +41,6 @@ _usage(){
     exit
 }
 
-user_input="${*}"
 OPTIND=1
 while getopts ":pienah" OPT ; do
     case "${OPT}" in

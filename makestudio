@@ -10,6 +10,7 @@ OLD_OUTPUT_FILENAME="${OUTPUT_DIR}/$(basename "${INPUT_DIR}")_$(basename "${INPU
 TMP_OUTPUT_FILENAME="/tmp/$(basename "${INPUT}" | cut -c 1-15)_$(basename "${INPUT_DIR}")_MULTIVIEW.mp4"
 if [[ -f "${OUTPUT_FILENAME}" ]] ; then
     echo "${OUTPUT_FILENAME} already exists, exiting..."
+    exit 1
 elif [[ -f "${OLD_OUTPUT_FILENAME}" ]] ; then
     echo "${OLD_OUTPUT_FILENAME} already exists, exiting..."
     exit
@@ -123,8 +124,10 @@ ESC_TC="${ESC_TC//;/\\;}"
 # determine grid size
 COLS=$(awk -v n="$NUM_INPUTS" 'BEGIN{print int(sqrt(n)+0.999)}')
 ROWS=$(( (NUM_INPUTS + COLS - 1) / COLS ))
-CELL_W=$((1920 / COLS))
-CELL_H=$((1080 / ROWS))
+OUT_W=1280
+OUT_H=720
+CELL_W=$((OUT_W / COLS))
+CELL_H=$((OUT_H / ROWS))
 
 FILTER=""
 LAYOUT=""
@@ -166,7 +169,12 @@ for ((i=0;i<NUM_INPUTS;i++)) ; do
         VIDEO_IN="[$i:v]"
     fi
     FILTER+="${TC_OVERLAY}"
-    FILTER+="[$i:a:0][$i:a:1][$i:a:2][$i:a:3][$i:a:4][$i:a:5][$i:a:6][$i:a:7]amerge=inputs=8[${i}a8];${EXTRA_ASPLIT}[${i}a8]showvolume=r=30000/1001:t=0:v=0:w=240:h=30:o=h:dm=1:p=0.3:m=p[${i}vum];${VIDEO_IN}tpad=start_duration=${OFFSET_SECONDS}:stop_duration=${STOP_PAD}[${i}vv];[${i}vv][${i}vum]overlay=0:0,scale=${CELL_W}:${CELL_H}:force_original_aspect_ratio=decrease,pad=${CELL_W}:${CELL_H}:(ow-iw)/2:(oh-ih)/2,drawtext=text='${BASENAME}':x=10:y=h-26:fontsize=16:fontcolor=white:box=1:boxcolor=black@0.8[v$i];"
+    AUDIO_IN=""
+    for j in 0 1 2 3 4 5 6 7 ; do
+        FILTER+="[$i:a:$j]aresample=async=1:first_pts=0,aformat=sample_fmts=fltp:channel_layouts=mono[a${i}_${j}];"
+        AUDIO_IN+="[a${i}_${j}]"
+    done
+    FILTER+="${AUDIO_IN}amerge=inputs=8[${i}a8];${EXTRA_ASPLIT}[${i}a8]showvolume=r=30000/2002:t=0:v=0:w=160:h=20:o=h:dm=1:p=0.3:m=p[${i}vum];${VIDEO_IN}tpad=start_duration=${OFFSET_SECONDS}:stop_duration=${STOP_PAD}[${i}vv];[${i}vv][${i}vum]overlay=0:0,scale=${CELL_W}:${CELL_H}:force_original_aspect_ratio=decrease,pad=${CELL_W}:${CELL_H}:(ow-iw)/2:(oh-ih)/2,drawtext=text='${BASENAME}':x=10:y=h-18:fontsize=11:fontcolor=white:box=1:boxcolor=black@0.8[v$i];"
 
     if (( NUM_INPUTS > 1 )); then
         X=$(( (i % COLS) * CELL_W ))
@@ -188,8 +196,8 @@ else
 fi
 
 # overlays: timecode + parent folder header
-FILTER+="drawtext=timecode='${ESC_TC}':r=${FPS_DEC}:x=20:y=20:fontsize=36:fontcolor=yellow:box=1:boxcolor=black@0.6,"
-FILTER+="drawtext=text='${PARENT_FOLDER}':x=360:y=20:fontsize=36:fontcolor=yellow:box=1:boxcolor=black@0.6[vout]"
+FILTER+="drawtext=timecode='${ESC_TC}':r=${FPS_DEC}:x=13:y=13:fontsize=24:fontcolor=yellow:box=1:boxcolor=black@0.6,"
+FILTER+="drawtext=text='${PARENT_FOLDER}':x=240:y=13:fontsize=24:fontcolor=yellow:box=1:boxcolor=black@0.6[vout]"
 
 if [[ ! -d "${OUTPUT_DIR}" ]] ; then
     mkdir -p "${OUTPUT_DIR}"
@@ -213,11 +221,11 @@ MIDDLEOPTIONS+=(-preset veryfast)
 MIDDLEOPTIONS+=(-crf 25)
 #fi
 MIDDLEOPTIONS+=(-f mp4)
-_add_video_filter "scale=-1:min(ih\,720)"
 MIDDLEOPTIONS+=(-c:a aac)
 MIDDLEOPTIONS+=(-ac 2)
 MIDDLEOPTIONS+=(-b:a 128k)
 MIDDLEOPTIONS+=(-ar 48000)
+
 # run ffmpeg
-"${FFMPEG_BIN}" -y -guess_layout_max 0 -y -nostdin "${FFMPEG_INPUTS[@]}" -filter_complex "${FILTER}" -metadata timecode="${MASTER_TC}" -map "[vout]" -map "[aout]" "${MIDDLEOPTIONS[@]}" -metadata comment="$METADATA_SOURCES_ESCAPED" "${TMP_OUTPUT_FILENAME}"
+_run_critical "${FFMPEG_BIN}" -y -guess_layout_max 0 -y -nostdin "${FFMPEG_INPUTS[@]}" -filter_complex "${FILTER}" -metadata timecode="${MASTER_TC}" -map "[vout]" -map "[aout]" "${MIDDLEOPTIONS[@]}" -metadata comment="$METADATA_SOURCES_ESCAPED" "${TMP_OUTPUT_FILENAME}"
 rsync -rtvP --remove-source-files "${TMP_OUTPUT_FILENAME}" "${OUTPUT_FILENAME}"
