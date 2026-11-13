@@ -175,10 +175,124 @@ else
     _usage
 fi
 _check_dependencies "${DEPENDENCIES[@]}"
+_concat_fit(){
+    # The concat demuxer feeds ONE decoder using segment 1's SPS/PPS, so a
+    # segment with a different frame size decodes into garbage before any
+    # filter runs. When geometry differs, decode each segment separately in a
+    # lavfi graph, fit each to one landscape canvas (pillarbox), concat there:
+    # one decode, one encode, no intermediates.
+    # Sets CONCAT_FIT_IO (array) + CONCAT_FIT_IN (string); both empty if unused.
+    CONCAT_FIT_IO=() ; CONCAT_FIT_IN=()
+    if [[ ! -f "${INPUTFILES}" ]] ; then
+        _report -wt "concat_fit: INPUTFILES='${INPUTFILES}' is not a readable file - demuxer untouched"
+        return 0
+    fi
+    if [[ "${OUTPUT_TYPE}" != "window" ]] ; then
+        _report -wt "concat_fit: OUTPUT_TYPE='${OUTPUT_TYPE}' is not window - fitting skipped"
+        return 0
+    fi
+
+    local list first p d wh="" fps="" n=0 x rest
+    local cw=1280 ch=720
+    local v="" a="" vin="" ain="" graph
+    local -a segs=() io=() fpr=() _rio=()
+    local -i k=0
+
+    # the segment list is the first -i argument ffmpeg is given
+    first="${FFMPEGINPUT#*-i }"
+    list="${first%% *}"
+    list="${list#\'}" ; list="${list%\'}"
+    list="${list#\"}" ; list="${list%\"}"
+
+    if [[ -f "${list}" ]] ; then
+        while IFS= read -r p || [[ -n "${p}" ]] ; do
+            p="${p%$'\r'}"
+            case "${p}" in
+                ""|\#*) continue ;;
+                file\ *) p="${p#file }" ;;
+                duration\ *|inpoint\ *|outpoint\ *|stream\ *|exact_seek\ *) continue ;;
+            esac
+            p="${p#\'}" ; p="${p%\'}" ; p="${p#\"}" ; p="${p%\"}"
+            [[ "${p}" == /* ]] || p="$(cd "$(dirname "${list}")" && pwd)/${p}"
+            if [[ -f "${p}" ]] ; then segs+=("${p}") ; fi
+        done < "${list}"
+    fi
+    if (( ${#segs[@]} < 2 )) && [[ -n "${INPUTFILES}" && -f "${INPUTFILES}" ]] ; then
+        while IFS= read -r p || [[ -n "${p}" ]] ; do
+            p="${p%$'\r'}"
+            if [[ -z "${p}" || "${p}" == \#* ]] ; then continue ; fi
+            [[ "${p}" == /* ]] || p="$(cd "$(dirname "${INPUTFILES}")" && pwd)/${p}"
+            if [[ -f "${p}" ]] ; then segs+=("${p}") ; fi
+        done < "${INPUTFILES}"
+    fi
+    if (( ${#segs[@]} < 2 )) ; then
+        _report -wt "concat_fit: no segment list (list='${list}'); leaving the concat demuxer in place"
+        return 0
+    fi
+
+    for p in "${segs[@]}" ; do
+        d=$(ffprobe -v error -select_streams v:0 -show_entries stream=width,height,r_frame_rate \
+              -of csv=p=0 "${p}" 2>/dev/null | head -1)
+        if [[ -z "${d}" ]] ; then
+            _report -wt "concat_fit: cannot probe ${p}; leaving the concat demuxer in place"
+            return 0
+        fi
+        wh+="$(printf '%s' "${d}" | cut -d, -f1,2) "
+        fpr+=("$(printf '%s' "${d}" | cut -d, -f3)")
+    done
+    if [[ "$(printf '%s\n' ${wh} | sort -u | wc -l | tr -d ' ')" -le 1 ]] ; then
+        _report -dt "concat_fit: all segments are ${wh% }; leaving the concat demuxer in place"
+        return 0
+    fi
+
+    _report -dt "concat_fit: building audio concat for ${#segs[@]} segments"
+
+    # one frame rate for the whole graph: the highest of the inputs
+    fps=$(printf '%s\n' "${fpr[@]}" | awk -F/ '{ v=(NF>1 && $2+0>0) ? $1/$2 : $1+0 ; if (v>m) { m=v ; s=$0 } } END { print (s=="" ? "30000/1001" : s) }')
+
+    for p in "${segs[@]}" ; do
+        v+="movie='${p}',fps=${fps},"
+        v+="scale=${cw}:${ch}:force_original_aspect_ratio=decrease:force_divisible_by=2,"
+        v+="pad=${cw}:${ch}:(ow-iw)/2:(oh-ih)/2,setsar=1,format=yuv420p,setpts=PTS-STARTPTS[v${n}];"
+        a+="amovie='${p}',aresample=48000,aformat=sample_fmts=fltp:channel_layouts=stereo,asetpts=PTS-STARTPTS[a${n}];"
+        vin+="[v${n}]" ; ain+="[a${n}]"
+        n=$(( n + 1 ))
+    done
+    graph="${v}${vin}concat=n=${n}:v=1:a=0[out0];${a}${ain}concat=n=${n}:v=0:a=1[out1]"
+
+    # drop the demuxer options, add -f lavfi; the ffmetadata input that carries
+    # the chapters stays the SECOND input so -map_metadata 1 keeps resolving
+	while (( k < ${#INPUTOPTIONS[@]} )) ; do
+        case "${INPUTOPTIONS[k]}" in
+            -f)    if [[ "${INPUTOPTIONS[k+1]:-}" == "concat" ]] ; then k=$(( k + 2 )) ; continue ; fi ;;
+            -safe|-apply_cropping|-vcodec) k=$(( k + 2 )) ; continue ;;
+            -noautorotate) k=$(( k + 1 )) ; continue ;;
+        esac
+        io+=("${INPUTOPTIONS[k]}")
+        k=$(( k + 1 ))
+    done
+    io+=(-f lavfi)
+
+    local -a _fp=()
+    local -i d=0
+    rest=()
+    read -r -a _fp <<< "${FFMPEGINPUT[*]}" || true
+    for x in "${_fp[@]}" ; do
+        if (( d == 0 )) && [[ "${x}" == "-i" ]] ; then d=1 ; continue ; fi
+        if (( d == 1 )) ; then d=2 ; continue ; fi
+        rest+=("${x}")
+    done
+
+    CONCAT_FIT_IO=("${io[@]}")
+    CONCAT_FIT_IN=(-i "${graph}")
+    if (( ${#rest[@]} > 0 )) ; then CONCAT_FIT_IN+=("${rest[@]}") ; fi
+    _report -wt "concat_fit: fitted ${n} segments (${wh% }) to ${cw}x${ch} via lavfi - one decode, one encode"
+}
 
 while [[ "${@}" != "" ]] ; do
     # get context about the input
     INPUT="${1}"
+    CONCAT_FIT_IO=() ; CONCAT_FIT_IN=()
     _report -dt "==== Starting to make a ${OUTPUT_TYPE} copy from ${INPUT}. ===="
     shift
     if [ -z "${OUTPUTDIR_FORCED}" ] ; then
@@ -805,8 +919,13 @@ while [[ "${@}" != "" ]] ; do
 
     MIDDLEOPTIONS+=(-metadata creation_time=now)
 
+    _concat_fit
     _filter_to_middle_option
-    _run_critical "${FFMPEG_BIN}" "${INPUTOPTIONS[@]}" "${FFMPEGINPUT[@]}" "${MIDDLEOPTIONS[@]}" "${OUTPUT}"
+    if [[ ${#CONCAT_FIT_IO[@]} -gt 0 ]] ; then
+        _run_critical "${FFMPEG_BIN}" "${CONCAT_FIT_IO[@]}" "${CONCAT_FIT_IN[@]}" "${MIDDLEOPTIONS[@]}" "${OUTPUT}"
+    else
+        _run_critical "${FFMPEG_BIN}" "${INPUTOPTIONS[@]}" "${FFMPEGINPUT[@]}" "${MIDDLEOPTIONS[@]}" "${OUTPUT}"
+    fi
 
     echo
     _summarize_make
