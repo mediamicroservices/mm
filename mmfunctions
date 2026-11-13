@@ -9,6 +9,8 @@ OBJECTS_FIND_EXCLUSIONS+=(! -path "*/reformatted/*")
 OBJECTS_FIND_EXCLUSIONS+=(! -path "*/service/*")
 OBJECTS_FIND_EXCLUSIONS+=(! -path "*/trimmed_materials/*")
 
+OBJECTS_PROXY_EXCLUSIONS=(! -iname "*.lrf")
+
 # load configuration file
 if [ -f "${TEMP_MMCONFIG}" ] ; then
     # for use in ingestfiletest; prevents test files from going to permanent storage
@@ -785,9 +787,13 @@ _find_input(){
                  _report -dt "This package contains a restoration, using that for processing."
             else
                  LOOKHERE="${1}/objects"
+                 OBJECTS_PROXY_EXCLUSIONS_COUNT=$(find "${LOOKHERE}" -type f -iname "*.lrf" | wc -l | tr -d ' ')
+                 if [[ "${OBJECTS_PROXY_EXCLUSIONS_COUNT}" -gt 0 ]] ; then
+                     _report -dt "Ignoring ${OBJECTS_PROXY_EXCLUSIONS_COUNT} low-resolution .LRF proxy file(s) in this package."
+                 fi
             fi
             # find av files in a directory and output to a temp list
-            find "${LOOKHERE}" -type f -size +0 "${OBJECTS_FIND_EXCLUSIONS[@]}" | sort | while read file ; do
+            find "${LOOKHERE}" -type f -size +0 "${OBJECTS_FIND_EXCLUSIONS[@]}" "${OBJECTS_PROXY_EXCLUSIONS[@]}" | sort | while read file ; do
                 streamcount=$(ffprobe -loglevel quiet "$file" -show_entries format=nb_streams -of default=nw=1:nk=1)
                 duration_ts=$(ffprobe -loglevel quiet "$file" -show_entries stream=duration_ts -of default=nw=1:nk=1)
 
