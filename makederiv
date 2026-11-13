@@ -564,6 +564,7 @@ while [[ "${@}" != "" ]] ; do
                 INPUTOPTIONS+=(-apply_cropping 0)
                 _add_video_filter "crop=720:480:0:32"
             fi
+            _add_video_filter "crop=trunc(iw/2)*2:trunc(ih/2)*2"
             _add_video_filter "yadif"
         elif [[ "${OUTPUT_TYPE}" == "window" ]] ; then
             MIDDLEOPTIONS+=(-movflags faststart)
@@ -578,7 +579,7 @@ while [[ "${@}" != "" ]] ; do
 #           fi
             MIDDLEOPTIONS+=(-force_key_frames chapters)
             MIDDLEOPTIONS+=(-f mp4)
-            _add_video_filter "scale=-1:min(ih\,720)"
+            _add_video_filter "scale=-2:trunc(min(ih\,720)/2)*2"
             if  [[ "${WIDTH}" == 720 && "${HEIGHT}" == 486 ]] ; then
                 INPUTOPTIONS+=(-apply_cropping 0)
                 _add_video_filter "crop=720:480:0:4"
@@ -603,6 +604,8 @@ while [[ "${@}" != "" ]] ; do
             MIDDLEOPTIONS+=(-c:v libx264)
             MIDDLEOPTIONS+=(-force_key_frames chapters)
             MIDDLEOPTIONS+=(-crf 26)
+            _add_video_filter "scale=-2:min(ih\,720)"
+            _add_video_filter "crop=trunc(iw/2)*2:trunc(ih/2)*2"
             _add_video_filter "yadif"
         elif [[ "${OUTPUT_TYPE}" == "m4a" ]] || [[ "${OUTPUT_TYPE}" == "mp3" ]] || [[ "${OUTPUT_TYPE}" == "waveform" ]] ; then
             _report -dt "No video stream needed for ${OUTPUT_TYPE}."
